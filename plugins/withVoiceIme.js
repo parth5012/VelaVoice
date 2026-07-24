@@ -49,7 +49,7 @@ function withVoiceIme(config) {
     return config;
   });
 
-  // 2. Copy method.xml and Kotlin files
+  // 2. Copy method.xml, Kotlin files and patch MainApplication.kt
   config = withDangerousMod(config, [
     'android',
     async (config) => {
@@ -73,13 +73,41 @@ function withVoiceIme(config) {
         fs.mkdirSync(packageDir, { recursive: true });
       }
       
-      const srcKotlinPath = path.join(projectRoot, 'src/native/VoiceInputMethodService.kt');
-      const destKotlinPath = path.join(packageDir, 'VoiceInputMethodService.kt');
+      // Copy Kotlin files
+      const filesToCopy = [
+        'VoiceInputMethodService.kt',
+        'ModelVerifierModule.kt',
+        'VoiceImePackage.kt',
+      ];
       
-      if (fs.existsSync(srcKotlinPath)) {
-        fs.copyFileSync(srcKotlinPath, destKotlinPath);
+      for (const fileName of filesToCopy) {
+        const srcPath = path.join(projectRoot, 'src/native', fileName);
+        const destPath = path.join(packageDir, fileName);
+        if (fs.existsSync(srcPath)) {
+          fs.copyFileSync(srcPath, destPath);
+        } else {
+          console.warn(`Source Kotlin file not found at ${srcPath}`);
+        }
+      }
+      
+      // Patch MainApplication.kt to add VoiceImePackage
+      const mainAppPath = path.join(packageDir, 'MainApplication.kt');
+      if (fs.existsSync(mainAppPath)) {
+        let content = fs.readFileSync(mainAppPath, 'utf-8');
+        if (!content.includes('VoiceImePackage')) {
+          // Replace getPackages() return
+          const target = 'return PackageList(this).packages';
+          const replacement = 'return PackageList(this).packages + listOf(VoiceImePackage())';
+          if (content.includes(target)) {
+            content = content.replace(target, replacement);
+            fs.writeFileSync(mainAppPath, content, 'utf-8');
+            console.log('Successfully patched MainApplication.kt to include VoiceImePackage');
+          } else {
+            console.warn('Could not find return PackageList(this).packages in MainApplication.kt');
+          }
+        }
       } else {
-        console.warn(`Source Kotlin file not found at ${srcKotlinPath}`);
+        console.warn(`MainApplication.kt not found at ${mainAppPath}`);
       }
       
       return config;
