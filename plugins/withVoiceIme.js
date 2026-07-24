@@ -45,6 +45,21 @@ function withVoiceIme(config) {
         ],
       });
     }
+
+    // Add RECORD_AUDIO permission if it doesn't exist
+    if (!config.modResults.manifest['uses-permission']) {
+      config.modResults.manifest['uses-permission'] = [];
+    }
+    const hasRecordAudio = config.modResults.manifest['uses-permission'].some(
+      (p) => p.$['android:name'] === 'android.permission.RECORD_AUDIO'
+    );
+    if (!hasRecordAudio) {
+      config.modResults.manifest['uses-permission'].push({
+        $: {
+          'android:name': 'android.permission.RECORD_AUDIO',
+        },
+      });
+    }
     
     return config;
   });
@@ -78,6 +93,7 @@ function withVoiceIme(config) {
         'VoiceInputMethodService.kt',
         'ModelVerifierModule.kt',
         'VoiceImePackage.kt',
+        'WaveformView.kt',
       ];
       
       for (const fileName of filesToCopy) {
