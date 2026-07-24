@@ -15,6 +15,7 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.database.sqlite.SQLiteDatabase
 import java.io.ByteArrayOutputStream
+import java.io.File
 import kotlin.math.sqrt
 
 class VoiceInputMethodService : InputMethodService() {
@@ -254,7 +255,7 @@ class VoiceInputMethodService : InputMethodService() {
     }
 
     private fun getWhisperModelPath(context: Context): String? {
-        val dbFile = context.getDatabasePath("models.db")
+        val dbFile = File(context.filesDir, "SQLite/models.db")
         if (!dbFile.exists()) return null
         var db: SQLiteDatabase? = null
         var path: String? = null
@@ -281,7 +282,7 @@ class VoiceInputMethodService : InputMethodService() {
     }
 
     private fun getLlmModelPath(context: Context): String? {
-        val dbFile = context.getDatabasePath("models.db")
+        val dbFile = File(context.filesDir, "SQLite/models.db")
         if (!dbFile.exists()) return null
         var db: SQLiteDatabase? = null
         var path: String? = null

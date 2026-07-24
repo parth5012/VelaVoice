@@ -94,6 +94,8 @@ function withVoiceIme(config) {
         'ModelVerifierModule.kt',
         'VoiceImePackage.kt',
         'WaveformView.kt',
+        'WhisperEngine.kt',
+        'TextCleaner.kt',
       ];
       
       for (const fileName of filesToCopy) {

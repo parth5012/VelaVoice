@@ -21,14 +21,14 @@ const DEFAULT_MODELS: Omit<ModelInfo, 'progress' | 'path' | 'status'>[] = [
     name: 'Whisper Tiny (English)',
     url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin',
     filename: 'ggml-tiny.en.bin',
-    expectedHash: 'c2da7c7587d9bc4ad2c94ca4b3a8e32906e5720050e50f38b4d8f895c1a84f3e', // Example hash
+    expectedHash: '921e4cf8686fdd993dcd081a5da5b6c365bfde1162e72b08d75ac75289920b1f',
   },
   {
     id: 'cleaner-llama-3b',
     name: 'Llama 3.2 1B Cleaner ONNX',
-    url: 'https://huggingface.co/onnx-community/Llama-3.2-1B-Instruct-ONNX/resolve/main/ONNX/model.onnx',
+    url: 'https://huggingface.co/onnx-community/Llama-3.2-1B-Instruct-ONNX/resolve/main/onnx/model.onnx',
     filename: 'llama-cleaner.onnx',
-    expectedHash: '4a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b', // Example hash
+    expectedHash: '3002ec321434a9ac3e6e9b5e05b1e9e6eb751a2b560ecb898538f9cf7c1ae203',
   }
 ];
 

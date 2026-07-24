@@ -6,6 +6,9 @@
     "android": {
       "package": "com.velavoice.app"
     },
+    "splash": {
+      "backgroundColor": "#ffffff"
+    },
     "plugins": [
       [
         "expo-build-properties",
