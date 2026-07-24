@@ -11,7 +11,8 @@ import {
   AppState,
   AppStateStatus,
   NativeModules,
-  Platform
+  Platform,
+  PermissionsAndroid
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { ModelManager, ModelInfo } from './src/services/ModelManager';
@@ -24,14 +25,17 @@ export default function App() {
   const [isImeEnabled, setIsImeEnabled] = useState(false);
   const [isImeSelected, setIsImeSelected] = useState(false);
   const [useLlmCleaner, setUseLlmCleaner] = useState(false);
+  const [hasMicPermission, setHasMicPermission] = useState(false);
 
   useEffect(() => {
     loadModels();
     checkImeStatus();
+    checkMicPermission();
 
     const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
         checkImeStatus();
+        checkMicPermission();
       }
     });
 
@@ -64,6 +68,45 @@ export default function App() {
         console.error('Failed to check IME status', e);
       }
     }
+  };
+
+  const checkMicPermission = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const hasPermission = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
+        );
+        setHasMicPermission(hasPermission);
+      } catch (e) {
+        console.error('Failed to check mic permission', e);
+      }
+    } else {
+      setHasMicPermission(true);
+    }
+  };
+
+  const requestMicPermission = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+          {
+            title: 'Microphone Permission',
+            message: 'Vela Voice IME needs access to your microphone to transcribe audio offline.',
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          }
+        );
+        const hasPermission = granted === PermissionsAndroid.RESULTS.GRANTED;
+        setHasMicPermission(hasPermission);
+        return hasPermission;
+      } catch (e) {
+        console.error('Failed to request mic permission', e);
+        return false;
+      }
+    }
+    return true;
   };
 
   const handleOpenSettings = () => {
@@ -106,6 +149,7 @@ export default function App() {
       // Reload to capture final state (checksum result, paths, etc.)
       loadModels();
       checkImeStatus();
+      checkMicPermission();
     }
   };
 
@@ -114,6 +158,7 @@ export default function App() {
       await ModelManager.deleteModel(id);
       loadModels();
       checkImeStatus();
+      checkMicPermission();
     } catch (e) {
       console.error('Failed to delete model', e);
     }
@@ -181,6 +226,13 @@ export default function App() {
           <Text style={styles.sectionTitle}>Keyboard Status</Text>
           
           <View style={styles.statusRow}>
+            <Text style={styles.statusLabel}>Microphone Permission:</Text>
+            <Text style={[styles.statusValue, hasMicPermission ? styles.statusActive : styles.statusInactive]}>
+              {hasMicPermission ? 'GRANTED' : 'DENIED'}
+            </Text>
+          </View>
+
+          <View style={styles.statusRow}>
             <Text style={styles.statusLabel}>Vela Voice Keyboard:</Text>
             <Text style={[styles.statusValue, isImeEnabled ? styles.statusActive : styles.statusInactive]}>
               {isImeEnabled ? 'ENABLED' : 'DISABLED'}
@@ -195,13 +247,17 @@ export default function App() {
           </View>
 
           <View style={styles.configActions}>
-            {!isImeEnabled ? (
+            {!hasMicPermission ? (
+              <TouchableOpacity style={styles.primaryButton} onPress={requestMicPermission}>
+                <Text style={styles.buttonText}>1. Grant Microphone Permission</Text>
+              </TouchableOpacity>
+            ) : !isImeEnabled ? (
               <TouchableOpacity style={styles.primaryButton} onPress={handleOpenSettings}>
-                <Text style={styles.buttonText}>1. Enable in Settings</Text>
+                <Text style={styles.buttonText}>2. Enable in Settings</Text>
               </TouchableOpacity>
             ) : !isImeSelected ? (
               <TouchableOpacity style={styles.primaryButton} onPress={handleSelectKeyboard}>
-                <Text style={styles.buttonText}>2. Switch Active Keyboard</Text>
+                <Text style={styles.buttonText}>3. Switch Active Keyboard</Text>
               </TouchableOpacity>
             ) : (
               <View style={styles.activeIndicator}>
