@@ -324,6 +324,10 @@ class VoiceInputMethodService : InputMethodService() {
         statusText.text = "Processing transcript..."
         
         val audioBytes = recordedAudioData.toByteArray()
+        val runtime = Runtime.getRuntime()
+        val startMemory = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024)
+        android.util.Log.d("VoiceIMEPerformance", "Memory usage before processing: ${startMemory}MB")
+        val startTime = System.currentTimeMillis()
         
         // Run Whisper in background thread
         Thread({
@@ -358,6 +362,14 @@ class VoiceInputMethodService : InputMethodService() {
             } else {
                 rawTranscript
             }
+
+            val endTime = System.currentTimeMillis()
+            val duration = endTime - startTime
+            val endMemory = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024)
+            android.util.Log.d(
+                "VoiceIMEPerformance",
+                "Processing finished. Duration: ${duration}ms, Memory: ${endMemory}MB (Delta: ${endMemory - startMemory}MB)"
+            )
 
             // Post back to UI thread to commit and hide pane
             waveformView.post {
