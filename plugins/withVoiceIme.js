@@ -108,6 +108,36 @@ function withVoiceIme(config) {
         }
       }
       
+          // 2.5 Copy whisper JNI files and patch build.gradle
+    const jniDestDir = path.join(projectRoot, 'android/app/src/main/jni');
+    if (!fs.existsSync(jniDestDir)) {
+      fs.mkdirSync(jniDestDir, { recursive: true });
+    }
+    const srcJniDir = path.join(projectRoot, 'src/native/whisper');
+    if (fs.existsSync(srcJniDir)) {
+      const jniFiles = fs.readdirSync(srcJniDir);
+      for (const fileName of jniFiles) {
+        fs.copyFileSync(path.join(srcJniDir, fileName), path.join(jniDestDir, fileName));
+      }
+      console.log('Successfully copied whisper JNI files');
+    } else {
+      console.warn('Source whisper JNI directory not found');
+    }
+
+    const buildGradlePath = path.join(projectRoot, 'android/app/build.gradle');
+    if (fs.existsSync(buildGradlePath)) {
+      let gradleContent = fs.readFileSync(buildGradlePath, 'utf-8');
+      if (!gradleContent.includes('externalNativeBuild')) {
+        const targetStr = "namespace 'com.velavoice.app'";
+        const replacementStr = "namespace 'com.velavoice.app'\n      \n          externalNativeBuild {\n              cmake {\n                  path \"src/main/jni/CMakeLists.txt\"\n              }\n          }";
+        gradleContent = gradleContent.replace(targetStr, replacementStr);
+        fs.writeFileSync(buildGradlePath, gradleContent, 'utf-8');
+        console.log('Successfully patched android/app/build.gradle with externalNativeBuild');
+      }
+    } else {
+      console.warn('android/app/build.gradle not found');
+    }
+
       // Patch MainApplication.kt to add VoiceImePackage
       const mainAppPath = path.join(packageDir, 'MainApplication.kt');
       if (fs.existsSync(mainAppPath)) {
