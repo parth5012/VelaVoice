@@ -254,9 +254,24 @@ class VoiceInputMethodService : InputMethodService() {
         }
     }
 
+        private fun findDatabaseFile(context: Context): File? {
+        val paths = listOf(
+            context.getDatabasePath("models.db"),
+            File(context.filesDir, "SQLite/models.db"),
+            File(context.filesDir, "databases/models.db")
+        )
+        for (path in paths) {
+            if (path != null && path.exists()) {
+                android.util.Log.d("VoiceIME", "Found database at: ${path.absolutePath}")
+                return path
+            }
+        }
+        android.util.Log.w("VoiceIME", "models.db database file not found in any standard locations")
+        return null
+    }
+
     private fun getWhisperModelPath(context: Context): String? {
-        val dbFile = File(context.filesDir, "SQLite/models.db")
-        if (!dbFile.exists()) return null
+        val dbFile = findDatabaseFile(context) ?: return null
         var db: SQLiteDatabase? = null
         var path: String? = null
         try {
@@ -282,8 +297,7 @@ class VoiceInputMethodService : InputMethodService() {
     }
 
     private fun getLlmModelPath(context: Context): String? {
-        val dbFile = File(context.filesDir, "SQLite/models.db")
-        if (!dbFile.exists()) return null
+        val dbFile = findDatabaseFile(context) ?: return null
         var db: SQLiteDatabase? = null
         var path: String? = null
         try {
