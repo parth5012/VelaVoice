@@ -280,11 +280,31 @@ class VoiceInputMethodService : InputMethodService() {
         return path
     }
 
-    private fun cleanTranscript(text: String): String {
-        // Fallback simple regex cleaning (Issue 05)
-        return text.replace(Regex("(?i)\\b(um|ah|like|eh|uh)\\b,?\\s*"), "")
-            .replace(Regex("\\s+"), " ")
-            .trim()
+    private fun getLlmModelPath(context: Context): String? {
+        val dbFile = context.getDatabasePath("models.db")
+        if (!dbFile.exists()) return null
+        var db: SQLiteDatabase? = null
+        var path: String? = null
+        try {
+            db = SQLiteDatabase.openDatabase(
+                dbFile.absolutePath,
+                null,
+                SQLiteDatabase.OPEN_READONLY
+            )
+            val cursor = db.rawQuery(
+                "SELECT path FROM models WHERE id = 'cleaner-llama-3b' AND status = 'completed' LIMIT 1",
+                null
+            )
+            if (cursor.moveToFirst()) {
+                path = cursor.getString(0)
+            }
+            cursor.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            db?.close()
+        }
+        return path
     }
 
     private fun stopRecording(runCleaner: Boolean) {
@@ -307,10 +327,10 @@ class VoiceInputMethodService : InputMethodService() {
         
         // Run Whisper in background thread
         Thread({
-            val modelPath = getWhisperModelPath(this)
+            val whisperPath = getWhisperModelPath(this)
             val whisper = WhisperEngine()
             
-            val rawTranscript = if (modelPath != null && whisper.init(modelPath)) {
+            val rawTranscript = if (whisperPath != null && whisper.init(whisperPath)) {
                 whisper.transcribe(audioBytes)
             } else {
                 // Heuristic fallback transcript
@@ -321,9 +341,20 @@ class VoiceInputMethodService : InputMethodService() {
             }
             whisper.free()
 
-            // Run cleaner pipeline if needed, then commit
+            // Run cleaner pipeline if requested
             val finalTranscript = if (runCleaner) {
-                cleanTranscript(rawTranscript)
+                // Check if LLM option is enabled in SharedPreferences
+                val prefs = getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
+                val useLlm = prefs.getBoolean("useLlmCleaner", false)
+                
+                val cleaner = TextCleaner()
+                if (useLlm) {
+                    val llmPath = getLlmModelPath(this)
+                    if (llmPath != null) {
+                        cleaner.initLlm(llmPath)
+                    }
+                }
+                cleaner.clean(rawTranscript, useLlm)
             } else {
                 rawTranscript
             }
