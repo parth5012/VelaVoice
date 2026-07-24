@@ -1,0 +1,112 @@
+{
+  ".claude/settings.json": {
+    "mtime": 1784922494.2561958,
+    "ast_hash": "598cb075410bcd95220ac90bbb60344a",
+    "semantic_hash": ""
+  },
+  "App.tsx": {
+    "mtime": 1784916482.8773427,
+    "ast_hash": "3558053af8b3ea1f3a87f84fa5df98fe",
+    "semantic_hash": ""
+  },
+  "app.json": {
+    "mtime": 1784910535.3278787,
+    "ast_hash": "a8336e84fd53ba4bc276396e8b15ec7b",
+    "semantic_hash": ""
+  },
+  "package.json": {
+    "mtime": 1784914610.564952,
+    "ast_hash": "2618359118b2dec6434209ab3b51cd5f",
+    "semantic_hash": ""
+  },
+  "plugins/withVoiceIme.js": {
+    "mtime": 1784917194.6078126,
+    "ast_hash": "7c3071f84d00bcfadf790e126cf11daf",
+    "semantic_hash": ""
+  },
+  "src/native/ModelVerifierModule.kt": {
+    "mtime": 1784914346.081802,
+    "ast_hash": "23d5f09852562660aaa8340e1a850654",
+    "semantic_hash": ""
+  },
+  "src/native/TextCleaner.kt": {
+    "mtime": 1784917609.2831893,
+    "ast_hash": "ef076210133a11862409041ab44cc5fe",
+    "semantic_hash": ""
+  },
+  "src/native/VoiceImePackage.kt": {
+    "mtime": 1784914346.081802,
+    "ast_hash": "0e4f272627ad00084e9a7fede774976a",
+    "semantic_hash": ""
+  },
+  "src/native/VoiceInputMethodService.kt": {
+    "mtime": 1784918351.8355129,
+    "ast_hash": "32386233ae6737b44097051c9d7dccc1",
+    "semantic_hash": ""
+  },
+  "src/native/WaveformView.kt": {
+    "mtime": 1784917178.0140018,
+    "ast_hash": "5ebde55e64aa569235bc6fe0e2909a52",
+    "semantic_hash": ""
+  },
+  "src/native/WhisperEngine.kt": {
+    "mtime": 1784917254.735991,
+    "ast_hash": "00db1b9cba3586a03debaa0a1a65bab9",
+    "semantic_hash": ""
+  },
+  "src/services/ModelManager.ts": {
+    "mtime": 1784914510.7316847,
+    "ast_hash": "403167e8790798369820911ba10b106e",
+    "semantic_hash": ""
+  },
+  "tsconfig.json": {
+    "mtime": 1784910529.309242,
+    "ast_hash": "a5df9ddad82c56de332cbb7d00dd294b",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1784922368.3239183,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1784922494.2561958,
+    "ast_hash": "8a6643a420fdad6bfb583523bc6cef16",
+    "semantic_hash": ""
+  },
+  "CONTEXT.md": {
+    "mtime": 1784909225.3145437,
+    "ast_hash": "8138f30c2c281f612f6c7a856a96a1f7",
+    "semantic_hash": ""
+  },
+  "docs/adr/0001-separate-transcription-ime.md": {
+    "mtime": 1784909225.417561,
+    "ast_hash": "1f81e8d37577580141584dcdaf99021e",
+    "semantic_hash": ""
+  },
+  "docs/adr/0002-model-storage-and-access-architecture.md": {
+    "mtime": 1784909225.5176215,
+    "ast_hash": "491d855fb3c5f7f5c1ddd11f850ec1b3",
+    "semantic_hash": ""
+  },
+  "docs/adr/0003-hybrid-cleaner-architecture.md": {
+    "mtime": 1784909225.5935307,
+    "ast_hash": "43ad2d57163d7bdf1f55a05b07d25960",
+    "semantic_hash": ""
+  },
+  "docs/adr/0004-voice-typing-pane-layout.md": {
+    "mtime": 1784909226.0323613,
+    "ast_hash": "859e25bed5feaa21793de15ce1deb3b1",
+    "semantic_hash": ""
+  },
+  "issues.md": {
+    "mtime": 1784909226.6838632,
+    "ast_hash": "903df2da3e7425a866f5e5be83b1a4f7",
+    "semantic_hash": ""
+  },
+  "spec.md": {
+    "mtime": 1784909226.6838632,
+    "ast_hash": "f3eb047632a780620b743d839fbfd2ad",
+    "semantic_hash": ""
+  }
+}

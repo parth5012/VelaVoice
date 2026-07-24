@@ -1,0 +1,22 @@
+{
+  "0": "VoiceInputMethodService",
+  "1": "package.json",
+  "2": "ModelVerifierModule",
+  "3": "WhisperEngine",
+  "4": "App.tsx",
+  "5": "expo",
+  "6": "WaveformView",
+  "7": "Combined Issues: Offline Transcription IME",
+  "8": "TextCleaner",
+  "9": "dependencies",
+  "10": "Spec: Offline Transcription IME",
+  "11": "withVoiceIme.js",
+  "12": "tsconfig.json",
+  "13": "CLAUDE.md",
+  "14": "AGENTS.md",
+  "15": "CONTEXT.md",
+  "16": "0001-separate-transcription-ime.md",
+  "17": "0002-model-storage-and-access-architecture.md",
+  "18": "0003-hybrid-cleaner-architecture.md",
+  "19": "0004-voice-typing-pane-layout.md"
+}
