@@ -7,6 +7,11 @@ import com.facebook.react.bridge.Promise
 import java.io.File
 import java.io.FileInputStream
 import java.security.MessageDigest
+import android.content.Context
+import android.content.Intent
+import android.provider.Settings
+import android.view.inputmethod.InputMethodManager
+
 
 class ModelVerifierModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
     override fun getName(): String {
@@ -42,4 +47,51 @@ class ModelVerifierModule(reactContext: ReactApplicationContext) : ReactContextB
             promise.reject("HASH_ERROR", e.message)
         }
     }
+
+    @ReactMethod
+    fun openInputMethodSettings() {
+        val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        reactApplicationContext.startActivity(intent)
+    }
+
+    @ReactMethod
+    fun showInputMethodPicker() {
+        val imm = reactApplicationContext.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.showInputMethodPicker()
+    }
+
+    @ReactMethod
+    fun isImeEnabled(promise: Promise) {
+        val imm = reactApplicationContext.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val enabledMethods = imm.enabledInputMethodList
+        val packageName = reactApplicationContext.packageName
+        val isEnabled = enabledMethods.any { it.packageName == packageName }
+        promise.resolve(isEnabled)
+    }
+
+    @ReactMethod
+    fun isImeSelected(promise: Promise) {
+        val currentInputMethodId = Settings.Secure.getString(
+            reactApplicationContext.contentResolver,
+            Settings.Secure.DEFAULT_INPUT_METHOD
+        )
+        val packageName = reactApplicationContext.packageName
+        val isSelected = currentInputMethodId != null && currentInputMethodId.startsWith(packageName)
+        promise.resolve(isSelected)
+    }
+
+    @ReactMethod
+    fun getUseLlmCleaner(promise: Promise) {
+        val prefs = reactApplicationContext.getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
+        promise.resolve(prefs.getBoolean("useLlmCleaner", false))
+    }
+
+    @ReactMethod
+    fun setUseLlmCleaner(value: Boolean, promise: Promise) {
+        val prefs = reactApplicationContext.getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean("useLlmCleaner", value).apply()
+        promise.resolve(true)
+    }
+
 }
