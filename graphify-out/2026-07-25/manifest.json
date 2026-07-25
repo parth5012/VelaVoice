@@ -5,8 +5,8 @@
     "semantic_hash": ""
   },
   "App.tsx": {
-    "mtime": 1784930559.7970214,
-    "ast_hash": "5ceab100382c2987cdedbea4beab5269",
+    "mtime": 1784961352.227018,
+    "ast_hash": "88f5c692244351aa18776f782b0c7de1",
     "semantic_hash": ""
   },
   "app.json": {
@@ -30,8 +30,8 @@
     "semantic_hash": ""
   },
   "src/native/TextCleaner.kt": {
-    "mtime": 1784917609.2831893,
-    "ast_hash": "ef076210133a11862409041ab44cc5fe",
+    "mtime": 1784961402.4534705,
+    "ast_hash": "969b61fb54c25b67abdeb79a4f646b24",
     "semantic_hash": ""
   },
   "src/native/VoiceImePackage.kt": {
@@ -40,8 +40,8 @@
     "semantic_hash": ""
   },
   "src/native/VoiceInputMethodService.kt": {
-    "mtime": 1784931185.0048504,
-    "ast_hash": "48b1a6e80572556760a9e4e2f59acb4c",
+    "mtime": 1784961411.9104946,
+    "ast_hash": "401b90ab203a65560be97863274406d4",
     "semantic_hash": ""
   },
   "src/native/WaveformView.kt": {
@@ -55,8 +55,8 @@
     "semantic_hash": ""
   },
   "src/services/ModelManager.ts": {
-    "mtime": 1784928755.3407571,
-    "ast_hash": "4cc1fb0043104dc35e4514613cc093f1",
+    "mtime": 1784961159.0057144,
+    "ast_hash": "3257e403b72321724f857ac0fcfa1001",
     "semantic_hash": ""
   },
   "tsconfig.json": {
