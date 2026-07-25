@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>VelaVoice Studio</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed": "#f0dbff",
+                    "surface-variant": "#2f3635",
+                    "error-container": "#93000a",
+                    "tertiary-container": "#fce363",
+                    "surface-container-high": "#242b2a",
+                    "on-secondary-container": "#d1a1ff",
+                    "secondary": "#ddb7ff",
+                    "tertiary": "#ffffff",
+                    "secondary-container": "#622599",
+                    "on-primary-fixed-variant": "#00504b",
+                    "on-tertiary-fixed": "#211b00",
+                    "on-surface-variant": "#bacac7",
+                    "surface-container-highest": "#2f3635",
+                    "surface-dim": "#0e1514",
+                    "surface-container-low": "#161d1c",
+                    "error": "#ffb4ab",
+                    "on-secondary-fixed": "#2c0050",
+                    "surface": "#0e1514",
+                    "outline-variant": "#3c4948",
+                    "tertiary-fixed": "#fce363",
+                    "on-primary": "#003734",
+                    "on-secondary": "#4a0080",
+                    "primary": "#ffffff",
+                    "on-primary-fixed": "#00201e",
+                    "on-surface": "#dde4e2",
+                    "outline": "#859491",
+                    "primary-container": "#62f9ee",
+                    "surface-bright": "#333b3a",
+                    "surface-container-lowest": "#090f0f",
+                    "on-secondary-fixed-variant": "#622599",
+                    "on-background": "#dde4e2",
+                    "on-tertiary": "#393000",
+                    "on-tertiary-container": "#736400",
+                    "inverse-on-surface": "#2b3231",
+                    "surface-tint": "#3cdcd1",
+                    "on-error-container": "#ffdad6",
+                    "inverse-surface": "#dde4e2",
+                    "on-error": "#690005",
+                    "background": "#0e1514",
+                    "surface-container": "#1a2120",
+                    "tertiary-fixed-dim": "#dec74a",
+                    "inverse-primary": "#006a64",
+                    "secondary-fixed-dim": "#ddb7ff",
+                    "primary-fixed-dim": "#3cdcd1",
+                    "on-tertiary-fixed-variant": "#524700",
+                    "on-primary-container": "#00716b",
+                    "primary-fixed": "#62f9ee",
+                    "ai-indigo": "#4B0082"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "32px",
+                    "xs": "4px",
+                    "lg": "24px",
+                    "md": "16px",
+                    "container-margin": "20px",
+                    "sm": "12px",
+                    "base": "8px",
+                    "gutter": "16px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "mono-sm": ["Inter"],
+                    "title-md": ["Plus Jakarta Sans"],
+                    "label-md": ["Inter"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "display-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "mono-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0B0C10; /* Brand background */
+            -webkit-font-smoothing: antialiased;
+            color: #dde4e2;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .magic-glow {
+            box-shadow: 0 0 15px rgba(60, 220, 209, 0.3);
+        }
+
+        .ai-pulse {
+            animation: aiPulse 2.5s infinite ease-in-out;
+        }
+
+        @keyframes aiPulse {
+            0% { text-shadow: 0 0 0px rgba(75, 0, 130, 0); }
+            50% { text-shadow: 0 0 12px rgba(75, 0, 130, 0.8); }
+            100% { text-shadow: 0 0 0px rgba(75, 0, 130, 0); }
+        }
+
+        .cleaned-text {
+            border-bottom: 2px solid rgba(75, 0, 130, 0.6);
+            transition: background 0.3s ease;
+            cursor: pointer;
+        }
+        .cleaned-text:hover {
+            background: rgba(75, 0, 130, 0.15);
+        }
+
+        .waveform-bar {
+            width: 3px;
+            border-radius: 4px;
+            transition: height 0.2s ease;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(133, 148, 145, 0.2);
+            border-radius: 10px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-on-surface selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top App Bar -->
+<header class="fixed top-0 left-0 w-full h-16 flex justify-between items-center px-container-margin z-50 bg-background/80 backdrop-blur-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">graphic_eq</span>
+<h1 class="font-display-lg text-[24px] font-bold text-primary tracking-tight">VelaVoice</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex gap-6 items-center">
+<span class="font-label-md text-primary cursor-pointer hover:opacity-80 transition-opacity">Studio</span>
+<span class="font-label-md text-outline cursor-pointer hover:text-primary transition-colors">Library</span>
+<span class="font-label-md text-outline cursor-pointer hover:text-primary transition-colors">Automations</span>
+</div>
+<div class="px-3 py-1 bg-surface-container rounded-full border border-outline-variant/30 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary-container magic-glow"></span>
+<span class="font-mono-sm text-[10px] uppercase tracking-widest text-on-surface-variant">GPT-4o ACTIVE</span>
+</div>
+</div>
+</header>
+<main class="pt-20 pb-32 min-h-screen px-container-margin max-w-4xl mx-auto flex flex-col">
+<!-- Magic Swipe Segmented Control -->
+<section class="mb-8">
+<div class="relative w-full p-1 bg-surface-container-high rounded-full flex items-center">
+<div class="absolute h-[calc(100%-8px)] w-[calc(50%-4px)] bg-ai-indigo/20 border border-ai-indigo/30 rounded-full transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] translate-x-[calc(100%+0px)]" id="swipe-indicator"></div>
+<button class="relative z-10 flex-1 py-3 text-center font-label-md text-outline transition-colors duration-300" id="btn-raw" onclick="toggleMode('raw')">
+                    Raw Audio
+                </button>
+<button class="relative z-10 flex-1 py-3 text-center font-label-md text-primary font-bold transition-colors duration-300" id="btn-ai" onclick="toggleMode('ai')">
+                    AI Cleaned
+                </button>
+</div>
+</section>
+<!-- Waveform Visualization -->
+<section class="h-24 w-full flex items-center justify-center gap-[4px] mb-8 overflow-hidden">
+<!-- Dynamically generated bars via JS -->
+<div class="flex items-center gap-1" id="waveform-container"></div>
+</section>
+<!-- Interactive Text Canvas -->
+<section class="flex-1 glass rounded-3xl p-6 md:p-10 mb-6 custom-scrollbar overflow-y-auto">
+<div class="flex items-center justify-between mb-8">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-ai-indigo ai-pulse" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<h2 class="font-headline-lg-mobile text-primary">Transcript Analysis</h2>
+</div>
+<span class="font-mono-sm text-outline-variant">04:22 PM • 2m 14s</span>
+</div>
+<article class="space-y-6">
+<div class="flex gap-4">
+<div class="w-10 h-10 rounded-full flex-shrink-0 bg-surface-container flex items-center justify-center text-primary font-bold">A</div>
+<div class="space-y-4">
+<p class="font-body-lg text-on-surface leading-relaxed">
+                            So, we were looking at the <span class="cleaned-text" title="AI removed 'uhm, actually'">quarterly trajectory</span> of the project. I think the most important thing to <span class="cleaned-text" title="AI fixed pronunciation">acknowledge</span> is the shift in user behavior we saw last month. 
+                        </p>
+<p class="font-body-lg text-on-surface/80 leading-relaxed italic">
+                            "The data shows a 14% increase in retention when the new <span class="cleaned-text" title="AI corrected grammar">interface was deployed</span> across the beta group."
+                        </p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-10 h-10 rounded-full flex-shrink-0 bg-primary-container flex items-center justify-center text-on-primary-container font-bold">V</div>
+<div class="space-y-4">
+<p class="font-body-lg text-on-surface leading-relaxed">
+                            That makes sense. If we <span class="cleaned-text" title="AI removed background noise">extrapolate those findings</span> to the wider audience, we should expect a similar surge. But what about the <span class="cleaned-text" title="AI sharpened clarity">latency issues</span> we discussed earlier?
+                        </p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-10 h-10 rounded-full flex-shrink-0 bg-surface-container flex items-center justify-center text-primary font-bold">A</div>
+<div class="space-y-4">
+<p class="font-body-lg text-on-surface leading-relaxed">
+                            The AI team handled that <span class="cleaned-text" title="AI cleaned filler word">exceptionally</span> well. They've optimized the <span class="cleaned-text" title="AI corrected technical term">neural architecture</span> for lower-end devices without sacrificing the precision of the voice-to-text engine.
+                        </p>
+</div>
+</div>
+</article>
+</section>
+</main>
+<!-- Glassmorphic Action Bottom Bar -->
+<div class="fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-lg z-50">
+<nav class="glass rounded-full px-4 py-3 flex items-center justify-between gap-2 shadow-2xl">
+<button class="flex-1 flex flex-col items-center gap-1 py-1 text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined">content_copy</span>
+<span class="text-[10px] font-label-md uppercase tracking-tighter">Copy</span>
+</button>
+<!-- Main Reprocess Action -->
+<button class="px-8 py-3 bg-ai-indigo text-white rounded-full flex items-center gap-2 active:scale-95 transition-transform shadow-[0_0_20px_rgba(75,0,130,0.4)]">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">refresh</span>
+<span class="font-label-md font-bold whitespace-nowrap">Reprocess</span>
+</button>
+<button class="flex-1 flex flex-col items-center gap-1 py-1 text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined">share</span>
+<span class="text-[10px] font-label-md uppercase tracking-tighter">Share</span>
+</button>
+</nav>
+</div>
+<!-- Hidden Bottom Nav (Only for Global Layout Context) -->
+<div class="fixed bottom-0 w-full z-40 md:hidden bg-surface/80 backdrop-blur-xl border-t border-outline-variant/15 flex justify-around items-center px-4 py-3 pb-safe translate-y-full transition-transform" id="global-nav">
+<div class="flex flex-col items-center justify-center text-outline p-3"><span class="material-symbols-outlined">mic_none</span></div>
+<div class="flex flex-col items-center justify-center text-outline p-3"><span class="material-symbols-outlined">folder_open</span></div>
+<div class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full p-3 shadow-[0_0_15px_rgba(60,220,209,0.3)]"><span class="material-symbols-outlined">auto_awesome</span></div>
+<div class="flex flex-col items-center justify-center text-outline p-3"><span class="material-symbols-outlined">settings</span></div>
+</div>
+<script>
+        // Mode Toggling Logic
+        function toggleMode(mode) {
+            const indicator = document.getElementById('swipe-indicator');
+            const btnRaw = document.getElementById('btn-raw');
+            const btnAi = document.getElementById('btn-ai');
+            const highlights = document.querySelectorAll('.cleaned-text');
+
+            if (mode === 'raw') {
+                indicator.style.transform = 'translateX(0%)';
+                btnRaw.classList.add('text-primary', 'font-bold');
+                btnRaw.classList.remove('text-outline');
+                btnAi.classList.remove('text-primary', 'font-bold');
+                btnAi.classList.add('text-outline');
+                
+                highlights.forEach(el => {
+                    el.style.borderBottomColor = 'transparent';
+                    el.style.color = 'inherit';
+                });
+            } else {
+                indicator.style.transform = 'translateX(calc(100% + 4px))';
+                btnAi.classList.add('text-primary', 'font-bold');
+                btnAi.classList.remove('text-outline');
+                btnRaw.classList.remove('text-primary', 'font-bold');
+                btnRaw.classList.add('text-outline');
+
+                highlights.forEach(el => {
+                    el.style.borderBottomColor = 'rgba(75, 0, 130, 0.6)';
+                    el.style.color = '#ddb7ff';
+                });
+            }
+        }
+
+        // Generate Waveform
+        const waveformContainer = document.getElementById('waveform-container');
+        const barCount = 64;
+        
+        for (let i = 0; i < barCount; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'waveform-bar bg-primary-container/40';
+            const height = Math.random() * 60 + 10;
+            bar.style.height = `${height}px`;
+            waveformContainer.appendChild(bar);
+        }
+
+        // Animate Waveform
+        function animateWave() {
+            const bars = document.querySelectorAll('.waveform-bar');
+            bars.forEach(bar => {
+                const newHeight = Math.random() * 60 + 10;
+                bar.style.height = `${newHeight}px`;
+                // Cycle colors slightly for effect
+                if (Math.random() > 0.8) {
+                    bar.style.backgroundColor = 'rgba(75, 0, 130, 0.6)';
+                } else {
+                    bar.style.backgroundColor = 'rgba(60, 220, 209, 0.4)';
+                }
+            });
+        }
+        setInterval(animateWave, 150);
+
+        // Interaction Observer for revealing highlights
+        document.querySelectorAll('.cleaned-text').forEach(item => {
+            item.addEventListener('click', () => {
+                alert(`AI Adjustment: ${item.getAttribute('title')}`);
+            });
+        });
+    </script>
+</body></html>

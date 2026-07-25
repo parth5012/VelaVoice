@@ -88,13 +88,5 @@
   "86": "whisper_batch",
   "87": "index.js",
   "88": "ggml_add_rel_pos_impl",
-  "89": "ggml_compute_forward_sum",
-  "90": "ggml_map_custom1_impl",
-  "91": "ggml_compute_forward_log_f32",
-  "92": "ggml_compute_forward_sub_f32",
-  "93": "ggml_dup_impl",
-  "94": "ggml_log_impl",
-  "95": "ggml_sqrt_impl",
-  "96": "ggml_fp16_t",
   "99": "app.config.js"
 }

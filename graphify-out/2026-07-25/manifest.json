@@ -40,13 +40,13 @@
     "semantic_hash": ""
   },
   "src/native/VoiceInputMethodService.kt": {
-    "mtime": 1784961411.9104946,
-    "ast_hash": "401b90ab203a65560be97863274406d4",
+    "mtime": 1784966468.8071356,
+    "ast_hash": "8865bf6d6797d0cf05901793725f0928",
     "semantic_hash": ""
   },
   "src/native/WaveformView.kt": {
-    "mtime": 1784917178.0140018,
-    "ast_hash": "5ebde55e64aa569235bc6fe0e2909a52",
+    "mtime": 1784966439.756508,
+    "ast_hash": "164e26e8773d9ffe9b573db2a04109ba",
     "semantic_hash": ""
   },
   "src/native/WhisperEngine.kt": {
@@ -105,8 +105,8 @@
     "semantic_hash": ""
   },
   "spec.md": {
-    "mtime": 1784909226.6838632,
-    "ast_hash": "f3eb047632a780620b743d839fbfd2ad",
+    "mtime": 1784967214.2182865,
+    "ast_hash": "cec1855649e14812457e279a1342f8c3",
     "semantic_hash": ""
   },
   "app.config.js": {
