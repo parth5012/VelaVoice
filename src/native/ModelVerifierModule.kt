@@ -11,7 +11,7 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
-
+import android.text.TextUtils
 
 class ModelVerifierModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
     override fun getName(): String {
@@ -25,6 +25,7 @@ class ModelVerifierModule(reactContext: ReactApplicationContext) : ReactContextB
             promise.resolve(false)
             return
         }
+
         try {
             val digest = MessageDigest.getInstance("SHA-256")
             val buffer = ByteArray(8192)
@@ -35,7 +36,7 @@ class ModelVerifierModule(reactContext: ReactApplicationContext) : ReactContextB
                 bytesRead = fis.read(buffer)
             }
             fis.close()
-            
+
             val hashBytes = digest.digest()
             val sb = StringBuilder()
             for (b in hashBytes) {
@@ -94,4 +95,37 @@ class ModelVerifierModule(reactContext: ReactApplicationContext) : ReactContextB
         promise.resolve(true)
     }
 
+    @ReactMethod
+    fun isAccessibilityServiceEnabled(promise: Promise) {
+        val context = reactApplicationContext
+        val expectedService = "${context.packageName}/${context.packageName}.VoiceAccessibilityService"
+        var enabled = false
+        try {
+            val settingValue = Settings.Secure.getString(
+                context.contentResolver,
+                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+            )
+            if (settingValue != null) {
+                val splitter = TextUtils.SimpleStringSplitter(':')
+                splitter.setString(settingValue)
+                while (splitter.hasNext()) {
+                    val accessService = splitter.next()
+                    if (accessService.equals(expectedService, ignoreCase = true)) {
+                        enabled = true
+                        break
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        promise.resolve(enabled)
+    }
+
+    @ReactMethod
+    fun openAccessibilitySettings() {
+        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        reactApplicationContext.startActivity(intent)
+    }
 }
