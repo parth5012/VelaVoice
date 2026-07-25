@@ -15,7 +15,7 @@ import {
   PermissionsAndroid
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { ModelManager, ModelInfo } from './src/services/ModelManager';
+import { ModelManager, ModelInfo, DictionaryEntry } from './src/services/ModelManager';
 
 export default function App() {
   const [models, setModels] = useState<ModelInfo[]>([]);
@@ -26,9 +26,15 @@ export default function App() {
   const [isImeSelected, setIsImeSelected] = useState(false);
   const [useLlmCleaner, setUseLlmCleaner] = useState(false);
   const [hasMicPermission, setHasMicPermission] = useState(false);
+  const [dictionary, setDictionary] = useState<DictionaryEntry[]>([]);
+  const [originalWord, setOriginalWord] = useState('');
+  const [replacement, setReplacement] = useState('');
+  const [language, setLanguage] = useState('');
+  const [priority, setPriority] = useState('1');
 
   useEffect(() => {
     loadModels();
+    loadDictionary();
     checkImeStatus();
     checkMicPermission();
 
@@ -52,6 +58,49 @@ export default function App() {
       console.error('Failed to load models', e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadDictionary = async () => {
+    try {
+      const list = await ModelManager.getDictionaryEntries();
+      setDictionary(list);
+    } catch (e) {
+      console.error('Failed to load dictionary', e);
+    }
+  };
+
+  const handleAddEntry = async () => {
+    if (!originalWord.trim() || !replacement.trim()) {
+      alert('Please fill out both the original word and its replacement.');
+      return;
+    }
+    try {
+      await ModelManager.addDictionaryEntry(
+        originalWord.trim(),
+        replacement.trim(),
+        language.trim() || null,
+        parseInt(priority, 10) || 1
+      );
+      setOriginalWord('');
+      setReplacement('');
+      setLanguage('');
+      setPriority('1');
+      await loadDictionary();
+    } catch (e) {
+      console.error('Failed to add dictionary entry', e);
+      alert('Failed to add entry. Word might already exist.');
+    }
+  };
+
+  const handleDeleteEntry = async (id?: number) => {
+    if (id === undefined) return;
+    try {
+      await ModelManager.deleteDictionaryEntry(id);
+      await loadDictionary();
+    } catch (e) {
+      console.error('Failed to delete dictionary entry', e);
+      alert('Failed to delete entry.');
     }
   };
 
@@ -145,9 +194,10 @@ export default function App() {
       });
     } catch (e) {
       console.error('Download failed', e);
-    } finally {
+    }     finally {
       // Reload to capture final state (checksum result, paths, etc.)
       loadModels();
+      loadDictionary();
       checkImeStatus();
       checkMicPermission();
     }
@@ -157,6 +207,7 @@ export default function App() {
     try {
       await ModelManager.deleteModel(id);
       loadModels();
+      loadDictionary();
       checkImeStatus();
       checkMicPermission();
     } catch (e) {
@@ -299,14 +350,68 @@ export default function App() {
   const renderFooter = () => {
     return (
       <View style={styles.footerContainer}>
+        {/* Personal Dictionary Card */}
+        <View style={styles.configCard}>
+          <Text style={styles.sectionTitle}>Personal Dictionary</Text>
+          <Text style={styles.testInstruction}>
+            Add custom words and corrections (e.g. name spellings, acronyms) to clean post-transcription text.
+          </Text>
+
+          {/* Add Entry Form */}
+          <View style={styles.formContainer}>
+            <TextInput
+              style={styles.inputField}
+              placeholder="Original word (e.g., Vela)"
+              placeholderTextColor="#888"
+              value={originalWord}
+              onChangeText={setOriginalWord}
+            />
+            <TextInput
+              style={styles.inputField}
+              placeholder="Replacement (e.g., VELA)"
+              placeholderTextColor="#888"
+              value={replacement}
+              onChangeText={setReplacement}
+            />
+            <TouchableOpacity style={styles.addButton} onPress={handleAddEntry}>
+              <Text style={styles.buttonText}>Add Mapping</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* List of Entries */}
+          {dictionary.length > 0 ? (
+            <View style={styles.dictionaryList}>
+              <Text style={styles.listHeader}>Current Mappings ({dictionary.length}):</Text>
+              {dictionary.map((entry) => (
+                <View key={entry.id} style={styles.dictionaryRow}>
+                  <View style={styles.dictionaryTextContainer}>
+                    <Text style={styles.originalWordText}>{entry.original_word}</Text>
+                    <Text style={styles.arrowText}>→</Text>
+                    <Text style={styles.replacementText}>{entry.replacement}</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.rowDeleteButton}
+                    onPress={() => handleDeleteEntry(entry.id)}
+                  >
+                    <Text style={styles.deleteButtonText}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.emptyText}>No custom mappings added yet.</Text>
+          )}
+        </View>
+
+        {/* Test Keyboard Input */}
         <View style={styles.testCard}>
           <Text style={styles.sectionTitle}>Test Keyboard Input</Text>
           <Text style={styles.testInstruction}>
-            Tap the text field below, switch your keyboard to "Vela Voice Input", and tap the microphone icon to transcribe offline!
+            Tap text field below, switch keyboard to "Vela Voice Input", and tap the microphone icon to transcribe offline!
           </Text>
           <TextInput
             style={styles.textInput}
-            placeholder="Tap here to test typing..."
+            placeholder="Tap to test typing..."
             placeholderTextColor="#888"
             multiline={true}
             numberOfLines={3}
@@ -598,5 +703,77 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9',
     textAlignVertical: 'top',
     height: 80,
+  },
+  formContainer: {
+    marginBottom: 16,
+  },
+  inputField: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    padding: 10,
+    fontSize: 14,
+    color: '#333',
+    backgroundColor: '#f9f9f9',
+    marginBottom: 10,
+  },
+  addButton: {
+    backgroundColor: '#28a745',
+    paddingVertical: 10,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  dictionaryList: {
+    marginTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    paddingTop: 12,
+  },
+  listHeader: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#555',
+    marginBottom: 8,
+  },
+  dictionaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  dictionaryTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  originalWordText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  arrowText: {
+    fontSize: 14,
+    color: '#888',
+    marginHorizontal: 8,
+  },
+  replacementText: {
+    fontSize: 14,
+    color: '#28a745',
+  },
+  rowDeleteButton: {
+    padding: 6,
+  },
+  deleteButtonText: {
+    color: '#dc3545',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  emptyText: {
+    fontSize: 12,
+    color: '#888',
+    textAlign: 'center',
+    marginTop: 8,
   },
 });

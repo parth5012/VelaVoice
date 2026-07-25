@@ -1,5 +1,7 @@
 package com.velavoice.app
 
+import android.content.Context
+import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 import java.io.File
 
@@ -13,15 +15,15 @@ class TextCleaner {
             return false
         }
         this.modelPath = modelPath
-        // In real implementation, this would load ONNX Runtime / MediaPipe LLM Inference JNI
-        Log.d("TextCleaner", "Initialized on-device LLM Cleaner with model: $modelPath")
+        // real implementation, load ONNX Runtime / MediaPipe LLM Inference JNI
+        Log.d("TextCleaner", "Initialized on-device LLM Cleaner model: $modelPath")
         isLlmInitialized = true
         return true
     }
 
-    fun clean(text: String, useLlm: Boolean): String {
-        // Step 1: Rule-based pre-processor (Regex) is always run first
-        val regexCleaned = cleanRuleBased(text)
+    fun clean(context: Context, text: String, useLlm: Boolean): String {
+        // Step 1: Rule-based pre-processor (Regex) run first
+        val regexCleaned = cleanRuleBased(context, text)
         
         // Step 2: If LLM is requested and initialized, run advanced cleanup
         if (useLlm && isLlmInitialized) {
@@ -31,17 +33,63 @@ class TextCleaner {
         return regexCleaned
     }
 
-    fun cleanRuleBased(text: String): String {
+    fun cleanRuleBased(context: Context, text: String): String {
         if (text.isEmpty()) return ""
-        
+
+        // Apply personal dictionary replacements first
+        var cleaned = applyPersonalDictionary(context, text)
+
         // Regex to remove common filler words case-insensitively
         val fillersRegex = Regex("(?i)\\b(um|ah|like|eh|uh|er|hm|oh)\\b,?\\s*")
-        var cleaned = text.replace(fillersRegex, "")
-        
+        cleaned = cleaned.replace(fillersRegex, "")
+
         // Remove duplicate spaces and trim
         cleaned = cleaned.replace(Regex("\\s+"), " ").trim()
-        
+
         return cleaned
+    }
+
+    private fun applyPersonalDictionary(context: Context, text: String): String {
+        var result = text
+        val dbFile = findDatabaseFile(context) ?: return result
+        var db: SQLiteDatabase? = null
+        try {
+            db = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
+            val cursor = db.rawQuery(
+                "SELECT original_word, replacement FROM personal_dictionary ORDER BY priority DESC, id ASC",
+                null
+            )
+            if (cursor.moveToFirst()) {
+                do {
+                    val original = cursor.getString(0)
+                    val replacement = cursor.getString(1)
+                    if (original.isNotEmpty()) {
+                        val regex = Regex("(?i)\\b" + Regex.escape(original) + "\\b")
+                        result = result.replace(regex, replacement)
+                    }
+                } while (cursor.moveToNext())
+            }
+            cursor.close()
+        } catch (e: Exception) {
+            Log.e("TextCleaner", "Error querying personal dictionary: ${e.message}")
+        } finally {
+            db?.close()
+        }
+        return result
+    }
+
+    private fun findDatabaseFile(context: Context): File? {
+        val paths = listOf(
+            context.getDatabasePath("models.db"),
+            File(context.filesDir, "SQLite/models.db"),
+            File(context.filesDir, "databases/models.db")
+        )
+        for (path in paths) {
+            if (path != null && path.exists()) {
+                return path
+            }
+        }
+        return null
     }
 
     private fun cleanLlm(text: String): String {

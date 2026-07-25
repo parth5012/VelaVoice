@@ -373,7 +373,7 @@ class VoiceInputMethodService : InputMethodService() {
                         cleaner.initLlm(llmPath)
                     }
                 }
-                cleaner.clean(rawTranscript, useLlm)
+                cleaner.clean(this, rawTranscript, useLlm)
             } else {
                 rawTranscript
             }
