@@ -14,6 +14,8 @@ import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.database.sqlite.SQLiteDatabase
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import java.io.ByteArrayOutputStream
 import java.io.File
 import kotlin.math.sqrt
@@ -23,7 +25,7 @@ class VoiceInputMethodService : InputMethodService() {
     private var audioRecord: AudioRecord? = null
     private var recordingThread: Thread? = null
     private val recordedAudioData = ByteArrayOutputStream()
-    
+
     private lateinit var statusText: TextView
     private lateinit var waveformView: WaveformView
     private lateinit var stopCleanButton: Button
@@ -39,129 +41,128 @@ class VoiceInputMethodService : InputMethodService() {
 
     override fun onCreateInputView(): View {
         val context: Context = this
+        val density = context.resources.displayMetrics.density
+        val fixedHeightPx = (260 * density).toInt()
+
+        val isDark = (context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
+
+        // Catppuccin color scheme (Mocha / Latte)
+        val baseBgColor = Color.parseColor(if (isDark) "#1e1e2e" else "#eff1f5")
+        val crustColor = Color.parseColor(if (isDark) "#11111b" else "#dce0e8")
+        val mainTextColor = Color.parseColor(if (isDark) "#cdd6f4" else "#4c4f69")
+        val stopCleanColor = Color.parseColor(if (isDark) "#a6e3a1" else "#40a02b")
+        val stopRawColor = Color.parseColor(if (isDark) "#fab387" else "#df8e1d")
+        val cancelColor = Color.parseColor(if (isDark) "#f38ba8" else "#d20f39")
+
+        val stopCleanTextColor = if (isDark) Color.parseColor("#11111b") else Color.parseColor("#eff1f5")
+        val stopRawTextColor = if (isDark) Color.parseColor("#11111b") else Color.parseColor("#eff1f5")
+        val cancelTextColor = if (isDark) Color.parseColor("#11111b") else Color.parseColor("#eff1f5")
+
+        // Typography settings
+        val sansSerifMedium = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+        val sansSerifLight = Typeface.create("sans-serif-light", Typeface.NORMAL)
+
+        // Root Layout: Fixed Height (260dp)
         val rootLayout = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.parseColor("#f8f9fa"))
+            setBackgroundColor(baseBgColor)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+                fixedHeightPx
             )
         }
 
-        // Standard Keyboard view container (initially visible)
+        // Standard Keyboard view container / Standby screen (initially visible)
         val keyboardView = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setPadding(16, 32, 16, 32)
+            setBackgroundColor(baseBgColor)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+                LinearLayout.LayoutParams.MATCH_PARENT
             )
         }
 
-        val titleText = TextView(context).apply {
-            text = "Vela Voice IME"
-            textSize = 18f
-            setTextColor(Color.BLACK)
-            gravity = Gravity.CENTER
-            setPadding(0, 0, 0, 16)
-        }
-
         voiceButton = Button(context).apply {
-            text = "🎤 Start Voice Typing"
-            setBackgroundColor(Color.parseColor("#007bff"))
-            setTextColor(Color.WHITE)
-            setPadding(32, 16, 32, 16)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                (56 * density).toInt()
+            )
+            styleButton(this, "🎤 Tap Speak", stopCleanColor, stopCleanTextColor, density, sansSerifMedium)
+            setPadding((32 * density).toInt(), 0, (32 * density).toInt(), 0)
             setOnClickListener {
                 showVoicePane()
                 startRecording()
             }
         }
-
-        keyboardView.addView(titleText)
         keyboardView.addView(voiceButton)
 
         // Voice Pane layout (initially hidden)
         voicePane = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             visibility = View.GONE
-            setPadding(16, 16, 16, 16)
+            setBackgroundColor(baseBgColor)
+            setPadding((16 * density).toInt(), (16 * density).toInt(), (16 * density).toInt(), 0)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+                LinearLayout.LayoutParams.MATCH_PARENT
             )
         }
 
         statusText = TextView(context).apply {
             text = "Listening..."
             textSize = 14f
-            setTextColor(Color.parseColor("#495057"))
+            typeface = sansSerifLight
+            setTextColor(mainTextColor)
             gravity = Gravity.CENTER
-            setPadding(0, 0, 0, 8)
+            setPadding(0, 0, 0, (8 * density).toInt())
         }
 
         waveformView = WaveformView(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                150
+                (100 * density).toInt()
             ).apply {
-                bottomMargin = 16
+                bottomMargin = (16 * density).toInt()
             }
         }
 
+        // Bottom panel / crust holding the buttons
         val buttonContainer = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
+            setPadding((16 * density).toInt(), (16 * density).toInt(), (16 * density).toInt(), (16 * density).toInt())
+            setBackgroundColor(crustColor)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+                LinearLayout.LayoutParams.MATCH_PARENT
             )
         }
 
-        stopCleanButton = Button(context).apply {
-            text = "Stop Clean"
-            setBackgroundColor(Color.parseColor("#28a745"))
-            setTextColor(Color.WHITE)
-            layoutParams = LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                1f
-            ).apply {
-                rightMargin = 8
-            }
-            setOnClickListener {
-                stopRecording(runCleaner = true)
-            }
+        val btnLayoutParams = LinearLayout.LayoutParams(0, (48 * density).toInt(), 1f).apply {
+            leftMargin = (4 * density).toInt()
+            rightMargin = (4 * density).toInt()
         }
 
-        stopRawButton = Button(context).apply {
-            text = "Stop Raw"
-            setBackgroundColor(Color.parseColor("#ffc107"))
-            setTextColor(Color.BLACK)
-            layoutParams = LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                1f
-            ).apply {
-                rightMargin = 8
-            }
-            setOnClickListener {
-                stopRecording(runCleaner = false)
-            }
+        stopCleanButton = Button(context)
+        styleButton(stopCleanButton, "Stop Clean", stopCleanColor, stopCleanTextColor, density, sansSerifMedium)
+        stopCleanButton.layoutParams = btnLayoutParams
+        stopCleanButton.setOnClickListener {
+            stopRecording(runCleaner = true)
         }
 
-        cancelButton = Button(context).apply {
-            text = "Cancel"
-            setBackgroundColor(Color.parseColor("#dc3545"))
-            setTextColor(Color.WHITE)
-            layoutParams = LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                1f
-            )
-            setOnClickListener {
-                cancelRecording()
-            }
+        stopRawButton = Button(context)
+        styleButton(stopRawButton, "Stop Raw", stopRawColor, stopRawTextColor, density, sansSerifMedium)
+        stopRawButton.layoutParams = btnLayoutParams
+        stopRawButton.setOnClickListener {
+            stopRecording(runCleaner = false)
+        }
+
+        cancelButton = Button(context)
+        styleButton(cancelButton, "Cancel", cancelColor, cancelTextColor, density, sansSerifMedium)
+        cancelButton.layoutParams = btnLayoutParams
+        cancelButton.setOnClickListener {
+            cancelRecording()
         }
 
         buttonContainer.addView(stopCleanButton)
@@ -176,6 +177,25 @@ class VoiceInputMethodService : InputMethodService() {
         rootLayout.addView(voicePane)
 
         return rootLayout
+    }
+
+    private fun styleButton(button: Button, text: String, bgColor: Int, textColor: Int, density: Float, typeface: Typeface) {
+        button.apply {
+            this.text = text
+            this.typeface = typeface
+            this.setTextColor(textColor)
+            this.isAllCaps = false
+            this.background = createCapsuleDrawable(bgColor, 100f * density)
+            this.gravity = Gravity.CENTER
+        }
+    }
+
+    private fun createCapsuleDrawable(backgroundColor: Int, cornerRadius: Float): GradientDrawable {
+        return GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            setColor(backgroundColor)
+            setCornerRadius(cornerRadius)
+        }
     }
 
     private fun showVoicePane() {
@@ -215,7 +235,7 @@ class VoiceInputMethodService : InputMethodService() {
             }
 
             audioRecord?.startRecording()
-            
+
             recordingThread = Thread({
                 val buffer = ShortArray(BUFFER_SIZE / 2)
                 val byteBuffer = ByteArray(BUFFER_SIZE)
@@ -226,12 +246,12 @@ class VoiceInputMethodService : InputMethodService() {
                         var sum = 0.0
                         for (i in 0 until readResult) {
                             sum += buffer[i] * buffer[i]
-                            // Convert short to byte array (little endian PCM)
+                            // Convert short to bytearray (little endian PCM)
                             val shortVal = buffer[i]
                             byteBuffer[i * 2] = (shortVal.toInt() and 0xff).toByte()
                             byteBuffer[i * 2 + 1] = ((shortVal.toInt() shr 8) and 0xff).toByte()
                         }
-                        
+
                         recordedAudioData.write(byteBuffer, 0, readResult * 2)
 
                         val rms = sqrt(sum / readResult)
@@ -243,7 +263,7 @@ class VoiceInputMethodService : InputMethodService() {
                     }
                 }
             }, "VoiceIMERecordThread")
-            
+
             recordingThread?.start()
         } catch (e: SecurityException) {
             statusText.text = "Mic permission denied"
@@ -254,7 +274,7 @@ class VoiceInputMethodService : InputMethodService() {
         }
     }
 
-        private fun findDatabaseFile(context: Context): File? {
+    private fun findDatabaseFile(context: Context): File? {
         val paths = listOf(
             context.getDatabasePath("models.db"),
             File(context.filesDir, "SQLite/models.db"),
@@ -337,43 +357,47 @@ class VoiceInputMethodService : InputMethodService() {
         }
 
         statusText.text = "Processing transcript..."
-        
+
         val audioBytes = recordedAudioData.toByteArray()
         val runtime = Runtime.getRuntime()
         val startMemory = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024)
         android.util.Log.d("VoiceIMEPerformance", "Memory usage before processing: ${startMemory}MB")
         val startTime = System.currentTimeMillis()
-        
+
         // Run Whisper in background thread
         Thread({
-            val whisperPath = getWhisperModelPath(this)
+            val whisperPath = getWhisperModelPath(this@VoiceInputMethodService)
             val whisper = WhisperEngine()
-            
+
             val rawTranscript = if (whisperPath != null && whisper.init(whisperPath)) {
                 whisper.transcribe(audioBytes)
             } else {
                 // Heuristic fallback transcript
                 val seconds = (audioBytes.size / 2) / 16000f
-                if (seconds < 1f) ""
-                else if (seconds < 3f) "Hello, this is a test of the Vela Voice offline transcriber."
-                else "Thank you for choosing Vela Voice. This is a longer offline transcription generated on the device using our Whisper model."
+                if (seconds < 1f) {
+                    ""
+                } else if (seconds < 3f) {
+                    "Hello, test Vela Voice offline transcriber."
+                } else {
+                    "Thank you for choosing Vela Voice. A longer offline transcription generated on-device using Whisper model."
+                }
             }
             whisper.free()
 
             // Run cleaner pipeline if requested
             val finalTranscript = if (runCleaner) {
-                // Check if LLM option is enabled in SharedPreferences
-                val prefs = getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
+                // Check LLM option enabled in SharedPreferences
+                val prefs = this@VoiceInputMethodService.getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
                 val useLlm = prefs.getBoolean("useLlmCleaner", false)
-                
+
                 val cleaner = TextCleaner()
                 if (useLlm) {
-                    val llmPath = getLlmModelPath(this)
+                    val llmPath = getLlmModelPath(this@VoiceInputMethodService)
                     if (llmPath != null) {
                         cleaner.initLlm(llmPath)
                     }
                 }
-                cleaner.clean(this, rawTranscript, useLlm)
+                cleaner.clean(this@VoiceInputMethodService, rawTranscript, useLlm)
             } else {
                 rawTranscript
             }
@@ -386,7 +410,7 @@ class VoiceInputMethodService : InputMethodService() {
                 "Processing finished. Duration: ${duration}ms, Memory: ${endMemory}MB (Delta: ${endMemory - startMemory}MB)"
             )
 
-            // Post back to UI thread to commit and hide pane
+            // Post back to main thread to commit and hide pane
             waveformView.post {
                 val ic = currentInputConnection
                 if (ic != null && finalTranscript.isNotEmpty()) {
@@ -415,6 +439,17 @@ class VoiceInputMethodService : InputMethodService() {
         recordedAudioData.reset()
         waveformView.clear()
         showKeyboardView()
+    }
+
+    override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
+        super.onStartInputView(info, restarting)
+        showVoicePane()
+        startRecording()
+    }
+
+    override fun onFinishInputView(finishingInput: Boolean) {
+        super.onFinishInputView(finishingInput)
+        cancelRecording()
     }
 
     override fun onDestroy() {

@@ -14,15 +14,13 @@ class WaveformView @JvmOverloads constructor(
 ) : View(context, attrs, defStyleAttr) {
 
     private val paint = Paint().apply {
-        color = Color.parseColor("#007bff") // Modern blue
         style = Paint.Style.FILL
-        strokeWidth = 6f
         isAntiAlias = true
         strokeCap = Paint.Cap.ROUND
     }
 
     private val amplitudes = ArrayList<Float>()
-    private val maxBarCount = 40
+    private val maxBarCount = 24
 
     fun addAmplitude(amp: Float) {
         amplitudes.add(amp)
@@ -48,7 +46,12 @@ class WaveformView @JvmOverloads constructor(
         val barWidth = spacing * 0.6f
         paint.strokeWidth = barWidth
 
-        val startIdx = maxBarCount - amplitudes.size
+        // Catppuccin Waveform colors: Latte: #b4befe, Mocha: #89b4fa
+        val isDark = (context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
+        paint.color = Color.parseColor(if (isDark) "#89b4fa" else "#b4befe")
+
+        // Draw symmetrically growing from center
+        val startIdx = (maxBarCount - amplitudes.size) / 2
         for (i in 0 until amplitudes.size) {
             val amp = amplitudes[i]
             val x = (startIdx + i) * spacing + spacing / 2f
