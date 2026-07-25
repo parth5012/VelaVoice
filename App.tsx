@@ -12,35 +12,90 @@ import {
   AppStateStatus,
   NativeModules,
   Platform,
-  PermissionsAndroid
+  PermissionsAndroid,
+  ScrollView,
+  SafeAreaView,
+  Dimensions,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { ModelManager, ModelInfo, DictionaryEntry } from './src/services/ModelManager';
 
+interface Recording {
+  id: string;
+  title: string;
+  date: string;
+  size: string;
+  raw: string;
+  cleaned: string;
+  wave: number[];
+}
+
 export default function App() {
+  const [activeTab, setActiveTab] = useState<'hub' | 'studio' | 'engine'>('hub');
+  
+  // Model Management States
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [downloadProgress, setDownloadProgress] = useState<{ [key: string]: number }>({});
-  
-  const [isImeEnabled, setIsImeEnabled] = useState(false);
-  const [isImeSelected, setIsImeSelected] = useState(false);
+
+  // System & Permission States
+  const [isAccessibilityEnabled, setIsAccessibilityEnabled] = useState(false);
   const [useLlmCleaner, setUseLlmCleaner] = useState(false);
   const [hasMicPermission, setHasMicPermission] = useState(false);
+
+  // Personal Dictionary States
   const [dictionary, setDictionary] = useState<DictionaryEntry[]>([]);
   const [originalWord, setOriginalWord] = useState('');
   const [replacement, setReplacement] = useState('');
   const [language, setLanguage] = useState('');
   const [priority, setPriority] = useState('1');
 
+  // Recordings Library (Voice Hub / Studio)
+  const [recordings, setRecordings] = useState<Recording[]>([
+    {
+      id: '1',
+      title: 'Marketing Sync Ideas',
+      date: '12:45 • 4m 32s',
+      size: '1.2 MB',
+      raw: 'So, um, today we need to talk about the marketing plan. We should, like, focus on developer outreach, you know? And maybe run some ads.',
+      cleaned: 'Today we need to talk about the marketing plan. We should focus on developer outreach and run advertising campaigns.',
+      wave: [10, 18, 12, 28, 20, 15, 8, 16, 12, 24, 10, 18, 14, 8, 22, 12]
+    },
+    {
+      id: '2',
+      title: 'Morning Dev Jam',
+      date: '09:15 • 12m 04s',
+      size: '3.4 MB',
+      raw: 'Okay, so the SQLite db needs to be initialized. Uh, we have some tables. Models and personal dictionary. Let\'s, um, make sure they have indexes.',
+      cleaned: 'The SQLite database needs to be initialized. We have models and personal dictionary tables. Let\'s make sure they have indexes.',
+      wave: [8, 14, 10, 22, 16, 12, 6, 14, 10, 20, 8, 16, 12, 6, 18, 10]
+    }
+  ]);
+  const [selectedRecordingId, setSelectedRecordingId] = useState<string>('1');
+
+  // Recording Simulation States
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [recordingAmplitudes, setRecordingAmplitudes] = useState<number[]>([]);
+
+  // Custom text test state in Studio
+  const [testText, setTestText] = useState('');
+  const [testCleanedText, setTestCleanedText] = useState('');
+
+  // Selected Recording Transcript View Segment Tab
+  const [studioSegment, setStudioSegment] = useState<'cleaned' | 'raw'>('cleaned');
+  const [isEditingTranscript, setIsEditingTranscript] = useState(false);
+  const [editingTextValue, setEditingTextValue] = useState('');
+
   useEffect(() => {
     loadModels();
     loadDictionary();
-    checkImeStatus();
+    checkAccessibilityStatus();
     checkMicPermission();
 
     const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
-        checkImeStatus();
+        checkAccessibilityStatus();
         checkMicPermission();
       }
     });
@@ -49,6 +104,44 @@ export default function App() {
       subscription.remove();
     };
   }, []);
+
+  // Update editing text when recording selection or segment changes
+  useEffect(() => {
+    const activeRec = recordings.find(r => r.id === selectedRecordingId);
+    if (activeRec) {
+      setEditingTextValue(studioSegment === 'cleaned' ? activeRec.cleaned : activeRec.raw);
+    } else {
+      setEditingTextValue('');
+    }
+  }, [selectedRecordingId, studioSegment, recordings]);
+
+  // Recording Simulation logic
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    let timer: NodeJS.Timeout;
+    if (isRecording) {
+      setRecordingSeconds(0);
+      setRecordingAmplitudes([]);
+      timer = setInterval(() => {
+        setRecordingSeconds(prev => prev + 1);
+      }, 1000);
+      
+      interval = setInterval(() => {
+        const amp = Math.floor(Math.random() * 32) + 4;
+        setRecordingAmplitudes(prev => {
+          const next = [...prev, amp];
+          if (next.length > 20) {
+            next.shift();
+          }
+          return next;
+        });
+      }, 150);
+    }
+    return () => {
+      clearInterval(interval);
+      clearInterval(timer);
+    };
+  }, [isRecording]);
 
   const loadModels = async () => {
     try {
@@ -75,6 +168,7 @@ export default function App() {
       alert('Please fill out both the original word and its replacement.');
       return;
     }
+
     try {
       await ModelManager.addDictionaryEntry(
         originalWord.trim(),
@@ -104,17 +198,15 @@ export default function App() {
     }
   };
 
-  const checkImeStatus = async () => {
+  const checkAccessibilityStatus = async () => {
     if (NativeModules.ModelVerifier) {
       try {
-        const enabled = await NativeModules.ModelVerifier.isImeEnabled();
-        const selected = await NativeModules.ModelVerifier.isImeSelected();
+        const enabled = await NativeModules.ModelVerifier.isAccessibilityServiceEnabled();
         const useLlm = await NativeModules.ModelVerifier.getUseLlmCleaner();
-        setIsImeEnabled(enabled);
-        setIsImeSelected(selected);
+        setIsAccessibilityEnabled(enabled);
         setUseLlmCleaner(useLlm);
       } catch (e) {
-        console.error('Failed to check IME status', e);
+        console.error('Failed to check accessibility status', e);
       }
     }
   };
@@ -141,8 +233,8 @@ export default function App() {
           PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
           {
             title: 'Microphone Permission',
-            message: 'Vela Voice IME needs access to your microphone to transcribe audio offline.',
-            buttonNeutral: 'Ask Me Later',
+            message: 'Vela Voice needs access to your microphone to transcribe audio offline.',
+            buttonNeutral: 'Ask Later',
             buttonNegative: 'Cancel',
             buttonPositive: 'OK',
           }
@@ -158,15 +250,9 @@ export default function App() {
     return true;
   };
 
-  const handleOpenSettings = () => {
+  const handleOpenAccessibilitySettings = () => {
     if (NativeModules.ModelVerifier) {
-      NativeModules.ModelVerifier.openInputMethodSettings();
-    }
-  };
-
-  const handleSelectKeyboard = () => {
-    if (NativeModules.ModelVerifier) {
-      NativeModules.ModelVerifier.showInputMethodPicker();
+      NativeModules.ModelVerifier.openAccessibilitySettings();
     }
   };
 
@@ -178,12 +264,13 @@ export default function App() {
       } catch (e) {
         console.error('Failed to toggle LLM Cleaner', e);
       }
+    } else {
+      setUseLlmCleaner(value);
     }
   };
 
   const handleDownload = async (id: string) => {
     setDownloadProgress((prev) => ({ ...prev, [id]: 0 }));
-    // Update model status in local state immediately
     setModels((prevModels) =>
       prevModels.map((m) => (m.id === id ? { ...m, status: 'downloading' } : m))
     );
@@ -194,12 +281,8 @@ export default function App() {
       });
     } catch (e) {
       console.error('Download failed', e);
-    }     finally {
-      // Reload to capture final state (checksum result, paths, etc.)
+    } finally {
       loadModels();
-      loadDictionary();
-      checkImeStatus();
-      checkMicPermission();
     }
   };
 
@@ -207,74 +290,289 @@ export default function App() {
     try {
       await ModelManager.deleteModel(id);
       loadModels();
-      loadDictionary();
-      checkImeStatus();
-      checkMicPermission();
     } catch (e) {
       console.error('Failed to delete model', e);
     }
   };
 
-  const renderModelItem = (info: { item: ModelInfo }) => {
-    const item = info.item;
-    const progress = downloadProgress[item.id] || 0;
-    const progressPercent = Math.round(progress * 100);
+  // Run Personal Dictionary Clean simulation
+  const runCustomClean = () => {
+    if (!testText.trim()) return;
+    let cleaned = testText;
+    const sortedDict = [...dictionary].sort((a, b) => (b.priority || 0) - (a.priority || 0));
+    for (const entry of sortedDict) {
+      if (entry.original_word) {
+        const regex = new RegExp(`\\b${entry.original_word}\\b`, 'gi');
+        cleaned = cleaned.replace(regex, entry.replacement);
+      }
+    }
+    setTestCleanedText(cleaned);
+  };
 
+  // Start simulated recording
+  const startRecordingSim = async () => {
+    const hasPermission = await requestMicPermission();
+    if (!hasPermission) {
+      alert('Microphone permission required to record.');
+      return;
+    }
+    setIsRecording(true);
+  };
+
+  // Stop simulated recording and process
+  const stopRecordingSim = (runCleaner: boolean) => {
+    setIsRecording(false);
+    const mins = Math.floor(recordingSeconds / 60);
+    const secs = recordingSeconds % 60;
+    const durationStr = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    const newId = (recordings.length + 1).toString();
+    
+    // Simulate raw vs cleaned transcription
+    const rawText = "So, like, this is, um, a new recording from the, you know, Vela Voice App Hub tab. We are recording audio locally.";
+    const cleanedText = runCleaner 
+      ? "This is a new recording from the Vela Voice App Hub tab. We are recording audio locally."
+      : rawText;
+
+    const newRec: Recording = {
+      id: newId,
+      title: `Voice Memo ${newId}`,
+      date: `${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • ${durationStr}`,
+      size: '0.9 MB',
+      raw: rawText,
+      cleaned: cleanedText,
+      wave: recordingAmplitudes.length > 0 ? recordingAmplitudes : [8, 15, 24, 18, 12, 10, 15, 22, 10, 8]
+    };
+
+    setRecordings([newRec, ...recordings]);
+    setSelectedRecordingId(newId);
+    setStudioSegment(runCleaner ? 'cleaned' : 'raw');
+    setActiveTab('studio');
+  };
+
+  const handleSaveEditedTranscript = () => {
+    setRecordings(prev => 
+      prev.map(r => {
+        if (r.id === selectedRecordingId) {
+          return studioSegment === 'cleaned'
+            ? { ...r, cleaned: editingTextValue }
+            : { ...r, raw: editingTextValue };
+        }
+        return r;
+      })
+    );
+    setIsEditingTranscript(false);
+  };
+
+  const formatSeconds = (totalSeconds: number) => {
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  // Sub-render: Voice Hub Screen
+  const renderVoiceHub = () => {
+    const isWhisperDownloaded = models.some(m => m.id === 'whisper-tiny-en' && m.status === 'completed');
+    
     return (
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.modelName}>{item.name}</Text>
-          <Text style={[styles.statusTag, styles[item.status]]}>
-            {item.status.toUpperCase()}
-          </Text>
-        </View>
-        <Text style={styles.filename}>Filename: {item.filename}</Text>
-        {item.path ? <Text style={styles.path}>Path: {item.path}</Text> : null}
-
-        {item.status === 'downloading' ? (
-          <View style={styles.progressContainer}>
-            <View style={styles.progressBarBg}>
-              <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
-            </View>
-            <Text style={styles.progressText}>{progressPercent}%</Text>
+      <View style={styles.tabContent}>
+        <View style={styles.hubHeader}>
+          <Text style={styles.hubTitle}>Your Library</Text>
+          <View style={styles.hubModelIndicator}>
+            <View style={[styles.glowIndicator, isWhisperDownloaded ? styles.glowActive : styles.glowPending]} />
+            <Text style={styles.hubModelText}>
+              {isWhisperDownloaded ? 'Whisper Local Ready' : 'Whisper Pending Download'}
+            </Text>
           </View>
-        ) : null}
-
-        <View style={styles.actions}>
-          {item.status === 'pending' || item.status === 'failed' || item.status === 'checksum_failed' ? (
-            <TouchableOpacity
-              style={styles.downloadButton}
-              onPress={() => handleDownload(item.id)}
-            >
-              <Text style={styles.buttonText}>Download Model</Text>
-            </TouchableOpacity>
-          ) : null}
-
-          {item.status === 'completed' ? (
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={() => handleDelete(item.id)}
-            >
-              <Text style={styles.buttonText}>Delete Model</Text>
-            </TouchableOpacity>
-          ) : null}
-
-          {item.status === 'downloading' ? (
-            <ActivityIndicator size="small" color="#007bff" />
-          ) : null}
         </View>
+
+        <FlatList
+          data={recordings}
+          keyExtractor={(item) => item.id}
+          style={styles.recordingsList}
+          contentContainerStyle={{ paddingBottom: 100 }}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>Your voice library is empty. Start recording below!</Text>
+          }
+          renderItem={({ item }) => {
+            const isSelected = item.id === selectedRecordingId;
+            return (
+              <TouchableOpacity
+                style={[styles.recordingCard, isSelected && styles.recordingCardSelected]}
+                onPress={() => {
+                  setSelectedRecordingId(item.id);
+                  setActiveTab('studio');
+                }}
+              >
+                <View style={styles.recCardHeader}>
+                  <View>
+                    <Text style={styles.recTitle}>{item.title}</Text>
+                    <Text style={styles.recDate}>{item.date} • {item.size}</Text>
+                  </View>
+                  <Text style={styles.recChevron}>➔</Text>
+                </View>
+
+                {/* Animated Waveform representation */}
+                <View style={styles.recWaveContainer}>
+                  {item.wave.map((h, i) => (
+                    <View
+                      key={i}
+                      style={[
+                        styles.recWaveBar,
+                        { height: h },
+                        isSelected ? { backgroundColor: '#62f9ee' } : { backgroundColor: '#859491' }
+                      ]}
+                    />
+                  ))}
+                </View>
+              </TouchableOpacity>
+            );
+          }}
+        />
+
+        {/* Large Floating Record FAB */}
+        <TouchableOpacity style={styles.recordFab} onPress={startRecordingSim}>
+          <Text style={styles.recordFabIcon}>🎤</Text>
+        </TouchableOpacity>
       </View>
     );
   };
 
-  const renderHeader = () => {
+  // Sub-render: The Studio Screen
+  const renderStudio = () => {
+    const activeRec = recordings.find(r => r.id === selectedRecordingId);
+    
+    return (
+      <ScrollView style={styles.tabContent} contentContainerStyle={{ paddingBottom: 40 }}>
+        <Text style={styles.hubTitle}>The Studio</Text>
+        <Text style={styles.studioSubtitle}>Review and format on-device transcripts.</Text>
+
+        {activeRec ? (
+          <View style={styles.studioCanvas}>
+            <View style={styles.studioCanvasHeader}>
+              <View>
+                <Text style={styles.activeRecTitle}>{activeRec.title}</Text>
+                <Text style={styles.activeRecDate}>{activeRec.date}</Text>
+              </View>
+              <Text style={styles.studioEngineTag}>Local Cleaner</Text>
+            </View>
+
+            {/* Segment Controller (Clean vs Raw) */}
+            <View style={styles.segmentContainer}>
+              <TouchableOpacity
+                style={[styles.segmentButton, studioSegment === 'cleaned' && styles.segmentButtonActive]}
+                onPress={() => {
+                  setStudioSegment('cleaned');
+                  setIsEditingTranscript(false);
+                }}
+              >
+                <Text style={[styles.segmentText, studioSegment === 'cleaned' && styles.segmentTextActive]}>
+                  Cleaned Transcript
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.segmentButton, studioSegment === 'raw' && styles.segmentButtonActive]}
+                onPress={() => {
+                  setStudioSegment('raw');
+                  setIsEditingTranscript(false);
+                }}
+              >
+                <Text style={[styles.segmentText, studioSegment === 'raw' && styles.segmentTextActive]}>
+                  Raw Transcript
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Transcript Panel */}
+            <View style={styles.transcriptPanel}>
+              {isEditingTranscript ? (
+                <View>
+                  <TextInput
+                    style={styles.transcriptTextInput}
+                    value={editingTextValue}
+                    onChangeText={setEditingTextValue}
+                    multiline={true}
+                  />
+                  <View style={styles.editActionRow}>
+                    <TouchableOpacity
+                      style={[styles.studioButton, { backgroundColor: '#dc3545', marginRight: 10 }]}
+                      onPress={() => setIsEditingTranscript(false)}
+                    >
+                      <Text style={styles.studioButtonText}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.studioButton, { backgroundColor: '#62f9ee' }]}
+                      onPress={handleSaveEditedTranscript}
+                    >
+                      <Text style={[styles.studioButtonText, { color: '#003734' }]}>Save</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <View>
+                  <Text style={styles.transcriptText}>
+                    {studioSegment === 'cleaned' ? activeRec.cleaned : activeRec.raw}
+                  </Text>
+                  
+                  <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={() => {
+                      setIsEditingTranscript(true);
+                      setEditingTextValue(studioSegment === 'cleaned' ? activeRec.cleaned : activeRec.raw);
+                    }}
+                  >
+                    <Text style={styles.editButtonText}>✎ Edit Transcript</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          </View>
+        ) : (
+          <View style={styles.noSelectedCard}>
+            <Text style={styles.noSelectedText}>No recording selected. Go to Voice Hub to choose or record one.</Text>
+          </View>
+        )}
+
+        {/* Dictionary Sandbox testing tool */}
+        <View style={styles.studioSandboxCard}>
+          <Text style={styles.sandboxTitle}>Dictionary Sandbox</Text>
+          <Text style={styles.sandboxInstruction}>
+            Type text here and run dictionary cleaner to verify your mappings.
+          </Text>
+          <TextInput
+            style={styles.sandboxInput}
+            value={testText}
+            onChangeText={setTestText}
+            placeholder="Type word to test (e.g., 'Vela is awesome')"
+            placeholderTextColor="#859491"
+            multiline={true}
+          />
+          <TouchableOpacity style={styles.sandboxButton} onPress={runCustomClean}>
+            <Text style={styles.sandboxButtonText}>Clean Text</Text>
+          </TouchableOpacity>
+
+          {testCleanedText !== '' && (
+            <View style={styles.sandboxResult}>
+              <Text style={styles.sandboxResultTitle}>Output Result:</Text>
+              <Text style={styles.sandboxResultText}>{testCleanedText}</Text>
+            </View>
+          )}
+        </View>
+      </ScrollView>
+    );
+  };
+
+  // Sub-render: The Engine Room Screen
+  const renderEngineRoom = () => {
     const isLlamaDownloaded = models.some(m => m.id === 'cleaner-llama-3b' && m.status === 'completed');
 
     return (
-      <View style={styles.headerContainer}>
-        {/* Keyboard Settings Card */}
-        <View style={styles.configCard}>
-          <Text style={styles.sectionTitle}>Keyboard Status</Text>
+      <ScrollView style={styles.tabContent} contentContainerStyle={{ paddingBottom: 40 }}>
+        <Text style={styles.hubTitle}>The Engine Room</Text>
+        <Text style={styles.studioSubtitle}>Configure computational models & parameters.</Text>
+
+        {/* Accessibility & Mic Permission Config Card */}
+        <View style={styles.engineCard}>
+          <Text style={styles.engineCardTitle}>Floating Overlay Status</Text>
           
           <View style={styles.statusRow}>
             <Text style={styles.statusLabel}>Microphone Permission:</Text>
@@ -284,101 +582,134 @@ export default function App() {
           </View>
 
           <View style={styles.statusRow}>
-            <Text style={styles.statusLabel}>Vela Voice Keyboard:</Text>
-            <Text style={[styles.statusValue, isImeEnabled ? styles.statusActive : styles.statusInactive]}>
-              {isImeEnabled ? 'ENABLED' : 'DISABLED'}
-            </Text>
-          </View>
-          
-          <View style={styles.statusRow}>
-            <Text style={styles.statusLabel}>Currently Selected:</Text>
-            <Text style={[styles.statusValue, isImeSelected ? styles.statusActive : styles.statusInactive]}>
-              {isImeSelected ? 'YES' : 'NO'}
+            <Text style={styles.statusLabel}>Voice Overlay Service:</Text>
+            <Text style={[styles.statusValue, isAccessibilityEnabled ? styles.statusActive : styles.statusInactive]}>
+              {isAccessibilityEnabled ? 'ENABLED' : 'DISABLED'}
             </Text>
           </View>
 
-          <View style={styles.configActions}>
-            {!hasMicPermission ? (
-              <TouchableOpacity style={styles.primaryButton} onPress={requestMicPermission}>
-                <Text style={styles.buttonText}>1. Grant Microphone Permission</Text>
+          <View style={styles.engineActions}>
+            {!hasMicPermission && (
+              <TouchableOpacity style={styles.engineButton} onPress={requestMicPermission}>
+                <Text style={styles.engineButtonText}>Grant Microphone Permission</Text>
               </TouchableOpacity>
-            ) : !isImeEnabled ? (
-              <TouchableOpacity style={styles.primaryButton} onPress={handleOpenSettings}>
-                <Text style={styles.buttonText}>2. Enable in Settings</Text>
+            )}
+
+            {hasMicPermission && !isAccessibilityEnabled && (
+              <TouchableOpacity style={styles.engineButton} onPress={handleOpenAccessibilitySettings}>
+                <Text style={styles.engineButtonText}>Enable Overlay Service (Accessibility)</Text>
               </TouchableOpacity>
-            ) : !isImeSelected ? (
-              <TouchableOpacity style={styles.primaryButton} onPress={handleSelectKeyboard}>
-                <Text style={styles.buttonText}>3. Switch Active Keyboard</Text>
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.activeIndicator}>
-                <Text style={styles.activeIndicatorText}>✓ Keyboard is Active & Ready</Text>
+            )}
+
+            {hasMicPermission && isAccessibilityEnabled && (
+              <View style={styles.engineStatusIndicator}>
+                <Text style={styles.engineStatusIndicatorText}>✓ Floating Overlay Active & Ready</Text>
               </View>
             )}
           </View>
         </View>
 
-        {/* LLM Cleaner Toggle Card */}
-        <View style={styles.configCard}>
+        {/* LLM Cleaner toggle */}
+        <View style={styles.engineCard}>
           <View style={styles.cleanerHeader}>
-            <Text style={styles.sectionTitle}>LLM Cleaner Model (Llama 1B)</Text>
+            <Text style={styles.engineCardTitle}>LLM Cleaner Model (Llama 1B)</Text>
             <Switch
               value={useLlmCleaner}
               onValueChange={handleToggleLlm}
               disabled={!isLlamaDownloaded}
-              trackColor={{ false: '#767577', true: '#28a745' }}
-              thumbColor={useLlmCleaner ? '#fff' : '#f4f3f4'}
+              trackColor={{ false: '#3c4948', true: '#62f9ee' }}
+              thumbColor={useLlmCleaner ? '#ffffff' : '#859491'}
             />
           </View>
           
           {!isLlamaDownloaded ? (
             <Text style={styles.disabledText}>
-              Download the Llama3.2 1B Cleaner model below to enable advanced offline grammatical and capitalization cleaning.
+              Download the Llama cleaner model below to enable advanced grammatical post-transcription cleaning.
             </Text>
           ) : (
             <Text style={styles.enabledText}>
-              Advanced offline LLM cleaner is enabled. The keyboard will refine your raw transcripts using the Llama model.
+              Advanced offline LLM cleaner is active. The overlay service will refine raw transcripts automatically.
             </Text>
           )}
         </View>
 
-        <Text style={styles.modelSectionTitle}>On-Device Model Files</Text>
-      </View>
-    );
-  };
+        {/* Local Models List */}
+        <View style={styles.engineCard}>
+          <Text style={styles.engineCardTitle}>On-Device Model Files</Text>
+          {models.map((item) => {
+            const progress = downloadProgress[item.id] || 0;
+            const progressPercent = Math.round(progress * 100);
+            
+            return (
+              <View key={item.id} style={styles.modelItem}>
+                <View style={styles.modelItemHeader}>
+                  <View>
+                    <Text style={styles.modelItemName}>{item.name}</Text>
+                    <Text style={styles.modelItemFile}>{item.filename}</Text>
+                  </View>
+                  <Text style={[styles.modelStatusTag, styles[item.status]]}>
+                    {item.status.toUpperCase()}
+                  </Text>
+                </View>
 
-  const renderFooter = () => {
-    return (
-      <View style={styles.footerContainer}>
-        {/* Personal Dictionary Card */}
-        <View style={styles.configCard}>
-          <Text style={styles.sectionTitle}>Personal Dictionary</Text>
-          <Text style={styles.testInstruction}>
-            Add custom words and corrections (e.g. name spellings, acronyms) to clean post-transcription text.
+                {item.status === 'downloading' && (
+                  <View style={styles.progressContainer}>
+                    <View style={styles.progressBarBg}>
+                      <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
+                    </View>
+                    <Text style={styles.progressText}>{progressPercent}%</Text>
+                  </View>
+                )}
+
+                <View style={styles.modelActions}>
+                  {(item.status === 'pending' || item.status === 'failed' || item.status === 'checksum_failed') && (
+                    <TouchableOpacity style={styles.downloadBtn} onPress={() => handleDownload(item.id)}>
+                      <Text style={styles.downloadBtnText}>Download Model</Text>
+                    </TouchableOpacity>
+                  )}
+
+                  {item.status === 'completed' && (
+                    <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item.id)}>
+                      <Text style={styles.deleteBtnText}>Delete</Text>
+                    </TouchableOpacity>
+                  )}
+
+                  {item.status === 'downloading' && (
+                    <ActivityIndicator size="small" color="#62f9ee" />
+                  )}
+                </View>
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Personal Dictionary */}
+        <View style={styles.engineCard}>
+          <Text style={styles.engineCardTitle}>Personal Dictionary</Text>
+          <Text style={styles.dictionaryDescription}>
+            Define on-device custom replacements (e.g. names, spellings) for Whisper outputs.
           </Text>
 
-          {/* Add Entry Form */}
           <View style={styles.formContainer}>
             <TextInput
               style={styles.inputField}
-              placeholder="Original word (e.g., Vela)"
-              placeholderTextColor="#888"
+              placeholder="Original word (e.g. Vela)"
+              placeholderTextColor="#859491"
               value={originalWord}
               onChangeText={setOriginalWord}
             />
             <TextInput
               style={styles.inputField}
-              placeholder="Replacement (e.g., VELA)"
-              placeholderTextColor="#888"
+              placeholder="Replacement word (e.g. VELA)"
+              placeholderTextColor="#859491"
               value={replacement}
               onChangeText={setReplacement}
             />
             <TouchableOpacity style={styles.addButton} onPress={handleAddEntry}>
-              <Text style={styles.buttonText}>Add Mapping</Text>
+              <Text style={styles.addButtonText}>Add Mapping</Text>
             </TouchableOpacity>
           </View>
 
-          {/* List of Entries */}
           {dictionary.length > 0 ? (
             <View style={styles.dictionaryList}>
               <Text style={styles.listHeader}>Current Mappings ({dictionary.length}):</Text>
@@ -386,120 +717,598 @@ export default function App() {
                 <View key={entry.id} style={styles.dictionaryRow}>
                   <View style={styles.dictionaryTextContainer}>
                     <Text style={styles.originalWordText}>{entry.original_word}</Text>
-                    <Text style={styles.arrowText}>→</Text>
+                    <Text style={styles.arrowText}>➔</Text>
                     <Text style={styles.replacementText}>{entry.replacement}</Text>
                   </View>
                   <TouchableOpacity
-                    style={styles.rowDeleteButton}
+                    style={styles.rowDeleteBtn}
                     onPress={() => handleDeleteEntry(entry.id)}
                   >
-                    <Text style={styles.deleteButtonText}>✕</Text>
+                    <Text style={styles.rowDeleteBtnText}>✕</Text>
                   </TouchableOpacity>
                 </View>
               ))}
             </View>
           ) : (
-            <Text style={styles.emptyText}>No custom mappings added yet.</Text>
+            <Text style={styles.emptyDictText}>No custom mappings added yet.</Text>
           )}
         </View>
-
-        {/* Test Keyboard Input */}
-        <View style={styles.testCard}>
-          <Text style={styles.sectionTitle}>Test Keyboard Input</Text>
-          <Text style={styles.testInstruction}>
-            Tap text field below, switch keyboard to "Vela Voice Input", and tap the microphone icon to transcribe offline!
-          </Text>
-          <TextInput
-            style={styles.textInput}
-            placeholder="Tap to test typing..."
-            placeholderTextColor="#888"
-            multiline={true}
-            numberOfLines={3}
-          />
-        </View>
-      </View>
+      </ScrollView>
     );
   };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007bff" />
+        <ActivityIndicator size="large" color="#62f9ee" />
+        <Text style={styles.loadingText}>Initializing Vela Voice...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Vela Voice IME Manager</Text>
-      <Text style={styles.subtitle}>Manage Whisper & Cleaner models for offline transcription.</Text>
+    <SafeAreaView style={styles.container}>
+      {/* Top Application Bar */}
+      <View style={styles.topAppBar}>
+        <Text style={styles.appTitle}>VelaVoice</Text>
+        <View style={styles.appIndicator}>
+          <View style={styles.appIndicatorGlow} />
+          <Text style={styles.appIndicatorText}>OLED OPTIMIZED</Text>
+        </View>
+      </View>
 
-      <FlatList
-        data={models}
-        keyExtractor={(item) => item.id}
-        renderItem={renderModelItem}
-        ListHeaderComponent={renderHeader}
-        ListFooterComponent={renderFooter}
-        contentContainerStyle={styles.list}
-      />
+      {/* Main Tab Window Content */}
+      <View style={styles.contentWindow}>
+        {activeTab === 'hub' && renderVoiceHub()}
+        {activeTab === 'studio' && renderStudio()}
+        {activeTab === 'engine' && renderEngineRoom()}
+      </View>
 
-      <StatusBar style="auto" />
-    </View>
+      {/* Recording Screen Simulation Sheet Overlay */}
+      {isRecording && (
+        <View style={styles.recordingOverlay}>
+          <View style={styles.recordingSheet}>
+            <View style={styles.sheetHeader}>
+              <View style={styles.recordingDot} />
+              <Text style={styles.recordingStateText}>RECORDING AUDIO</Text>
+            </View>
+            
+            <Text style={styles.recordingTimer}>{formatSeconds(recordingSeconds)}</Text>
+            
+            {/* Visual Realtime waves */}
+            <View style={styles.realtimeWaveContainer}>
+              {recordingAmplitudes.map((h, i) => (
+                <View
+                  key={i}
+                  style={[styles.realtimeWaveBar, { height: h }]}
+                />
+              ))}
+            </View>
+
+            <View style={styles.sheetActions}>
+              <TouchableOpacity
+                style={[styles.sheetButton, styles.sheetBtnRaw]}
+                onPress={() => stopRecordingSim(false)}
+              >
+                <Text style={styles.sheetBtnRawText}>Stop Raw</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.sheetButton, styles.sheetBtnClean]}
+                onPress={() => stopRecordingSim(true)}
+              >
+                <Text style={styles.sheetBtnCleanText}>Stop & Clean</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* Bottom Navigation Tab Bar */}
+      <View style={styles.tabBar}>
+        <TouchableOpacity
+          style={[styles.tabItem, activeTab === 'hub' && styles.tabItemActive]}
+          onPress={() => setActiveTab('hub')}
+        >
+          <Text style={[styles.tabIcon, activeTab === 'hub' && styles.tabTextActive]}>🎤</Text>
+          <Text style={[styles.tabLabel, activeTab === 'hub' && styles.tabTextActive]}>Voice Hub</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.tabItem, activeTab === 'studio' && styles.tabItemActive]}
+          onPress={() => setActiveTab('studio')}
+        >
+          <Text style={[styles.tabIcon, activeTab === 'studio' && styles.tabTextActive]}>📝</Text>
+          <Text style={[styles.tabLabel, activeTab === 'studio' && styles.tabTextActive]}>Studio</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.tabItem, activeTab === 'engine' && styles.tabItemActive]}
+          onPress={() => setActiveTab('engine')}
+        >
+          <Text style={[styles.tabIcon, activeTab === 'engine' && styles.tabTextActive]}>⚙️</Text>
+          <Text style={[styles.tabLabel, activeTab === 'engine' && styles.tabTextActive]}>Engine Room</Text>
+        </TouchableOpacity>
+      </View>
+
+      <StatusBar style="light" backgroundColor="#0e1514" />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    paddingTop: 60,
-    paddingHorizontal: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    marginTop: 5,
-    marginBottom: 20,
+    backgroundColor: '#0e1514', // Lumina Sonic Dark background
   },
   loadingContainer: {
     flex: 1,
+    backgroundColor: '#0e1514',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  list: {
-    paddingBottom: 20,
+  loadingText: {
+    color: '#dde4e2',
+    marginTop: 15,
+    fontSize: 16,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+  topAppBar: {
+    height: 60,
+    backgroundColor: '#0e1514',
+    borderBottomWidth: 1,
+    borderBottomColor: '#3c4948',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginTop: Platform.OS === 'android' ? 25 : 0,
+  },
+  appTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    letterSpacing: -0.5,
+  },
+  appIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1a2120',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#3c4948',
+  },
+  appIndicatorGlow: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#62f9ee',
+    marginRight: 6,
+    shadowColor: '#62f9ee',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
     shadowRadius: 4,
-    elevation: 3,
   },
-  cardHeader: {
+  appIndicatorText: {
+    color: '#bacac7',
+    fontSize: 9,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  contentWindow: {
+    flex: 1,
+  },
+  tabContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 15,
+  },
+  hubHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 20,
   },
-  modelName: {
+  hubTitle: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  hubModelIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#161d1c',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#3c4948',
+  },
+  glowIndicator: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
+  },
+  glowActive: {
+    backgroundColor: '#62f9ee',
+  },
+  glowPending: {
+    backgroundColor: '#ffb4ab',
+  },
+  hubModelText: {
+    color: '#dde4e2',
+    fontSize: 11,
+  },
+  recordingsList: {
+    flex: 1,
+  },
+  emptyText: {
+    color: '#859491',
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 40,
+    lineHeight: 20,
+  },
+  recordingCard: {
+    backgroundColor: '#161d1c', // Low container background
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#3c4948',
+  },
+  recordingCardSelected: {
+    borderColor: '#62f9ee', // Active outline
+  },
+  recCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  recTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#ffffff',
   },
-  statusTag: {
+  recDate: {
+    fontSize: 12,
+    color: '#859491',
+    marginTop: 2,
+  },
+  recChevron: {
+    fontSize: 16,
+    color: '#859491',
+  },
+  recWaveContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    height: 30,
+    marginTop: 4,
+  },
+  recWaveBar: {
+    width: 3,
+    marginRight: 2,
+    borderRadius: 1.5,
+  },
+  recordFab: {
+    position: 'absolute',
+    bottom: 25,
+    alignSelf: 'center',
+    backgroundColor: '#62f9ee',
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#62f9ee',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  recordFabIcon: {
+    fontSize: 28,
+    color: '#003734',
+  },
+
+  // Studio Screen styles
+  studioSubtitle: {
+    fontSize: 14,
+    color: '#859491',
+    marginTop: -16,
+    marginBottom: 20,
+  },
+  studioCanvas: {
+    backgroundColor: '#161d1c',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#3c4948',
+    padding: 16,
+    marginBottom: 20,
+  },
+  studioCanvasHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#3c4948',
+    paddingBottom: 12,
+  },
+  activeRecTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  activeRecDate: {
+    fontSize: 12,
+    color: '#859491',
+    marginTop: 2,
+  },
+  studioEngineTag: {
+    backgroundColor: '#622599',
+    color: '#d1a1ff',
     fontSize: 10,
+    fontWeight: 'bold',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  segmentContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#0e1514',
+    padding: 4,
+    borderRadius: 8,
+    marginBottom: 15,
+  },
+  segmentButton: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: 6,
+  },
+  segmentButtonActive: {
+    backgroundColor: '#1a2120',
+    borderWidth: 1,
+    borderColor: '#3c4948',
+  },
+  segmentText: {
+    color: '#859491',
+    fontSize: 13,
+  },
+  segmentTextActive: {
+    color: '#62f9ee',
+    fontWeight: 'bold',
+  },
+  transcriptPanel: {
+    backgroundColor: '#0e1514',
+    padding: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#3c4948',
+  },
+  transcriptText: {
+    color: '#dde4e2',
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  editButton: {
+    marginTop: 15,
+    alignSelf: 'flex-end',
+  },
+  editButtonText: {
+    color: '#62f9ee',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  transcriptTextInput: {
+    color: '#dde4e2',
+    fontSize: 15,
+    lineHeight: 22,
+    minHeight: 120,
+    textAlignVertical: 'top',
+  },
+  editActionRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 12,
+  },
+  studioButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+  },
+  studioButtonText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  noSelectedCard: {
+    backgroundColor: '#161d1c',
+    padding: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#3c4948',
+    marginBottom: 20,
+  },
+  noSelectedText: {
+    color: '#859491',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  studioSandboxCard: {
+    backgroundColor: '#161d1c',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#3c4948',
+    padding: 16,
+  },
+  sandboxTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  sandboxInstruction: {
+    fontSize: 12,
+    color: '#859491',
+    marginBottom: 12,
+  },
+  sandboxInput: {
+    backgroundColor: '#0e1514',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#3c4948',
+    padding: 10,
+    color: '#dde4e2',
+    fontSize: 14,
+    height: 70,
+    textAlignVertical: 'top',
+    marginBottom: 12,
+  },
+  sandboxButton: {
+    backgroundColor: '#1a2120',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#3c4948',
+  },
+  sandboxButtonText: {
+    color: '#62f9ee',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  sandboxResult: {
+    marginTop: 15,
+    backgroundColor: '#1a2120',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#3c4948',
+  },
+  sandboxResultTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#ddb7ff',
+    marginBottom: 4,
+  },
+  sandboxResultText: {
+    fontSize: 14,
+    color: '#dde4e2',
+    lineHeight: 20,
+  },
+
+  // Engine Room styles
+  engineCard: {
+    backgroundColor: '#161d1c',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#3c4948',
+  },
+  engineCardTitle: {
+    fontSize: 17,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 12,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  statusLabel: {
+    fontSize: 14,
+    color: '#bacac7',
+  },
+  statusValue: {
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
+  statusActive: {
+    color: '#28a745',
+  },
+  statusInactive: {
+    color: '#ffb4ab',
+  },
+  engineActions: {
+    marginTop: 10,
+  },
+  engineButton: {
+    backgroundColor: '#1a2120',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#3c4948',
+    marginBottom: 8,
+  },
+  engineButtonText: {
+    color: '#62f9ee',
+    fontWeight: 'bold',
+    fontSize: 13,
+  },
+  engineStatusIndicator: {
+    backgroundColor: '#1a2120',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#3c4948',
+  },
+  engineStatusIndicatorText: {
+    color: '#62f9ee',
+    fontWeight: 'bold',
+    fontSize: 13,
+  },
+  cleanerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  disabledText: {
+    fontSize: 12,
+    color: '#859491',
+    lineHeight: 18,
+    marginTop: 8,
+  },
+  enabledText: {
+    fontSize: 12,
+    color: '#62f9ee',
+    lineHeight: 18,
+    marginTop: 8,
+  },
+  modelItem: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#3c4948',
+    paddingVertical: 12,
+  },
+  modelItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  modelItemName: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  modelItemFile: {
+    fontSize: 11,
+    color: '#859491',
+    marginTop: 2,
+  },
+  modelStatusTag: {
+    fontSize: 9,
     fontWeight: 'bold',
     paddingVertical: 2,
     paddingHorizontal: 6,
@@ -507,241 +1316,127 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   pending: {
-    backgroundColor: '#ffeeba',
-    color: '#856404',
+    backgroundColor: '#2f3635',
+    color: '#859491',
   },
   downloading: {
-    backgroundColor: '#b8daff',
-    color: '#004085',
+    backgroundColor: '#00504b',
+    color: '#62f9ee',
   },
   completed: {
-    backgroundColor: '#c3e6cb',
-    color: '#155724',
+    backgroundColor: '#161d1c',
+    color: '#28a745',
+    borderWidth: 1,
+    borderColor: '#28a745',
   },
   failed: {
-    backgroundColor: '#f5c6cb',
-    color: '#721c24',
+    backgroundColor: '#93000a',
+    color: '#ffb4ab',
   },
   checksum_failed: {
-    backgroundColor: '#f8d7da',
-    color: '#721c24',
-  },
-  filename: {
-    fontSize: 12,
-    color: '#888',
-    marginBottom: 4,
-  },
-  path: {
-    fontSize: 11,
-    color: '#555',
-    backgroundColor: '#f8f9fa',
-    padding: 4,
-    borderRadius: 4,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    marginTop: 4,
+    backgroundColor: '#93000a',
+    color: '#ffb4ab',
   },
   progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 12,
+    marginTop: 10,
   },
   progressBarBg: {
     flex: 1,
-    height: 8,
-    backgroundColor: '#eee',
+    backgroundColor: '#0e1514',
     borderRadius: 4,
+    height: 6,
     overflow: 'hidden',
-    marginRight: 10,
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#007bff',
+    backgroundColor: '#62f9ee',
   },
   progressText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#555',
+    color: '#dde4e2',
+    fontSize: 11,
     width: 35,
     textAlign: 'right',
   },
-  actions: {
+  modelActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginTop: 12,
-  },
-  downloadButton: {
-    backgroundColor: '#007bff',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-  },
-  deleteButton: {
-    backgroundColor: '#dc3545',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  headerContainer: {
-    marginBottom: 16,
-  },
-  footerContainer: {
-    marginTop: 16,
-    marginBottom: 40,
-  },
-  configCard: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 12,
-  },
-  modelSectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
     marginTop: 8,
-    marginBottom: 12,
   },
-  statusRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+  downloadBtn: {
+    backgroundColor: '#1a2120',
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#3c4948',
   },
-  statusLabel: {
-    fontSize: 14,
-    color: '#555',
-  },
-  statusValue: {
-    fontSize: 14,
+  downloadBtnText: {
+    color: '#62f9ee',
+    fontSize: 11,
     fontWeight: 'bold',
   },
-  statusActive: {
-    color: '#28a745',
+  deleteBtn: {
+    backgroundColor: '#93000a',
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 4,
   },
-  statusInactive: {
-    color: '#dc3545',
-  },
-  configActions: {
-    marginTop: 12,
-    alignItems: 'stretch',
-  },
-  primaryButton: {
-    backgroundColor: '#007bff',
-    paddingVertical: 10,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  activeIndicator: {
-    backgroundColor: '#d4edda',
-    borderColor: '#c3e6cb',
-    borderWidth: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  activeIndicatorText: {
-    color: '#155724',
+  deleteBtnText: {
+    color: '#ffb4ab',
+    fontSize: 11,
     fontWeight: 'bold',
-    fontSize: 14,
   },
-  cleanerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  disabledText: {
+  dictionaryDescription: {
     fontSize: 12,
-    color: '#666',
+    color: '#859491',
     lineHeight: 18,
-  },
-  enabledText: {
-    fontSize: 12,
-    color: '#28a745',
-    lineHeight: 18,
-  },
-  testCard: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  testInstruction: {
-    fontSize: 12,
-    color: '#666',
     marginBottom: 12,
-    lineHeight: 18,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    padding: 10,
-    fontSize: 14,
-    color: '#333',
-    backgroundColor: '#f9f9f9',
-    textAlignVertical: 'top',
-    height: 80,
   },
   formContainer: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   inputField: {
+    backgroundColor: '#0e1514',
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
+    borderColor: '#3c4948',
     padding: 10,
+    color: '#dde4e2',
     fontSize: 14,
-    color: '#333',
-    backgroundColor: '#f9f9f9',
     marginBottom: 10,
   },
   addButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: '#62f9ee',
     paddingVertical: 10,
-    borderRadius: 6,
+    borderRadius: 8,
     alignItems: 'center',
   },
+  addButtonText: {
+    color: '#003734',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
   dictionaryList: {
-    marginTop: 12,
+    marginTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
-    paddingTop: 12,
+    borderTopColor: '#3c4948',
+    paddingTop: 10,
   },
   listHeader: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 'bold',
-    color: '#555',
+    color: '#bacac7',
     marginBottom: 8,
   },
   dictionaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#1a2120',
   },
   dictionaryTextContainer: {
     flexDirection: 'row',
@@ -751,29 +1446,150 @@ const styles = StyleSheet.create({
   originalWordText: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#ffffff',
   },
   arrowText: {
     fontSize: 14,
-    color: '#888',
+    color: '#859491',
     marginHorizontal: 8,
   },
   replacementText: {
     fontSize: 14,
-    color: '#28a745',
+    color: '#62f9ee',
   },
-  rowDeleteButton: {
+  rowDeleteBtn: {
     padding: 6,
   },
-  deleteButtonText: {
-    color: '#dc3545',
-    fontSize: 16,
-    fontWeight: 'bold',
+  rowDeleteBtnText: {
+    color: '#ffb4ab',
+    fontSize: 14,
   },
-  emptyText: {
+  emptyDictText: {
     fontSize: 12,
-    color: '#888',
+    color: '#859491',
     textAlign: 'center',
-    marginTop: 8,
+    marginTop: 10,
+  },
+
+  // Simulated Recording sheet overlay styles
+  recordingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(14, 21, 20, 0.85)',
+    justifyContent: 'flex-end',
+    zIndex: 999,
+  },
+  recordingSheet: {
+    backgroundColor: '#161d1c',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    borderTopWidth: 1,
+    borderTopColor: '#62f9ee',
+    alignItems: 'center',
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  recordingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#ffb4ab',
+    marginRight: 6,
+  },
+  recordingStateText: {
+    color: '#ffb4ab',
+    fontSize: 10,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  recordingTimer: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 20,
+  },
+  realtimeWaveContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 60,
+    marginBottom: 30,
+    width: '100%',
+    justifyContent: 'center',
+  },
+  realtimeWaveBar: {
+    width: 4,
+    backgroundColor: '#62f9ee',
+    marginHorizontal: 2,
+    borderRadius: 2,
+  },
+  sheetActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  sheetButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginHorizontal: 8,
+  },
+  sheetBtnRaw: {
+    backgroundColor: '#1a2120',
+    borderWidth: 1,
+    borderColor: '#3c4948',
+  },
+  sheetBtnRawText: {
+    color: '#dde4e2',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  sheetBtnClean: {
+    backgroundColor: '#62f9ee',
+  },
+  sheetBtnCleanText: {
+    color: '#003734',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+
+  // Bottom Navigation Bar styles
+  tabBar: {
+    height: 70,
+    backgroundColor: '#161d1c',
+    borderTopWidth: 1,
+    borderTopColor: '#3c4948',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingBottom: Platform.OS === 'ios' ? 15 : 5,
+    paddingTop: 8,
+  },
+  tabItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
+  tabItemActive: {
+    borderTopWidth: 0,
+  },
+  tabIcon: {
+    fontSize: 18,
+    color: '#859491',
+    marginBottom: 4,
+  },
+  tabLabel: {
+    fontSize: 11,
+    color: '#859491',
+  },
+  tabTextActive: {
+    color: '#62f9ee', // Active teal accent
+    fontWeight: 'bold',
   },
 });
