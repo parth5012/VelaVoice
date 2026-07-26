@@ -96,6 +96,19 @@ class ModelVerifierModule(reactContext: ReactApplicationContext) : ReactContextB
     }
 
     @ReactMethod
+    fun getStringPreference(key: String, defaultValue: String, promise: Promise) {
+        val prefs = reactApplicationContext.getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
+        promise.resolve(prefs.getString(key, defaultValue))
+    }
+
+    @ReactMethod
+    fun setStringPreference(key: String, value: String, promise: Promise) {
+        val prefs = reactApplicationContext.getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
+        prefs.edit().putString(key, value).apply()
+        promise.resolve(true)
+    }
+
+    @ReactMethod
     fun isAccessibilityServiceEnabled(promise: Promise) {
         val context = reactApplicationContext
         val expectedService = "${context.packageName}/${context.packageName}.VoiceAccessibilityService"
