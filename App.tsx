@@ -3,6 +3,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Image,
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
@@ -19,6 +20,7 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { ModelManager, ModelInfo, DictionaryEntry } from './src/services/ModelManager';
+import OverlayLogo from './src/components/OverlayLogo';
 
 interface Recording {
   id: string;
@@ -750,7 +752,14 @@ export default function App() {
     <SafeAreaView style={styles.container}>
       {/* Top Application Bar */}
       <View style={styles.topAppBar}>
-        <Text style={styles.appTitle}>VelaVoice</Text>
+        <View style={styles.brandRow}>
+          <Image
+            source={require('./assets/logo.png')}
+            style={styles.appLogo}
+            resizeMode="contain"
+          />
+          <Text style={styles.appTitle}>VelaVoice</Text>
+        </View>
         <View style={styles.appIndicator}>
           <View style={styles.appIndicatorGlow} />
           <Text style={styles.appIndicatorText}>OLED OPTIMIZED</Text>
@@ -768,6 +777,10 @@ export default function App() {
       {isRecording && (
         <View style={styles.recordingOverlay}>
           <View style={styles.recordingSheet}>
+            {/* Brand mark — clean V logo at the top-center of the overlay */}
+            <View style={styles.overlayLogoRow}>
+              <OverlayLogo size={28} />
+            </View>
             <View style={styles.sheetHeader}>
               <View style={styles.recordingDot} />
               <Text style={styles.recordingStateText}>RECORDING AUDIO</Text>
@@ -863,6 +876,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     marginTop: Platform.OS === 'android' ? 25 : 0,
+  },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  appLogo: {
+    width: 28,
+    height: 28,
+    marginRight: 10,
   },
   appTitle: {
     fontSize: 20,
@@ -1490,6 +1512,11 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#62f9ee',
     alignItems: 'center',
+  },
+  overlayLogoRow: {
+    alignItems: 'center',
+    marginBottom: 8,
+    marginTop: -4,
   },
   sheetHeader: {
     flexDirection: 'row',
