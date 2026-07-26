@@ -45,6 +45,25 @@ export default function App() {
   const [useLlmCleaner, setUseLlmCleaner] = useState(false);
   const [hasMicPermission, setHasMicPermission] = useState(false);
 
+  // Transcription API States
+  const [transcriptionMode, setTranscriptionMode] = useState<string>('local');
+  const [groqApiKey, setGroqApiKey] = useState<string>('');
+  const [groqModel, setGroqModel] = useState<string>('whisper-large-v3');
+  const [openaiApiKey, setOpenaiApiKey] = useState<string>('');
+  const [openaiModel, setOpenaiModel] = useState<string>('whisper-1');
+  const [openaiEndpoint, setOpenaiEndpoint] = useState<string>('https://api.openai.com/v1');
+
+  const updatePreference = async (key: string, value: string, setter: (val: string) => void) => {
+    setter(value);
+    if (NativeModules.ModelVerifier) {
+      try {
+        await NativeModules.ModelVerifier.setStringPreference(key, value);
+      } catch (e) {
+        console.error(`Failed to save preference ${key}`, e);
+      }
+    }
+  };
+
   // Personal Dictionary States
   const [dictionary, setDictionary] = useState<DictionaryEntry[]>([]);
   const [originalWord, setOriginalWord] = useState('');
@@ -207,6 +226,20 @@ export default function App() {
         const useLlm = await NativeModules.ModelVerifier.getUseLlmCleaner();
         setIsAccessibilityEnabled(enabled);
         setUseLlmCleaner(useLlm);
+        
+        const mode = await NativeModules.ModelVerifier.getStringPreference('transcriptionMode', 'local');
+        const groqKey = await NativeModules.ModelVerifier.getStringPreference('groqApiKey', '');
+        const groqM = await NativeModules.ModelVerifier.getStringPreference('groqModel', 'whisper-large-v3');
+        const openaiKey = await NativeModules.ModelVerifier.getStringPreference('openaiApiKey', '');
+        const openaiM = await NativeModules.ModelVerifier.getStringPreference('openaiModel', 'whisper-1');
+        const openaiUrl = await NativeModules.ModelVerifier.getStringPreference('openaiEndpoint', 'https://api.openai.com/v1');
+
+        setTranscriptionMode(mode || 'local');
+        setGroqApiKey(groqKey || '');
+        setGroqModel(groqM || 'whisper-large-v3');
+        setOpenaiApiKey(openaiKey || '');
+        setOpenaiModel(openaiM || 'whisper-1');
+        setOpenaiEndpoint(openaiUrl || 'https://api.openai.com/v1');
       } catch (e) {
         console.error('Failed to check accessibility status', e);
       }
@@ -603,15 +636,98 @@ export default function App() {
               </TouchableOpacity>
             )}
 
-            {hasMicPermission && isAccessibilityEnabled && (
-              <View style={styles.engineStatusIndicator}>
-                <Text style={styles.engineStatusIndicatorText}>✓ Floating Overlay Active & Ready</Text>
-              </View>
-            )}
+        {hasMicPermission && isAccessibilityEnabled && (
+          <View style={styles.engineStatusIndicator}>
+            <Text style={styles.engineStatusIndicatorText}>✓ Floating Overlay Active & Ready</Text>
           </View>
+        )}
+      </View>
+    </View>
+
+    {/* Transcription API / Offline settings */}
+      <View style={styles.engineCard}>
+        <Text style={styles.engineCardTitle}>Transcription Engine</Text>
+        <View style={styles.modeContainer}>
+          <TouchableOpacity
+            style={[styles.modeButton, transcriptionMode === 'local' && styles.modeButtonActive]}
+            onPress={() => updatePreference('transcriptionMode', 'local', setTranscriptionMode)}
+          >
+            <Text style={[styles.modeButtonText, transcriptionMode === 'local' && styles.modeButtonTextActive]}>
+              On-Device (Offline)
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.modeButton, transcriptionMode === 'groq' && styles.modeButtonActive]}
+            onPress={() => updatePreference('transcriptionMode', 'groq', setTranscriptionMode)}
+          >
+            <Text style={[styles.modeButtonText, transcriptionMode === 'groq' && styles.modeButtonTextActive]}>
+              Groq API
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.modeButton, transcriptionMode === 'openai' && styles.modeButtonActive]}
+            onPress={() => updatePreference('transcriptionMode', 'openai', setTranscriptionMode)}
+          >
+            <Text style={[styles.modeButtonText, transcriptionMode === 'openai' && styles.modeButtonTextActive]}>
+              OpenAI API
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {/* LLM Cleaner toggle */}
+        {transcriptionMode === 'groq' && (
+          <View style={styles.apiFields}>
+            <Text style={styles.fieldLabel}>Groq API Key</Text>
+            <TextInput
+              style={styles.inputField}
+              placeholder="gsk_..."
+              placeholderTextColor="#859491"
+              value={groqApiKey}
+              onChangeText={(val) => updatePreference('groqApiKey', val, setGroqApiKey)}
+              secureTextEntry
+            />
+            <Text style={styles.fieldLabel}>Groq Model</Text>
+            <TextInput
+              style={styles.inputField}
+              placeholder="whisper-large-v3"
+              placeholderTextColor="#859491"
+              value={groqModel}
+              onChangeText={(val) => updatePreference('groqModel', val, setGroqModel)}
+            />
+          </View>
+        )}
+
+        {transcriptionMode === 'openai' && (
+          <View style={styles.apiFields}>
+            <Text style={styles.fieldLabel}>OpenAI API Key</Text>
+            <TextInput
+              style={styles.inputField}
+              placeholder="sk-..."
+              placeholderTextColor="#859491"
+              value={openaiApiKey}
+              onChangeText={(val) => updatePreference('openaiApiKey', val, setOpenaiApiKey)}
+              secureTextEntry
+            />
+            <Text style={styles.fieldLabel}>API Endpoint URL</Text>
+            <TextInput
+              style={styles.inputField}
+              placeholder="https://api.openai.com/v1"
+              placeholderTextColor="#859491"
+              value={openaiEndpoint}
+              onChangeText={(val) => updatePreference('openaiEndpoint', val, setOpenaiEndpoint)}
+            />
+            <Text style={styles.fieldLabel}>OpenAI Model</Text>
+            <TextInput
+              style={styles.inputField}
+              placeholder="whisper-1"
+              placeholderTextColor="#859491"
+              value={openaiModel}
+              onChangeText={(val) => updatePreference('openaiModel', val, setOpenaiModel)}
+            />
+          </View>
+        )}
+      </View>
+
+      {/* LLM Cleaner toggle */}
         <View style={styles.engineCard}>
           <View style={styles.cleanerHeader}>
             <Text style={styles.engineCardTitle}>LLM Cleaner Model (Llama 1B)</Text>
@@ -1616,7 +1732,43 @@ const styles = StyleSheet.create({
     color: '#859491',
   },
   tabTextActive: {
-    color: '#62f9ee', // Active teal accent
+    color: '#62f9ee', //Active teal accent
     fontWeight: 'bold',
+  },
+  modeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  modeButton: {
+    flex: 1,
+    backgroundColor: '#0e1514',
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#3c4948',
+    alignItems: 'center',
+    marginHorizontal: 4,
+  },
+  modeButtonActive: {
+    backgroundColor: '#62f9ee',
+    borderColor: '#62f9ee',
+  },
+  modeButtonText: {
+    color: '#bacac7',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  modeButtonTextActive: {
+    color: '#003734',
+  },
+  apiFields: {
+    marginTop: 8,
+  },
+  fieldLabel: {
+    color: '#bacac7',
+    fontSize: 12,
+    marginBottom: 4,
+    marginTop: 6,
   },
 });
