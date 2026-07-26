@@ -332,53 +332,88 @@ class VoiceAccessibilityService : AccessibilityService() {
             e.printStackTrace()
         }
 
-        statusText.text = "Processing..."
-        val audioBytes = recordedAudioData.toByteArray()
+    statusText.text = "Processing..."
+    val audioBytes = recordedAudioData.toByteArray()
 
-        Thread({
+    Thread({
+        val prefs = this@VoiceAccessibilityService.getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
+        val mode = prefs.getString("transcriptionMode", "local") ?: "local"
+        var rawTranscript = ""
+        var errorMessage: String? = null
+
+        if (mode == "groq" || mode == "openai") {
+            val apiKey = if (mode == "groq") {
+                prefs.getString("groqApiKey", "") ?: ""
+            } else {
+                prefs.getString("openaiApiKey", "") ?: ""
+            }
+            
+            val model = if (mode == "groq") {
+                prefs.getString("groqModel", "whisper-large-v3") ?: "whisper-large-v3"
+            } else {
+                prefs.getString("openaiModel", "whisper-1") ?: "whisper-1"
+            }
+            
+            val endpoint = if (mode == "openai") {
+                prefs.getString("openaiEndpoint", "https://api.openai.com/v1") ?: "https://api.openai.com/v1"
+            } else null
+            
+            if (apiKey.isBlank()) {
+                errorMessage = "Error: API Key is missing for $mode"
+            } else {
+                try {
+                    rawTranscript = transcribeWithApi(audioBytes, mode, apiKey, model, endpoint)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    errorMessage = "API Error: ${e.message}"
+                }
+            }
+        } else {
             val whisperPath = getWhisperModelPath(this@VoiceAccessibilityService)
-            val whisper = WhisperEngine()
-
-            val rawTranscript = if (whisperPath != null) {
-                whisper.init(whisperPath)
-                whisper.transcribe(audioBytes)
+            if (whisperPath != null) {
+                val whisper = WhisperEngine()
+                try {
+                    whisper.init(whisperPath)
+                    rawTranscript = whisper.transcribe(audioBytes)
+                } finally {
+                    whisper.free()
+                }
             } else {
                 val seconds = (audioBytes.size / 2) / 16000f
-                val fallback = if (seconds < 1f) {
+                rawTranscript = if (seconds < 1f) {
                     ""
                 } else if (seconds < 3f) {
                     "Hello, testing Vela Voice floating transcription overlay."
                 } else {
-                    "Thank you for choosing Vela Voice. This longer offline transcription was generated on-device using the Whisper model."
+                    "Thank you for choosing Vela Voice. A longer offline transcription generated on-device using Whisper model."
                 }
-                fallback
             }
+        }
 
-            whisper.free()
+        val useLlm = prefs.getBoolean("useLlmCleaner", false)
+        val cleaner = TextCleaner()
+        val finalTranscript = if (rawTranscript.isNotEmpty()) {
+            cleaner.clean(this@VoiceAccessibilityService, rawTranscript, useLlm)
+        } else {
+            rawTranscript
+        }
 
-            val prefs = this@VoiceAccessibilityService.getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
-            val useLlm = prefs.getBoolean("useLlmCleaner", false)
-
-            val cleaner = TextCleaner()
-            val finalTranscript = if (rawTranscript.isNotEmpty()) {
-                cleaner.clean(this@VoiceAccessibilityService, rawTranscript, useLlm)
+        Handler(Looper.getMainLooper()).post {
+            if (errorMessage != null) {
+                statusText.text = errorMessage
             } else {
-                rawTranscript
-            }
-
-            Handler(Looper.getMainLooper()).post {
                 if (finalTranscript.isNotEmpty()) {
                     insertText(finalTranscript)
                 }
-
                 statusText.text = "Ready"
-                controlPane.visibility = View.GONE
-
-                val density = resources.displayMetrics.density
-                val micColor = Color.parseColor("#a6e3a1")
-                micButton.background = createCapsuleDrawable(micColor, 100f * density)
             }
-        }).start()
+            controlPane.visibility = View.GONE
+
+            val density = resources.displayMetrics.density
+            val micColor = Color.parseColor("#a6e3a1")
+            micButton.background = createCapsuleDrawable(micColor, 100f * density)
+        }
+    }).start()
     }
 
     private fun insertText(text: String) {
@@ -461,6 +496,133 @@ class VoiceAccessibilityService : AccessibilityService() {
             db?.close()
         }
         return path
+    }
+
+    private fun pcmToWav(pcmBytes: ByteArray, sampleRate: Int = 16000): ByteArray {
+        val totalSize = 36 + pcmBytes.size
+        val byteRate = sampleRate * 2
+        val header = ByteArray(44)
+        
+        header[0] = 'R'.toByte()
+        header[1] = 'I'.toByte()
+        header[2] = 'F'.toByte()
+        header[3] = 'F'.toByte()
+        header[4] = (totalSize and 0xff).toByte()
+        header[5] = ((totalSize shr 8) and 0xff).toByte()
+        header[6] = ((totalSize shr 16) and 0xff).toByte()
+        header[7] = ((totalSize shr 24) and 0xff).toByte()
+        header[8] = 'W'.toByte()
+        header[9] = 'A'.toByte()
+        header[10] = 'V'.toByte()
+        header[11] = 'E'.toByte()
+        
+        header[12] = 'f'.toByte()
+        header[13] = 'm'.toByte()
+        header[14] = 't'.toByte()
+        header[15] = ' '.toByte()
+        header[16] = 16
+        header[17] = 0
+        header[18] = 0
+        header[19] = 0
+        header[20] = 1
+        header[21] = 0
+        header[22] = 1
+        header[23] = 0
+        header[24] = (sampleRate and 0xff).toByte()
+        header[25] = ((sampleRate shr 8) and 0xff).toByte()
+        header[26] = ((sampleRate shr 16) and 0xff).toByte()
+        header[27] = ((sampleRate shr 24) and 0xff).toByte()
+        header[28] = (byteRate and 0xff).toByte()
+        header[29] = ((byteRate shr 8) and 0xff).toByte()
+        header[30] = ((byteRate shr 16) and 0xff).toByte()
+        header[31] = ((byteRate shr 24) and 0xff).toByte()
+        header[32] = 2
+        header[33] = 0
+        header[34] = 16
+        header[35] = 0
+        
+        header[36] = 'd'.toByte()
+        header[37] = 'a'.toByte()
+        header[38] = 't'.toByte()
+        header[39] = 'a'.toByte()
+        header[40] = (pcmBytes.size and 0xff).toByte()
+        header[41] = ((pcmBytes.size shr 8) and 0xff).toByte()
+        header[42] = ((pcmBytes.size shr 16) and 0xff).toByte()
+        header[43] = ((pcmBytes.size shr 24) and 0xff).toByte()
+        
+        val wavBytes = ByteArray(44 + pcmBytes.size)
+        System.arraycopy(header, 0, wavBytes, 0, 44)
+        System.arraycopy(pcmBytes, 0, wavBytes, 44, pcmBytes.size)
+        return wavBytes
+    }
+
+    private fun transcribeWithApi(
+        audioBytes: ByteArray,
+        mode: String,
+        apiKey: String,
+        model: String,
+        endpoint: String? = null
+    ): String {
+        val wavBytes = pcmToWav(audioBytes)
+        val urlString = when (mode) {
+            "groq" -> "https://api.groq.com/openai/v1/audio/transcriptions"
+            "openai" -> {
+                val base = if (endpoint.isNullOrBlank()) "https://api.openai.com/v1" else endpoint.trim().removeSuffix("/")
+                "$base/audio/transcriptions"
+            }
+            else -> return ""
+        }
+        
+        val boundary = "Boundary-" + System.currentTimeMillis()
+        val LINE_FEED = "\r\n"
+        
+        val url = java.net.URL(urlString)
+        val conn = url.openConnection() as java.net.HttpURLConnection
+        conn.useCaches = false
+        conn.doOutput = true
+        conn.doInput = true
+        conn.requestMethod = "POST"
+        conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=$boundary")
+        conn.setRequestProperty("Authorization", "Bearer $apiKey")
+        conn.connectTimeout = 15000
+        conn.readTimeout = 15000
+        
+        val outputStream = conn.outputStream
+        val writer = java.io.PrintWriter(outputStream.writer(), true)
+        
+        writer.append("--$boundary").append(LINE_FEED)
+        writer.append("Content-Disposition: form-data; name=\"model\"").append(LINE_FEED)
+        writer.append(LINE_FEED)
+        writer.append(model).append(LINE_FEED)
+        writer.flush()
+        
+        writer.append("--$boundary").append(LINE_FEED)
+        writer.append("Content-Disposition: form-data; name=\"file\"; filename=\"audio.wav\"").append(LINE_FEED)
+        writer.append("Content-Type: audio/wav").append(LINE_FEED)
+        writer.append(LINE_FEED)
+        writer.flush()
+        
+        outputStream.write(wavBytes)
+        outputStream.flush()
+        
+        writer.append(LINE_FEED)
+        writer.append("--$boundary--").append(LINE_FEED)
+        writer.flush()
+        writer.close()
+        
+        val responseCode = conn.responseCode
+        if (responseCode == java.net.HttpURLConnection.HTTP_OK) {
+            val reader = conn.inputStream.bufferedReader()
+            val response = reader.readText()
+            reader.close()
+            val json = org.json.JSONObject(response)
+            return json.optString("text", "")
+        } else {
+            val errorReader = conn.errorStream?.bufferedReader()
+            val errorMsg = errorReader?.readText() ?: "Unknown error"
+            errorReader?.close()
+            throw Exception("API Error $responseCode: $errorMsg")
+        }
     }
 
     override fun onDestroy() {
