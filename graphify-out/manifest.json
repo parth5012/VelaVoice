@@ -1,192 +1,257 @@
 {
   ".claude/settings.json": {
-    "mtime": 1784927806.8885658,
+    "mtime": 1785051377.9077833,
     "ast_hash": "598cb075410bcd95220ac90bbb60344a",
     "semantic_hash": ""
   },
   "App.tsx": {
-    "mtime": 1784961352.227018,
-    "ast_hash": "88f5c692244351aa18776f782b0c7de1",
+    "mtime": 1785057513.5169916,
+    "ast_hash": "5c3202dd12a3659b61f855733d112317",
     "semantic_hash": ""
   },
   "app.json": {
-    "mtime": 1784928442.3952632,
+    "mtime": 1785051377.9222546,
     "ast_hash": "a06a91a910522d29bf5fbcad7e2b0f9a",
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1784928369.7323978,
+    "mtime": 1785051415.5763793,
     "ast_hash": "694eb45917c4bec3acc2357715ccaf49",
     "semantic_hash": ""
   },
   "plugins/withVoiceIme.js": {
-    "mtime": 1784931228.568271,
-    "ast_hash": "704fed4fd1cb64ac63334b2ec53ccc5a",
+    "mtime": 1785054090.1958187,
+    "ast_hash": "3775762fa46a4d17bcc4432afb7e245a",
     "semantic_hash": ""
   },
   "src/native/ModelVerifierModule.kt": {
-    "mtime": 1784930020.660359,
-    "ast_hash": "4fc5ffed82ac995b595555b5edc905c0",
+    "mtime": 1785056279.0525122,
+    "ast_hash": "f8b6ae478dc79e3d693fe200821da891",
     "semantic_hash": ""
   },
   "src/native/TextCleaner.kt": {
-    "mtime": 1784961402.4534705,
-    "ast_hash": "969b61fb54c25b67abdeb79a4f646b24",
+    "mtime": 1785052009.2841637,
+    "ast_hash": "e8af85b1b854398b3a540b4d191553df",
     "semantic_hash": ""
   },
   "src/native/VoiceImePackage.kt": {
-    "mtime": 1784914346.081802,
+    "mtime": 1785052516.0590794,
     "ast_hash": "0e4f272627ad00084e9a7fede774976a",
     "semantic_hash": ""
   },
   "src/native/VoiceInputMethodService.kt": {
-    "mtime": 1784966468.8071356,
-    "ast_hash": "8865bf6d6797d0cf05901793725f0928",
+    "mtime": 1785056434.7556322,
+    "ast_hash": "4fc42e69aaf849e905174c5896efbd3b",
     "semantic_hash": ""
   },
   "src/native/WaveformView.kt": {
-    "mtime": 1784966439.756508,
+    "mtime": 1785052527.0818958,
     "ast_hash": "164e26e8773d9ffe9b573db2a04109ba",
     "semantic_hash": ""
   },
   "src/native/WhisperEngine.kt": {
-    "mtime": 1784917254.735991,
-    "ast_hash": "00db1b9cba3586a03debaa0a1a65bab9",
+    "mtime": 1785051981.744903,
+    "ast_hash": "99e68ab2a2e66268627b2848d7ed9c37",
     "semantic_hash": ""
   },
   "src/services/ModelManager.ts": {
-    "mtime": 1784961159.0057144,
+    "mtime": 1785051415.6226306,
     "ast_hash": "3257e403b72321724f857ac0fcfa1001",
     "semantic_hash": ""
   },
   "tsconfig.json": {
-    "mtime": 1784910529.309242,
+    "mtime": 1785051415.6239445,
     "ast_hash": "a5df9ddad82c56de332cbb7d00dd294b",
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1784922368.3239183,
+    "mtime": 1785051377.9138322,
     "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1784922494.2561958,
+    "mtime": 1785051377.9175303,
     "ast_hash": "8a6643a420fdad6bfb583523bc6cef16",
     "semantic_hash": ""
   },
   "CONTEXT.md": {
-    "mtime": 1784909225.3145437,
+    "mtime": 1785051377.9202478,
     "ast_hash": "8138f30c2c281f612f6c7a856a96a1f7",
     "semantic_hash": ""
   },
   "docs/adr/0001-separate-transcription-ime.md": {
-    "mtime": 1784909225.417561,
+    "mtime": 1785051377.9237628,
     "ast_hash": "1f81e8d37577580141584dcdaf99021e",
     "semantic_hash": ""
   },
   "docs/adr/0002-model-storage-and-access-architecture.md": {
-    "mtime": 1784909225.5176215,
+    "mtime": 1785051377.9237628,
     "ast_hash": "491d855fb3c5f7f5c1ddd11f850ec1b3",
     "semantic_hash": ""
   },
   "docs/adr/0003-hybrid-cleaner-architecture.md": {
-    "mtime": 1784909225.5935307,
+    "mtime": 1785051377.9237628,
     "ast_hash": "43ad2d57163d7bdf1f55a05b07d25960",
     "semantic_hash": ""
   },
   "docs/adr/0004-voice-typing-pane-layout.md": {
-    "mtime": 1784909226.0323613,
+    "mtime": 1785051377.9237628,
     "ast_hash": "859e25bed5feaa21793de15ce1deb3b1",
     "semantic_hash": ""
   },
   "issues.md": {
-    "mtime": 1784909226.6838632,
+    "mtime": 1785051378.034246,
     "ast_hash": "903df2da3e7425a866f5e5be83b1a4f7",
     "semantic_hash": ""
   },
   "spec.md": {
-    "mtime": 1784967214.2182865,
+    "mtime": 1785051415.5763793,
     "ast_hash": "cec1855649e14812457e279a1342f8c3",
     "semantic_hash": ""
   },
   "app.config.js": {
-    "mtime": 1784928279.6058564,
+    "mtime": 1785051377.9202478,
     "ast_hash": "f2c773921633d0faae9491823ee2a686",
     "semantic_hash": ""
   },
   "index.js": {
-    "mtime": 1784924589.8691466,
+    "mtime": 1785051378.0236895,
     "ast_hash": "829d47c34c79ad0512d9efb8602e9b2e",
     "semantic_hash": ""
   },
   "src/native/whisper/ggml-alloc.c": {
-    "mtime": 1784930952.8649316,
+    "mtime": 1785051415.6010377,
     "ast_hash": "3e84f82d6707729742a6036a410cb88b",
     "semantic_hash": ""
   },
   "src/native/whisper/ggml-alloc.h": {
-    "mtime": 1784930952.407545,
+    "mtime": 1785051415.6020374,
     "ast_hash": "626c292ccf61430c689f62001ad5470c",
     "semantic_hash": ""
   },
   "src/native/whisper/ggml-backend.c": {
-    "mtime": 1784930954.6298735,
+    "mtime": 1785051415.6040359,
     "ast_hash": "b146a2a72638506fd6f4100a32fca8b2",
     "semantic_hash": ""
   },
   "src/native/whisper/ggml-backend.h": {
-    "mtime": 1784930953.4378333,
+    "mtime": 1785051415.6050804,
     "ast_hash": "0e4e602819184aecee9cb1035581d1d7",
     "semantic_hash": ""
   },
   "src/native/whisper/ggml-quants.c": {
-    "mtime": 1784930955.689127,
+    "mtime": 1785051415.609668,
     "ast_hash": "ba17709786f0aa5321a7e0a1ed257fb4",
     "semantic_hash": ""
   },
   "src/native/whisper/ggml-quants.h": {
-    "mtime": 1784930955.0909348,
+    "mtime": 1785051415.6106303,
     "ast_hash": "152945ae8a060c2f43fa57c27a315819",
     "semantic_hash": ""
   },
   "src/native/whisper/ggml.c": {
-    "mtime": 1784930951.9391055,
+    "mtime": 1785051415.6146245,
     "ast_hash": "ffdf9e2b2c095eb9b385466f5c7c21af",
     "semantic_hash": ""
   },
   "src/native/whisper/ggml.h": {
-    "mtime": 1784930949.4918537,
+    "mtime": 1785051415.6166668,
     "ast_hash": "1878d09eb35e85b3d8aad300d6ae94b6",
     "semantic_hash": ""
   },
   "src/native/whisper/whisper-jni.cpp": {
-    "mtime": 1784930960.5709229,
+    "mtime": 1785051415.6176364,
     "ast_hash": "31c0a859b29664c4af29c6cf3030aeac",
     "semantic_hash": ""
   },
   "src/native/whisper/whisper.cpp": {
-    "mtime": 1784930948.5814447,
+    "mtime": 1785051415.6196694,
     "ast_hash": "104c7467f92504888fa6e462b635ae12",
     "semantic_hash": ""
   },
   "src/native/whisper/whisper.h": {
-    "mtime": 1784930946.7189293,
+    "mtime": 1785051415.62167,
     "ast_hash": "eaabbfbdc8cd6e6c5a29922a67184ca6",
     "semantic_hash": ""
   },
   "src/native/whisper/CMakeLists.txt": {
-    "mtime": 1784930966.4861772,
+    "mtime": 1785051415.6000383,
     "ast_hash": "4f1ba165b0e72df154b41b22f4f78fcf",
     "semantic_hash": ""
   },
   "src/native/whisper/ggml-backend-impl.h": {
-    "mtime": 1784955552.5148537,
+    "mtime": 1785051415.6030376,
     "ast_hash": "d87e8e237fae6d674d1730ed12ae9c3e",
     "semantic_hash": ""
   },
   "src/native/whisper/ggml-impl.h": {
-    "mtime": 1784955552.878289,
+    "mtime": 1785051415.6070278,
     "ast_hash": "dff8963206b278531362f0d86ccc3828",
+    "semantic_hash": ""
+  },
+  "src/components/OverlayLogo.tsx": {
+    "mtime": 1785054928.3459246,
+    "ast_hash": "adaee16d4701deda3139787bced81dfc",
+    "semantic_hash": ""
+  },
+  "src/native/VoiceAccessibilityService.kt": {
+    "mtime": 1785056499.7210724,
+    "ast_hash": "994009eeb6e57585d4eeb5f9b8a5e3db",
+    "semantic_hash": ""
+  },
+  "ui/lumina_sonic/DESIGN.md": {
+    "mtime": 1785051415.6239445,
+    "ast_hash": "ff12594b973ffc0e3a0fd34cb482ed95",
+    "semantic_hash": ""
+  },
+  "ui/shader/code.html": {
+    "mtime": 1785051415.6239445,
+    "ast_hash": "35dce17ac3447758fd7d102df9e9baba",
+    "semantic_hash": ""
+  },
+  "ui/the_engine_room/code.html": {
+    "mtime": 1785051415.6239445,
+    "ast_hash": "8ec0f8fb2cd7b53547e650fecafe67c8",
+    "semantic_hash": ""
+  },
+  "ui/the_studio/code.html": {
+    "mtime": 1785051415.6239445,
+    "ast_hash": "13e6ea6da031cd5e63dd52d23132f35a",
+    "semantic_hash": ""
+  },
+  "ui/the_voice_hub/code.html": {
+    "mtime": 1785051415.6395426,
+    "ast_hash": "6b9a2c62d5383232b8d950a9b4cb0e63",
+    "semantic_hash": ""
+  },
+  "ui/velavoice_project_prd.md": {
+    "mtime": 1785051415.6395426,
+    "ast_hash": "8fc1735ee32550b2e83c145e42c3a97e",
+    "semantic_hash": ""
+  },
+  "assets/logo.png": {
+    "mtime": 1785051415.6239445,
+    "ast_hash": "46577796b7d9b1fa2ef32aa9b0e3d793",
+    "semantic_hash": ""
+  },
+  "ui/logo/screen.png": {
+    "mtime": 1785051415.6239445,
+    "ast_hash": "46577796b7d9b1fa2ef32aa9b0e3d793",
+    "semantic_hash": ""
+  },
+  "ui/the_engine_room/screen.png": {
+    "mtime": 1785051415.6239445,
+    "ast_hash": "4914ef65a38af4a80044f563a581fbe0",
+    "semantic_hash": ""
+  },
+  "ui/the_studio/screen.png": {
+    "mtime": 1785051415.6239445,
+    "ast_hash": "1c510ae7af0da5127672d8523f28a282",
+    "semantic_hash": ""
+  },
+  "docs/blueprint-sdk-heliboard.md": {
+    "mtime": 1785055792.191859,
+    "ast_hash": "8f3a46b797817dde81c926b0aee5a497",
     "semantic_hash": ""
   }
 }

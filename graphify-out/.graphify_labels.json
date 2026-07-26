@@ -88,5 +88,21 @@
   "86": "whisper_batch",
   "87": "index.js",
   "88": "ggml_add_rel_pos_impl",
-  "99": "app.config.js"
+  "89": "Boolean",
+  "90": "String",
+  "91": "ggml_free",
+  "92": "whisper_bench_ggml_mul_mat_str",
+  "93": "ggml_set_f32_1d",
+  "94": "ggml_set_impl",
+  "95": "whisper_pair",
+  "96": "ggml_map_custom1_impl_f32",
+  "97": "ggml_dup_impl",
+  "98": "ggml_compute_forward_repeat_back_f32",
+  "99": "app.config.js",
+  "100": "ggml_compute_forward_div_f32",
+  "101": "ggml_compute_forward_elu_f32",
+  "102": "ggml_compute_forward_sqr_f32",
+  "103": "Float",
+  "104": "App.tsx",
+  "105": "OverlayLogo.tsx"
 }
