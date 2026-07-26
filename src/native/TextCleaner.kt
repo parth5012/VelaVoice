@@ -15,7 +15,7 @@ class TextCleaner {
             return false
         }
         this.modelPath = modelPath
-        // real implementation, load ONNX Runtime / MediaPipe LLM Inference JNI
+        // In real implementation, load ONNX Runtime / MediaPipe LLM Inference JNI
         Log.d("TextCleaner", "Initialized on-device LLM Cleaner model: $modelPath")
         isLlmInitialized = true
         return true
@@ -24,12 +24,12 @@ class TextCleaner {
     fun clean(context: Context, text: String, useLlm: Boolean): String {
         // Step 1: Rule-based pre-processor (Regex) run first
         val regexCleaned = cleanRuleBased(context, text)
-        
-        // Step 2: If LLM is requested and initialized, run advanced cleanup
+
+        // Step 2: If LLM requested and initialized, run advanced cleanup
         if (useLlm && isLlmInitialized) {
             return cleanLlm(regexCleaned)
         }
-        
+
         return regexCleaned
     }
 
@@ -39,7 +39,7 @@ class TextCleaner {
         // Apply personal dictionary replacements first
         var cleaned = applyPersonalDictionary(context, text)
 
-        // Regex to remove common filler words case-insensitively
+        // Regex: remove common filler words case-insensitively
         val fillersRegex = Regex("(?i)\\b(um|ah|like|eh|uh|er|hm|oh)\\b,?\\s*")
         cleaned = cleaned.replace(fillersRegex, "")
 
@@ -56,7 +56,7 @@ class TextCleaner {
         try {
             db = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
             val cursor = db.rawQuery(
-                "SELECT original_word, replacement FROM personal_dictionary ORDER BY priority DESC, id ASC",
+                "SELECT original_word, replacement FROM personal_dictionary ORDER BY priority DESC, name ASC",
                 null
             )
             if (cursor.moveToFirst()) {
@@ -95,9 +95,9 @@ class TextCleaner {
     private fun cleanLlm(text: String): String {
         // Simulated offline LLM inference for text correction (grammar, capitalisation, punctuation)
         Log.d("TextCleaner", "Running LLM grammatical/semantic refinement on: '$text'")
-        
+
         if (text.isEmpty()) return ""
-        
+
         // Heuristic correction simulator:
         // 1. Capitalize sentences
         val sentences = text.split(Regex("(?<=[.!?])\\s+"))
@@ -113,13 +113,14 @@ class TextCleaner {
                 ""
             }
         }
+
         var cleanedText = formattedSentences.joinToString(" ")
-        
-        // 2. Ensure it ends with punctuation
+
+        // 2. Ensure ends with punctuation
         if (cleanedText.isNotEmpty() && !cleanedText.last().toString().matches(Regex("[.!?]"))) {
             cleanedText += "."
         }
-        
+
         // 3. Common voice typos corrections
         cleanedText = cleanedText
             .replace(" i ", " I ")
@@ -127,7 +128,7 @@ class TextCleaner {
             .replace(" i've ", " I've ")
             .replace(" i'll ", " I'll ")
             .replace(" i'd ", " I'd ")
-            
+
         return cleanedText
     }
 }

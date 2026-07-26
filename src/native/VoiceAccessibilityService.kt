@@ -35,28 +35,28 @@ import kotlin.math.sqrt
 class VoiceAccessibilityService : AccessibilityService() {
     private var windowManager: WindowManager? = null
     private var floatingLayout: FrameLayout? = null
-    
+
     private var isRecording = false
     private var audioRecord: AudioRecord? = null
     private var recordingThread: Thread? = null
     private val recordedAudioData = ByteArrayOutputStream()
-    
+
     private lateinit var statusText: TextView
     private lateinit var waveformView: WaveformView
     private lateinit var micButton: Button
     private lateinit var controlPane: LinearLayout
     private lateinit var dragHandle: View
-    
+
     private val SAMPLE_RATE = 16000
     private val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
     private val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
     private val BUFFER_SIZE = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT)
-    
+
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         val eventType = event.eventType
-        if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED || 
+        if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ||
             eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED) {
-            
+
             val keyboardVisible = isKeyboardVisible()
             floatingLayout?.post {
                 floatingLayout?.visibility = if (keyboardVisible) View.VISIBLE else View.GONE
@@ -79,23 +79,23 @@ class VoiceAccessibilityService : AccessibilityService() {
         }
         return false
     }
-    
+
     override fun onInterrupt() {
-        // Not used
+        // Not needed
     }
-    
+
     override fun onServiceConnected() {
         super.onServiceConnected()
         Log.d("VoiceAccessibility", "Service Connected")
         setupFloatingButton()
     }
-    
+
     private fun setupFloatingButton() {
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val density = resources.displayMetrics.density
-        
+
         floatingLayout = FrameLayout(this)
-        
+
         val floatingLayoutParams = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -105,26 +105,27 @@ class VoiceAccessibilityService : AccessibilityService() {
         ).apply {
             gravity = Gravity.TOP or Gravity.START
             x = (20 * density).toInt()
-            y = (200 * density).toInt()
+            y = (20 * density).toInt()
         }
-        
+
         val isDark = true
         val baseBgColor = Color.parseColor(if (isDark) "#1e1e2e" else "#eff1f5")
         val crustColor = Color.parseColor(if (isDark) "#11111b" else "#dce0e8")
         val mainTextColor = Color.parseColor(if (isDark) "#cdd6f4" else "#4c4f69")
         val micColor = Color.parseColor(if (isDark) "#a6e3a1" else "#40a02b")
         val micTextColor = Color.parseColor("#11111b")
-        
+
         val sansSerifMedium = Typeface.create("sans-serif-medium", Typeface.NORMAL)
         val sansSerifLight = Typeface.create("sans-serif-light", Typeface.NORMAL)
-        
+
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(baseBgColor)
             setPadding((8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt())
             background = createCapsuleDrawable(baseBgColor, 16 * density)
         }
-        
+
+
         val headerRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -135,17 +136,18 @@ class VoiceAccessibilityService : AccessibilityService() {
                 bottomMargin = (4 * density).toInt()
             }
         }
-        
+
+
         dragHandle = View(this).apply {
             layoutParams = LinearLayout.LayoutParams((32 * density).toInt(), (8 * density).toInt()).apply {
                 weight = 1f
             }
             background = createCapsuleDrawable(crustColor, 4 * density)
         }
-        
+
         headerRow.addView(dragHandle)
         container.addView(headerRow)
-        
+
         controlPane = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             visibility = View.GONE
@@ -154,7 +156,8 @@ class VoiceAccessibilityService : AccessibilityService() {
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
         }
-        
+
+
         statusText = TextView(this).apply {
             text = "Ready"
             textSize = 12f
@@ -163,7 +166,8 @@ class VoiceAccessibilityService : AccessibilityService() {
             gravity = Gravity.CENTER
             setPadding(0, 0, 0, (4 * density).toInt())
         }
-        
+
+
         waveformView = WaveformView(this).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -172,11 +176,11 @@ class VoiceAccessibilityService : AccessibilityService() {
                 bottomMargin = (8 * density).toInt()
             }
         }
-        
+
         controlPane.addView(statusText)
         controlPane.addView(waveformView)
         container.addView(controlPane)
-        
+
         micButton = Button(this).apply {
             layoutParams = LinearLayout.LayoutParams(
                 (56 * density).toInt(),
@@ -189,15 +193,15 @@ class VoiceAccessibilityService : AccessibilityService() {
                 toggleRecording()
             }
         }
-        
+
         container.addView(micButton)
         floatingLayout?.addView(container)
-        
+
         var initialX = 0
         var initialY = 0
         var initialTouchX = 0f
         var initialTouchY = 0f
-        
+
         dragHandle.setOnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
@@ -220,7 +224,7 @@ class VoiceAccessibilityService : AccessibilityService() {
         floatingLayout?.visibility = if (isKeyboardVisible()) View.VISIBLE else View.GONE
         windowManager?.addView(floatingLayout, floatingLayoutParams)
     }
-    
+
     private fun styleButton(button: Button, text: String, bgColor: Int, textColor: Int, density: Float, typeface: Typeface) {
         button.apply {
             this.text = text
@@ -231,7 +235,8 @@ class VoiceAccessibilityService : AccessibilityService() {
             this.gravity = Gravity.CENTER
         }
     }
-    
+
+
     private fun createCapsuleDrawable(backgroundColor: Int, cornerRadius: Float): GradientDrawable {
         return GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
@@ -239,7 +244,7 @@ class VoiceAccessibilityService : AccessibilityService() {
             setCornerRadius(cornerRadius)
         }
     }
-    
+
     private fun toggleRecording() {
         if (!isRecording) {
             startRecording()
@@ -247,20 +252,20 @@ class VoiceAccessibilityService : AccessibilityService() {
             stopRecording(runCleaner = true)
         }
     }
-    
+
     private fun startRecording() {
         if (isRecording) return
         isRecording = true
         recordedAudioData.reset()
         waveformView.clear()
-        
+
         controlPane.visibility = View.VISIBLE
         statusText.text = "Recording..."
-        
+
         val density = resources.displayMetrics.density
         val micRecordingColor = Color.parseColor("#f38ba8")
         micButton.background = createCapsuleDrawable(micRecordingColor, 100f * density)
-        
+
         try {
             audioRecord = AudioRecord(
                 MediaRecorder.AudioSource.MIC,
@@ -269,15 +274,15 @@ class VoiceAccessibilityService : AccessibilityService() {
                 AUDIO_FORMAT,
                 BUFFER_SIZE
             )
-            
+
             if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
                 statusText.text = "Mic initialization failed"
                 isRecording = false
                 return
             }
-            
+
             audioRecord?.startRecording()
-            
+
             recordingThread = Thread({
                 val buffer = ShortArray(BUFFER_SIZE / 2)
                 val byteBuffer = ByteArray(BUFFER_SIZE)
@@ -292,16 +297,17 @@ class VoiceAccessibilityService : AccessibilityService() {
                             byteBuffer[i * 2 + 1] = ((shortVal.toInt() shr 8) and 0xff).toByte()
                         }
                         recordedAudioData.write(byteBuffer, 0, readResult * 2)
-                        
-                        val rms = sqrt(sum / readResult)
-                        val normalized = (rms / 32768.0).toFloat()
+
+                        val rmss = sqrt(sum / readResult)
+                        val normalized = (rmss / 32768.0f).toFloat()
                         waveformView.post {
                             waveformView.addAmplitude(normalized)
                         }
                     }
                 }
-            }, "VoiceAccessibilityRecordThread")
-            
+                Log.d("VoiceAccessibilityRecordThread", "Recording thread stopped")
+            })
+
             recordingThread?.start()
         } catch (e: SecurityException) {
             statusText.text = "Mic permission denied"
@@ -311,11 +317,11 @@ class VoiceAccessibilityService : AccessibilityService() {
             isRecording = false
         }
     }
-    
+
     private fun stopRecording(runCleaner: Boolean) {
         if (!isRecording) return
         isRecording = false
-        
+
         try {
             audioRecord?.stop()
             audioRecord?.release()
@@ -325,64 +331,61 @@ class VoiceAccessibilityService : AccessibilityService() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        
+
         statusText.text = "Processing..."
         val audioBytes = recordedAudioData.toByteArray()
-        
+
         Thread({
             val whisperPath = getWhisperModelPath(this@VoiceAccessibilityService)
             val whisper = WhisperEngine()
-            
-            val rawTranscript = if (whisperPath != null && whisper.init(whisperPath)) {
+
+            val rawTranscript = if (whisperPath != null) {
+                whisper.init(whisperPath)
                 whisper.transcribe(audioBytes)
             } else {
                 val seconds = (audioBytes.size / 2) / 16000f
-                if (seconds < 1f) {
+                val fallback = if (seconds < 1f) {
                     ""
                 } else if (seconds < 3f) {
                     "Hello, testing Vela Voice floating transcription overlay."
                 } else {
-                    "Thank you for choosing Vela Voice. This is a longer offline transcription generated on-device using the Whisper model."
+                    "Thank you for choosing Vela Voice. This longer offline transcription was generated on-device using the Whisper model."
                 }
+                fallback
             }
+
             whisper.free()
-            
+
             val prefs = this@VoiceAccessibilityService.getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
             val useLlm = prefs.getBoolean("useLlmCleaner", false)
-            
+
             val cleaner = TextCleaner()
             val finalTranscript = if (rawTranscript.isNotEmpty()) {
-                if (useLlm) {
-                    val llmPath = getLlmModelPath(this@VoiceAccessibilityService)
-                    if (llmPath != null) {
-                        cleaner.initLlm(llmPath)
-                    }
-                }
                 cleaner.clean(this@VoiceAccessibilityService, rawTranscript, useLlm)
             } else {
-                ""
+                rawTranscript
             }
-            
+
             Handler(Looper.getMainLooper()).post {
                 if (finalTranscript.isNotEmpty()) {
                     insertText(finalTranscript)
                 }
-                
+
                 statusText.text = "Ready"
                 controlPane.visibility = View.GONE
-                
+
                 val density = resources.displayMetrics.density
                 val micColor = Color.parseColor("#a6e3a1")
                 micButton.background = createCapsuleDrawable(micColor, 100f * density)
             }
         }).start()
     }
-    
+
     private fun insertText(text: String) {
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText("transcription", text)
         clipboard.setPrimaryClip(clip)
-        
+
         val focusNode = findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
         if (focusNode != null) {
             focusNode.performAction(AccessibilityNodeInfo.ACTION_PASTE)
@@ -394,11 +397,12 @@ class VoiceAccessibilityService : AccessibilityService() {
             }
         }
     }
-    
+
     private fun findEditableNode(node: AccessibilityNodeInfo): AccessibilityNodeInfo? {
         if (node.isEditable) {
             return node
         }
+
         for (i in 0 until node.childCount) {
             val child = node.getChild(i) ?: continue
             val result = findEditableNode(child)
@@ -406,7 +410,7 @@ class VoiceAccessibilityService : AccessibilityService() {
         }
         return null
     }
-    
+
     private fun findDatabaseFile(context: Context): File? {
         val paths = listOf(
             context.getDatabasePath("models.db"),
@@ -420,14 +424,14 @@ class VoiceAccessibilityService : AccessibilityService() {
         }
         return null
     }
-    
+
     private fun getWhisperModelPath(context: Context): String? {
         val dbFile = findDatabaseFile(context) ?: return null
         var db: SQLiteDatabase? = null
         var path: String? = null
         try {
             db = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-            val cursor = db.rawQuery("SELECT path FROM models WHERE id = 'whisper-tiny-en' AND status = 'completed' LIMIT 1", null)
+            val cursor = db.rawQuery("SELECT path FROM models WHERE name = 'whisper-tiny-en' AND status = 'completed' LIMIT 1", null)
             if (cursor.moveToFirst()) {
                 path = cursor.getString(0)
             }
@@ -439,14 +443,14 @@ class VoiceAccessibilityService : AccessibilityService() {
         }
         return path
     }
-    
+
     private fun getLlmModelPath(context: Context): String? {
         val dbFile = findDatabaseFile(context) ?: return null
         var db: SQLiteDatabase? = null
         var path: String? = null
         try {
             db = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-            val cursor = db.rawQuery("SELECT path FROM models WHERE id = 'cleaner-llama-3b' AND status = 'completed' LIMIT 1", null)
+            val cursor = db.rawQuery("SELECT path FROM models WHERE name = 'cleaner-llama-3b' AND status = 'completed' LIMIT 1", null)
             if (cursor.moveToFirst()) {
                 path = cursor.getString(0)
             }
@@ -458,7 +462,7 @@ class VoiceAccessibilityService : AccessibilityService() {
         }
         return path
     }
-    
+
     override fun onDestroy() {
         super.onDestroy()
         isRecording = false

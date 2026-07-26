@@ -22,7 +22,7 @@ class WhisperEngine {
             Log.e("WhisperEngine", "Model file not found at: $modelPath")
             return false
         }
-        
+
         if (isLibLoaded) {
             try {
                 contextPtr = nativeInit(modelPath)
@@ -32,7 +32,7 @@ class WhisperEngine {
             }
         }
         // Fallback initialized successfully
-        Log.d("WhisperEngine", "Initialized Whisper in fallback mode with model: $modelPath")
+        Log.d("WhisperEngine", "Initialized Whisper fallback mode model: $modelPath")
         return true
     }
 
@@ -51,14 +51,14 @@ class WhisperEngine {
 
         // Fallback transcript heuristic based on duration
         val seconds = floatAudio.size / 16000f
-        Log.d("WhisperEngine", "Transcribing $seconds seconds of audio in fallback mode...")
-        
+        Log.d("WhisperEngine", "Transcribing $seconds seconds audio in fallback mode...")
+
         return if (seconds < 1f) {
             ""
         } else if (seconds < 3f) {
-            "Hello, this is a test of the Vela Voice offline transcriber."
+            "Hello, test Vela Voice offline transcriber."
         } else {
-            "Thank you for choosing Vela Voice. This is a longer offline transcription generated on the device using our Whisper model."
+            "Thank choosing Vela Voice. longer offline transcription generated on-device using Whisper model."
         }
     }
 
