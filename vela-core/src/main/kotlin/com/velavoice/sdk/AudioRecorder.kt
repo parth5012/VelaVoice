@@ -112,7 +112,7 @@ class AudioRecorder {
                     rawTranscript
                 }
                 val durationMs = ((audioBytes.size / 2) / 16L) // 16 samples/ms
-                callback.onResult(TranscriptionResult(rawTranscript, cleanedTranscript, durationMs))
+                callback.onResult(TranscriptionResult(rawTranscript, cleanedTranscript, durationMs, audioBytes))
             } catch (e: Exception) {
                 callback.onError(WhisperError("Transcription failed: " + e.message))
             }

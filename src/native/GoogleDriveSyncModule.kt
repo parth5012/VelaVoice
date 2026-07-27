@@ -147,7 +147,14 @@ class GoogleDriveSyncModule(reactContext: ReactApplicationContext) :
                     try {
                         val pair = TranscriptionStorage.readTranscriptionFile(file)
                         if (pair != null) {
-                            uploadTranscription(accessToken, folderId, file, pair)
+                            uploadTextTranscription(accessToken, folderId, file, pair)
+                            // Upload matching audio if present
+                            if (pair.audioFileName != null) {
+                                val audioFile = TranscriptionStorage.getAudioFile(reactApplicationContext, file.name)
+                                if (audioFile != null) {
+                                    uploadAudioFile(accessToken, folderId, audioFile)
+                                }
+                            }
                             TranscriptionStorage.markSynced(file)
                             uploaded++
                             results.put(JSONObject().apply {
@@ -312,13 +319,10 @@ class GoogleDriveSyncModule(reactContext: ReactApplicationContext) :
     }
 
     // ──────────────────────────────────────────────
-    // Drive API: file upload (multipart)
+    // Drive API: text transcription upload (multipart)
     // ──────────────────────────────────────────────
 
-    /**
-     * Upload a single transcription file to Google Drive using multipart upload.
-     */
-    private fun uploadTranscription(
+    private fun uploadTextTranscription(
         accessToken: String,
         folderId: String,
         file: File,
@@ -355,6 +359,10 @@ class GoogleDriveSyncModule(reactContext: ReactApplicationContext) :
                 appendLine()
                 appendLine("--- CLEANED TRANSCRIPT ---")
                 appendLine(pair.cleaned)
+                if (pair.audioFileName != null) {
+                    appendLine()
+                    appendLine("Audio: ${pair.audioFileName}")
+                }
                 appendLine()
                 appendLine("=== End ===")
             }
@@ -386,17 +394,89 @@ class GoogleDriveSyncModule(reactContext: ReactApplicationContext) :
                 val reader = BufferedReader(InputStreamReader(conn.inputStream, Charsets.UTF_8))
                 val response = reader.readText()
                 reader.close()
-                android.util.Log.d("GoogleDriveSync", "Uploaded ${file.name}: $response")
+                android.util.Log.d("GoogleDriveSync", "Uploaded text: ${file.name}: $response")
                 true
             } else {
                 val errorReader = conn.errorStream?.bufferedReader(Charsets.UTF_8)
                 val errorMsg = errorReader?.readText() ?: "HTTP $responseCode"
                 errorReader?.close()
-                android.util.Log.e("GoogleDriveSync", "Upload failed: $errorMsg")
+                android.util.Log.e("GoogleDriveSync", "Text upload failed: $errorMsg")
                 false
             }
         } catch (e: Exception) {
-            android.util.Log.e("GoogleDriveSync", "Upload error for ${file.name}", e)
+            android.util.Log.e("GoogleDriveSync", "Text upload error for ${file.name}", e)
+            false
+        }
+    }
+
+    // ──────────────────────────────────────────────
+    // Drive API: audio file upload (binary)
+    // ──────────────────────────────────────────────
+
+    private fun uploadAudioFile(
+        accessToken: String,
+        folderId: String,
+        audioFile: File
+    ): Boolean {
+        return try {
+            val boundary = "Boundary_${System.currentTimeMillis()}"
+            val lineFeed = "\r\n"
+            val audioBytes = audioFile.readBytes()
+
+            val url = URL("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart")
+            val conn = url.openConnection() as HttpURLConnection
+            conn.requestMethod = "POST"
+            conn.doOutput = true
+            conn.setRequestProperty("Authorization", "Bearer $accessToken")
+            conn.setRequestProperty("Content-Type", "multipart/related; boundary=$boundary")
+            conn.connectTimeout = 30000
+            conn.readTimeout = 30000
+
+            // Metadata
+            val metadata = JSONObject().apply {
+                put("name", audioFile.name)
+                put("parents", JSONArray().apply { put(folderId) })
+                put("description", "Vela Voice audio recording (16-bit 16kHz mono WAV)")
+            }
+
+            conn.outputStream.use { os ->
+                val writer = OutputStreamWriter(os, Charsets.UTF_8)
+
+                // First part: JSON metadata
+                writer.append("--$boundary").append(lineFeed)
+                writer.append("Content-Type: application/json; charset=UTF-8").append(lineFeed)
+                writer.append(lineFeed)
+                writer.append(metadata.toString()).append(lineFeed)
+                writer.flush()
+
+                // Second part: binary audio
+                writer.append("--$boundary").append(lineFeed)
+                writer.append("Content-Type: audio/wav").append(lineFeed)
+                writer.append("Content-Transfer-Encoding: binary").append(lineFeed)
+                writer.append(lineFeed)
+                writer.flush()
+                os.write(audioBytes)
+                os.flush()
+                writer.append(lineFeed).flush()
+
+                // Close boundary
+                writer.append("--$boundary--").append(lineFeed)
+                writer.flush()
+            }
+
+            val responseCode = conn.responseCode
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                android.util.Log.d("GoogleDriveSync", "Uploaded audio: ${audioFile.name}")
+                true
+            } else {
+                val errorReader = conn.errorStream?.bufferedReader(Charsets.UTF_8)
+                val errorMsg = errorReader?.readText() ?: "HTTP $responseCode"
+                errorReader?.close()
+                android.util.Log.e("GoogleDriveSync", "Audio upload failed: $errorMsg")
+                false
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("GoogleDriveSync", "Audio upload error for ${audioFile.name}", e)
             false
         }
     }

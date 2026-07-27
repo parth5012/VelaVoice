@@ -218,12 +218,13 @@ class VoiceInputMethodService : InputMethodService() {
                             timerHandler?.removeCallbacksAndMessages(null)
                             voiceRecordingPane.statusText.text = "Done"
                             val finalTranscript = result.cleanedTranscript
-                            // Auto-save transcription pair to local storage
+                            // Auto-save transcription pair + audio to local storage
                             TranscriptionStorage.save(
                                 this@VoiceInputMethodService,
                                 raw = result.rawTranscript,
                                 cleaned = result.cleanedTranscript,
-                                durationMs = result.durationMs
+                                durationMs = result.durationMs,
+                                audioBytes = result.audioBytes
                             )
                             voiceRecordingPane.post {
                                 val ic = currentInputConnection

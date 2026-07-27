@@ -438,14 +438,15 @@ class VoiceAccessibilityService : AccessibilityService() {
                 rawTranscript
             }
 
-        // Auto-save transcription pair to local storage
+        // Auto-save transcription pair + audio to local storage
         if (rawTranscript.isNotEmpty()) {
             val durationMs = ((audioBytes.size / 2) / 16L)
             TranscriptionStorage.save(
                 this@VoiceAccessibilityService,
                 raw = rawTranscript,
                 cleaned = finalTranscript,
-                durationMs = durationMs
+                durationMs = durationMs,
+                audioBytes = audioBytes
             )
         }
 
