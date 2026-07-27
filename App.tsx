@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -31,6 +31,38 @@ interface Recording {
   cleaned: string;
   wave: number[];
 }
+
+// Memoized recording card for FlatList performance
+const RecordingCard = React.memo(({ item, isSelected, onPress }: {
+  item: Recording;
+  isSelected: boolean;
+  onPress: () => void;
+}) => (
+  <TouchableOpacity
+    style={[styles.recordingCard, isSelected && styles.recordingCardSelected]}
+    onPress={onPress}
+  >
+    <View style={styles.recCardHeader}>
+      <View>
+        <Text style={styles.recTitle}>{item.title}</Text>
+        <Text style={styles.recDate}>{item.date} • {item.size}</Text>
+      </View>
+      <Text style={styles.recChevron}>➔</Text>
+    </View>
+    <View style={styles.recWaveContainer}>
+      {item.wave.map((h, i) => (
+        <View
+          key={i}
+          style={[
+            styles.recWaveBar,
+            { height: h },
+            isSelected ? { backgroundColor: '#62f9ee' } : { backgroundColor: '#859491' }
+          ]}
+        />
+      ))}
+    </View>
+  </TouchableOpacity>
+));
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'hub' | 'studio' | 'engine'>('hub');
@@ -164,7 +196,7 @@ export default function App() {
     };
   }, [isRecording]);
 
-  const loadModels = async () => {
+  const loadModels = useCallback(async () => {
     try {
       const list = await ModelManager.getModels();
       setModels(list);
@@ -173,18 +205,18 @@ export default function App() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const loadDictionary = async () => {
+  const loadDictionary = useCallback(async () => {
     try {
       const list = await ModelManager.getDictionaryEntries();
       setDictionary(list);
     } catch (e) {
       console.error('Failed to load dictionary', e);
     }
-  };
+  }, []);
 
-  const handleAddEntry = async () => {
+  const handleAddEntry = useCallback(async () => {
     if (!originalWord.trim() || !replacement.trim()) {
       alert('Please fill out both the original word and its replacement.');
       return;
@@ -206,9 +238,9 @@ export default function App() {
       console.error('Failed to add dictionary entry', e);
       alert('Failed to add entry. Word might already exist.');
     }
-  };
+  }, [originalWord, replacement, language, priority, loadDictionary]);
 
-  const handleDeleteEntry = async (id?: number) => {
+  const handleDeleteEntry = useCallback(async (id?: number) => {
     if (id === undefined) return;
     try {
       await ModelManager.deleteDictionaryEntry(id);
@@ -217,31 +249,33 @@ export default function App() {
       console.error('Failed to delete dictionary entry', e);
       alert('Failed to delete entry.');
     }
-  };
+  }, [loadDictionary]);
 
-  const checkAccessibilityStatus = async () => {
+  const checkAccessibilityStatus = useCallback(async () => {
     if (NativeModules.ModelVerifier) {
       try {
-        const enabled = await NativeModules.ModelVerifier.isAccessibilityServiceEnabled();
-        const useLlm = await NativeModules.ModelVerifier.getUseLlmCleaner();
+        // Batch load accessibility + all preferences in parallel
+        const [enabled, useLlm, prefsJson] = await Promise.all([
+          NativeModules.ModelVerifier.isAccessibilityServiceEnabled(),
+          NativeModules.ModelVerifier.getUseLlmCleaner(),
+          NativeModules.ModelVerifier.getAllPreferences()
+            .then((json: string) => JSON.parse(json))
+            .catch(() => null)
+        ]);
+
         setIsAccessibilityEnabled(enabled);
         setUseLlmCleaner(useLlm);
-        
-        const mode = await NativeModules.ModelVerifier.getStringPreference('transcriptionMode', 'local');
-        const groqKey = await NativeModules.ModelVerifier.getStringPreference('groqApiKey', '');
-        const groqM = await NativeModules.ModelVerifier.getStringPreference('groqModel', 'whisper-large-v3');
-        const openaiKey = await NativeModules.ModelVerifier.getStringPreference('openaiApiKey', '');
-        const openaiM = await NativeModules.ModelVerifier.getStringPreference('openaiModel', 'whisper-1');
-        const openaiUrl = await NativeModules.ModelVerifier.getStringPreference('openaiEndpoint', 'https://api.openai.com/v1');
 
-        setTranscriptionMode(mode || 'local');
-        setGroqApiKey(groqKey || '');
-        setGroqModel(groqM || 'whisper-large-v3');
-        setOpenaiApiKey(openaiKey || '');
-        setOpenaiModel(openaiM || 'whisper-1');
-        setOpenaiEndpoint(openaiUrl || 'https://api.openai.com/v1');
+        if (prefsJson) {
+          setTranscriptionMode(prefsJson.transcriptionMode || 'local');
+          setGroqApiKey(prefsJson.groqApiKey || '');
+          setGroqModel(prefsJson.groqModel || 'whisper-large-v3');
+          setOpenaiApiKey(prefsJson.openaiApiKey || '');
+          setOpenaiModel(prefsJson.openaiModel || 'whisper-1');
+          setOpenaiEndpoint(prefsJson.openaiEndpoint || 'https://api.openai.com/v1');
+        }
       } catch (e) {
-        console.error('Failed to check accessibility status', e);
+        console.error('Failed to load preferences', e);
       }
     }
   };
@@ -304,7 +338,7 @@ export default function App() {
     }
   };
 
-  const handleDownload = async (id: string) => {
+  const handleDownload = useCallback(async (id: string) => {
     setDownloadProgress((prev) => ({ ...prev, [id]: 0 }));
     setModels((prevModels) =>
       prevModels.map((m) => (m.id === id ? { ...m, status: 'downloading' } : m))
@@ -319,16 +353,16 @@ export default function App() {
     } finally {
       loadModels();
     }
-  };
+  }, [loadModels]);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     try {
       await ModelManager.deleteModel(id);
       loadModels();
     } catch (e) {
       console.error('Failed to delete model', e);
     }
-  };
+  }, [loadModels]);
 
   // Run Personal Dictionary Clean simulation
   const runCustomClean = () => {
@@ -431,35 +465,14 @@ export default function App() {
           renderItem={({ item }) => {
             const isSelected = item.id === selectedRecordingId;
             return (
-              <TouchableOpacity
-                style={[styles.recordingCard, isSelected && styles.recordingCardSelected]}
+              <RecordingCard
+                item={item}
+                isSelected={isSelected}
                 onPress={() => {
                   setSelectedRecordingId(item.id);
                   setActiveTab('studio');
                 }}
-              >
-                <View style={styles.recCardHeader}>
-                  <View>
-                    <Text style={styles.recTitle}>{item.title}</Text>
-                    <Text style={styles.recDate}>{item.date} • {item.size}</Text>
-                  </View>
-                  <Text style={styles.recChevron}>➔</Text>
-                </View>
-
-                {/* Animated Waveform representation */}
-                <View style={styles.recWaveContainer}>
-                  {item.wave.map((h, i) => (
-                    <View
-                      key={i}
-                      style={[
-                        styles.recWaveBar,
-                        { height: h },
-                        isSelected ? { backgroundColor: '#62f9ee' } : { backgroundColor: '#859491' }
-                      ]}
-                    />
-                  ))}
-                </View>
-              </TouchableOpacity>
+              />
             );
           }}
         />

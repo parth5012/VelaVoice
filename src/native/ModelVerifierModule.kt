@@ -141,4 +141,26 @@ class ModelVerifierModule(reactContext: ReactApplicationContext) : ReactContextB
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         reactApplicationContext.startActivity(intent)
     }
+
+    /**
+     * Batch load all preferences in a single native call.
+     * Returns a JSON string containing all Vela settings at once.
+     */
+    @ReactMethod
+    fun getAllPreferences(promise: Promise) {
+        try {
+            val prefs = reactApplicationContext.getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
+            val json = org.json.JSONObject()
+            json.put("useLlmCleaner", prefs.getBoolean("useLlmCleaner", false))
+            json.put("transcriptionMode", prefs.getString("transcriptionMode", "local") ?: "local")
+            json.put("groqApiKey", prefs.getString("groqApiKey", "") ?: "")
+            json.put("groqModel", prefs.getString("groqModel", "whisper-large-v3") ?: "whisper-large-v3")
+            json.put("openaiApiKey", prefs.getString("openaiApiKey", "") ?: "")
+            json.put("openaiModel", prefs.getString("openaiModel", "whisper-1") ?: "whisper-1")
+            json.put("openaiEndpoint", prefs.getString("openaiEndpoint", "https://api.openai.com/v1") ?: "https://api.openai.com/v1")
+            promise.resolve(json.toString())
+        } catch (e: Exception) {
+            promise.reject("PREF_ERROR", e.message)
+        }
+    }
 }
