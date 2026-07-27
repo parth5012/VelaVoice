@@ -6,3 +6,8 @@ android/
 graphify-out/
 .pipeline/
 .gradle/
+build/
+.cxx/
+local.properties
+*.iml
+.idea/
