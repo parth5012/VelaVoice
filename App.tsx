@@ -19,6 +19,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import Constants from 'expo-constants';
 import { ModelManager, ModelInfo, DictionaryEntry } from './src/services/ModelManager';
 import OverlayLogo from './src/components/OverlayLogo';
 
@@ -103,6 +104,13 @@ export default function App() {
   const [language, setLanguage] = useState('');
   const [priority, setPriority] = useState('1');
 
+  // Google Drive Sync States
+  const [driveConfigured, setDriveConfigured] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
+  const [unsyncedCount, setUnsyncedCount] = useState(0);
+  const [totalTranscriptions, setTotalTranscriptions] = useState(0);
+
   // Recordings Library (Voice Hub / Studio)
   const [recordings, setRecordings] = useState<Recording[]>([
     {
@@ -145,11 +153,14 @@ export default function App() {
     loadDictionary();
     checkAccessibilityStatus();
     checkMicPermission();
+    initDriveCredentials();
+    refreshDriveStatus();
 
     const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
         checkAccessibilityStatus();
         checkMicPermission();
+        refreshDriveStatus();
       }
     });
 
@@ -317,6 +328,81 @@ export default function App() {
       }
     }
     return true;
+  };
+
+  // ──────────────────────────────────────────────
+  // Google Drive Sync
+  // ──────────────────────────────────────────────
+
+  const initDriveCredentials = async () => {
+    if (!NativeModules.GoogleDriveSync) return;
+    try {
+      // Check if credentials are already stored in native prefs
+      const hasCreds = await NativeModules.GoogleDriveSync.hasDriveCredentials();
+      if (!hasCreds) {
+        // Read from Constants.extra (loaded from .env) and store in native prefs
+        const extras = Constants.expoConfig?.extra || {};
+        const clientId = extras.googleDriveClientId;
+        const clientSecret = extras.googleDriveClientSecret;
+        const refreshToken = extras.googleDriveRefreshToken;
+        if (clientId && clientSecret && refreshToken) {
+          await NativeModules.GoogleDriveSync.setDriveCredentials(
+            clientId,
+            clientSecret,
+            refreshToken
+          );
+        }
+      }
+    } catch (e) {
+      console.error('Failed to init Drive credentials', e);
+    }
+  };
+
+  const refreshDriveStatus = async () => {
+    if (!NativeModules.GoogleDriveSync) return;
+    try {
+      const hasCreds = await NativeModules.GoogleDriveSync.hasDriveCredentials();
+      setDriveConfigured(hasCreds);
+      if (hasCreds) {
+        const unsynced = await NativeModules.GoogleDriveSync.getUnsyncedCount();
+        setUnsyncedCount(unsynced);
+        const total = await NativeModules.GoogleDriveSync.getTotalTranscriptionCount();
+        setTotalTranscriptions(total);
+      }
+    } catch (e) {
+      console.error('Failed to refresh Drive status', e);
+    }
+  };
+
+  const handleSyncToDrive = async () => {
+    if (!NativeModules.GoogleDriveSync || isSyncing) return;
+    setIsSyncing(true);
+    setSyncResult(null);
+    try {
+      const resultJson = await NativeModules.GoogleDriveSync.syncToDrive();
+      const result = typeof resultJson === 'string' ? JSON.parse(resultJson) : resultJson;
+      const uploaded = result.uploaded || 0;
+      const failed = result.failed || 0;
+      if (uploaded > 0) {
+        setSyncResult(`✅ Synced ${uploaded} transcription${uploaded > 1 ? 's' : ''} to Google Drive.`);
+      } else if (result === 'No new transcriptions to sync.') {
+        setSyncResult('✅ All transcriptions already synced.');
+      } else {
+        setSyncResult(`Synced: ${uploaded}, Failed: ${failed}`);
+      }
+      await refreshDriveStatus();
+    } catch (e: any) {
+      const msg = e?.message || String(e);
+      if (msg.includes('NO_CREDENTIALS')) {
+        setSyncResult('⚠️ Drive credentials not configured. Check your .env file.');
+      } else if (msg.includes('AUTH_FAILED')) {
+        setSyncResult('⚠️ Authentication failed. Your Google Drive token may be expired.');
+      } else {
+        setSyncResult(`❌ Sync failed: ${msg}`);
+      }
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const handleOpenAccessibilitySettings = () => {
@@ -739,6 +825,58 @@ export default function App() {
           </View>
         )}
       </View>
+
+      {/* Google Drive Sync */}
+        <View style={styles.engineCard}>
+          <Text style={styles.engineCardTitle}>Google Drive Sync</Text>
+          <Text style={styles.dictionaryDescription}>
+            Automatically saves every transcription (raw + cleaned) to your device.
+            Press "Sync with Drive" to upload all pending pairs to Google Drive.
+          </Text>
+
+          <View style={styles.statusRow}>
+            <Text style={styles.statusLabel}>Drive Connection:</Text>
+            <Text style={[styles.statusValue, driveConfigured ? styles.statusActive : styles.statusInactive]}>
+              {driveConfigured ? 'CONFIGURED' : 'NOT SET UP'}
+            </Text>
+          </View>
+
+          <View style={styles.statusRow}>
+            <Text style={styles.statusLabel}>Local Transcriptions:</Text>
+            <Text style={[styles.statusValue, { color: '#bacac7' }]}>
+              {totalTranscriptions} total
+            </Text>
+          </View>
+
+          {driveConfigured && (
+            <View style={styles.statusRow}>
+              <Text style={styles.statusLabel}>Pending Sync:</Text>
+              <Text style={[styles.statusValue, unsyncedCount > 0 ? { color: '#ffb4ab' } : { color: '#28a745' }]}>
+                {unsyncedCount > 0 ? `${unsyncedCount} pending` : 'All synced'}
+              </Text>
+            </View>
+          )}
+
+          {syncResult && (
+            <View style={[styles.sandboxResult, { marginTop: 10, marginBottom: 10 }]}>
+              <Text style={[styles.sandboxResultText, { fontSize: 13 }]}>{syncResult}</Text>
+            </View>
+          )}
+
+          <View style={styles.engineActions}>
+            {driveConfigured && (
+              <TouchableOpacity
+                style={[styles.engineButton, isSyncing && { opacity: 0.5 }]}
+                onPress={handleSyncToDrive}
+                disabled={isSyncing}
+              >
+                <Text style={styles.engineButtonText}>
+                  {isSyncing ? '⏳ Syncing...' : `☁️ Sync with Drive (${unsyncedCount})`}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
 
       {/* LLM Cleaner toggle */}
         <View style={styles.engineCard}>

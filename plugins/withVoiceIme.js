@@ -80,22 +80,24 @@ function withVoiceIme(config) {
       });
     }
 
-    // Add RECORD_AUDIO permission if it doesn't exist
+    // Ensure uses-permission array exists
     if (!config.modResults.manifest['uses-permission']) {
       config.modResults.manifest['uses-permission'] = [];
     }
 
-    const hasRecordAudio = config.modResults.manifest['uses-permission'].some(
-      (p) => p.$['android:name'] === 'android.permission.RECORD_AUDIO'
-    );
+    const addPermission = (name) => {
+      const exists = config.modResults.manifest['uses-permission'].some(
+        (p) => p.$['android:name'] === name
+      );
+      if (!exists) {
+        config.modResults.manifest['uses-permission'].push({
+          '$': { 'android:name': name },
+        });
+      }
+    };
 
-    if (!hasRecordAudio) {
-      config.modResults.manifest['uses-permission'].push({
-        '$': {
-          'android:name': 'android.permission.RECORD_AUDIO',
-        },
-      });
-    }
+    addPermission('android.permission.RECORD_AUDIO');
+    addPermission('android.permission.INTERNET');
 
     // Add SYSTEM_ALERT_WINDOW permission if it doesn't exist
     const hasSystemAlertWindow = config.modResults.manifest['uses-permission'].some(
@@ -158,6 +160,8 @@ function withVoiceIme(config) {
         'VoiceAccessibilityService.kt',
         'ModelVerifierModule.kt',
         'VoiceImePackage.kt',
+        'TranscriptionStorage.kt',
+        'GoogleDriveSyncModule.kt',
       ];
 
       for (const fileName of filesToCopy) {

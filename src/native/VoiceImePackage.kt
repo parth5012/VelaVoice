@@ -10,6 +10,7 @@ class VoiceImePackage : ReactPackage {
     override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
         val modules = ArrayList<NativeModule>()
         modules.add(ModelVerifierModule(reactContext))
+        modules.add(GoogleDriveSyncModule(reactContext))
         return modules
     }
 

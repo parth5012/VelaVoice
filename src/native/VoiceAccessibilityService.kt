@@ -438,6 +438,17 @@ class VoiceAccessibilityService : AccessibilityService() {
                 rawTranscript
             }
 
+        // Auto-save transcription pair to local storage
+        if (rawTranscript.isNotEmpty()) {
+            val durationMs = ((audioBytes.size / 2) / 16L)
+            TranscriptionStorage.save(
+                this@VoiceAccessibilityService,
+                raw = rawTranscript,
+                cleaned = finalTranscript,
+                durationMs = durationMs
+            )
+        }
+
         Handler(Looper.getMainLooper()).post {
             if (errorMessage != null) {
                 statusText.text = errorMessage
