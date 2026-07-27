@@ -31,6 +31,12 @@ import android.util.Log
 import java.io.ByteArrayOutputStream
 import java.io.File
 import kotlin.math.sqrt
+import com.velavoice.sdk.whisper.WhisperEngine
+import com.velavoice.sdk.whisper.WhisperConfig
+import com.velavoice.sdk.cleaner.TextCleaner
+import com.velavoice.sdk.cleaner.CleanerConfig
+import com.velavoice.sdk.cleaner.PersonalDictionary
+import com.velavoice.sdk.ui.WaveformView
 
 class VoiceAccessibilityService : AccessibilityService() {
     private var windowManager: WindowManager? = null
@@ -370,13 +376,13 @@ class VoiceAccessibilityService : AccessibilityService() {
             }
         } else {
             val whisperPath = getWhisperModelPath(this@VoiceAccessibilityService)
-            if (whisperPath != null) {
-                val whisper = WhisperEngine()
-                try {
-                    whisper.init(whisperPath)
-                    rawTranscript = whisper.transcribe(audioBytes)
-                } finally {
-                    whisper.free()
+                if (whisperPath != null) {
+                    val whisper = WhisperEngine(WhisperConfig(whisperPath))
+                    try {
+                        rawTranscript = whisper.transcribe(audioBytes)
+                    } finally {
+                        whisper.free()
+                    }
                 }
             } else {
                 val seconds = (audioBytes.size / 2) / 16000f
@@ -390,13 +396,47 @@ class VoiceAccessibilityService : AccessibilityService() {
             }
         }
 
-        val useLlm = prefs.getBoolean("useLlmCleaner", false)
-        val cleaner = TextCleaner()
-        val finalTranscript = if (rawTranscript.isNotEmpty()) {
-            cleaner.clean(this@VoiceAccessibilityService, rawTranscript, useLlm)
-        } else {
-            rawTranscript
-        }
+            val useLlm = prefs.getBoolean("useLlmCleaner", false)
+            val llmPath = getLlmModelPath(this@VoiceAccessibilityService)
+            val personalDictionary = object : PersonalDictionary {
+                override fun getEntries(): List<Pair<String, String>> {
+                    val dbFile = findDatabaseFile(this@VoiceAccessibilityService) ?: return emptyList()
+                    val entries = mutableListOf<Pair<String, String>>()
+                    var db: SQLiteDatabase? = null
+                    try {
+                        db = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
+                        val cursor = db.rawQuery(
+                            "SELECT original_word, replacement FROM personal_dictionary ORDER BY priority DESC, name ASC",
+                            null
+                        )
+                        if (cursor.moveToFirst()) {
+                            do {
+                                val original = cursor.getString(0)
+                                val replacement = cursor.getString(1)
+                                if (original.isNotEmpty()) {
+                                    entries.add(Pair(original, replacement))
+                                }
+                            } while (cursor.moveToNext())
+                        }
+                        cursor.close()
+                    } catch (e: Exception) {
+                        Log.e("VoiceAccessibility", "Error loading personal dictionary: ${e.message}")
+                    } finally {
+                        db?.close()
+                    }
+                    return entries
+                }
+            }
+            val cleaner = TextCleaner(CleanerConfig(
+                useLlm = useLlm,
+                llmModelPath = llmPath,
+                personalDictionary = personalDictionary
+            ))
+            val finalTranscript = if (rawTranscript.isNotEmpty()) {
+                cleaner.clean(rawTranscript)
+            } else {
+                rawTranscript
+            }
 
         Handler(Looper.getMainLooper()).post {
             if (errorMessage != null) {
