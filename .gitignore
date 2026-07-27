@@ -4,3 +4,5 @@ android/
 .tmp/
 .scratch/
 graphify-out/
+.pipeline/
+.gradle/
