@@ -177,7 +177,7 @@ class VoiceAccessibilityService : AccessibilityService() {
         waveformView = WaveformView(this).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                (40 * density).toInt()
+                (56 * density).toInt()
             ).apply {
                 bottomMargin = (8 * density).toInt()
             }

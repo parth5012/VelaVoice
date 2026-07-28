@@ -81,11 +81,11 @@ class VoiceRecordingPane(context: Context) : LinearLayout(context) {
         topRow.addView(timerText)
         addView(topRow)
 
-        // --- Waveform ---
+        // --- Waveform (taller for more pronounced amplitude visualization) ---
         waveformView = WaveformView(context).apply {
-            layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, (80 * density).toInt()).apply {
-                topMargin = (6 * density).toInt()
-                bottomMargin = (6 * density).toInt()
+            layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, (100 * density).toInt()).apply {
+                topMargin = (8 * density).toInt()
+                bottomMargin = (8 * density).toInt()
             }
         }
         addView(waveformView)
