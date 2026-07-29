@@ -20,7 +20,7 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Constants from 'expo-constants';
-import { ModelManager, ModelInfo, DictionaryEntry } from './src/services/ModelManager';
+import { ModelManager, ModelInfo, DictionaryEntry, DictionaryKeyword } from './src/services/ModelManager';
 import OverlayLogo from './src/components/OverlayLogo';
 
 interface Recording {
@@ -104,6 +104,10 @@ export default function App() {
   const [language, setLanguage] = useState('');
   const [priority, setPriority] = useState('1');
 
+  // Dictionary Keywords States
+  const [keywords, setKeywords] = useState<DictionaryKeyword[]>([]);
+  const [keywordInput, setKeywordInput] = useState('');
+
   // Google Drive Sync States
   const [driveConfigured, setDriveConfigured] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -151,6 +155,7 @@ export default function App() {
   useEffect(() => {
     loadModels();
     loadDictionary();
+    loadKeywords();
     checkAccessibilityStatus();
     checkMicPermission();
     initDriveCredentials();
@@ -227,6 +232,15 @@ export default function App() {
     }
   }, []);
 
+  const loadKeywords = useCallback(async () => {
+    try {
+      const list = await ModelManager.getKeywords();
+      setKeywords(list);
+    } catch (e) {
+      console.error('Failed to load keywords', e);
+    }
+  }, []);
+
   const handleAddEntry = useCallback(async () => {
     if (!originalWord.trim() || !replacement.trim()) {
       alert('Please fill out both the original word and its replacement.');
@@ -261,6 +275,38 @@ export default function App() {
       alert('Failed to delete entry.');
     }
   }, [loadDictionary]);
+
+  const handleAddKeyword = useCallback(async () => {
+    const trimmed = keywordInput.trim();
+    if (!trimmed) {
+      alert('Please enter a keyword.');
+      return;
+    }
+    // Validate that keyword contains only valid word characters
+    if (!/^[\w\s-]+$/.test(trimmed)) {
+      alert('Keywords can only contain letters, numbers, spaces, and hyphens.');
+      return;
+    }
+    try {
+      await ModelManager.addKeyword(trimmed, null);
+      setKeywordInput('');
+      await loadKeywords();
+    } catch (e) {
+      console.error('Failed to add keyword', e);
+      alert('Failed to add keyword. It might already exist.');
+    }
+  }, [keywordInput, loadKeywords]);
+
+  const handleDeleteKeyword = useCallback(async (id?: number) => {
+    if (id === undefined) return;
+    try {
+      await ModelManager.deleteKeyword(id);
+      await loadKeywords();
+    } catch (e) {
+      console.error('Failed to delete keyword', e);
+      alert('Failed to delete keyword.');
+    }
+  }, [loadKeywords]);
 
   const checkAccessibilityStatus = useCallback(async () => {
     if (NativeModules.ModelVerifier) {
@@ -454,6 +500,8 @@ export default function App() {
   const runCustomClean = () => {
     if (!testText.trim()) return;
     let cleaned = testText;
+
+    // Step 1: Apply dictionary replacements (corrections)
     const sortedDict = [...dictionary].sort((a, b) => (b.priority || 0) - (a.priority || 0));
     for (const entry of sortedDict) {
       if (entry.original_word) {
@@ -461,6 +509,21 @@ export default function App() {
         cleaned = cleaned.replace(regex, entry.replacement);
       }
     }
+
+    // Step 2: Show which keywords are protected from filler removal
+    const keywordSet = new Set(keywords.map(k => k.keyword.toLowerCase()));
+    const protectedFound: string[] = [];
+    const testWords = testText.toLowerCase().split(/\b/);
+    for (const word of testWords) {
+      const trimmed = word.trim();
+      if (trimmed && keywordSet.has(trimmed)) {
+        protectedFound.push(trimmed);
+      }
+    }
+    if (protectedFound.length > 0) {
+      cleaned += `\n\n[Protected keywords in text: ${[...new Set(protectedFound)].join(', ')}]`;
+    }
+
     setTestCleanedText(cleaned);
   };
 
@@ -670,7 +733,7 @@ export default function App() {
         <View style={styles.studioSandboxCard}>
           <Text style={styles.sandboxTitle}>Dictionary Sandbox</Text>
           <Text style={styles.sandboxInstruction}>
-            Type text here and run dictionary cleaner to verify your mappings.
+            Type text here and run dictionary cleaner to verify your mappings and keyword protection.
           </Text>
           <TextInput
             style={styles.sandboxInput}
@@ -952,9 +1015,62 @@ export default function App() {
           })}
         </View>
 
+        {/* Dictionary Keywords */}
+        <View style={styles.engineCard}>
+          <Text style={styles.engineCardTitle}>Dictionary Keywords</Text>
+          <Text style={styles.dictionaryDescription}>
+            Add keywords, names, and technical terms so Whisper recognizes them correctly during transcription. Like Willow Voice's dictionary terms.
+          </Text>
+
+          <View style={styles.formContainer}>
+            <View style={styles.keywordInputRow}>
+              <TextInput
+                style={styles.keywordInputField}
+                placeholder="Enter a keyword (e.g. Kubernetes)"
+                placeholderTextColor="#859491"
+                value={keywordInput}
+                onChangeText={setKeywordInput}
+                onSubmitEditing={handleAddKeyword}
+                returnKeyType="done"
+              />
+              <TouchableOpacity style={styles.keywordAddButton} onPress={handleAddKeyword}>
+                <Text style={styles.keywordAddButtonText}>+</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {keywords.length > 0 ? (
+            <View style={styles.dictionaryList}>
+              <Text style={styles.listHeader}>Keywords ({keywords.length}):</Text>
+              <View style={styles.keywordChipContainer}>
+                {keywords.map((kw) => (
+                  <View key={kw.id} style={styles.keywordChip}>
+                    <Text style={styles.keywordChipText}>{kw.keyword}</Text>
+                    <TouchableOpacity
+                      style={styles.keywordChipDelete}
+                      onPress={() => handleDeleteKeyword(kw.id)}
+                    >
+                      <Text style={styles.keywordChipDeleteText}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            </View>
+          ) : (
+            <Text style={styles.emptyDictText}>No keywords added yet. Add terms you use frequently.</Text>
+          )}
+
+          <View style={styles.keywordTip}>
+            <Text style={styles.keywordTipIcon}>💡</Text>
+            <Text style={styles.keywordTipText}>
+              Tip: Adding product names, acronyms, and jargon improves transcription accuracy — similar to Willow Voice's custom dictionary.
+            </Text>
+          </View>
+        </View>
+
         {/* Personal Dictionary */}
         <View style={styles.engineCard}>
-          <Text style={styles.engineCardTitle}>Personal Dictionary</Text>
+          <Text style={styles.engineCardTitle}>Personal Dictionary (Corrections)</Text>
           <Text style={styles.dictionaryDescription}>
             Define on-device custom replacements (e.g. names, spellings) for Whisper outputs.
           </Text>
@@ -1758,6 +1874,92 @@ const styles = StyleSheet.create({
     color: '#859491',
     textAlign: 'center',
     marginTop: 10,
+  },
+
+  // Dictionary Keywords styles
+  keywordInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  keywordInputField: {
+    flex: 1,
+    backgroundColor: '#0e1514',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#3c4948',
+    padding: 10,
+    color: '#dde4e2',
+    fontSize: 14,
+  },
+  keywordAddButton: {
+    width: 40,
+    height: 40,
+    backgroundColor: '#62f9ee',
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  keywordAddButtonText: {
+    color: '#003734',
+    fontSize: 20,
+    fontWeight: 'bold',
+    lineHeight: 22,
+  },
+  keywordChipContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 4,
+  },
+  keywordChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#622599',
+    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#ddb7ff',
+  },
+  keywordChipText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '500',
+    marginRight: 6,
+  },
+  keywordChipDelete: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  keywordChipDeleteText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  keywordTip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 14,
+    padding: 10,
+    backgroundColor: '#1a2120',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#3c4948',
+    gap: 8,
+  },
+  keywordTipIcon: {
+    fontSize: 16,
+  },
+  keywordTipText: {
+    flex: 1,
+    fontSize: 12,
+    color: '#bacac7',
+    lineHeight: 16,
   },
 
   // Simulated Recording sheet overlay styles
