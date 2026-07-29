@@ -548,7 +548,7 @@ class VoiceAccessibilityService : AccessibilityService() {
         var path: String? = null
         try {
             db = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-            val cursor = db.rawQuery("SELECT path FROM models WHERE name = 'whisper-tiny-en' AND status = 'completed' LIMIT 1", null)
+            val cursor = db.rawQuery("SELECT path FROM models WHERE (id = 'whisper-tiny-en' OR name = 'whisper-tiny-en') AND status = 'completed' LIMIT 1", null)
             if (cursor.moveToFirst()) {
                 path = cursor.getString(0)
             }
@@ -567,7 +567,7 @@ class VoiceAccessibilityService : AccessibilityService() {
         var path: String? = null
         try {
             db = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-            val cursor = db.rawQuery("SELECT path FROM models WHERE name = 'cleaner-llama-3b' AND status = 'completed' LIMIT 1", null)
+            val cursor = db.rawQuery("SELECT path FROM models WHERE (id = 'cleaner-llama-3b' OR name = 'cleaner-llama-3b') AND status = 'completed' LIMIT 1", null)
             if (cursor.moveToFirst()) {
                 path = cursor.getString(0)
             }

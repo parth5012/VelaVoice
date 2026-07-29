@@ -312,7 +312,7 @@ class VoiceInputMethodService : InputMethodService() {
 
     private fun queryModelPath(db: SQLiteDatabase, modelType: String): String? {
         val cursor = db.rawQuery(
-            "SELECT path FROM models WHERE (type = ? OR name = ?) AND status = 'completed' LIMIT 1",
+            "SELECT path FROM models WHERE (id = ? OR name = ?) AND status = 'completed' LIMIT 1",
             arrayOf(modelType, modelType)
         )
         return try {
