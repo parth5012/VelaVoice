@@ -35,6 +35,7 @@ import com.velavoice.sdk.whisper.WhisperEngine
 import com.velavoice.sdk.whisper.WhisperConfig
 import com.velavoice.sdk.cleaner.TextCleaner
 import com.velavoice.sdk.cleaner.CleanerConfig
+import com.velavoice.sdk.cleaner.DictionaryKeywords
 import com.velavoice.sdk.cleaner.PersonalDictionary
 import com.velavoice.sdk.ui.WaveformView
 
@@ -427,10 +428,39 @@ class VoiceAccessibilityService : AccessibilityService() {
                     return entries
                 }
             }
+            val dictionaryKeywords = object : DictionaryKeywords {
+                override fun getKeywords(): List<String> {
+                    val dbFile = findDatabaseFile(this@VoiceAccessibilityService) ?: return emptyList()
+                    val keywords = mutableListOf<String>()
+                    var db: SQLiteDatabase? = null
+                    try {
+                        db = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
+                        val cursor = db.rawQuery(
+                            "SELECT keyword FROM dictionary_keywords ORDER BY keyword ASC",
+                            null
+                        )
+                        if (cursor.moveToFirst()) {
+                            do {
+                                val keyword = cursor.getString(0)
+                                if (keyword.isNotEmpty()) {
+                                    keywords.add(keyword)
+                                }
+                            } while (cursor.moveToNext())
+                        }
+                        cursor.close()
+                    } catch (e: Exception) {
+                        Log.e("VoiceAccessibility", "Error loading dictionary keywords: ${e.message}")
+                    } finally {
+                        db?.close()
+                    }
+                    return keywords
+                }
+            }
             val cleaner = TextCleaner(CleanerConfig(
                 useLlm = useLlm,
                 llmModelPath = llmPath,
-                personalDictionary = personalDictionary
+                personalDictionary = personalDictionary,
+                dictionaryKeywords = dictionaryKeywords
             ))
             val finalTranscript = if (rawTranscript.isNotEmpty()) {
                 cleaner.clean(rawTranscript)
