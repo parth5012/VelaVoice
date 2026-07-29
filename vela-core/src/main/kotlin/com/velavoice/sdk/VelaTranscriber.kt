@@ -2,6 +2,7 @@ package com.velavoice.sdk
 
 import android.content.Context
 import com.velavoice.sdk.cleaner.CleanerConfig
+import com.velavoice.sdk.cleaner.DictionaryKeywords
 import com.velavoice.sdk.cleaner.PersonalDictionary
 import com.velavoice.sdk.cleaner.TextCleaner
 import com.velavoice.sdk.whisper.WhisperConfig
@@ -20,6 +21,7 @@ class VelaTranscriber private constructor(
         private var llmModelPath: String? = null
         private var personalDictionary: PersonalDictionary? = null
         private var customFillers: List<String>? = null
+        private var dictionaryKeywords: DictionaryKeywords? = null
 
         fun whisperModel(path: String) = apply { this.whisperModelPath = path }
         fun language(lang: String) = apply { this.language = lang }
@@ -30,18 +32,20 @@ class VelaTranscriber private constructor(
         }
         fun personalDictionary(dict: PersonalDictionary) = apply { this.personalDictionary = dict }
         fun customFillers(fillers: List<String>) = apply { this.customFillers = fillers }
+        fun dictionaryKeywords(keywords: DictionaryKeywords) = apply { this.dictionaryKeywords = keywords }
 
         fun build(): VelaTranscriber {
             val modelPath = whisperModelPath ?: throw IllegalStateException("whisperModel() required")
             val whisperConfig = WhisperConfig(modelPath, language, threads)
             val engine = WhisperEngine(whisperConfig)
-            val cleaner = if (personalDictionary != null || customFillers != null || useLlmCleaner) {
+            val cleaner = if (personalDictionary != null || customFillers != null || useLlmCleaner || dictionaryKeywords != null) {
                 TextCleaner(
                     CleanerConfig(
                         useLlm = useLlmCleaner,
                         llmModelPath = llmModelPath,
                         personalDictionary = personalDictionary,
-                        customFillers = customFillers
+                        customFillers = customFillers,
+                        dictionaryKeywords = dictionaryKeywords
                     )
                 )
             } else {
