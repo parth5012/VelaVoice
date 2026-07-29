@@ -41,18 +41,38 @@ class TextCleaner(private val config: CleanerConfig) {
         // Apply personal dictionary replacements first
         var cleaned = applyPersonalDictionary(text)
 
-        // Regex: remove common filler words case-insensitively
+        // Collect protected keywords that should not be removed as filler words
+        val protectedKeywords = getProtectedKeywords()
+
+        // Regex: remove common filler words case-insensitively,
+        // but skip any filler that matches a protected keyword
         val fillers = config.customFillers ?: listOf("um", "ah", "like", "eh", "uh", "er", "hm", "oh")
         if (fillers.isNotEmpty()) {
-            val fillersRegexStr = fillers.joinToString("|") { Regex.escape(it) }
-            val fillersRegex = Regex("(?i)\\b($fillersRegexStr)\\b,?\\s*")
-            cleaned = cleaned.replace(fillersRegex, "")
+            val activeFillers = fillers.filter { filler ->
+                protectedKeywords.none { keyword ->
+                    keyword.equals(filler, ignoreCase = true)
+                }
+            }
+            if (activeFillers.isNotEmpty()) {
+                val fillersRegexStr = activeFillers.joinToString("|") { Regex.escape(it) }
+                val fillersRegex = Regex("(?i)\\b($fillersRegexStr)\\b,?\\s*")
+                cleaned = cleaned.replace(fillersRegex, "")
+            }
         }
 
         // Remove duplicate spaces and trim
         cleaned = cleaned.replace(Regex("\\s+"), " ").trim()
 
         return cleaned
+    }
+
+    /**
+     * Returns the set of protected keyword terms that should never be removed
+     * as filler words or otherwise filtered out.
+     */
+    private fun getProtectedKeywords(): Set<String> {
+        val keywords = config.dictionaryKeywords?.getKeywords() ?: return emptySet()
+        return keywords.map { it.lowercase() }.toSet()
     }
 
     private fun applyPersonalDictionary(text: String): String {
