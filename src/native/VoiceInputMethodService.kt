@@ -19,6 +19,7 @@ import com.velavoice.sdk.TranscriptionResult
 import com.velavoice.sdk.VelaException
 import com.velavoice.sdk.VelaRecordingCallback
 import com.velavoice.sdk.VelaTranscriber
+import com.velavoice.sdk.cleaner.DictionaryKeywords
 import com.velavoice.sdk.cleaner.PersonalDictionary
 import com.velavoice.sdk.ui.VoiceRecordingPane
 import java.io.File
@@ -175,8 +176,9 @@ class VoiceInputMethodService : InputMethodService() {
                     return@post
                 }
 
-                // Load personal dictionary and prefs
+                // Load personal dictionary, keywords, and prefs
                 val personalDictionary = loadPersonalDictionary()
+                val dictionaryKeywords = loadDictionaryKeywords()
                 val prefs = this@VoiceInputMethodService
                     .getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
                 val useLlm = prefs.getBoolean("useLlmCleaner", false)
@@ -187,6 +189,7 @@ class VoiceInputMethodService : InputMethodService() {
                     .language("en")
                     .threads(4)
                     .personalDictionary(personalDictionary)
+                    .dictionaryKeywords(dictionaryKeywords)
 
                 if (useLlm && cachedLlmPath != null) {
                     builder.useLlmCleaner(true, cachedLlmPath)
@@ -349,6 +352,38 @@ class VoiceInputMethodService : InputMethodService() {
         }
         return object : PersonalDictionary {
             override fun getEntries(): List<Pair<String, String>> = entries
+        }
+    }
+
+    /** Load dictionary keywords from the database */
+    private fun loadDictionaryKeywords(): DictionaryKeywords {
+        val dbFile = findDatabaseFile(this)
+        val keywords = mutableListOf<String>()
+        if (dbFile != null) {
+            var db: SQLiteDatabase? = null
+            try {
+                db = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
+                val cursor = db.rawQuery(
+                    "SELECT keyword FROM dictionary_keywords ORDER BY keyword ASC",
+                    null
+                )
+                if (cursor.moveToFirst()) {
+                    do {
+                        val keyword = cursor.getString(0)
+                        if (keyword.isNotEmpty()) {
+                            keywords.add(keyword)
+                        }
+                    } while (cursor.moveToNext())
+                }
+                cursor.close()
+            } catch (e: Exception) {
+                android.util.Log.e("VoiceIME", "Error loading dictionary keywords: ${e.message}")
+            } finally {
+                db?.close()
+            }
+        }
+        return object : DictionaryKeywords {
+            override fun getKeywords(): List<String> = keywords
         }
     }
 
