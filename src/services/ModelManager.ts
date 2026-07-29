@@ -54,6 +54,12 @@ async function getDb(): Promise<SQLite.SQLiteDatabase> {
           language TEXT,
           priority INTEGER DEFAULT 1
         );
+        CREATE TABLE IF NOT EXISTS dictionary_keywords (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          keyword TEXT UNIQUE NOT NULL,
+          language TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
       `);
       return database;
     });
@@ -67,6 +73,13 @@ export interface DictionaryEntry {
   replacement: string;
   language?: string | null;
   priority?: number;
+}
+
+export interface DictionaryKeyword {
+  id?: number;
+  keyword: string;
+  language?: string | null;
+  created_at?: string;
 }
 
 export class ModelManager {
@@ -221,5 +234,29 @@ export class ModelManager {
   static async deleteDictionaryEntry(id: number): Promise<void> {
     const db = await getDb();
     await db.runAsync('DELETE FROM personal_dictionary WHERE id = ?', [id]);
+  }
+
+  // ──────────────────────────────────────────────
+  // Dictionary Keywords
+  // ──────────────────────────────────────────────
+
+  static async getKeywords(): Promise<DictionaryKeyword[]> {
+    const db = await getDb();
+    return await db.getAllAsync<DictionaryKeyword>(
+      'SELECT * FROM dictionary_keywords ORDER BY keyword ASC'
+    );
+  }
+
+  static async addKeyword(keyword: string, language?: string | null): Promise<void> {
+    const db = await getDb();
+    await db.runAsync(
+      'INSERT OR REPLACE INTO dictionary_keywords (keyword, language) VALUES (?, ?)',
+      [keyword, language ?? null]
+    );
+  }
+
+  static async deleteKeyword(id: number): Promise<void> {
+    const db = await getDb();
+    await db.runAsync('DELETE FROM dictionary_keywords WHERE id = ?', [id]);
   }
 }
