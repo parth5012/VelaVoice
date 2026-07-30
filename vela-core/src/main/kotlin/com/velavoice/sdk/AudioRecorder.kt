@@ -104,18 +104,24 @@ class AudioRecorder {
         val callback = currentCallback
 
         if (whisper != null && callback != null) {
-            try {
-                val rawTranscript = whisper.transcribe(audioBytes)
-                val cleanedTranscript = if (clean) {
-                    currentCleaner?.clean(rawTranscript) ?: rawTranscript
-                } else {
-                    rawTranscript
+            Thread({
+                try {
+                    val rawTranscript = whisper.transcribe(audioBytes)
+                    val cleanedTranscript = if (clean) {
+                        currentCleaner?.clean(rawTranscript) ?: rawTranscript
+                    } else {
+                        rawTranscript
+                    }
+                    val durationMs = ((audioBytes.size / 2) / 16L)
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        callback.onResult(TranscriptionResult(rawTranscript, cleanedTranscript, durationMs, audioBytes))
+                    }
+                } catch (e: Exception) {
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        callback.onError(WhisperError("Transcription failed: " + e.message))
+                    }
                 }
-                val durationMs = ((audioBytes.size / 2) / 16L) // 16 samples/ms
-                callback.onResult(TranscriptionResult(rawTranscript, cleanedTranscript, durationMs, audioBytes))
-            } catch (e: Exception) {
-                callback.onError(WhisperError("Transcription failed: " + e.message))
-            }
+            }, "VelaTranscribeThread").start()
         }
     }
 
