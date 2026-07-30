@@ -22,6 +22,8 @@ import { StatusBar } from 'expo-status-bar';
 import Constants from 'expo-constants';
 import { ModelManager, ModelInfo, DictionaryEntry, DictionaryKeyword } from './src/services/ModelManager';
 import OverlayLogo from './src/components/OverlayLogo';
+import { TranscriptionEditor } from './src/components/TranscriptionEditor';
+import { CorrectionAPI } from './src/services/api';
 
 interface Recording {
   id: string;
@@ -153,6 +155,19 @@ export default function App() {
   const [editingTextValue, setEditingTextValue] = useState('');
 
   useEffect(() => {
+    if (typeof global !== 'undefined') {
+      const g = global as any;
+      if (!g.realFetch) {
+        g.realFetch = g.fetch;
+        g.fetch = (url: string, options?: any) => {
+          if (url && url.includes('/save_correction')) {
+            return CorrectionAPI.mockFetch(url, options);
+          }
+          return g.realFetch ? g.realFetch(url, options) : Promise.reject(new Error('Network offline'));
+        };
+      }
+    }
+
     loadModels();
     loadDictionary();
     loadKeywords();
@@ -331,11 +346,11 @@ export default function App() {
           setOpenaiModel(prefsJson.openaiModel || 'whisper-1');
           setOpenaiEndpoint(prefsJson.openaiEndpoint || 'https://api.openai.com/v1');
         }
-      } catch (e) {
-        console.error('Failed to load preferences', e);
-      }
+    } catch (e) {
+      console.error('Failed to load preferences', e);
     }
-  };
+  }
+  }, []);
 
   const checkMicPermission = async () => {
     if (Platform.OS === 'android') {
@@ -568,7 +583,7 @@ export default function App() {
   };
 
   const handleSaveEditedTranscript = () => {
-    setRecordings(prev => 
+    setRecordings(prev =>
       prev.map(r => {
         if (r.id === selectedRecordingId) {
           return studioSegment === 'cleaned'
@@ -578,6 +593,48 @@ export default function App() {
         return r;
       })
     );
+    setIsEditingTranscript(false);
+  };
+
+  const handleSaveCorrection = async (
+    audioId: string,
+    original: string,
+    corrected: string,
+    edits: any[],
+    editDistance: number
+  ) => {
+    setRecordings(prev =>
+      prev.map(r => {
+        if (r.id === audioId) {
+          return studioSegment === 'cleaned'
+            ? { ...r, cleaned: corrected }
+            : { ...r, raw: corrected };
+        }
+        return r;
+      })
+    );
+
+    try {
+      const response = await fetch('https://api.velavoice.com/save_correction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          audio_id: audioId,
+          original_transcription: original,
+          corrected_transcription: corrected,
+          edits,
+          edit_distance: editDistance,
+          user_id: 'local_user',
+          confidence_score: 1.0
+        })
+      });
+      if (!response.ok) {
+        throw new Error('API server returned error status');
+      }
+    } catch (err) {
+      console.warn('Failed to save correction to API backend:', err);
+    }
+
     setIsEditingTranscript(false);
   };
 
@@ -681,29 +738,13 @@ export default function App() {
 
             {/* Transcript Panel */}
             <View style={styles.transcriptPanel}>
-              {isEditingTranscript ? (
-                <View>
-                  <TextInput
-                    style={styles.transcriptTextInput}
-                    value={editingTextValue}
-                    onChangeText={setEditingTextValue}
-                    multiline={true}
-                  />
-                  <View style={styles.editActionRow}>
-                    <TouchableOpacity
-                      style={[styles.studioButton, { backgroundColor: '#dc3545', marginRight: 10 }]}
-                      onPress={() => setIsEditingTranscript(false)}
-                    >
-                      <Text style={styles.studioButtonText}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.studioButton, { backgroundColor: '#62f9ee' }]}
-                      onPress={handleSaveEditedTranscript}
-                    >
-                      <Text style={[styles.studioButtonText, { color: '#003734' }]}>Save</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
+        {isEditingTranscript ? (
+          <TranscriptionEditor
+            audioId={activeRec.id}
+            originalTranscription={studioSegment === 'cleaned' ? activeRec.cleaned : activeRec.raw}
+            onSave={handleSaveCorrection}
+            onCancel={() => setIsEditingTranscript(false)}
+          />
               ) : (
                 <View>
                   <Text style={styles.transcriptText}>

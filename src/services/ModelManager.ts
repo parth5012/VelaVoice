@@ -60,6 +60,17 @@ async function getDb(): Promise<SQLite.SQLiteDatabase> {
           language TEXT,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
+        CREATE TABLE IF NOT EXISTS corrections (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          audio_id TEXT NOT NULL,
+          original_transcription TEXT NOT NULL,
+          corrected_transcription TEXT NOT NULL,
+          edits TEXT NOT NULL,
+          edit_distance INTEGER NOT NULL,
+          timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+          user_id TEXT,
+          confidence_score REAL
+        );
       `);
       return database;
     });
@@ -255,8 +266,52 @@ export class ModelManager {
     );
   }
 
-  static async deleteKeyword(id: number): Promise<void> {
-    const db = await getDb();
-    await db.runAsync('DELETE FROM dictionary_keywords WHERE id = ?', [id]);
+static async deleteKeyword(id: number): Promise<void> {
+  const db = await getDb();
+  await db.runAsync('DELETE FROM dictionary_keywords WHERE id = ?', [id]);
+}
+
+static async saveCorrection(
+  audioId: string,
+  original: string,
+  corrected: string,
+  edits: string,
+  editDistance: number,
+  userId?: string | null,
+  confidenceScore?: number | null
+): Promise<void> {
+  const db = await getDb();
+  await db.runAsync(
+    `INSERT INTO corrections (
+      audio_id, original_transcription, corrected_transcription,
+      edits, edit_distance, user_id, confidence_score
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [
+      audioId,
+      original,
+      corrected,
+      edits,
+      editDistance,
+      userId || null,
+      confidenceScore !== undefined && confidenceScore !== null ? confidenceScore : null
+    ]
+  );
+}
+
+static async getCorrections(): Promise<any[]> {
+  const db = await getDb();
+  return await db.getAllAsync<any>(
+    'SELECT * FROM corrections ORDER BY timestamp DESC'
+  );
+}
+
+static async closeDb(): Promise<void> {
+  if (dbPromise) {
+    const db = await dbPromise;
+    if ((db as any).closeAsync) {
+      await (db as any).closeAsync();
+    }
+    dbPromise = null;
   }
+}
 }

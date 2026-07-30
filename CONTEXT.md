@@ -1,4 +1,4 @@
-Vela Client Offline Transcription IME
+     Vela Client Offline Transcription IME
 
 On-device Android keyboard provider that records audio, transcribes it offline using Whisper, and refines the transcript using an offline cleaner model.
 
@@ -26,7 +26,7 @@ _Avoid_: Final transcript, formatted text
 
 ## HeliBoard-vela (Keyboard Integration)
 
-**Location**: `D:\work\projects\HeliBoard-vela` 
+**Location**: `D:\work\projects\VelaBoard` 
 
 A fork of [HeliBoard](https://github.com/HeliBorg/HeliBoard) (privacy-focused AOSP/OpenBoard keyboard) with Vela Voice SDK integrated as the voice input engine.
 
