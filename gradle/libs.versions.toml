@@ -8,6 +8,8 @@ sqlite = "2.4.0"
 junit = "4.13.2"
 robolectric = "4.12.2"
 mockito = "5.8.0"
+onnxruntimeAndroid = "1.22.0"
+onnxruntimeGenai = "0.15.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidxCore" }
@@ -17,6 +19,8 @@ sqlite-ktx = { group = "androidx.sqlite", name = "sqlite-ktx", version.ref = "sq
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
+onnxruntime-android = { group = "com.microsoft.onnxruntime", name = "onnxruntime-android", version.ref = "onnxruntimeAndroid" }
+onnxruntime-genai-android = { group = "com.microsoft.onnxruntime", name = "onnxruntime-genai-android", version.ref = "onnxruntimeGenai" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "agp" }

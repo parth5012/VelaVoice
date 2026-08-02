@@ -9,7 +9,8 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        minSdk = 23
+        // onnxruntime-genai-android 0.15.0 requires minSdk 24 (its manifest enforces it)
+        minSdk = 24
     }
 
     buildTypes {
@@ -40,6 +41,13 @@ android {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
+    // On-device LLM inference for Scribe / standard cleanup (Ticket 003).
+    // onnxruntime-genai-android is NOT on Maven Central; it is published to
+    // mavenLocal from the GitHub-release AAR (see README / commit message).
+    // Its native libonnxruntime-genai.so dlopens libonnxruntime.so at runtime,
+    // which is provided by onnxruntime-android (Maven Central).
+    implementation(libs.onnxruntime.genai.android)
+    implementation(libs.onnxruntime.android)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
 }

@@ -1,5 +1,10 @@
 package com.velavoice.sdk.cleaner
 
+import ai.onnxruntime.genai.GenAI
+import ai.onnxruntime.genai.Generator
+import ai.onnxruntime.genai.GeneratorParams
+import ai.onnxruntime.genai.Model
+import ai.onnxruntime.genai.Tokenizer
 import android.util.Log
 import java.io.File
 
@@ -13,7 +18,8 @@ import java.io.File
  */
 class TextCleaner(private val config: CleanerConfig) {
     private var isLlmInitialized = false
-    private var contextPtr: Long = 0L
+    private var model: Model? = null
+    private var tokenizer: Tokenizer? = null
 
     init {
         if (config.useLlm && config.llmModelPath != null) {
@@ -21,15 +27,42 @@ class TextCleaner(private val config: CleanerConfig) {
         }
     }
 
+    /**
+     * Initializes the on-device LLM via ONNX Runtime GenAI (Java API).
+     *
+     * [modelPath] points at the model directory (containing genai_config.json + onnx model
+     * files) or a single .onnx file. Telemetry bundled with the GenAI AAR is disabled first
+     * for privacy. Any failure (missing file, native load error, invalid model) leaves
+     * [isLlmInitialized] false so [clean] falls back to rule-based cleanup.
+     */
     private fun initLlm(modelPath: String): Boolean {
         if (!File(modelPath).exists()) {
             Log.e("TextCleaner", "LLM model file not found at: $modelPath")
             return false
         }
-        // real implementation, load ONNX Runtime / MediaPipe LLM Inference JNI
-        Log.d("TextCleaner", "Initialized on-device LLM Cleaner model: $modelPath")
-        isLlmInitialized = true
-        return true
+        return try {
+            // Loads onnxruntime + onnxruntime-genai + onnxruntime-genai-jni native libraries
+            // (setTelemetry triggers GenAI.init() internally). Disable Microsoft telemetry.
+            GenAI.setTelemetry(false)
+            val m = Model(modelPath)
+            model = m
+            tokenizer = Tokenizer(m)
+            isLlmInitialized = true
+            Log.d("TextCleaner", "Initialized on-device LLM Cleaner model: $modelPath")
+            true
+        } catch (e: Throwable) {
+            Log.e("TextCleaner", "Failed to initialize on-device LLM: ${e.message}")
+            closeLlm()
+            false
+        }
+    }
+
+    private fun closeLlm() {
+        runCatching { tokenizer?.close() }
+        runCatching { model?.close() }
+        tokenizer = null
+        model = null
+        isLlmInitialized = false
     }
 
     fun clean(text: String): String = clean(
@@ -78,7 +111,7 @@ class TextCleaner(private val config: CleanerConfig) {
             } else {
                 formatStandardCleanupPrompt(regexCleaned)
             }
-            return nativeGenerate(contextPtr, prompt) ?: regexCleaned
+            return generate(prompt) ?: regexCleaned
         }
 
         return regexCleaned
@@ -209,10 +242,38 @@ class TextCleaner(private val config: CleanerConfig) {
         else -> "Rewrite the input to be formal, professional, polite, and grammatically perfect. Retain the core meaning."
     }
 
-    /** JNI entry point. Accepts arbitrary prompts and returns generated text (stub). */
-    private fun nativeGenerate(contextPtr: Long, prompt: String): String? {
-        // TODO: real implementation, ONNX Runtime / MediaPipe LLM Inference JNI
-        return null
+    /**
+     * Runs [prompt] through the loaded model with greedy decoding and returns the
+     * generated text, or null if the model is unavailable / generation fails.
+     *
+     * Uses the official GenAI Java loop: feed encoded prompt tokens, then iterate the
+     * generator (each step runs generateNextToken and yields the last token), decoding
+     * each token incrementally through a TokenizerStream to preserve multi-byte text.
+     */
+    private fun generate(prompt: String): String? {
+        val m = model ?: return null
+        val t = tokenizer ?: return null
+        return try {
+            val params = GeneratorParams(m)
+            // Greedy decoding for deterministic, reproducible cleanup output.
+            params.setSearchOption("do_sample", false)
+            val generator = Generator(m, params)
+            val stream = t.createStream()
+            try {
+                generator.appendTokenSequences(t.encode(prompt))
+                val sb = StringBuilder()
+                for (token in generator) {
+                    sb.append(stream.decode(token))
+                }
+                sb.toString()
+            } finally {
+                stream.close()
+                generator.close()
+            }
+        } catch (e: Throwable) {
+            Log.e("TextCleaner", "LLM generation failed: ${e.message}")
+            null
+        }
     }
 
     private fun cleanLlm(text: String): String {
