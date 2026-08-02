@@ -175,9 +175,9 @@
     "semantic_hash": "b65708f35dba7ab1ef1016446acc6350"
   },
   "vela-cleaner/build.gradle.kts": {
-    "mtime": 1785124802.58269,
-    "ast_hash": "19d52e23dbc3744dc2651213a3673b06",
-    "semantic_hash": "19d52e23dbc3744dc2651213a3673b06"
+    "mtime": 1785675922.8657947,
+    "ast_hash": "b76345fe8cd8f3fdabe233ac44ec515e",
+    "semantic_hash": ""
   },
   "vela-cleaner/src/main/kotlin/com/velavoice/sdk/cleaner/CleanerConfig.kt": {
     "mtime": 1785672033.4944167,
@@ -190,8 +190,8 @@
     "semantic_hash": "f8227a78c04f44b1aba9c2f56a0c466f"
   },
   "vela-cleaner/src/main/kotlin/com/velavoice/sdk/cleaner/TextCleaner.kt": {
-    "mtime": 1785673580.0664384,
-    "ast_hash": "fee038c659ed9298d419d63c4f8c3e93",
+    "mtime": 1785675562.5195346,
+    "ast_hash": "d15ed38b867557049bd4920b4a19e65f",
     "semantic_hash": ""
   },
   "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/CleanerConfigTest.kt": {
@@ -1199,11 +1199,6 @@
     "ast_hash": "a278c610f95a632dc7425270fb82e16f",
     "semantic_hash": ""
   },
-  "HELIBOARD-VELA-BRIEF.md": {
-    "mtime": 1785158232.8281293,
-    "ast_hash": "4974c32bae6ed3bb44cba7f69bfa9bcd",
-    "semantic_hash": ""
-  },
   "scripts/export_corrections.py": {
     "mtime": 1785424092.4818852,
     "ast_hash": "187f94cc574cc2183070349baecb9a52",
@@ -1242,11 +1237,6 @@
   "src/utils/editCalculator.ts": {
     "mtime": 1785423347.4843183,
     "ast_hash": "b23db2723392875f8bcf736b58abb2ec",
-    "semantic_hash": ""
-  },
-  "REVIEW.md": {
-    "mtime": 1785425824.5432427,
-    "ast_hash": "56a5d02c6a627e7d77bfe500d764c763",
     "semantic_hash": ""
   },
   "docs/database.md": {
