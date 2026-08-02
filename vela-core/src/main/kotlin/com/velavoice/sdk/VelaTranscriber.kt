@@ -12,13 +12,18 @@ import com.velavoice.sdk.whisper.WhisperEngine
  * Runtime context for a single Scribe rewrite call (Ticket 003 / Ticket 004).
  * The IME supplies surrounding editor text and app metadata; these are injected into
  * the LLM prompt by [TextCleaner].
+ *
+ * [privacySensitive] must be set by the IME when the active editor is a password/PII field
+ * (Ticket 004): Scribe and LLM cleanup are then force-disabled for this call and only
+ * local rule-based cleanup runs.
  */
 data class ScribeInput(
     val contextBefore: String? = null,
     val contextAfter: String? = null,
     val appName: String? = null,
     val inputType: String? = null,
-    val overrideStyle: String? = null
+    val overrideStyle: String? = null,
+    val privacySensitive: Boolean = false
 )
 
 class VelaTranscriber private constructor(
@@ -97,7 +102,8 @@ class VelaTranscriber private constructor(
             contextAfter = scribeInput.contextAfter,
             appName = scribeInput.appName,
             inputType = scribeInput.inputType,
-            overrideStyle = scribeInput.overrideStyle
+            overrideStyle = scribeInput.overrideStyle,
+            privacySensitive = scribeInput.privacySensitive
         ) ?: raw
         val durationMs = ((audioBytes.size / 2) / 16L) // 16 samples/ms
         return TranscriptionResult(raw, cleaned, durationMs)

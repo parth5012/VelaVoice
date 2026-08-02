@@ -82,6 +82,7 @@ class VelaTranscriberTest {
         assertNull(scribe.appName)
         assertNull(scribe.inputType)
         assertNull(scribe.overrideStyle)
+        assertEquals(false, scribe.privacySensitive)
     }
 
     @Test
@@ -91,12 +92,14 @@ class VelaTranscriberTest {
             contextAfter = "how are you",
             appName = "com.example.messages",
             inputType = "text",
-            overrideStyle = "Bullet Points"
+            overrideStyle = "Bullet Points",
+            privacySensitive = true
         )
         assertEquals("Hello there", scribe.contextBefore)
         assertEquals("how are you", scribe.contextAfter)
         assertEquals("com.example.messages", scribe.appName)
         assertEquals("text", scribe.inputType)
         assertEquals("Bullet Points", scribe.overrideStyle)
+        assertEquals(true, scribe.privacySensitive)
     }
 }

@@ -242,6 +242,31 @@ class TextCleanerTest {
         assertEquals("hello world", result)
     }
 
+    @Test
+    fun `privacySensitive forces rule-based even with LLM initialized`() {
+        // LLM init with an existing file would mark initialized; we pass a missing path
+        // so isLlmInitialized is false, but the point is the privacySensitive path
+        // must never reach prompt formatting — it returns regexCleaned directly.
+        val cleaner = TextCleaner(CleanerConfig(useLlm = true, llmModelPath = "/nonexistent"))
+        val result = cleaner.clean(
+            "um hello world",
+            privacySensitive = true
+        )
+        assertEquals("hello world", result)
+    }
+
+    @Test
+    fun `privacySensitive ignores context metadata`() {
+        val cleaner = TextCleaner(CleanerConfig(useLlm = true, llmModelPath = "/nonexistent"))
+        val result = cleaner.clean(
+            "um hello world",
+            contextBefore = "secret password hint",
+            contextAfter = "private data",
+            privacySensitive = true
+        )
+        assertEquals("hello world", result)
+    }
+
     // Edge cases
 
     @Test

@@ -38,7 +38,8 @@ class TextCleaner(private val config: CleanerConfig) {
         contextAfter = null,
         appName = null,
         inputType = null,
-        overrideStyle = null
+        overrideStyle = null,
+        privacySensitive = false
     )
 
     /**
@@ -47,6 +48,9 @@ class TextCleaner(private val config: CleanerConfig) {
      * When [config.scribeEnabled] is set, builds a Scribe prompt from the raw input, requested
      * [overrideStyle] (falling back to [config.defaultScribeStyle]), surrounding editor context,
      * app metadata, and runs it through the LLM. Otherwise standard cleanup is applied.
+     *
+     * [privacySensitive] (Ticket 004) force-disables Scribe and LLM cleanup for password/PII
+     * fields: only local rule-based cleanup runs, so sensitive text never leaves the device.
      */
     fun clean(
         text: String,
@@ -54,13 +58,14 @@ class TextCleaner(private val config: CleanerConfig) {
         contextAfter: String? = null,
         appName: String? = null,
         inputType: String? = null,
-        overrideStyle: String? = null
+        overrideStyle: String? = null,
+        privacySensitive: Boolean = false
     ): String {
         // Step 1: Rule-based pre-processor (Regex) run first
         val regexCleaned = cleanRuleBased(text)
 
-        // Step 2: LLM requested and initialized, run advanced cleanup / scribe
-        if (config.useLlm && isLlmInitialized) {
+        // Step 2: LLM requested and initialized AND the field is not privacy-sensitive
+        if (config.useLlm && isLlmInitialized && !privacySensitive) {
             val prompt = if (config.scribeEnabled) {
                 formatScribePrompt(
                     rawInput = regexCleaned,

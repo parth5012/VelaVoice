@@ -120,7 +120,8 @@ class AudioRecorder {
                             contextAfter = currentScribeInput.contextAfter,
                             appName = currentScribeInput.appName,
                             inputType = currentScribeInput.inputType,
-                            overrideStyle = currentScribeInput.overrideStyle
+                            overrideStyle = currentScribeInput.overrideStyle,
+                            privacySensitive = currentScribeInput.privacySensitive
                         ) ?: rawTranscript
                     } else {
                         rawTranscript
