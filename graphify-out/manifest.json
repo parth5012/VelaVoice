@@ -55,8 +55,8 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1785668957.6117454,
-    "ast_hash": "55eecf86bf33e9ce14e56a55ffa04d21",
+    "mtime": 1785672306.7112818,
+    "ast_hash": "8fb4b05127569e3cf072d795e5092ae9",
     "semantic_hash": ""
   },
   "CONTEXT.md": {
@@ -1297,6 +1297,11 @@
   "docs/agents/triage-labels.md": {
     "mtime": 1784638081.8302717,
     "ast_hash": "85409347dbf487c8a25c9dac59708b83",
+    "semantic_hash": ""
+  },
+  "docs/research/heliboard-sdk-config.md": {
+    "mtime": 1785672236.5985503,
+    "ast_hash": "f24dab05b88172a524c95bcd3b5fa665",
     "semantic_hash": ""
   }
 }

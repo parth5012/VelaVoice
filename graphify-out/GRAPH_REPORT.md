@@ -1,16 +1,16 @@
 # Graph Report - Vela Voice  (2026-08-02)
 
 ## Corpus Check
-- 92 files · ~216,807 words
+- 92 files · ~216,756 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2094 nodes · 4649 edges · 179 communities (116 shown, 63 thin omitted)
+- 2090 nodes · 4645 edges · 172 communities (109 shown, 63 thin omitted)
 - Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 352 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e1397925`
+- Built from commit: `68fa7ef3`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -145,12 +145,10 @@
 - [[_COMMUNITY_byteswap_tensor_data|byteswap_tensor_data]]
 - [[_COMMUNITY_string|string]]
 - [[_COMMUNITY_ggml_backend_graph_copy|ggml_backend_graph_copy]]
-- [[_COMMUNITY_whisper_pair|whisper_pair]]
 - [[_COMMUNITY_PersonalDictionaryTest|PersonalDictionaryTest]]
 - [[_COMMUNITY_ggml_compute_forward_acc_f32|ggml_compute_forward_acc_f32]]
 - [[_COMMUNITY_ggml_add_rel_pos_impl|ggml_add_rel_pos_impl]]
 - [[_COMMUNITY_whisper_kv_cache|whisper_kv_cache]]
-- [[_COMMUNITY_ggml_sqrt_impl|ggml_sqrt_impl]]
 - [[_COMMUNITY_ggml_compute_forward_flash_attn_back_f32|ggml_compute_forward_flash_attn_back_f32]]
 - [[_COMMUNITY_ggml_set_f32_1d|ggml_set_f32_1d]]
 - [[_COMMUNITY_ggml_backend_graph_copy|ggml_backend_graph_copy]]
@@ -159,10 +157,8 @@
 - [[_COMMUNITY_withVoiceIme.js|withVoiceIme.js]]
 - [[_COMMUNITY_Domain Docs|Domain Docs]]
 - [[_COMMUNITY_ggml_map_custom3_impl_f32|ggml_map_custom3_impl_f32]]
-- [[_COMMUNITY_ggml_map_custom2_impl_f32|ggml_map_custom2_impl_f32]]
 - [[_COMMUNITY_ggml_map_custom1_impl|ggml_map_custom1_impl]]
 - [[_COMMUNITY_ggml_map_custom3_impl|ggml_map_custom3_impl]]
-- [[_COMMUNITY_ggml_compute_forward_sub_f32|ggml_compute_forward_sub_f32]]
 - [[_COMMUNITY_ggml_dup_impl|ggml_dup_impl]]
 - [[_COMMUNITY_Model Storage and Access Architecture|Model Storage and Access Architecture]]
 - [[_COMMUNITY_vela-cleaner|vela-cleaner]]
@@ -170,7 +166,6 @@
 - [[_COMMUNITY_vela-core|vela-core]]
 - [[_COMMUNITY_VelaTranscriber|VelaTranscriber]]
 - [[_COMMUNITY_vela-transcription-sdk|vela-transcription-sdk]]
-- [[_COMMUNITY_ggml_log_impl|ggml_log_impl]]
 - [[_COMMUNITY_vela-voice-ui|vela-voice-ui]]
 - [[_COMMUNITY_vela-whisper|vela-whisper]]
 - [[_COMMUNITY_Implementation Issues|Implementation Issues]]
@@ -178,8 +173,6 @@
 - [[_COMMUNITY_Ethereal Precision|Ethereal Precision]]
 - [[_COMMUNITY_VelaVoice PRD|VelaVoice PRD]]
 - [[_COMMUNITY_triage-labels|triage-labels.md]]
-- [[_COMMUNITY_pthread_create|pthread_create]]
-- [[_COMMUNITY_ggml_is_numa|ggml_is_numa]]
 - [[_COMMUNITY_AudioRecord|AudioRecord]]
 
 ## God Nodes (most connected - your core abstractions)
@@ -216,7 +209,7 @@
 - **whisper native library built for 4 Android ABIs** — arm64_v8a_abi, armeabi_v7a_abi, x86_abi, x86_64_abi, whisper_cmake_project [EXTRACTED 1.00]
 - **All source files compiled into the whisper shared library** — whisper_cpp_source, whisper_jni_cpp_source, ggml_c_source, ggml_alloc_c_source, ggml_backend_c_source, ggml_quants_c_source, whisper_shared_library [EXTRACTED 1.00]
 
-## Communities (179 total, 63 thin omitted)
+## Communities (172 total, 63 thin omitted)
 
 ### Community 0 - "Model Verification Module"
 Cohesion: 0.07
@@ -224,11 +217,11 @@ Nodes (17): NativeModule, ReactApplicationContext, ReactContextBaseJavaModule, R
 
 ### Community 1 - "Native Build Toolchain"
 Cohesion: 0.02
-Nodes (119): float32x4_t, ggml_abs_inplace(), ggml_compute_forward_argmax(), ggml_compute_forward_argmax_f32(), ggml_compute_forward_concat(), ggml_compute_forward_concat_f32(), ggml_compute_forward_diag(), ggml_compute_forward_diag_f32() (+111 more)
+Nodes (102): float32x4_t, ggml_abs(), ggml_abs_inplace(), ggml_build_forward_impl(), ggml_compute_forward_add_rel_pos(), ggml_compute_forward_add_rel_pos_f32(), ggml_compute_forward_argmax(), ggml_compute_forward_argmax_f32() (+94 more)
 
 ### Community 2 - "GGML Inference Engine"
-Cohesion: 0.09
-Nodes (52): ggml_backend_buffer_context_t, ggml_backend_init_fn, ggml_backend_buffer_t, ggml_backend_buffer_type_t, ggml_are_same_layout(), ggml_backend_alloc_buffer(), ggml_backend_buffer_clear(), ggml_backend_buffer_get_alignment() (+44 more)
+Cohesion: 0.10
+Nodes (50): ggml_backend_buffer_context_t, ggml_backend_init_fn, ggml_backend_buffer_t, ggml_backend_buffer_type_t, ggml_backend_buffer_clear(), ggml_backend_buffer_free(), ggml_backend_buffer_get_alignment(), ggml_backend_buffer_get_alloc_size() (+42 more)
 
 ### Community 3 - "Expo App Configuration"
 Cohesion: 0.20
@@ -247,20 +240,20 @@ Cohesion: 0.07
 Nodes (28): dependencies, expo, expo-constants, expo-file-system, expo-sqlite, expo-status-bar, react, react-native (+20 more)
 
 ### Community 7 - "Core Domain Pipeline"
-Cohesion: 0.15
-Nodes (34): ggml_acc(), ggml_acc_impl(), ggml_acc_inplace(), ggml_acc_or_set(), ggml_blck_size(), ggml_compute_backward(), ggml_compute_forward_dup_bytes(), ggml_compute_forward_dup_f16() (+26 more)
+Cohesion: 0.11
+Nodes (47): ggml_acc(), ggml_acc_impl(), ggml_acc_inplace(), ggml_acc_or_set(), ggml_blck_size(), ggml_compute_backward(), ggml_compute_forward_acc_f32(), ggml_compute_forward_conv_transpose_1d() (+39 more)
 
 ### Community 8 - "RN Package Registration"
 Cohesion: 0.04
-Nodes (47): mt19937, T, byteswap(), byteswap_tensor(), byteswap_tensor_data(), ggml_tensor, string, fill_sin_cos_table() (+39 more)
+Nodes (44): mt19937, ggml_time_us(), fill_sin_cos_table(), hann_window(), kv_cache_free(), log_mel_spectrogram(), whisper_allocr_free(), whisper_allocr_size() (+36 more)
 
 ### Community 9 - "Build Scripts"
-Cohesion: 0.07
-Nodes (64): GGML_API, ggml_type, ggml_allocr_alloc(), ggml_add(), ggml_build_forward_expand(), ggml_conv_1d(), ggml_conv_1d_ph(), ggml_conv_2d() (+56 more)
+Cohesion: 0.09
+Nodes (54): GGML_API, ggml_backend_tensor_set(), ggml_add(), ggml_build_forward_expand(), ggml_cpy(), ggml_critical_section_end(), ggml_element_size(), ggml_free() (+46 more)
 
 ### Community 10 - "RN Runtime Dependencies"
-Cohesion: 0.11
-Nodes (53): function, ggml_allocr_t, ggml_gallocr_t, add_allocated_tensor(), aligned_offset(), allocate_node(), ggml_tallocr_t, free_node() (+45 more)
+Cohesion: 0.10
+Nodes (56): function, ggml_allocr_t, ggml_gallocr_t, add_allocated_tensor(), aligned_offset(), allocate_node(), ggml_tallocr_t, free_node() (+48 more)
 
 ### Community 11 - "Brand Identity"
 Cohesion: 0.40
@@ -271,16 +264,16 @@ Cohesion: 0.50
 Nodes (3): compilerOptions, strict, extends
 
 ### Community 56 - "ggml_compute_forward"
-Cohesion: 0.07
-Nodes (36): ggml_compute_forward(), ggml_compute_forward_acc(), ggml_compute_forward_acc_f32(), ggml_compute_forward_add_rel_pos(), ggml_compute_forward_add_rel_pos_f32(), ggml_compute_forward_argsort(), ggml_compute_forward_argsort_f32(), ggml_compute_forward_clamp() (+28 more)
+Cohesion: 0.06
+Nodes (35): ggml_compute_forward(), ggml_compute_forward_acc(), ggml_compute_forward_concat(), ggml_compute_forward_concat_f32(), ggml_compute_forward_cont(), ggml_compute_forward_cpy(), ggml_compute_forward_cross_entropy_loss(), ggml_compute_forward_cross_entropy_loss_back() (+27 more)
 
 ### Community 57 - "ggml_init"
-Cohesion: 0.13
-Nodes (20): dft(), fft(), hann_window(), log_mel_spectrogram(), log_mel_spectrogram_worker_thread(), tokenize(), whisper_filters, n_fft (+12 more)
+Cohesion: 0.29
+Nodes (7): T, byteswap(), byteswap_tensor(), byteswap_tensor_data(), ggml_tensor, read_safe(), whisper_model_loader
 
 ### Community 58 - "whisper_state"
 Cohesion: 0.05
-Nodes (47): ggml_graph_compute_helper(), whisper_decode_internal(), whisper_encode(), whisper_encode_external(), whisper_encode_internal(), whisper_encode_with_state(), whisper_kv_cache_cell_max(), whisper_kv_cache_find_slot() (+39 more)
+Nodes (38): whisper_state, alloc_conv, alloc_cross, alloc_decode, alloc_encode, backend, batch, decoders (+30 more)
 
 ### Community 59 - "vector"
 Cohesion: 0.12
@@ -291,28 +284,28 @@ Cohesion: 0.11
 Nodes (35): block_q2_K, block_q3_K, block_q4_K, block_q5_K, block_q6_K, block_q8_K, ggml_quantize_chunk(), dequantize_row_q2_K() (+27 more)
 
 ### Community 61 - "whisper_full_with_state"
-Cohesion: 0.12
-Nodes (25): ggml_compute_forward_cross_entropy_loss(), ggml_compute_forward_cross_entropy_loss_back(), ggml_compute_forward_cross_entropy_loss_back_f32(), ggml_compute_forward_cross_entropy_loss_f32(), ggml_compute_forward_flash_attn(), ggml_compute_forward_flash_attn_back(), ggml_compute_forward_flash_attn_back_f32(), ggml_compute_forward_flash_attn_f16() (+17 more)
+Cohesion: 0.16
+Nodes (21): ggml_compute_forward_cross_entropy_loss_back_f32(), ggml_compute_forward_cross_entropy_loss_f32(), ggml_compute_forward_flash_attn(), ggml_compute_forward_flash_attn_back_f32(), ggml_compute_forward_flash_attn_f16(), ggml_compute_forward_flash_attn_f32(), ggml_compute_forward_group_norm(), ggml_compute_forward_group_norm_f32() (+13 more)
 
 ### Community 62 - "whisper_context"
 Cohesion: 0.21
 Nodes (3): CleanerConfig, TextCleaner, TextCleanerTest
 
 ### Community 63 - "data"
-Cohesion: 0.15
-Nodes (27): vector, pair, decode_utf8(), whisper_grammar, whisper_grammar_accept(), whisper_grammar_accept_token(), whisper_grammar_advance_stack(), whisper_grammar_candidate (+19 more)
+Cohesion: 0.09
+Nodes (38): vector, pair, decode_utf8(), dft(), fft(), get_signal_energy(), log_mel_spectrogram_worker_thread(), whisper_filters (+30 more)
 
 ### Community 64 - "ggml_fp16_t"
 Cohesion: 0.18
 Nodes (14): v128_t, __avx_f32cx8_load(), __avx_f32cx8_store(), ggml_fp16_t, __m128, __m256, ggml_fp16_to_fp32(), ggml_fp32_to_fp16() (+6 more)
 
 ### Community 65 - "whisper_build_graph_decoder"
-Cohesion: 0.23
-Nodes (20): ggml_backend_sched_t, ggml_tallocr_t, fmt_size(), get_allocr_backend(), get_buffer_backend(), ggml_backend_name(), ggml_backend_sched_get_buffer(), ggml_backend_sched_get_tallocr() (+12 more)
+Cohesion: 0.17
+Nodes (25): ggml_backend_eval_callback, ggml_backend_sched_t, ggml_tallocr_t, fmt_size(), get_allocr_backend(), get_buffer_backend(), ggml_are_same_layout(), ggml_backend_compare_graph_backend() (+17 more)
 
 ### Community 66 - "ggml_dup_tensor"
-Cohesion: 0.20
-Nodes (15): ggml_compute_forward_out_prod(), ggml_compute_forward_out_prod_f32(), ggml_compute_forward_out_prod_q_f32(), ggml_new_f32(), ggml_new_i32(), ggml_scratch_load(), ggml_scratch_save(), ggml_set_f32() (+7 more)
+Cohesion: 0.60
+Nodes (5): ggml_custom2_op_f32_t, ggml_compute_forward_map_custom2_f32(), ggml_map_custom2_f32(), ggml_map_custom2_impl_f32(), ggml_map_custom2_inplace_f32()
 
 ### Community 67 - "ggml_compute_forward_unary"
 Cohesion: 0.06
@@ -323,8 +316,8 @@ Cohesion: 0.08
 Nodes (25): whisper_layer_decoder, attn_k_w, attn_ln_0_b, attn_ln_0_w, attn_ln_1_b, attn_ln_1_w, attn_q_b, attn_q_w (+17 more)
 
 ### Community 69 - "ggml_compute_backward"
-Cohesion: 0.27
-Nodes (10): jfloatArray, jlong, JNIEnv, JNIEXPORT, jobject, jstring, Java_com_velavoice_sdk_whisper_WhisperEngine_nativeFree(), Java_com_velavoice_sdk_whisper_WhisperEngine_nativeInit() (+2 more)
+Cohesion: 0.24
+Nodes (11): jfloatArray, jlong, JNIEnv, JNIEXPORT, jobject, jstring, Java_com_velavoice_sdk_whisper_WhisperEngine_nativeFree(), Java_com_velavoice_sdk_whisper_WhisperEngine_nativeInit() (+3 more)
 
 ### Community 70 - "whisper_decoder"
 Cohesion: 0.08
@@ -363,28 +356,28 @@ Cohesion: 0.40
 Nodes (5): block_q4_1, ggml_quantize_q4_1(), dequantize_row_q4_1(), quantize_row_q4_1(), quantize_row_q4_1_reference()
 
 ### Community 79 - "whisper_vocab"
-Cohesion: 0.12
-Nodes (15): map, whisper_is_multilingual(), whisper_vocab, id_to_token, n_vocab, token_beg, token_eot, token_nosp (+7 more)
+Cohesion: 0.11
+Nodes (18): map, tokenize(), id, whisper_is_multilingual(), whisper_tokenize(), whisper_vocab, id_to_token, n_vocab (+10 more)
 
 ### Community 80 - "whisper_batch"
-Cohesion: 0.17
-Nodes (15): set, whisper_batch, logits, n_seq_id, n_tokens, pos, seq_id, token (+7 more)
+Cohesion: 0.08
+Nodes (29): ggml_allocr, ggml_backend_buffer_t, set, whisper_allocr, alloc, buffer, meta, whisper_batch (+21 more)
 
 ### Community 81 - "ggml_build_forward_expand"
 Cohesion: 0.06
 Nodes (26): AccessibilityEvent, AccessibilityService, Canvas, FrameLayout, getKeywords(), AudioRecord, Boolean, Button (+18 more)
 
 ### Community 82 - "gguf_get_or_add_key"
-Cohesion: 0.23
-Nodes (16): gguf_get_or_add_key(), gguf_set_arr_data(), gguf_set_arr_str(), gguf_set_kv(), gguf_set_val_bool(), gguf_set_val_f32(), gguf_set_val_f64(), gguf_set_val_i16() (+8 more)
+Cohesion: 0.08
+Nodes (37): gguf_find_key(), gguf_get_arr_data(), gguf_get_arr_n(), gguf_get_arr_str(), gguf_get_arr_type(), gguf_get_key(), gguf_get_kv_type(), gguf_get_n_kv() (+29 more)
 
 ### Community 83 - "whisper_layer_encoder"
 Cohesion: 0.12
 Nodes (16): whisper_layer_encoder, attn_k_w, attn_ln_0_b, attn_ln_0_w, attn_ln_1_b, attn_ln_1_w, attn_q_b, attn_q_w (+8 more)
 
 ### Community 84 - "ggml_view_tensor"
-Cohesion: 0.10
-Nodes (34): get_signal_energy(), sample_to_timestamp(), should_split_on_word(), timestamp_to_sample(), voice_length(), whisper_batch_prep_legacy(), whisper_decode(), whisper_decode_with_state() (+26 more)
+Cohesion: 0.09
+Nodes (35): sample_to_timestamp(), should_split_on_word(), timestamp_to_sample(), to_timestamp(), whisper_batch_prep_legacy(), whisper_decode(), whisper_decode_with_state(), whisper_encode_with_state() (+27 more)
 
 ### Community 85 - "quantize_row_q8_1"
 Cohesion: 0.18
@@ -415,16 +408,16 @@ Cohesion: 0.25
 Nodes (8): ggml_log_callback, ggml_log_level, whisper_global, log_callback, log_callback_user_data, whisper_log_callback_default(), whisper_log_internal(), whisper_log_set()
 
 ### Community 92 - "ggml_cont_4d"
-Cohesion: 0.14
-Nodes (16): ggml_add_cast(), ggml_add_cast_impl(), ggml_can_repeat(), ggml_can_repeat_rows(), ggml_compute_forward_div(), ggml_compute_forward_div_f32(), ggml_compute_forward_mul(), ggml_compute_forward_mul_f32() (+8 more)
+Cohesion: 0.15
+Nodes (15): ggml_add_cast(), ggml_add_cast_impl(), ggml_can_repeat(), ggml_can_repeat_rows(), ggml_compute_forward_div(), ggml_compute_forward_div_f32(), ggml_compute_forward_mul(), ggml_compute_forward_mul_f32() (+7 more)
 
 ### Community 93 - "ggml_compute_forward_rope_f16"
 Cohesion: 0.36
 Nodes (8): ggml_compute_forward_rope(), ggml_compute_forward_rope_back(), ggml_compute_forward_rope_f16(), ggml_compute_forward_rope_f32(), ggml_rope_yarn_corr_dim(), ggml_rope_yarn_corr_dims(), rope_yarn(), rope_yarn_ramp()
 
 ### Community 95 - "whisper_pair"
-Cohesion: 0.20
-Nodes (19): ggml_opt_callback, ggml_cycles(), ggml_get_f32_1d(), ggml_get_f32_nd(), ggml_graph_compute(), ggml_opt_acc_grad(), ggml_opt_adam(), ggml_opt_get_grad() (+11 more)
+Cohesion: 0.06
+Nodes (58): atomic_int, ggml_opt_callback, pthread_t, thread_ret_t, atomic_fetch_add(), atomic_fetch_sub(), atomic_load(), atomic_store() (+50 more)
 
 ### Community 97 - "ggml_compute_forward_sum"
 Cohesion: 0.14
@@ -435,8 +428,8 @@ Cohesion: 0.53
 Nodes (6): ggml_unary_op_f32_t, ggml_compute_forward_map_unary(), ggml_compute_forward_map_unary_f32(), ggml_map_unary_f32(), ggml_map_unary_impl_f32(), ggml_map_unary_inplace_f32()
 
 ### Community 100 - "quantize_row_q5_1_reference"
-Cohesion: 0.38
-Nodes (10): atomic_int, atomic_fetch_add(), atomic_fetch_sub(), atomic_load(), atomic_store(), LONG, ggml_critical_section_start(), ggml_graph_compute_perf_stats_node() (+2 more)
+Cohesion: 0.60
+Nodes (5): ggml_custom3_op_f32_t, ggml_compute_forward_map_custom3_f32(), ggml_map_custom3_f32(), ggml_map_custom3_impl_f32(), ggml_map_custom3_inplace_f32()
 
 ### Community 101 - "ggml_map_custom1_impl_f32"
 Cohesion: 0.13
@@ -447,24 +440,24 @@ Cohesion: 0.40
 Nodes (5): block_q4_0, ggml_quantize_q4_0(), dequantize_row_q4_0(), quantize_row_q4_0(), quantize_row_q4_0_reference()
 
 ### Community 103 - "ggml_map_custom3_impl_f32"
-Cohesion: 0.33
-Nodes (6): whisper_segment, speaker_turn_next, t0, t1, text, tokens
+Cohesion: 0.18
+Nodes (12): string, voice_length(), whisper_ctx_init_openvino_encoder(), whisper_get_coreml_path_encoder(), whisper_openvino_get_path_cache(), whisper_openvino_get_path_encoder(), whisper_segment, speaker_turn_next (+4 more)
 
 ### Community 104 - ".convertPcmToFloat"
 Cohesion: 0.40
 Nodes (3): AudioConverter, ByteArray, FloatArray
 
 ### Community 105 - "ggml_map_custom1_impl"
-Cohesion: 0.19
-Nodes (13): ggml_backend_buffer_t, ggml_backend_buffer_type_t, ggml_backend_t, ggml_backend_alloc_ctx_tensors(), ggml_backend_alloc_ctx_tensors_from_buft(), ggml_backend_buft_get_alloc_size(), ggml_backend_tensor_get_async(), ggml_backend_tensor_set_async() (+5 more)
+Cohesion: 0.21
+Nodes (13): ggml_backend_buffer_t, ggml_backend_buffer_type_t, ggml_backend_t, ggml_backend_alloc_ctx_tensors(), ggml_backend_alloc_ctx_tensors_from_buft(), ggml_backend_graph_copy(), ggml_dup_tensor_layout(), graph_dup_tensor() (+5 more)
 
 ### Community 106 - "ggml_map_custom2_impl"
 Cohesion: 1.00
 Nodes (3): export_corrections(), main(), pull_adb_db()
 
 ### Community 107 - "ggml_compute_forward_leaky_relu_f32"
-Cohesion: 0.14
-Nodes (14): ggml_allocr, ggml_backend_buffer_t, whisper_allocr, alloc, buffer, meta, whisper_kv_cache, buffer (+6 more)
+Cohesion: 0.83
+Nodes (4): ggml_custom1_op_t, ggml_map_custom1(), ggml_map_custom1_impl(), ggml_map_custom1_inplace()
 
 ### Community 108 - "CMakeCCompilerId.c"
 Cohesion: 0.14
@@ -476,7 +469,7 @@ Nodes (3): Boolean, Set, String
 
 ### Community 110 - "CMakeCCompilerId.c"
 Cohesion: 0.06
-Nodes (57): ggml_add_rel_pos(), ggml_add_rel_pos_impl(), ggml_add_rel_pos_inplace(), ggml_alibi(), ggml_argmax(), ggml_argsort(), ggml_calc_conv_output_size(), ggml_calc_conv_transpose_1d_output_size() (+49 more)
+Nodes (59): ggml_tensor, ggml_alibi(), ggml_argsort(), ggml_calc_conv_output_size(), ggml_calc_conv_transpose_1d_output_size(), ggml_calc_conv_transpose_output_size(), ggml_calc_pool_output_size(), ggml_can_mul_mat() (+51 more)
 
 ### Community 111 - "CMakeCXXCompilerId.cpp"
 Cohesion: 0.18
@@ -499,8 +492,8 @@ Cohesion: 0.29
 Nodes (6): Core Domain Vocabulary, Core Features, Overview, Spec: Offline Transcription IME, Target Platform, UI/UX Design (Voice Typing Pane)
 
 ### Community 117 - "CMakeCXXCompilerId.cpp"
-Cohesion: 0.14
-Nodes (19): ggml_add_impl(), ggml_add_inplace(), ggml_add_or_set(), ggml_build_backward_expand(), ggml_build_backward_gradient_checkpointing(), ggml_build_forward_impl(), ggml_graph_clear(), ggml_graph_cpy() (+11 more)
+Cohesion: 0.12
+Nodes (19): ggml_add1(), ggml_add1_impl(), ggml_add1_inplace(), ggml_add1_or_set(), ggml_add_impl(), ggml_add_inplace(), ggml_add_or_set(), ggml_build_backward_expand() (+11 more)
 
 ### Community 118 - "CMakeCCompilerId.c"
 Cohesion: 0.29
@@ -515,24 +508,24 @@ Cohesion: 0.07
 Nodes (29): ggml_compute_forward_abs(), ggml_compute_forward_abs_f32(), ggml_compute_forward_elu(), ggml_compute_forward_elu_f32(), ggml_compute_forward_gelu(), ggml_compute_forward_gelu_f32(), ggml_compute_forward_gelu_quick(), ggml_compute_forward_gelu_quick_f32() (+21 more)
 
 ### Community 121 - "CMakeCXXCompilerId.cpp"
-Cohesion: 0.29
-Nodes (7): ggml_add1(), ggml_add1_impl(), ggml_add1_inplace(), ggml_add1_or_set(), ggml_is_padded_1d(), ggml_scale_impl(), ggml_scale_inplace()
+Cohesion: 0.50
+Nodes (4): ggml_compute_forward_silu_back(), ggml_compute_forward_silu_back_f32(), ggml_silu_backward_f32(), ggml_vec_silu_backward_f32()
 
 ### Community 122 - "quantize_row_q5_1_reference"
-Cohesion: 0.12
-Nodes (17): ggml_compute_forward_get_rows(), ggml_compute_forward_get_rows_f16(), ggml_compute_forward_get_rows_f32(), ggml_compute_forward_repeat_back(), ggml_compute_forward_repeat_back_f32(), ggml_compute_forward_rms_norm_back(), ggml_compute_forward_rms_norm_back_f32(), ggml_compute_forward_set() (+9 more)
+Cohesion: 0.13
+Nodes (15): ggml_compute_forward_get_rows(), ggml_compute_forward_get_rows_f16(), ggml_compute_forward_get_rows_f32(), ggml_compute_forward_repeat_back(), ggml_compute_forward_repeat_back_f32(), ggml_compute_forward_rms_norm_back(), ggml_compute_forward_rms_norm_back_f32(), ggml_compute_forward_set() (+7 more)
 
 ### Community 123 - "ggml_cont_4d"
-Cohesion: 0.22
-Nodes (11): ggml_tensor, ggml_concat(), ggml_cont_1d(), ggml_cont_2d(), ggml_cont_3d(), ggml_cont_4d(), ggml_get_rows(), ggml_new_tensor_4d() (+3 more)
+Cohesion: 0.67
+Nodes (3): ggml_compute_forward_leaky_relu(), ggml_compute_forward_leaky_relu_f32(), ggml_vec_leaky_relu_f32()
 
 ### Community 126 - "ggml_set_f32"
-Cohesion: 0.17
-Nodes (12): whisper_context, backend, itype, model, params, path_model, state, t_load_us (+4 more)
+Cohesion: 0.11
+Nodes (21): ggml_type, ggml_graph_compute_helper(), whisper_context, backend, itype, model, params, path_model (+13 more)
 
 ### Community 127 - "ggml_backend_alloc_ctx_tensors_from_buft"
-Cohesion: 0.14
-Nodes (14): ggml_abs(), ggml_elu(), ggml_gelu_quick(), ggml_neg(), ggml_relu(), ggml_sgn(), ggml_silu(), ggml_step() (+6 more)
+Cohesion: 0.67
+Nodes (3): ggml_compute_forward_log(), ggml_compute_forward_log_f32(), ggml_vec_log_f32()
 
 ### Community 129 - "ggml_nbytes"
 Cohesion: 0.29
@@ -542,37 +535,29 @@ Nodes (6): Conventions, Issue tracker: GitHub, Pull requests as a triage surface
 Cohesion: 0.17
 Nodes (11): 1. Source constraint, 2. What config must the fork give the SDK, 3. Where config lives: Vela app (models.db) vs HeliBoard-style (SharedPreferences), 4. PersonalDictionary interface → mirroring/extending for shortcut expansions, 5. Licensing / boundary — config ownership, 6. Concrete recommendation, 7. Assumptions, inferences & open questions, Can Vela-app `models.db` shortcuts be reached from the fork? (+3 more)
 
-### Community 134 - "whisper_pair"
-Cohesion: 0.24
-Nodes (11): ggml_cycles_per_ms(), ggml_get_name(), ggml_graph_export(), ggml_graph_export_leaf(), ggml_graph_export_node(), ggml_graph_print(), ggml_n_dims(), ggml_nbytes_pad() (+3 more)
-
 ### Community 136 - "ggml_compute_forward_acc_f32"
-Cohesion: 0.12
-Nodes (30): ggml_are_same_shape(), ggml_compute_forward_add(), ggml_compute_forward_add1(), ggml_compute_forward_add1_f16_f16(), ggml_compute_forward_add1_f16_f32(), ggml_compute_forward_add1_f32(), ggml_compute_forward_add1_q_f32(), ggml_compute_forward_add_f16_f16() (+22 more)
+Cohesion: 0.11
+Nodes (22): ggml_compute_forward_add(), ggml_compute_forward_add_f16_f16(), ggml_compute_forward_add_f16_f32(), ggml_compute_forward_add_f32(), ggml_compute_forward_add_q_f32(), ggml_compute_forward_alibi(), ggml_compute_forward_alibi_f16(), ggml_compute_forward_alibi_f32() (+14 more)
 
 ### Community 137 - "ggml_add_rel_pos_impl"
-Cohesion: 0.20
-Nodes (9): Agent skills, Agent skills, Domain docs, Domain docs, graphify, Issue tracker, Issue tracker, Triage labels (+1 more)
+Cohesion: 0.33
+Nodes (5): Agent skills, Domain docs, graphify, Issue tracker, Triage labels
 
 ### Community 138 - "whisper_kv_cache"
 Cohesion: 0.60
 Nodes (5): ggml_custom1_op_f32_t, ggml_compute_forward_map_custom1_f32(), ggml_map_custom1_f32(), ggml_map_custom1_impl_f32(), ggml_map_custom1_inplace_f32()
 
-### Community 139 - "ggml_sqrt_impl"
-Cohesion: 0.83
-Nodes (4): ggml_custom2_op_t, ggml_map_custom2(), ggml_map_custom2_impl(), ggml_map_custom2_inplace()
-
 ### Community 142 - "ggml_set_f32_1d"
-Cohesion: 0.09
-Nodes (33): ggml_backend_eval_callback, ggml_backend_graph_plan_t, ggml_type_traits_t, ggml_backend_t, ggml_backend_buffer_free(), ggml_backend_compare_graph_backend(), ggml_backend_cpu_buffer_type_supports_backend(), ggml_backend_cpu_free() (+25 more)
+Cohesion: 0.11
+Nodes (27): ggml_backend_graph_plan_t, ggml_type_traits_t, ggml_backend_t, ggml_backend_cpu_buffer_type_supports_backend(), ggml_backend_cpu_free(), ggml_backend_cpu_graph_compute(), ggml_backend_cpu_graph_plan_compute(), ggml_backend_cpu_graph_plan_create() (+19 more)
 
 ### Community 143 - "ggml_backend_graph_copy"
 Cohesion: 0.23
 Nodes (6): Builder, Boolean, Int, List, String, VelaTranscriber
 
 ### Community 145 - "quantize_row_q4_1_reference"
-Cohesion: 0.31
-Nodes (9): FILE, ggml_graph_dump_dot(), ggml_graph_dump_dot_leaf_edge(), ggml_graph_dump_dot_node_edge(), ggml_graph_find(), ggml_graph_get_parent(), ggml_op_symbol(), gguf_fread_el() (+1 more)
+Cohesion: 0.08
+Nodes (31): FILE, ggml_argmax(), ggml_get_i32_1d(), ggml_get_i32_nd(), ggml_get_rows_back(), ggml_graph_dump_dot(), ggml_graph_dump_dot_leaf_edge(), ggml_graph_dump_dot_node_edge() (+23 more)
 
 ### Community 146 - "TranscriptionResult"
 Cohesion: 0.12
@@ -587,24 +572,16 @@ Cohesion: 0.33
 Nodes (5): Before exploring, read these, Domain Docs, File structure, Flag ADR conflicts, Use the glossary's vocabulary
 
 ### Community 150 - "ggml_map_custom3_impl_f32"
-Cohesion: 0.08
-Nodes (33): ggml_custom1_op_t, ggml_custom2_op_f32_t, ggml_custom3_op_f32_t, ggml_custom3_op_t, ggml_compute_forward_map_custom2_f32(), ggml_compute_forward_map_custom3_f32(), ggml_cont(), ggml_cont_impl() (+25 more)
-
-### Community 151 - "ggml_map_custom2_impl_f32"
-Cohesion: 0.33
-Nodes (7): ggml_time_us(), whisper_bench_ggml_mul_mat(), whisper_bench_memcpy(), whisper_bench_memcpy_str(), whisper_print_timings(), whisper_reset_timings(), WHISPER_API
+Cohesion: 0.07
+Nodes (32): ggml_custom2_op_t, ggml_custom3_op_t, ggml_add_rel_pos(), ggml_add_rel_pos_impl(), ggml_add_rel_pos_inplace(), ggml_cont(), ggml_cont_impl(), ggml_cont_inplace() (+24 more)
 
 ### Community 152 - "ggml_map_custom1_impl"
-Cohesion: 0.33
-Nodes (6): ggml_float, ggml_compute_forward_sum(), ggml_compute_forward_sum_f16(), ggml_compute_forward_sum_f32(), ggml_vec_sum_f16_ggf(), ggml_vec_sum_f32_ggf()
+Cohesion: 0.16
+Nodes (18): ggml_float, ggml_are_same_shape(), ggml_compute_forward_add1(), ggml_compute_forward_add1_f16_f16(), ggml_compute_forward_add1_f16_f32(), ggml_compute_forward_add1_f32(), ggml_compute_forward_add1_q_f32(), ggml_compute_forward_norm() (+10 more)
 
 ### Community 153 - "ggml_map_custom3_impl"
 Cohesion: 0.40
 Nodes (5): block_q5_0, ggml_quantize_q5_0(), dequantize_row_q5_0(), quantize_row_q5_0(), quantize_row_q5_0_reference()
-
-### Community 154 - "ggml_compute_forward_sub_f32"
-Cohesion: 0.67
-Nodes (3): ggml_compute_forward_sub(), ggml_compute_forward_sub_f32(), ggml_vec_sub_f32()
 
 ### Community 155 - "ggml_dup_impl"
 Cohesion: 0.40
@@ -614,41 +591,29 @@ Nodes (5): block_q5_1, ggml_quantize_q5_1(), dequantize_row_q5_1(), quantize_row
 Cohesion: 0.07
 Nodes (28): Recording, RecordingCard, styles, OverlayLogoProps, styles, styles, TranscriptionEditor(), TranscriptionEditorProps (+20 more)
 
-### Community 166 - "ggml_log_impl"
-Cohesion: 0.40
-Nodes (5): ggml_get_i32_1d(), ggml_get_i32_nd(), ggml_set_i32_1d(), ggml_set_i32_nd(), ggml_unravel_index()
-
-### Community 175 - "pthread_create"
-Cohesion: 0.50
-Nodes (4): pthread_t, thread_ret_t, pthread_create(), pthread_join()
-
-### Community 177 - "ggml_is_numa"
-Cohesion: 0.50
-Nodes (4): clear_numa_thread_affinity(), ggml_is_numa(), ggml_numa_init(), set_numa_thread_affinity()
-
 ### Community 207 - "AudioRecord"
 Cohesion: 0.19
 Nodes (7): AudioRecorder, AudioRecord, Boolean, Thread, AudioCaptureFailed, Float, VelaRecordingCallback
 
 ## Knowledge Gaps
-- **407 isolated node(s):** `$schema`, `plugin`, `@opencode-ai/plugin`, `Recording`, `RecordingCard` (+402 more)
+- **404 isolated node(s):** `Issue tracker`, `Triage labels`, `Domain docs`, `graphify`, `$schema` (+399 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **63 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `whisper_state` connect `whisper_state` to `whisper_decoder`, `ggml_map_custom3_impl_f32`, `RN Package Registration`, `Build Scripts`, `RN Runtime Dependencies`, `ggml_compute_forward_leaky_relu_f32`, `whisper_batch`, `ggml_view_tensor`, `ggml_init`, `ggml_set_f32`, `data`?**
-  _High betweenness centrality (0.040) - this node is a cross-community bridge._
-- **Why does `whisper_build_graph_decoder()` connect `Build Scripts` to `GGML Inference Engine`, `Core Domain Pipeline`, `RN Package Registration`, `ggml_map_custom1_impl`, `RN Runtime Dependencies`, `whisper_batch`, `ggml_map_custom3_impl_f32`, `ggml_init`, `whisper_state`, `ggml_cont_4d`, `ggml_set_f32`?**
-  _High betweenness centrality (0.026) - this node is a cross-community bridge._
-- **Why does `whisper_kv_cache` connect `ggml_compute_forward_leaky_relu_f32` to `RN Package Registration`, `whisper_batch`, `ggml_init`, `whisper_state`, `data`?**
-  _High betweenness centrality (0.026) - this node is a cross-community bridge._
-- **What connects `$schema`, `plugin`, `@opencode-ai/plugin` to the rest of the system?**
-  _408 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Why does `whisper_build_graph_decoder()` connect `Build Scripts` to `Core Domain Pipeline`, `RN Package Registration`, `RN Runtime Dependencies`, `CMakeCCompilerId.c`, `whisper_batch`, `whisper_state`, `ggml_set_f32`?**
+  _High betweenness centrality (0.031) - this node is a cross-community bridge._
+- **Why does `whisper_state` connect `whisper_state` to `whisper_decoder`, `ggml_map_custom3_impl_f32`, `RN Package Registration`, `Build Scripts`, `RN Runtime Dependencies`, `whisper_batch`, `ggml_view_tensor`, `ggml_set_f32`, `data`?**
+  _High betweenness centrality (0.029) - this node is a cross-community bridge._
+- **Why does `ggml_time_us()` connect `RN Package Registration` to `whisper_build_graph_decoder`, `Native Build Toolchain`, `Build Scripts`, `ggml_view_tensor`, `ggml_set_f32`, `whisper_pair`?**
+  _High betweenness centrality (0.021) - this node is a cross-community bridge._
+- **What connects `Issue tracker`, `Triage labels`, `Domain docs` to the rest of the system?**
+  _405 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Model Verification Module` be split into smaller, more focused modules?**
   _Cohesion score 0.07215541165587419 - nodes in this community are weakly interconnected._
 - **Should `Native Build Toolchain` be split into smaller, more focused modules?**
-  _Cohesion score 0.022012281530467644 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.024588178294573642 - nodes in this community are weakly interconnected._
 - **Should `GGML Inference Engine` be split into smaller, more focused modules?**
-  _Cohesion score 0.09433962264150944 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09647058823529411 - nodes in this community are weakly interconnected._
