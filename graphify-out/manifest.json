@@ -5,8 +5,8 @@
     "semantic_hash": "598cb075410bcd95220ac90bbb60344a"
   },
   "App.tsx": {
-    "mtime": 1785156819.04248,
-    "ast_hash": "4071d210380b969edfa9ff0365d6448e",
+    "mtime": 1785652199.781981,
+    "ast_hash": "13c655c74e9d20d82b2a386a832d00ec",
     "semantic_hash": ""
   },
   "app.json": {
@@ -15,8 +15,8 @@
     "semantic_hash": "a06a91a910522d29bf5fbcad7e2b0f9a"
   },
   "package.json": {
-    "mtime": 1785156806.7978594,
-    "ast_hash": "880acb938bffaad13c234c6cb873c588",
+    "mtime": 1785424190.0166523,
+    "ast_hash": "248252da75c264e72d625c466876d4ce",
     "semantic_hash": ""
   },
   "plugins/withVoiceIme.js": {
@@ -35,14 +35,14 @@
     "semantic_hash": ""
   },
   "src/native/VoiceInputMethodService.kt": {
-    "mtime": 1785156741.2396214,
-    "ast_hash": "d3f31b85bee057526520c554399a4519",
+    "mtime": 1785306289.274419,
+    "ast_hash": "112a21b29ea5f7b6bb00d242886c5844",
     "semantic_hash": ""
   },
   "src/services/ModelManager.ts": {
-    "mtime": 1785051415.6226306,
-    "ast_hash": "3257e403b72321724f857ac0fcfa1001",
-    "semantic_hash": "3257e403b72321724f857ac0fcfa1001"
+    "mtime": 1785424460.3714545,
+    "ast_hash": "b897b81ba7a50ff26721d04f180aa8cc",
+    "semantic_hash": ""
   },
   "tsconfig.json": {
     "mtime": 1785051415.6239445,
@@ -55,13 +55,13 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1785051377.9175303,
-    "ast_hash": "8a6643a420fdad6bfb583523bc6cef16",
-    "semantic_hash": "8a6643a420fdad6bfb583523bc6cef16"
+    "mtime": 1785668957.6117454,
+    "ast_hash": "55eecf86bf33e9ce14e56a55ffa04d21",
+    "semantic_hash": ""
   },
   "CONTEXT.md": {
-    "mtime": 1785155025.9665663,
-    "ast_hash": "a3d932e7942b38683844d1baf54aa13a",
+    "mtime": 1785390801.7524326,
+    "ast_hash": "bd00103819363132d7abb2828757be60",
     "semantic_hash": ""
   },
   "docs/adr/0001-separate-transcription-ime.md": {
@@ -100,8 +100,8 @@
     "semantic_hash": "adaee16d4701deda3139787bced81dfc"
   },
   "src/native/VoiceAccessibilityService.kt": {
-    "mtime": 1785156743.2138855,
-    "ast_hash": "ddab14c696ca3111bca1f81d7a192d5d",
+    "mtime": 1785306374.5192049,
+    "ast_hash": "f14684a1efdd00e5efb77bba17502dca",
     "semantic_hash": ""
   },
   "ui/lumina_sonic/DESIGN.md": {
@@ -180,9 +180,9 @@
     "semantic_hash": "19d52e23dbc3744dc2651213a3673b06"
   },
   "vela-cleaner/src/main/kotlin/com/velavoice/sdk/cleaner/CleanerConfig.kt": {
-    "mtime": 1785085402.0751958,
-    "ast_hash": "d0ee09e84aca923b2c3b98af42964a0b",
-    "semantic_hash": "d0ee09e84aca923b2c3b98af42964a0b"
+    "mtime": 1785672033.4944167,
+    "ast_hash": "399cf97e84b8e59f5b94b76f904bf9b6",
+    "semantic_hash": ""
   },
   "vela-cleaner/src/main/kotlin/com/velavoice/sdk/cleaner/PersonalDictionary.kt": {
     "mtime": 1785085381.5174773,
@@ -190,9 +190,9 @@
     "semantic_hash": "f8227a78c04f44b1aba9c2f56a0c466f"
   },
   "vela-cleaner/src/main/kotlin/com/velavoice/sdk/cleaner/TextCleaner.kt": {
-    "mtime": 1785123982.0193388,
-    "ast_hash": "208d2c16cd8d0ad132537b0a7ebc79e1",
-    "semantic_hash": "208d2c16cd8d0ad132537b0a7ebc79e1"
+    "mtime": 1785299724.7056346,
+    "ast_hash": "d703ab694ff925efd9322516e4a92379",
+    "semantic_hash": ""
   },
   "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/CleanerConfigTest.kt": {
     "mtime": 1785115825.2160432,
@@ -215,14 +215,14 @@
     "semantic_hash": "c3eaa4c44bf4e87b612174b054e0f894"
   },
   "vela-core/src/main/kotlin/com/velavoice/sdk/AudioRecorder.kt": {
-    "mtime": 1785086047.382812,
-    "ast_hash": "98c7540e7afd256466bca8bd6c88a00e",
-    "semantic_hash": "98c7540e7afd256466bca8bd6c88a00e"
+    "mtime": 1785420702.0919092,
+    "ast_hash": "14434f9904dd40b6b6171b188efe5304",
+    "semantic_hash": ""
   },
   "vela-core/src/main/kotlin/com/velavoice/sdk/TranscriptionResult.kt": {
-    "mtime": 1785086019.5953174,
-    "ast_hash": "0b99586ebd999a42f6cdbf17d17c351b",
-    "semantic_hash": "0b99586ebd999a42f6cdbf17d17c351b"
+    "mtime": 1785157904.7591503,
+    "ast_hash": "beaba6e002e07363e712b3d6820bf447",
+    "semantic_hash": ""
   },
   "vela-core/src/main/kotlin/com/velavoice/sdk/VelaException.kt": {
     "mtime": 1785085969.3881774,
@@ -235,9 +235,9 @@
     "semantic_hash": "9a64476acda1083de7d7dd95ffcb5fe6"
   },
   "vela-core/src/main/kotlin/com/velavoice/sdk/VelaTranscriber.kt": {
-    "mtime": 1785086070.9298756,
-    "ast_hash": "31b131328801898a52121df714678264",
-    "semantic_hash": "31b131328801898a52121df714678264"
+    "mtime": 1785299724.7176435,
+    "ast_hash": "a24c17e564d25f9f598246ae4ed69fc1",
+    "semantic_hash": ""
   },
   "vela-core/src/test/kotlin/com/velavoice/sdk/TranscriptionResultTest.kt": {
     "mtime": 1785115853.765802,
@@ -265,14 +265,14 @@
     "semantic_hash": "046abc8fa838e835601a61e031a92131"
   },
   "vela-voice-ui/src/main/kotlin/com/velavoice/sdk/ui/VoiceRecordingPane.kt": {
-    "mtime": 1785155246.8959484,
-    "ast_hash": "a038036c5890f5eddca21917c000c7ae",
+    "mtime": 1785224067.6506808,
+    "ast_hash": "5443ac98aebd7df9ddfef03b00aa0118",
     "semantic_hash": ""
   },
   "vela-voice-ui/src/main/kotlin/com/velavoice/sdk/ui/WaveformView.kt": {
-    "mtime": 1785085537.6539059,
-    "ast_hash": "612eca2ddd12e983a79a1fbce8dbc5a2",
-    "semantic_hash": "612eca2ddd12e983a79a1fbce8dbc5a2"
+    "mtime": 1785224023.1642065,
+    "ast_hash": "ddb3d378480d4bdf684662f8f8214395",
+    "semantic_hash": ""
   },
   "vela-voice-ui/src/test/kotlin/com/velavoice/sdk/ui/VoiceRecordingPaneTest.kt": {
     "mtime": 1785123896.430602,
@@ -280,9 +280,9 @@
     "semantic_hash": "723f38ad3444918938b5eea1c7d25815"
   },
   "vela-voice-ui/src/test/kotlin/com/velavoice/sdk/ui/WaveformViewTest.kt": {
-    "mtime": 1785123895.9550042,
-    "ast_hash": "7258da7bb9aeb51c6ef26bb7ee653d77",
-    "semantic_hash": "7258da7bb9aeb51c6ef26bb7ee653d77"
+    "mtime": 1785224104.106398,
+    "ast_hash": "3d1e00137213916cb0c9017dd5d80c46",
+    "semantic_hash": ""
   },
   "vela-whisper/.cxx/Debug/ok2a1w11/arm64-v8a/.cmake/api/v1/reply/cache-v2-376f17b8fa1f4b1b2504.json": {
     "mtime": 1785088492.7476053,
@@ -1185,13 +1185,118 @@
     "semantic_hash": ""
   },
   "src/native/GoogleDriveSyncModule.kt": {
-    "mtime": 1785156729.5970223,
-    "ast_hash": "eb4f31eddc709dd64883bce97c605302",
+    "mtime": 1785158109.431588,
+    "ast_hash": "d9921a94552a9136679fb2836c958627",
     "semantic_hash": ""
   },
   "src/native/TranscriptionStorage.kt": {
-    "mtime": 1785156710.2919896,
-    "ast_hash": "9d18a8c22c8ed6c412f2098ccfcf2b9c",
+    "mtime": 1785158072.9576137,
+    "ast_hash": "4b8a84776b9467af61c931b11ef8ed64",
+    "semantic_hash": ""
+  },
+  "vela-cleaner/src/main/kotlin/com/velavoice/sdk/cleaner/DictionaryKeywords.kt": {
+    "mtime": 1785299385.5935097,
+    "ast_hash": "a278c610f95a632dc7425270fb82e16f",
+    "semantic_hash": ""
+  },
+  "HELIBOARD-VELA-BRIEF.md": {
+    "mtime": 1785158232.8281293,
+    "ast_hash": "4974c32bae6ed3bb44cba7f69bfa9bcd",
+    "semantic_hash": ""
+  },
+  "scripts/export_corrections.py": {
+    "mtime": 1785424092.4818852,
+    "ast_hash": "187f94cc574cc2183070349baecb9a52",
+    "semantic_hash": ""
+  },
+  "scripts/test_export_corrections.py": {
+    "mtime": 1785424013.6586485,
+    "ast_hash": "3fbfe7846a10ec5eaff30f187b3b69ab",
+    "semantic_hash": ""
+  },
+  "src/components/TranscriptionEditor.tsx": {
+    "mtime": 1785425970.504469,
+    "ast_hash": "bee3f865f0d850a9db92478fcd8d1690",
+    "semantic_hash": ""
+  },
+  "src/services/api.test.ts": {
+    "mtime": 1785423587.9794185,
+    "ast_hash": "afa966489b65651d0eaf275de1bc8f74",
+    "semantic_hash": ""
+  },
+  "src/services/api.ts": {
+    "mtime": 1785426008.5653205,
+    "ast_hash": "a317eb3cb3cdf03e54f0d29443984fdc",
+    "semantic_hash": ""
+  },
+  "src/services/e2eCorrectionTracking.test.ts": {
+    "mtime": 1785424531.2788203,
+    "ast_hash": "7c357ea6e2bd43362a25e7ff49d4977f",
+    "semantic_hash": ""
+  },
+  "src/utils/editCalculator.test.ts": {
+    "mtime": 1785423469.8393483,
+    "ast_hash": "95b7c85632e139dda5468cc1dcee65c2",
+    "semantic_hash": ""
+  },
+  "src/utils/editCalculator.ts": {
+    "mtime": 1785423347.4843183,
+    "ast_hash": "b23db2723392875f8bcf736b58abb2ec",
+    "semantic_hash": ""
+  },
+  "REVIEW.md": {
+    "mtime": 1785425824.5432427,
+    "ast_hash": "56a5d02c6a627e7d77bfe500d764c763",
+    "semantic_hash": ""
+  },
+  "docs/database.md": {
+    "mtime": 1785423288.0732706,
+    "ast_hash": "cdcdae316c98c736b60cb406b4eb6b17",
+    "semantic_hash": ""
+  },
+  ".wayfinder/map.md": {
+    "mtime": 1785646977.648384,
+    "ast_hash": "4ce5ab00f07a3daf338bf3090c3a4d30",
+    "semantic_hash": ""
+  },
+  ".wayfinder/tickets/ticket-001-ui-trigger.md": {
+    "mtime": 1785646983.6951966,
+    "ast_hash": "fa93bc3c0281d6150cae7e5be7766e36",
+    "semantic_hash": ""
+  },
+  ".wayfinder/tickets/ticket-002-prompt-template.md": {
+    "mtime": 1785646988.4474041,
+    "ast_hash": "e8704f04f7a8601ed08465b17909c2a9",
+    "semantic_hash": ""
+  },
+  ".wayfinder/tickets/ticket-003-cleaner-architecture.md": {
+    "mtime": 1785646994.0752258,
+    "ast_hash": "21783281dcc55c8ac92a3d7aafe186bc",
+    "semantic_hash": ""
+  },
+  ".wayfinder/tickets/ticket-004-context-extraction.md": {
+    "mtime": 1785646999.5485108,
+    "ast_hash": "5e0fa49c89ef780885442a6d1b0cc8fb",
+    "semantic_hash": ""
+  },
+  ".wayfinder/tickets/ticket-005-ui-prototype.md": {
+    "mtime": 1785647005.1253111,
+    "ast_hash": "fdf8008f32d374fc8e2d8f961ffd3d9a",
+    "semantic_hash": ""
+  },
+  "docs/agents/domain.md": {
+    "mtime": 1784638081.8302717,
+    "ast_hash": "0c0972b77c4edaa4fbe03d562f04e8fb",
+    "semantic_hash": ""
+  },
+  "docs/agents/issue-tracker.md": {
+    "mtime": 1784638081.8302717,
+    "ast_hash": "a1ccc570564b4c0dd70e7be8ee0ef27f",
+    "semantic_hash": ""
+  },
+  "docs/agents/triage-labels.md": {
+    "mtime": 1784638081.8302717,
+    "ast_hash": "85409347dbf487c8a25c9dac59708b83",
     "semantic_hash": ""
   }
 }
