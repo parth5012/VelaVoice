@@ -13,6 +13,9 @@ class CleanerConfigTest {
         assertNull(config.llmModelPath)
         assertNull(config.personalDictionary)
         assertNull(config.customFillers)
+        assertEquals(false, config.scribeEnabled)
+        assertEquals("Professional", config.defaultScribeStyle)
+        assertNull(config.customSystemPrompt)
     }
 
     @Test
@@ -30,5 +33,19 @@ class CleanerConfigTest {
         assertEquals("/path/to/model", config.llmModelPath)
         assertEquals(dict, config.personalDictionary)
         assertEquals(listOf("actually"), config.customFillers)
+    }
+
+    @Test
+    fun `config accepts scribe values`() {
+        val config = CleanerConfig(
+            useLlm = true,
+            llmModelPath = "/path/to/model",
+            scribeEnabled = true,
+            defaultScribeStyle = "Casual",
+            customSystemPrompt = "You are a custom assistant."
+        )
+        assertEquals(true, config.scribeEnabled)
+        assertEquals("Casual", config.defaultScribeStyle)
+        assertEquals("You are a custom assistant.", config.customSystemPrompt)
     }
 }

@@ -1,6 +1,8 @@
 package com.velavoice.sdk.cleaner
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -132,7 +134,115 @@ class TextCleanerTest {
         assertEquals("hello world", result)
     }
 
-    // ── Edge cases ────────────────────────────────────────────────────
+    // Scribe (AI Rewrite) prompt formatting (Ticket 002 / Ticket 003)
+
+    @Test
+    fun `formatScribePrompt uses Llama chat template`() {
+        val cleaner = TextCleaner(CleanerConfig())
+        val prompt = cleaner.formatScribePrompt(
+            rawInput = "hello world",
+            style = "Professional",
+            contextBefore = "",
+            contextAfter = "",
+            appName = "",
+            inputType = "text"
+        )
+        assertTrue(prompt.startsWith("<|begin_of_text|><|start_header_id|>system<|end_header_id|>"))
+        assertTrue(prompt.contains("<|eot_id|><|start_header_id|>user<|end_header_id|>"))
+        assertTrue(prompt.trimEnd().endsWith("<|start_header_id|>assistant<|end_header_id|>"))
+        assertTrue(prompt.contains("hello world"))
+    }
+
+    @Test
+    fun `formatScribePrompt includes style instruction`() {
+        val cleaner = TextCleaner(CleanerConfig())
+        val prompt = cleaner.formatScribePrompt(
+            rawInput = "need to buy milk",
+            style = "Bullet Points",
+            contextBefore = "",
+            contextAfter = "",
+            appName = "",
+            inputType = "text"
+        )
+        assertTrue(prompt.contains("bullet-point list"))
+    }
+
+    @Test
+    fun `formatScribePrompt includes surrounding context`() {
+        val cleaner = TextCleaner(CleanerConfig())
+        val prompt = cleaner.formatScribePrompt(
+            rawInput = "and also",
+            style = "Casual",
+            contextBefore = "We should grab dinner",
+            contextAfter = "before the movie",
+            appName = "com.example.messages",
+            inputType = "number"
+        )
+        assertTrue(prompt.contains("We should grab dinner"))
+        assertTrue(prompt.contains("before the movie"))
+        assertTrue(prompt.contains("com.example.messages"))
+    }
+
+    @Test
+    fun `formatScribePrompt with no context omits context section`() {
+        val cleaner = TextCleaner(CleanerConfig())
+        val prompt = cleaner.formatScribePrompt(
+            rawInput = "hi",
+            style = "Professional",
+            contextBefore = "",
+            contextAfter = "",
+            appName = "",
+            inputType = "text"
+        )
+        assertFalse(prompt.contains("Following Context"))
+    }
+
+    @Test
+    fun `styleInstruction covers all canonical styles`() {
+        val cleaner = TextCleaner(CleanerConfig())
+        val styles = listOf("Professional", "Casual", "Bullet Points", "Email Draft", "Proofread")
+        for (style in styles) {
+            assertTrue("expected instruction for $style", cleaner.styleInstruction(style).isNotBlank())
+        }
+    }
+
+    @Test
+    fun `styleInstruction unknown style falls back to professional`() {
+        val cleaner = TextCleaner(CleanerConfig())
+        assertEquals(cleaner.styleInstruction("Professional"), cleaner.styleInstruction("UnknownStyle"))
+    }
+
+    @Test
+    fun `formatScribePrompt includes custom system prompt`() {
+        val cleaner = TextCleaner(CleanerConfig(customSystemPrompt = "You are my writing coach."))
+        val prompt = cleaner.formatScribePrompt(
+            rawInput = "help",
+            style = "Professional",
+            contextBefore = "",
+            contextAfter = "",
+            appName = "",
+            inputType = "text"
+        )
+        assertTrue(prompt.contains("You are my writing coach."))
+    }
+
+    @Test
+    fun `clean with scribe enabled but LLM unavailable falls back to rule-based`() {
+        val cleaner = TextCleaner(CleanerConfig(useLlm = true, scribeEnabled = true, llmModelPath = "/nonexistent"))
+        val input = "um hello world"
+        val result = cleaner.clean(input)
+        assertEquals("hello world", result)
+    }
+
+    @Test
+    fun `clean with scribe disabled and LLM unavailable falls back to rule-based`() {
+        val cleaner = TextCleaner(CleanerConfig(useLlm = true, llmModelPath = "/nonexistent"))
+        val input = "um hello world"
+        val result = cleaner.clean(input)
+        assertEquals("hello world", result)
+    }
+
+    // Edge cases
 
     @Test
     fun `cleanRuleBased filler at start with comma`() {

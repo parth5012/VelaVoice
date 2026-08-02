@@ -3,8 +3,17 @@ package com.velavoice.sdk.cleaner
 import android.util.Log
 import java.io.File
 
+/**
+ * On-device text cleaner. Runs rule-based cleanup first, then (optionally) routes the text
+ * through the LLM either for standard cleanup or for Scribe (intent-based rewrite).
+ *
+ * The [clean] overload with [contextBefore]/[contextAfter]/[appName]/[inputType]/[overrideStyle]
+ * follows Ticket 003's API: the IME service supplies surrounding editor text and app metadata,
+ * while this class owns prompt formatting and style routing.
+ */
 class TextCleaner(private val config: CleanerConfig) {
     private var isLlmInitialized = false
+    private var contextPtr: Long = 0L
 
     init {
         if (config.useLlm && config.llmModelPath != null) {
@@ -23,13 +32,48 @@ class TextCleaner(private val config: CleanerConfig) {
         return true
     }
 
-    fun clean(text: String): String {
+    fun clean(text: String): String = clean(
+        text,
+        contextBefore = null,
+        contextAfter = null,
+        appName = null,
+        inputType = null,
+        overrideStyle = null
+    )
+
+    /**
+     * Clean and optionally Scribe-rewrite [text]. Context and metadata are passed from the IME.
+     *
+     * When [config.scribeEnabled] is set, builds a Scribe prompt from the raw input, requested
+     * [overrideStyle] (falling back to [config.defaultScribeStyle]), surrounding editor context,
+     * app metadata, and runs it through the LLM. Otherwise standard cleanup is applied.
+     */
+    fun clean(
+        text: String,
+        contextBefore: String? = null,
+        contextAfter: String? = null,
+        appName: String? = null,
+        inputType: String? = null,
+        overrideStyle: String? = null
+    ): String {
         // Step 1: Rule-based pre-processor (Regex) run first
         val regexCleaned = cleanRuleBased(text)
 
-        // Step 2: LLM requested and initialized, run advanced cleanup
+        // Step 2: LLM requested and initialized, run advanced cleanup / scribe
         if (config.useLlm && isLlmInitialized) {
-            return cleanLlm(regexCleaned)
+            val prompt = if (config.scribeEnabled) {
+                formatScribePrompt(
+                    rawInput = regexCleaned,
+                    style = overrideStyle ?: config.defaultScribeStyle,
+                    contextBefore = contextBefore,
+                    contextAfter = contextAfter,
+                    appName = appName,
+                    inputType = inputType
+                )
+            } else {
+                formatStandardCleanupPrompt(regexCleaned)
+            }
+            return nativeGenerate(contextPtr, prompt) ?: regexCleaned
         }
 
         return regexCleaned
@@ -89,6 +133,81 @@ class TextCleaner(private val config: CleanerConfig) {
             Log.e("TextCleaner", "Error querying personal dictionary: ${e.message}")
         }
         return result
+    }
+
+    // ──────────────────────────────────────────────
+    // Scribe prompt formatting (Ticket 002 template)
+    // ──────────────────────────────────────────────
+
+    internal fun formatScribePrompt(
+        rawInput: String,
+        style: String,
+        contextBefore: String?,
+        contextAfter: String?,
+        appName: String?,
+        inputType: String?
+    ): String {
+        val systemPrompt = config.customSystemPrompt ?: """
+            You are Scribe, an on-device keyboard writing assistant.
+            Task: Rewrite the user's raw voice input based on the requested style, surrounding context, and app context.
+            Only output the rewritten text. Do not include introductory phrases, conversational fillers, or explanations. Keep the original language.
+        """.trimIndent()
+
+        val styleInstruction = styleInstruction(style)
+
+        val contextBeforeSafe = contextBefore?.take(256) ?: ""
+        val contextAfterSafe = contextAfter?.take(256) ?: ""
+        val appSafe = appName ?: "Unknown App"
+        val inputSafe = inputType ?: "text"
+
+        return buildString {
+            append("<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n")
+            append(systemPrompt).append('\n')
+            append("Style: ").append(styleInstruction).append('\n')
+            append("App Name/ID: ").append(appSafe).append('\n')
+            append("Input Type: ").append(inputSafe).append('\n')
+            if (contextBeforeSafe.isNotEmpty() || contextAfterSafe.isNotEmpty()) {
+                append("Preceding Context: ").append(contextBeforeSafe).append('\n')
+                append("Following Context: ").append(contextAfterSafe).append('\n')
+            }
+            append("<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n")
+            append("Raw input: ").append(rawInput).append('\n')
+            append("<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n")
+        }
+    }
+
+    private fun formatStandardCleanupPrompt(text: String): String {
+        val systemPrompt = config.customSystemPrompt ?: """
+            You are a text cleaning assistant for voice dictation.
+            Fix any spelling, grammar, and punctuation mistakes without changing the style or structure.
+            Only output the corrected text.
+        """.trimIndent()
+        return buildString {
+            append("<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n")
+            append(systemPrompt).append('\n')
+            append("<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n")
+            append("Raw input: ").append(text).append('\n')
+            append("<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n")
+        }
+    }
+
+    /**
+     * Canonical style instructions from Ticket 002. Values match the style enum used by
+     * the keyboard settings (scribe_default_style / scribe_app_<package>).
+     */
+    fun styleInstruction(style: String): String = when (style) {
+        "Professional" -> "Rewrite the input to be formal, professional, polite, and grammatically perfect. Retain the core meaning."
+        "Casual" -> "Rewrite the input to be casual, friendly, natural, and conversational."
+        "Bullet Points" -> "Summarize the input as a clear, concise bullet-point list."
+        "Email Draft" -> "Draft a professional email based on the brief notes provided, including a subject line and greeting."
+        "Proofread" -> "Fix any spelling, grammar, and punctuation mistakes without changing the style or structure."
+        else -> "Rewrite the input to be formal, professional, polite, and grammatically perfect. Retain the core meaning."
+    }
+
+    /** JNI entry point. Accepts arbitrary prompts and returns generated text (stub). */
+    private fun nativeGenerate(contextPtr: Long, prompt: String): String? {
+        // TODO: real implementation, ONNX Runtime / MediaPipe LLM Inference JNI
+        return null
     }
 
     private fun cleanLlm(text: String): String {

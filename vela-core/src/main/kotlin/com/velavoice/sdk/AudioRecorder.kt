@@ -17,6 +17,7 @@ class AudioRecorder {
     private var currentWhisper: WhisperEngine? = null
     private var currentCleaner: TextCleaner? = null
     private var currentCallback: VelaRecordingCallback? = null
+    private var currentScribeInput: ScribeInput = ScribeInput()
 
     companion object {
         const val SAMPLE_RATE = 16000
@@ -28,11 +29,16 @@ class AudioRecorder {
     fun isRecording(): Boolean = isRecording
 
     fun start(whisper: WhisperEngine, cleaner: TextCleaner?, callback: VelaRecordingCallback) {
+        start(whisper, cleaner, callback, ScribeInput())
+    }
+
+    fun start(whisper: WhisperEngine, cleaner: TextCleaner?, callback: VelaRecordingCallback, scribeInput: ScribeInput) {
         if (isRecording) return
         isRecording = true
         currentWhisper = whisper
         currentCleaner = cleaner
         currentCallback = callback
+        currentScribeInput = scribeInput
         recordedAudioData.reset()
 
         try {
@@ -108,7 +114,14 @@ class AudioRecorder {
                 try {
                     val rawTranscript = whisper.transcribe(audioBytes)
                     val cleanedTranscript = if (clean) {
-                        currentCleaner?.clean(rawTranscript) ?: rawTranscript
+                        currentCleaner?.clean(
+                            rawTranscript,
+                            contextBefore = currentScribeInput.contextBefore,
+                            contextAfter = currentScribeInput.contextAfter,
+                            appName = currentScribeInput.appName,
+                            inputType = currentScribeInput.inputType,
+                            overrideStyle = currentScribeInput.overrideStyle
+                        ) ?: rawTranscript
                     } else {
                         rawTranscript
                     }
@@ -130,5 +143,6 @@ class AudioRecorder {
         currentWhisper = null
         currentCleaner = null
         currentCallback = null
+        currentScribeInput = ScribeInput()
     }
 }
