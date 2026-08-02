@@ -190,8 +190,8 @@
     "semantic_hash": "f8227a78c04f44b1aba9c2f56a0c466f"
   },
   "vela-cleaner/src/main/kotlin/com/velavoice/sdk/cleaner/TextCleaner.kt": {
-    "mtime": 1785672964.7857711,
-    "ast_hash": "06105996f47d62804a07a0f624275dd7",
+    "mtime": 1785673580.0664384,
+    "ast_hash": "fee038c659ed9298d419d63c4f8c3e93",
     "semantic_hash": ""
   },
   "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/CleanerConfigTest.kt": {
@@ -205,8 +205,8 @@
     "semantic_hash": "4a02ae7f460c398160ac723fb7510171"
   },
   "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt": {
-    "mtime": 1785672972.323715,
-    "ast_hash": "5c1c54003a72c5522c78b0f619cf3a8a",
+    "mtime": 1785673599.9937377,
+    "ast_hash": "014cc07b5b32d076c46d7955bc3233ef",
     "semantic_hash": ""
   },
   "vela-core/build.gradle.kts": {
@@ -215,8 +215,8 @@
     "semantic_hash": "c3eaa4c44bf4e87b612174b054e0f894"
   },
   "vela-core/src/main/kotlin/com/velavoice/sdk/AudioRecorder.kt": {
-    "mtime": 1785672425.3397331,
-    "ast_hash": "b540be040fb8d2c404ec24c3d8ad323d",
+    "mtime": 1785673569.7776227,
+    "ast_hash": "bbcc30ee03118d496249e7b91babe552",
     "semantic_hash": ""
   },
   "vela-core/src/main/kotlin/com/velavoice/sdk/TranscriptionResult.kt": {
@@ -235,8 +235,8 @@
     "semantic_hash": "9a64476acda1083de7d7dd95ffcb5fe6"
   },
   "vela-core/src/main/kotlin/com/velavoice/sdk/VelaTranscriber.kt": {
-    "mtime": 1785672403.951774,
-    "ast_hash": "7362a28134a233a5bcc3cc0531890f4b",
+    "mtime": 1785673562.8215983,
+    "ast_hash": "dae353c201e571f8c2c06e875c2c56fc",
     "semantic_hash": ""
   },
   "vela-core/src/test/kotlin/com/velavoice/sdk/TranscriptionResultTest.kt": {
@@ -255,8 +255,8 @@
     "semantic_hash": "89243aa5291fd5f9ee2e66a030c98804"
   },
   "vela-core/src/test/kotlin/com/velavoice/sdk/VelaTranscriberTest.kt": {
-    "mtime": 1785672646.1190944,
-    "ast_hash": "73bb20d1b5c774088a0d5e6d779c760e",
+    "mtime": 1785673607.6349847,
+    "ast_hash": "c65dfbabddb2abd60a805ffa97513161",
     "semantic_hash": ""
   },
   "vela-voice-ui/build.gradle.kts": {
