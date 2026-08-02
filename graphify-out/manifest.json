@@ -190,14 +190,14 @@
     "semantic_hash": "f8227a78c04f44b1aba9c2f56a0c466f"
   },
   "vela-cleaner/src/main/kotlin/com/velavoice/sdk/cleaner/TextCleaner.kt": {
-    "mtime": 1785299724.7056346,
-    "ast_hash": "d703ab694ff925efd9322516e4a92379",
+    "mtime": 1785672964.7857711,
+    "ast_hash": "06105996f47d62804a07a0f624275dd7",
     "semantic_hash": ""
   },
   "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/CleanerConfigTest.kt": {
-    "mtime": 1785115825.2160432,
-    "ast_hash": "3b77ac9f32f5c3c199df987c974a4738",
-    "semantic_hash": "3b77ac9f32f5c3c199df987c974a4738"
+    "mtime": 1785672493.063787,
+    "ast_hash": "45e936a5bbc5bec8098bb28ad8d6b32d",
+    "semantic_hash": ""
   },
   "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/PersonalDictionaryTest.kt": {
     "mtime": 1785115826.749578,
@@ -205,9 +205,9 @@
     "semantic_hash": "4a02ae7f460c398160ac723fb7510171"
   },
   "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt": {
-    "mtime": 1785115819.5623717,
-    "ast_hash": "10983e7c2548d2c85ad44335daf45de2",
-    "semantic_hash": "10983e7c2548d2c85ad44335daf45de2"
+    "mtime": 1785672972.323715,
+    "ast_hash": "5c1c54003a72c5522c78b0f619cf3a8a",
+    "semantic_hash": ""
   },
   "vela-core/build.gradle.kts": {
     "mtime": 1785115756.920009,
@@ -215,8 +215,8 @@
     "semantic_hash": "c3eaa4c44bf4e87b612174b054e0f894"
   },
   "vela-core/src/main/kotlin/com/velavoice/sdk/AudioRecorder.kt": {
-    "mtime": 1785420702.0919092,
-    "ast_hash": "14434f9904dd40b6b6171b188efe5304",
+    "mtime": 1785672425.3397331,
+    "ast_hash": "b540be040fb8d2c404ec24c3d8ad323d",
     "semantic_hash": ""
   },
   "vela-core/src/main/kotlin/com/velavoice/sdk/TranscriptionResult.kt": {
@@ -235,8 +235,8 @@
     "semantic_hash": "9a64476acda1083de7d7dd95ffcb5fe6"
   },
   "vela-core/src/main/kotlin/com/velavoice/sdk/VelaTranscriber.kt": {
-    "mtime": 1785299724.7176435,
-    "ast_hash": "a24c17e564d25f9f598246ae4ed69fc1",
+    "mtime": 1785672403.951774,
+    "ast_hash": "7362a28134a233a5bcc3cc0531890f4b",
     "semantic_hash": ""
   },
   "vela-core/src/test/kotlin/com/velavoice/sdk/TranscriptionResultTest.kt": {
@@ -255,9 +255,9 @@
     "semantic_hash": "89243aa5291fd5f9ee2e66a030c98804"
   },
   "vela-core/src/test/kotlin/com/velavoice/sdk/VelaTranscriberTest.kt": {
-    "mtime": 1785123898.410044,
-    "ast_hash": "401443939ad296f501a585c4ab01eb0e",
-    "semantic_hash": "401443939ad296f501a585c4ab01eb0e"
+    "mtime": 1785672646.1190944,
+    "ast_hash": "73bb20d1b5c774088a0d5e6d779c760e",
+    "semantic_hash": ""
   },
   "vela-voice-ui/build.gradle.kts": {
     "mtime": 1785115756.032864,
