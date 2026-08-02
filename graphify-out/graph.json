@@ -81,14 +81,34 @@
   },
   "nodes": [
     {
+      "label": "CleanerConfig.kt",
+      "file_type": "code",
+      "source_file": "vela-cleaner/src/main/kotlin/com/velavoice/sdk/cleaner/CleanerConfig.kt",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig",
+      "community": 62,
+      "norm_label": "cleanerconfig.kt"
+    },
+    {
+      "label": "CleanerConfig",
+      "file_type": "code",
+      "source_file": "vela-cleaner/src/main/kotlin/com/velavoice/sdk/cleaner/CleanerConfig.kt",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig",
+      "community": 62,
+      "norm_label": "cleanerconfig"
+    },
+    {
       "label": "CLAUDE.md",
       "file_type": "document",
       "source_file": "CLAUDE.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "claude",
       "community": 137,
-      "norm_label": "claude.md"
+      "norm_label": "claude.md",
+      "id": "claude"
     },
     {
       "label": "graphify",
@@ -96,9 +116,9 @@
       "source_file": "CLAUDE.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "claude_graphify",
       "community": 137,
-      "norm_label": "graphify"
+      "norm_label": "graphify",
+      "id": "claude_graphify"
     },
     {
       "label": "Agent skills",
@@ -106,9 +126,9 @@
       "source_file": "CLAUDE.md",
       "source_location": "L11",
       "_origin": "ast",
-      "id": "claude_agent_skills",
       "community": 137,
-      "norm_label": "agent skills"
+      "norm_label": "agent skills",
+      "id": "claude_agent_skills"
     },
     {
       "label": "Issue tracker",
@@ -116,9 +136,9 @@
       "source_file": "CLAUDE.md",
       "source_location": "L13",
       "_origin": "ast",
-      "id": "claude_issue_tracker",
       "community": 137,
-      "norm_label": "issue tracker"
+      "norm_label": "issue tracker",
+      "id": "claude_issue_tracker"
     },
     {
       "label": "Triage labels",
@@ -126,9 +146,9 @@
       "source_file": "CLAUDE.md",
       "source_location": "L17",
       "_origin": "ast",
-      "id": "claude_triage_labels",
       "community": 137,
-      "norm_label": "triage labels"
+      "norm_label": "triage labels",
+      "id": "claude_triage_labels"
     },
     {
       "label": "Domain docs",
@@ -136,9 +156,9 @@
       "source_file": "CLAUDE.md",
       "source_location": "L21",
       "_origin": "ast",
-      "id": "claude_domain_docs",
       "community": 137,
-      "norm_label": "domain docs"
+      "norm_label": "domain docs",
+      "id": "claude_domain_docs"
     },
     {
       "label": "domain.md",
@@ -146,9 +166,9 @@
       "source_file": "docs/agents/domain.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "docs_agents_domain",
       "community": 149,
-      "norm_label": "domain.md"
+      "norm_label": "domain.md",
+      "id": "docs_agents_domain"
     },
     {
       "label": "Domain Docs",
@@ -156,9 +176,9 @@
       "source_file": "docs/agents/domain.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "docs_agents_domain_domain_docs",
       "community": 149,
-      "norm_label": "domain docs"
+      "norm_label": "domain docs",
+      "id": "docs_agents_domain_domain_docs"
     },
     {
       "label": "Before exploring, read these",
@@ -166,9 +186,9 @@
       "source_file": "docs/agents/domain.md",
       "source_location": "L5",
       "_origin": "ast",
-      "id": "docs_agents_domain_before_exploring_read_these",
       "community": 149,
-      "norm_label": "before exploring, read these"
+      "norm_label": "before exploring, read these",
+      "id": "docs_agents_domain_before_exploring_read_these"
     },
     {
       "label": "File structure",
@@ -176,9 +196,9 @@
       "source_file": "docs/agents/domain.md",
       "source_location": "L13",
       "_origin": "ast",
-      "id": "docs_agents_domain_file_structure",
       "community": 149,
-      "norm_label": "file structure"
+      "norm_label": "file structure",
+      "id": "docs_agents_domain_file_structure"
     },
     {
       "label": "Use the glossary's vocabulary",
@@ -186,9 +206,9 @@
       "source_file": "docs/agents/domain.md",
       "source_location": "L41",
       "_origin": "ast",
-      "id": "docs_agents_domain_use_the_glossary_s_vocabulary",
       "community": 149,
-      "norm_label": "use the glossary's vocabulary"
+      "norm_label": "use the glossary's vocabulary",
+      "id": "docs_agents_domain_use_the_glossary_s_vocabulary"
     },
     {
       "label": "Flag ADR conflicts",
@@ -196,9 +216,9 @@
       "source_file": "docs/agents/domain.md",
       "source_location": "L47",
       "_origin": "ast",
-      "id": "docs_agents_domain_flag_adr_conflicts",
       "community": 149,
-      "norm_label": "flag adr conflicts"
+      "norm_label": "flag adr conflicts",
+      "id": "docs_agents_domain_flag_adr_conflicts"
     },
     {
       "label": "issue-tracker.md",
@@ -206,9 +226,9 @@
       "source_file": "docs/agents/issue-tracker.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "docs_agents_issue_tracker",
       "community": 129,
-      "norm_label": "issue-tracker.md"
+      "norm_label": "issue-tracker.md",
+      "id": "docs_agents_issue_tracker"
     },
     {
       "label": "Issue tracker: GitHub",
@@ -216,9 +236,9 @@
       "source_file": "docs/agents/issue-tracker.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "docs_agents_issue_tracker_issue_tracker_github",
       "community": 129,
-      "norm_label": "issue tracker: github"
+      "norm_label": "issue tracker: github",
+      "id": "docs_agents_issue_tracker_issue_tracker_github"
     },
     {
       "label": "Conventions",
@@ -226,9 +246,9 @@
       "source_file": "docs/agents/issue-tracker.md",
       "source_location": "L5",
       "_origin": "ast",
-      "id": "docs_agents_issue_tracker_conventions",
       "community": 129,
-      "norm_label": "conventions"
+      "norm_label": "conventions",
+      "id": "docs_agents_issue_tracker_conventions"
     },
     {
       "label": "Pull requests as a triage surface",
@@ -236,9 +256,9 @@
       "source_file": "docs/agents/issue-tracker.md",
       "source_location": "L16",
       "_origin": "ast",
-      "id": "docs_agents_issue_tracker_pull_requests_as_a_triage_surface",
       "community": 129,
-      "norm_label": "pull requests as a triage surface"
+      "norm_label": "pull requests as a triage surface",
+      "id": "docs_agents_issue_tracker_pull_requests_as_a_triage_surface"
     },
     {
       "label": "When a skill says \"publish to the issue tracker\"",
@@ -246,9 +266,9 @@
       "source_file": "docs/agents/issue-tracker.md",
       "source_location": "L28",
       "_origin": "ast",
-      "id": "docs_agents_issue_tracker_when_a_skill_says_publish_to_the_issue_tracker",
       "community": 129,
-      "norm_label": "when a skill says \"publish to the issue tracker\""
+      "norm_label": "when a skill says \"publish to the issue tracker\"",
+      "id": "docs_agents_issue_tracker_when_a_skill_says_publish_to_the_issue_tracker"
     },
     {
       "label": "When a skill says \"fetch the relevant ticket\"",
@@ -256,9 +276,9 @@
       "source_file": "docs/agents/issue-tracker.md",
       "source_location": "L32",
       "_origin": "ast",
-      "id": "docs_agents_issue_tracker_when_a_skill_says_fetch_the_relevant_ticket",
       "community": 129,
-      "norm_label": "when a skill says \"fetch the relevant ticket\""
+      "norm_label": "when a skill says \"fetch the relevant ticket\"",
+      "id": "docs_agents_issue_tracker_when_a_skill_says_fetch_the_relevant_ticket"
     },
     {
       "label": "Wayfinding operations",
@@ -266,9 +286,9 @@
       "source_file": "docs/agents/issue-tracker.md",
       "source_location": "L36",
       "_origin": "ast",
-      "id": "docs_agents_issue_tracker_wayfinding_operations",
       "community": 129,
-      "norm_label": "wayfinding operations"
+      "norm_label": "wayfinding operations",
+      "id": "docs_agents_issue_tracker_wayfinding_operations"
     },
     {
       "label": "triage-labels.md",
@@ -276,9 +296,9 @@
       "source_file": "docs/agents/triage-labels.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "docs_agents_triage_labels",
       "community": 174,
-      "norm_label": "triage-labels.md"
+      "norm_label": "triage-labels.md",
+      "id": "docs_agents_triage_labels"
     },
     {
       "label": "Triage Labels",
@@ -286,9 +306,9 @@
       "source_file": "docs/agents/triage-labels.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "docs_agents_triage_labels_triage_labels",
       "community": 174,
-      "norm_label": "triage labels"
+      "norm_label": "triage labels",
+      "id": "docs_agents_triage_labels_triage_labels"
     },
     {
       "label": "App.tsx",
@@ -2919,26 +2939,6 @@
       "community": 140,
       "norm_label": "build.gradle.kts",
       "id": "vela_cleaner_build_gradle"
-    },
-    {
-      "label": "CleanerConfig.kt",
-      "file_type": "code",
-      "source_file": "vela-cleaner/src/main/kotlin/com/velavoice/sdk/cleaner/CleanerConfig.kt",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 62,
-      "norm_label": "cleanerconfig.kt",
-      "id": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig"
-    },
-    {
-      "label": "CleanerConfig",
-      "file_type": "code",
-      "source_file": "vela-cleaner/src/main/kotlin/com/velavoice/sdk/cleaner/CleanerConfig.kt",
-      "source_location": "L3",
-      "_origin": "ast",
-      "community": 62,
-      "norm_label": "cleanerconfig",
-      "id": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
     },
     {
       "label": "DictionaryKeywords.kt",
@@ -21002,12 +21002,253 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "vela-cleaner/src/main/kotlin/com/velavoice/sdk/cleaner/CleanerConfig.kt",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/CleanerConfigTest.kt",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_cleanerconfigtest_cleanerconfigtest_config_accepts_custom_values",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/CleanerConfigTest.kt",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_cleanerconfigtest_cleanerconfigtest_default_config_has_all_optional_fields_null_or_false",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
+      "source_location": "L119",
+      "weight": 1.0,
+      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_clean_with_llm_capitalizes_sentences",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
+      "source_location": "L181",
+      "weight": 1.0,
+      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_clean_with_llm_empty_text_returns_empty",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
+      "source_location": "L128",
+      "weight": 1.0,
+      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_clean_with_llm_when_llm_model_missing_falls_back_to_rule_based",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
+      "source_location": "L112",
+      "weight": 1.0,
+      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_clean_without_llm_only_runs_rule_based",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
+      "source_location": "L62",
+      "weight": 1.0,
+      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_empty_fillers_list_does_nothing",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_empty_text_returns_empty",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
+      "source_location": "L147",
+      "weight": 1.0,
+      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_filler_at_end_with_space",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
+      "source_location": "L139",
+      "weight": 1.0,
+      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_filler_at_start_with_comma",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
+      "source_location": "L101",
+      "weight": 1.0,
+      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_filler_then_dictionary_combined",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_fillers_case_insensitive",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
+      "source_location": "L88",
+      "weight": 1.0,
+      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_personal_dictionary_case_insensitive_matching",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
+      "source_location": "L159",
+      "weight": 1.0,
+      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_personal_dictionary_empty_entry_ignored",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
+      "source_location": "L172",
+      "weight": 1.0,
+      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_personal_dictionary_exception_does_not_crash",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_removes_default_filler_words",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
+      "source_location": "L37",
+      "weight": 1.0,
+      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_removes_duplicate_spaces",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
+      "source_location": "L45",
+      "weight": 1.0,
+      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_trims_surrounding_whitespace",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
+      "source_location": "L53",
+      "weight": 1.0,
+      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_with_custom_fillers",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
+      "source_location": "L75",
+      "weight": 1.0,
+      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_with_personal_dictionary",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "vela-core/src/main/kotlin/com/velavoice/sdk/VelaTranscriber.kt",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "vela_core_src_main_kotlin_com_velavoice_sdk_velatranscriber_builder_build",
+      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "CLAUDE.md",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "claude",
-      "target": "claude_agent_skills",
-      "confidence_score": 1.0
+      "target": "claude_agent_skills"
     },
     {
       "relation": "contains",
@@ -21015,9 +21256,9 @@
       "source_file": "CLAUDE.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "claude",
-      "target": "claude_graphify",
-      "confidence_score": 1.0
+      "target": "claude_graphify"
     },
     {
       "relation": "contains",
@@ -21025,9 +21266,9 @@
       "source_file": "CLAUDE.md",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "claude_agent_skills",
-      "target": "claude_domain_docs",
-      "confidence_score": 1.0
+      "target": "claude_domain_docs"
     },
     {
       "relation": "contains",
@@ -21035,9 +21276,9 @@
       "source_file": "CLAUDE.md",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "claude_agent_skills",
-      "target": "claude_issue_tracker",
-      "confidence_score": 1.0
+      "target": "claude_issue_tracker"
     },
     {
       "relation": "contains",
@@ -21045,9 +21286,9 @@
       "source_file": "CLAUDE.md",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "claude_agent_skills",
-      "target": "claude_triage_labels",
-      "confidence_score": 1.0
+      "target": "claude_triage_labels"
     },
     {
       "relation": "contains",
@@ -21055,9 +21296,9 @@
       "source_file": "docs/agents/domain.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_agents_domain",
-      "target": "docs_agents_domain_domain_docs",
-      "confidence_score": 1.0
+      "target": "docs_agents_domain_domain_docs"
     },
     {
       "relation": "contains",
@@ -21065,9 +21306,9 @@
       "source_file": "docs/agents/domain.md",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_agents_domain_domain_docs",
-      "target": "docs_agents_domain_before_exploring_read_these",
-      "confidence_score": 1.0
+      "target": "docs_agents_domain_before_exploring_read_these"
     },
     {
       "relation": "contains",
@@ -21075,9 +21316,9 @@
       "source_file": "docs/agents/domain.md",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_agents_domain_domain_docs",
-      "target": "docs_agents_domain_file_structure",
-      "confidence_score": 1.0
+      "target": "docs_agents_domain_file_structure"
     },
     {
       "relation": "contains",
@@ -21085,9 +21326,9 @@
       "source_file": "docs/agents/domain.md",
       "source_location": "L47",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_agents_domain_domain_docs",
-      "target": "docs_agents_domain_flag_adr_conflicts",
-      "confidence_score": 1.0
+      "target": "docs_agents_domain_flag_adr_conflicts"
     },
     {
       "relation": "contains",
@@ -21095,9 +21336,9 @@
       "source_file": "docs/agents/domain.md",
       "source_location": "L41",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_agents_domain_domain_docs",
-      "target": "docs_agents_domain_use_the_glossary_s_vocabulary",
-      "confidence_score": 1.0
+      "target": "docs_agents_domain_use_the_glossary_s_vocabulary"
     },
     {
       "relation": "contains",
@@ -21105,9 +21346,9 @@
       "source_file": "docs/agents/issue-tracker.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_agents_issue_tracker",
-      "target": "docs_agents_issue_tracker_issue_tracker_github",
-      "confidence_score": 1.0
+      "target": "docs_agents_issue_tracker_issue_tracker_github"
     },
     {
       "relation": "contains",
@@ -21115,9 +21356,9 @@
       "source_file": "docs/agents/issue-tracker.md",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_agents_issue_tracker_issue_tracker_github",
-      "target": "docs_agents_issue_tracker_conventions",
-      "confidence_score": 1.0
+      "target": "docs_agents_issue_tracker_conventions"
     },
     {
       "relation": "contains",
@@ -21125,9 +21366,9 @@
       "source_file": "docs/agents/issue-tracker.md",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_agents_issue_tracker_issue_tracker_github",
-      "target": "docs_agents_issue_tracker_pull_requests_as_a_triage_surface",
-      "confidence_score": 1.0
+      "target": "docs_agents_issue_tracker_pull_requests_as_a_triage_surface"
     },
     {
       "relation": "contains",
@@ -21135,9 +21376,9 @@
       "source_file": "docs/agents/issue-tracker.md",
       "source_location": "L36",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_agents_issue_tracker_issue_tracker_github",
-      "target": "docs_agents_issue_tracker_wayfinding_operations",
-      "confidence_score": 1.0
+      "target": "docs_agents_issue_tracker_wayfinding_operations"
     },
     {
       "relation": "contains",
@@ -21145,9 +21386,9 @@
       "source_file": "docs/agents/issue-tracker.md",
       "source_location": "L32",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_agents_issue_tracker_issue_tracker_github",
-      "target": "docs_agents_issue_tracker_when_a_skill_says_fetch_the_relevant_ticket",
-      "confidence_score": 1.0
+      "target": "docs_agents_issue_tracker_when_a_skill_says_fetch_the_relevant_ticket"
     },
     {
       "relation": "contains",
@@ -21155,9 +21396,9 @@
       "source_file": "docs/agents/issue-tracker.md",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_agents_issue_tracker_issue_tracker_github",
-      "target": "docs_agents_issue_tracker_when_a_skill_says_publish_to_the_issue_tracker",
-      "confidence_score": 1.0
+      "target": "docs_agents_issue_tracker_when_a_skill_says_publish_to_the_issue_tracker"
     },
     {
       "relation": "contains",
@@ -21165,9 +21406,9 @@
       "source_file": "docs/agents/triage-labels.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_agents_triage_labels",
-      "target": "docs_agents_triage_labels_triage_labels",
-      "confidence_score": 1.0
+      "target": "docs_agents_triage_labels_triage_labels"
     },
     {
       "relation": "contains",
@@ -25571,247 +25812,6 @@
       "confidence_score": 1.0,
       "source": "tsconfig_compileroptions",
       "target": "tsconfig_compileroptions_strict"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "vela-cleaner/src/main/kotlin/com/velavoice/sdk/cleaner/CleanerConfig.kt",
-      "source_location": "L3",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/CleanerConfigTest.kt",
-      "source_location": "L23",
-      "weight": 1.0,
-      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_cleanerconfigtest_cleanerconfigtest_config_accepts_custom_values",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/CleanerConfigTest.kt",
-      "source_location": "L11",
-      "weight": 1.0,
-      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_cleanerconfigtest_cleanerconfigtest_default_config_has_all_optional_fields_null_or_false",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
-      "source_location": "L119",
-      "weight": 1.0,
-      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_clean_with_llm_capitalizes_sentences",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
-      "source_location": "L181",
-      "weight": 1.0,
-      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_clean_with_llm_empty_text_returns_empty",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
-      "source_location": "L128",
-      "weight": 1.0,
-      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_clean_with_llm_when_llm_model_missing_falls_back_to_rule_based",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
-      "source_location": "L112",
-      "weight": 1.0,
-      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_clean_without_llm_only_runs_rule_based",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
-      "source_location": "L62",
-      "weight": 1.0,
-      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_empty_fillers_list_does_nothing",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
-      "source_location": "L15",
-      "weight": 1.0,
-      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_empty_text_returns_empty",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
-      "source_location": "L147",
-      "weight": 1.0,
-      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_filler_at_end_with_space",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
-      "source_location": "L139",
-      "weight": 1.0,
-      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_filler_at_start_with_comma",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
-      "source_location": "L101",
-      "weight": 1.0,
-      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_filler_then_dictionary_combined",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
-      "source_location": "L29",
-      "weight": 1.0,
-      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_fillers_case_insensitive",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
-      "source_location": "L88",
-      "weight": 1.0,
-      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_personal_dictionary_case_insensitive_matching",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
-      "source_location": "L159",
-      "weight": 1.0,
-      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_personal_dictionary_empty_entry_ignored",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
-      "source_location": "L172",
-      "weight": 1.0,
-      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_personal_dictionary_exception_does_not_crash",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
-      "source_location": "L21",
-      "weight": 1.0,
-      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_removes_default_filler_words",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
-      "source_location": "L37",
-      "weight": 1.0,
-      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_removes_duplicate_spaces",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
-      "source_location": "L45",
-      "weight": 1.0,
-      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_trims_surrounding_whitespace",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
-      "source_location": "L53",
-      "weight": 1.0,
-      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_with_custom_fillers",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt",
-      "source_location": "L75",
-      "weight": 1.0,
-      "source": "vela_cleaner_src_test_kotlin_com_velavoice_sdk_cleaner_textcleanertest_textcleanertest_cleanrulebased_with_personal_dictionary",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "vela-core/src/main/kotlin/com/velavoice/sdk/VelaTranscriber.kt",
-      "source_location": "L43",
-      "weight": 1.0,
-      "source": "vela_core_src_main_kotlin_com_velavoice_sdk_velatranscriber_builder_build",
-      "target": "vela_cleaner_src_main_kotlin_com_velavoice_sdk_cleaner_cleanerconfig_cleanerconfig"
     },
     {
       "relation": "contains",
@@ -70365,5 +70365,5 @@
       "source_file": "vela-whisper/src/main/cpp/CMakeLists.txt"
     }
   ],
-  "built_at_commit": "dd47a5193df4652c6e9c7e7566f8ba9c0247b1ba"
+  "built_at_commit": "e2a0b53deb3daade6eb8021876198ef9097c2ac3"
 }
