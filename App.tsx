@@ -154,6 +154,16 @@ export default function App() {
   const [isEditingTranscript, setIsEditingTranscript] = useState(false);
   const [editingTextValue, setEditingTextValue] = useState('');
 
+  // Scribe Simulator states
+  const [scribeStyle, setScribeStyle] = useState<string>('Professional');
+  const [scribeInstruction, setScribeInstruction] = useState<string>('');
+  const [scribeDrafts, setScribeDrafts] = useState<string[]>([]);
+  const [selectedScribeDraftIndex, setSelectedScribeDraftIndex] = useState<number>(0);
+  const [isGeneratingScribe, setIsGeneratingScribe] = useState<boolean>(false);
+  const [scribeAppName, setScribeAppName] = useState<string>('com.slack');
+  const [scribeInputType, setScribeInputType] = useState<string>('Message Field');
+  const [showPromptDebug, setShowPromptDebug] = useState<boolean>(false);
+
   useEffect(() => {
     if (typeof global !== 'undefined') {
       const g = global as any;
@@ -542,6 +552,132 @@ export default function App() {
     setTestCleanedText(cleaned);
   };
 
+  // simulated Scribe engine prompt builder and draft generator
+  const runScribeRewrite = () => {
+    const activeRec = recordings.find(r => r.id === selectedRecordingId);
+    if (!activeRec) return;
+    
+    const baseText = studioSegment === 'cleaned' ? activeRec.cleaned : activeRec.raw;
+    if (!baseText.trim()) return;
+
+    setIsGeneratingScribe(true);
+    
+    // Simulate mobile LLM inference latency (800ms)
+    setTimeout(() => {
+      let drafts: string[] = [];
+      const userText = baseText.trim();
+      const style = scribeStyle;
+      const app = scribeAppName;
+      const input = scribeInputType;
+      
+      // Dynamic draft generation based on text contents
+      const cleanText = userText.replace(/^(So, |um, |like, |eh, |uh, |er, |hm, |oh, )+/gi, '').trim();
+      const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+      
+      let base = cleanText;
+      if (scribeInstruction.trim()) {
+        const inst = scribeInstruction.trim().toLowerCase();
+        if (inst.includes('spanish') || inst.includes('espanol') || inst.includes('español')) {
+          drafts = [
+            `[Español] Con respecto a: ${cleanText}`,
+            `[Español - Casual] Oye, sobre esto: ${cleanText.toLowerCase()}`,
+            `[Español - Profesional] Estimado equipo, adjunto el detalle: ${cleanText}`
+          ];
+          setScribeDrafts(drafts);
+          setSelectedScribeDraftIndex(0);
+          setIsGeneratingScribe(false);
+          return;
+        }
+        if (inst.includes('german') || inst.includes('deutsch')) {
+          drafts = [
+            `[Deutsch] Bezüglich: ${cleanText}`,
+            `[Deutsch - Casual] Hallo, hier ist der Text: ${cleanText.toLowerCase()}`,
+            `[Deutsch - Info] Betreffend: ${cleanText}`
+          ];
+          setScribeDrafts(drafts);
+          setSelectedScribeDraftIndex(0);
+          setIsGeneratingScribe(false);
+          return;
+        }
+        if (inst.includes('short') || inst.includes('brief') || inst.includes('concise')) {
+          base = cleanText.substring(0, Math.min(cleanText.length, 60)) + '...';
+        } else {
+          base = `${cleanText} (${scribeInstruction.trim()})`;
+        }
+      }
+
+      switch (style) {
+        case 'Professional':
+          drafts = [
+            `Regarding the issue: ${cap(base)} I wanted to confirm this details.`,
+            `Please be advised that: ${cap(base)} Let me know if you would like to proceed.`,
+            `Concerning the details: ${cap(base)} I will keep you updated on progress.`
+          ];
+          break;
+        case 'Casual':
+          drafts = [
+            `Hey! So: ${cap(base)} Let's catch up later.`,
+            `Yeah, basically: ${base.toLowerCase()}`,
+            `Just wanted to let you know: ${base} Let me know what you think!`
+          ];
+          break;
+        case 'Bullet Points':
+          const sentences = base.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 0);
+          drafts = [
+            sentences.map(s => `- ${cap(s)}`).join('\n'),
+            `Key Points:\n` + sentences.map((s, idx) => `${idx + 1}. ${cap(s)}`).join('\n'),
+            sentences.map(s => `• [Action Item] ${cap(s)}`).join('\n')
+          ];
+          break;
+        case 'Email Draft':
+          const subject = base.split(/[.!?]+/)[0] || 'Update';
+          drafts = [
+            `Subject: Update on ${subject}\n\nHi Team,\n\nI hope you are doing well.\n\n${cap(base)}\n\nBest regards,\n[Name]`,
+            `Subject: Notes: ${subject}\n\nHi everyone,\n\nHere is a quick recap:\n${cap(base)}\n\nThanks,\n[Name]`,
+            `Subject: Quick question re: ${subject}\n\nHello,\n\n${cap(base)}\n\nLet me know your availability.\n\nThank you,\n[Name]`
+          ];
+          break;
+        case 'Proofread':
+        default:
+          const corrected = base
+            .replace(/\b(i)\b/g, 'I')
+            .replace(/\b(im)\b/gi, "I'm")
+            .replace(/\b(ive)\b/gi, "I've")
+            .replace(/\b(id)\b/gi, "I'd")
+            .replace(/\b(ill)\b/gi, "I'll");
+          drafts = [
+            cap(corrected),
+            `Cleaned transcription: ${cap(corrected)}`,
+            `Standard corrected text: ${cap(corrected)}`
+          ];
+      }
+
+      setScribeDrafts(drafts);
+      setSelectedScribeDraftIndex(0);
+      setIsGeneratingScribe(false);
+    }, 800);
+  };
+
+  const commitScribeDraft = () => {
+    if (scribeDrafts.length === 0) return;
+    const selectedDraft = scribeDrafts[selectedScribeDraftIndex];
+    if (!selectedDraft) return;
+
+    setRecordings(prev => prev.map(r => {
+      if (r.id === selectedRecordingId) {
+        return studioSegment === 'cleaned'
+          ? { ...r, cleaned: selectedDraft }
+          : { ...r, raw: selectedDraft };
+      }
+      return r;
+    }));
+    
+    setEditingTextValue(selectedDraft);
+    alert('Scribe draft committed to transcript!');
+    setScribeDrafts([]);
+    setScribeInstruction('');
+  };
+
   // Start simulated recording
   const startRecordingSim = async () => {
     const hasPermission = await requestMicPermission();
@@ -700,7 +836,7 @@ export default function App() {
         <Text style={styles.hubTitle}>The Studio</Text>
         <Text style={styles.studioSubtitle}>Review and format on-device transcripts.</Text>
 
-        {activeRec ? (
+        {activeRec ? (<>
           <View style={styles.studioCanvas}>
             <View style={styles.studioCanvasHeader}>
               <View>
@@ -763,8 +899,177 @@ export default function App() {
                 </View>
               )}
             </View>
+      </View>
+
+      {/* Scribe (On-Device LLM Re-writer) Prototype */}
+      <View style={styles.studioScribeCard}>
+        <Text style={styles.sandboxTitle}>Scribe Assistant (Llama-3)</Text>
+        <Text style={styles.sandboxInstruction}>
+          Select a rewrite style, app context, and enter instructions to dynamically transform the transcript using local LLM inference.
+        </Text>
+
+        {/* App & Field Context Simulators */}
+        <Text style={styles.scribeSectionLabel}>Simulate App & Field Context</Text>
+        <View style={styles.scribeContextRow}>
+          <View style={{ flex: 1, marginRight: 8 }}>
+            <Text style={styles.scribeSubLabel}>App Name / ID</Text>
+            <View style={styles.scribeDropdownContainer}>
+              {['com.slack', 'com.google.android.gm', 'com.whatsapp'].map((app) => (
+                <TouchableOpacity
+                  key={app}
+                  style={[styles.scribeContextChip, scribeAppName === app && styles.scribeContextChipActive]}
+                  onPress={() => setScribeAppName(app)}
+                >
+                  <Text style={[styles.scribeContextChipText, scribeAppName === app && styles.scribeContextChipTextActive]}>
+                    {app === 'com.slack' ? 'Slack' : app === 'com.google.android.gm' ? 'Gmail' : 'WhatsApp'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
-        ) : (
+
+          <View style={{ flex: 1 }}>
+            <Text style={styles.scribeSubLabel}>Input Field Variant</Text>
+            <View style={styles.scribeDropdownContainer}>
+              {['Message Field', 'Email Field', 'Search Bar'].map((field) => (
+                <TouchableOpacity
+                  key={field}
+                  style={[styles.scribeContextChip, scribeInputType === field && styles.scribeContextChipActive]}
+                  onPress={() => setScribeInputType(field)}
+                >
+                  <Text style={[styles.scribeContextChipText, scribeInputType === field && styles.scribeContextChipTextActive]}>
+                    {field}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+
+        {/* Style Chips select */}
+        <Text style={styles.scribeSectionLabel}>Select Rewrite Style</Text>
+        <View style={styles.scribeStyleContainer}>
+          {['Professional', 'Casual', 'Bullet Points', 'Email Draft', 'Proofread'].map((styleOpt) => (
+            <TouchableOpacity
+              key={styleOpt}
+              style={[styles.scribeStyleChip, scribeStyle === styleOpt && styles.scribeStyleChipActive]}
+              onPress={() => setScribeStyle(styleOpt)}
+            >
+              <Text style={[styles.scribeStyleChipText, scribeStyle === styleOpt && styles.scribeStyleChipTextActive]}>
+                {styleOpt}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Custom Instructions */}
+        <Text style={styles.scribeSectionLabel}>Custom Instructions / Intent (Optional)</Text>
+        <TextInput
+          style={styles.sandboxInput}
+          value={scribeInstruction}
+          onChangeText={setScribeInstruction}
+          placeholder="e.g. 'translate to Spanish', 'keep it short', 'sound excited'"
+          placeholderTextColor="#859491"
+        />
+
+        {/* Run Scribe button */}
+        <TouchableOpacity 
+          style={[styles.sandboxButton, { backgroundColor: '#161d1c', borderColor: '#62f9ee', marginTop: 10 }]} 
+          onPress={runScribeRewrite}
+          disabled={isGeneratingScribe}
+        >
+          {isGeneratingScribe ? (
+            <ActivityIndicator size="small" color="#62f9ee" />
+          ) : (
+            <Text style={[styles.sandboxButtonText, { color: '#62f9ee' }]}>Generate Scribe Options</Text>
+          )}
+        </TouchableOpacity>
+
+        {/* Draft Options results renderer */}
+        {scribeDrafts.length > 0 && (
+          <View style={styles.scribeResultsContainer}>
+            <Text style={styles.sandboxResultTitle}>Simulated On-Device LLM Options:</Text>
+            <Text style={styles.sandboxInstruction}>
+              Compare multiple drafts below. Tap one to select, then commit it to update the transcript file.
+            </Text>
+            
+            {scribeDrafts.map((draft, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={[styles.draftOptionCard, selectedScribeDraftIndex === idx && styles.draftOptionCardActive]}
+                onPress={() => setSelectedScribeDraftIndex(idx)}
+              >
+                <View style={styles.draftCardHeader}>
+                  <Text style={[styles.draftTitleText, selectedScribeDraftIndex === idx && styles.draftTitleTextActive]}>
+                    Option Draft {idx + 1}
+                  </Text>
+                  {selectedScribeDraftIndex === idx && (
+                    <Text style={{ color: '#62f9ee', fontSize: 12, fontWeight: 'bold' }}>✓ Selected</Text>
+                  )}
+                </View>
+                <Text style={styles.draftBodyText}>{draft}</Text>
+              </TouchableOpacity>
+            ))}
+
+            <View style={styles.scribeActionRow}>
+              <TouchableOpacity 
+                style={[styles.scribeActionBtn, { backgroundColor: '#1e3a34', borderColor: '#4e9a86' }]} 
+                onPress={commitScribeDraft}
+              >
+                <Text style={[styles.scribeActionBtnText, { color: '#62f9ee' }]}>Commit to Transcript</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.scribeActionBtn, { backgroundColor: '#1a2120', borderColor: '#3c4948' }]} 
+                onPress={() => setScribeDrafts([])}
+              >
+                <Text style={[styles.scribeActionBtnText, { color: '#859491' }]}>Cancel / Clear</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* Debug Prompt Inspector */}
+        <TouchableOpacity 
+          style={styles.debugToggleHeader} 
+          onPress={() => setShowPromptDebug(!showPromptDebug)}
+        >
+          <Text style={styles.debugToggleText}>
+            {showPromptDebug ? '▼ Hide Llama-3 Prompt context (JNI Packaging debug)' : '▶ Show Llama-3 Prompt context (JNI Packaging debug)'}
+          </Text>
+        </TouchableOpacity>
+
+        {showPromptDebug && (
+          <View style={styles.debugContainer}>
+            <Text style={styles.debugCodeLabel}>Unified JNI Prompt Package sent to local weights:</Text>
+            <ScrollView style={styles.debugScrollView} nestedScrollEnabled={true}>
+              <Text style={styles.debugOutputText}>
+                {`<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n`}
+                {`Scribe: on-device keyboard writing assistant.\n`}
+                {`Task: Rewrite user's raw voice input based on style: ${scribeStyle}\n`}
+                {`App Name/ID: ${scribeAppName} (${scribeAppName === 'com.slack' ? 'Slack' : scribeAppName === 'com.google.android.gm' ? 'Gmail' : 'WhatsApp'})\n`}
+                {`Input Type: ${scribeInputType}\n`}
+                {`Preceding Context: ${studioSegment === 'cleaned' ? 'Appended editor text' : 'None'}\n`}
+                {`Following Context: None\n\n`}
+                {`Style Instruction: ${
+                  scribeStyle === 'Professional' ? 'Rewrite input to be formal, professional, polite, and grammatically perfect. Retain the core meaning.' :
+                  scribeStyle === 'Casual' ? 'Rewrite input to be casual, friendly, natural, and conversational.' :
+                  scribeStyle === 'Bullet Points' ? 'Summarize input into a clear, concise bullet-point list.' :
+                  scribeStyle === 'Email Draft' ? 'Draft a professional email based on the brief notes provided, including a subject line and greeting.' :
+                  'Fix any spelling, grammar, and punctuation mistakes without changing the style or structure.'
+                }\n`}
+                {scribeInstruction.trim() ? `Additional Context/intent: ${scribeInstruction.trim()}\n` : ''}
+                {`Only output the rewritten text. Do not include introductory phrases, conversational fillers, or explanations. Keep the original language.\n`}
+                {`<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\n`}
+                {`Raw Input: ${studioSegment === 'cleaned' ? activeRec.cleaned : activeRec.raw}\n`}
+                {`<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n`}
+                {`[LLM Weights Response Drafts generated locally on-device]`}
+              </Text>
+            </ScrollView>
+          </View>
+        )}
+      </View>
+      </>
+      ) : (
           <View style={styles.noSelectedCard}>
             <Text style={styles.noSelectedText}>No recording selected. Go to Voice Hub to choose or record one.</Text>
           </View>
@@ -1649,6 +1954,165 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#dde4e2',
     lineHeight: 20,
+  },
+
+  // Scribe (On-Device LLM Re-writer) Prototype styles
+  studioScribeCard: {
+    backgroundColor: '#161d1c',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#3c4948',
+  },
+  scribeSectionLabel: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#62f9ee',
+    marginTop: 12,
+    marginBottom: 6,
+    letterSpacing: 0.3,
+  },
+  scribeContextRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 4,
+  },
+  scribeSubLabel: {
+    fontSize: 11,
+    color: '#859491',
+    marginBottom: 4,
+  },
+  scribeDropdownContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  scribeContextChip: {
+    backgroundColor: '#1a2120',
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#3c4948',
+    marginRight: 6,
+    marginBottom: 6,
+  },
+  scribeContextChipActive: {
+    borderColor: '#62f9ee',
+    backgroundColor: '#1e3a34',
+  },
+  scribeContextChipText: {
+    fontSize: 11,
+    color: '#859491',
+  },
+  scribeContextChipTextActive: {
+    color: '#62f9ee',
+  },
+  scribeStyleContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  scribeStyleChip: {
+    backgroundColor: '#1a2120',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#3c4948',
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  scribeStyleChipActive: {
+    borderColor: '#62f9ee',
+    backgroundColor: '#1e3a34',
+  },
+  scribeStyleChipText: {
+    fontSize: 12,
+    color: '#859491',
+  },
+  scribeStyleChipTextActive: {
+    color: '#62f9ee',
+    fontWeight: 'bold',
+  },
+  scribeResultsContainer: {
+    marginTop: 14,
+  },
+  draftOptionCard: {
+    backgroundColor: '#1a2120',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#3c4948',
+  },
+  draftOptionCardActive: {
+    borderColor: '#62f9ee',
+    backgroundColor: '#1e3a34',
+  },
+  draftCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  draftTitleText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#859491',
+  },
+  draftTitleTextActive: {
+    color: '#62f9ee',
+  },
+  draftBodyText: {
+    fontSize: 14,
+    color: '#dde4e2',
+    lineHeight: 20,
+  },
+  scribeActionRow: {
+    flexDirection: 'row',
+    marginTop: 8,
+  },
+  scribeActionBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  scribeActionBtnText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
+  debugToggleHeader: {
+    marginTop: 14,
+    paddingVertical: 8,
+  },
+  debugToggleText: {
+    fontSize: 12,
+    color: '#62f9ee',
+  },
+  debugContainer: {
+    backgroundColor: '#0a0f0e',
+    borderRadius: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#3c4948',
+  },
+  debugCodeLabel: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#ddb7ff',
+    marginBottom: 6,
+  },
+  debugScrollView: {
+    maxHeight: 180,
+  },
+  debugOutputText: {
+    fontSize: 11,
+    fontFamily: 'monospace',
+    color: '#a8c0bd',
+    lineHeight: 16,
   },
 
   // Engine Room styles
