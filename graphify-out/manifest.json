@@ -1,1197 +1,452 @@
 {
   ".claude/settings.json": {
-    "mtime": 1785051377.9077833,
+    "mtime": 1785669103.0637515,
     "ast_hash": "598cb075410bcd95220ac90bbb60344a",
     "semantic_hash": "598cb075410bcd95220ac90bbb60344a"
   },
   "App.tsx": {
-    "mtime": 1785156819.04248,
-    "ast_hash": "4071d210380b969edfa9ff0365d6448e",
+    "mtime": 1785669103.1369917,
+    "ast_hash": "bc0f48877100b96eeaac6fdb2d707c31",
     "semantic_hash": ""
   },
   "app.json": {
-    "mtime": 1785051377.9222546,
-    "ast_hash": "a06a91a910522d29bf5fbcad7e2b0f9a",
-    "semantic_hash": "a06a91a910522d29bf5fbcad7e2b0f9a"
+    "mtime": 1785669103.163911,
+    "ast_hash": "fde93b09e6fb657c998b9f971e414f79",
+    "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1785156806.7978594,
-    "ast_hash": "880acb938bffaad13c234c6cb873c588",
+    "mtime": 1785669104.248675,
+    "ast_hash": "bc26a4b03240bbabe96d4360b2455052",
     "semantic_hash": ""
   },
   "plugins/withVoiceIme.js": {
-    "mtime": 1785156851.7922928,
-    "ast_hash": "e69dec38b8eb700e98688d447cff20b4",
+    "mtime": 1785669104.265232,
+    "ast_hash": "abb34a1b7043d021911be5ad5041d96c",
     "semantic_hash": ""
   },
   "src/native/ModelVerifierModule.kt": {
-    "mtime": 1785154679.5698295,
-    "ast_hash": "3d5668cf701c34614edee903b5b32a52",
+    "mtime": 1785669104.3155196,
+    "ast_hash": "a6e6dfdb4c76cc685b21fafc537e8976",
     "semantic_hash": ""
   },
   "src/native/VoiceImePackage.kt": {
-    "mtime": 1785156744.1706674,
-    "ast_hash": "635819071c1521a3cc94e24527ecac8e",
+    "mtime": 1785669104.3321707,
+    "ast_hash": "cf2939f8e02f79bcb9a38f0f2caadf76",
     "semantic_hash": ""
   },
   "src/native/VoiceInputMethodService.kt": {
-    "mtime": 1785156741.2396214,
-    "ast_hash": "d3f31b85bee057526520c554399a4519",
+    "mtime": 1785669104.3486602,
+    "ast_hash": "5472222b101aabe9f898f0e9800612a0",
     "semantic_hash": ""
   },
   "src/services/ModelManager.ts": {
-    "mtime": 1785051415.6226306,
-    "ast_hash": "3257e403b72321724f857ac0fcfa1001",
-    "semantic_hash": "3257e403b72321724f857ac0fcfa1001"
+    "mtime": 1785669104.3486602,
+    "ast_hash": "ba3443bfcb9b6f5d93fed3e8590faf78",
+    "semantic_hash": ""
   },
   "tsconfig.json": {
-    "mtime": 1785051415.6239445,
-    "ast_hash": "a5df9ddad82c56de332cbb7d00dd294b",
-    "semantic_hash": "a5df9ddad82c56de332cbb7d00dd294b"
+    "mtime": 1785669104.3486602,
+    "ast_hash": "2f567448d4f0c0f9fcec96fb1c4ea748",
+    "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1785125224.4203477,
+    "mtime": 1785669103.1369917,
     "ast_hash": "21ceb6533048be51308e69e7b74a35cf",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1785051377.9175303,
-    "ast_hash": "8a6643a420fdad6bfb583523bc6cef16",
-    "semantic_hash": "8a6643a420fdad6bfb583523bc6cef16"
+    "mtime": 1785670068.3858695,
+    "ast_hash": "8fb4b05127569e3cf072d795e5092ae9",
+    "semantic_hash": ""
   },
   "CONTEXT.md": {
-    "mtime": 1785155025.9665663,
-    "ast_hash": "a3d932e7942b38683844d1baf54aa13a",
+    "mtime": 1785669103.1416316,
+    "ast_hash": "fb4f98053dc27cdc3d1ed5fcf09ddbed",
     "semantic_hash": ""
   },
   "docs/adr/0001-separate-transcription-ime.md": {
-    "mtime": 1785051377.9237628,
-    "ast_hash": "1f81e8d37577580141584dcdaf99021e",
-    "semantic_hash": "1f81e8d37577580141584dcdaf99021e"
+    "mtime": 1785669103.2180781,
+    "ast_hash": "7b418dccb934ab8dac5a7717b4b929cb",
+    "semantic_hash": ""
   },
   "docs/adr/0002-model-storage-and-access-architecture.md": {
-    "mtime": 1785051377.9237628,
-    "ast_hash": "491d855fb3c5f7f5c1ddd11f850ec1b3",
-    "semantic_hash": "491d855fb3c5f7f5c1ddd11f850ec1b3"
+    "mtime": 1785669103.2305267,
+    "ast_hash": "d25438a392955169c8f6f9ea62ac1c49",
+    "semantic_hash": ""
   },
   "docs/adr/0003-hybrid-cleaner-architecture.md": {
-    "mtime": 1785051377.9237628,
-    "ast_hash": "43ad2d57163d7bdf1f55a05b07d25960",
-    "semantic_hash": "43ad2d57163d7bdf1f55a05b07d25960"
+    "mtime": 1785669103.2472816,
+    "ast_hash": "1e0d02b537a41a4f3b853b3a2f9e5fa5",
+    "semantic_hash": ""
   },
   "docs/adr/0004-voice-typing-pane-layout.md": {
-    "mtime": 1785051377.9237628,
-    "ast_hash": "859e25bed5feaa21793de15ce1deb3b1",
-    "semantic_hash": "859e25bed5feaa21793de15ce1deb3b1"
+    "mtime": 1785669103.2627525,
+    "ast_hash": "aa30a60241378385ffdbf74fd68e6a0d",
+    "semantic_hash": ""
   },
   "app.config.js": {
-    "mtime": 1785156757.4631996,
-    "ast_hash": "45bbb7f58671e3e9136979b6e644d611",
+    "mtime": 1785669103.1491764,
+    "ast_hash": "664c5af5e673577271f2918246b2928d",
     "semantic_hash": ""
   },
   "index.js": {
-    "mtime": 1785051378.0236895,
-    "ast_hash": "829d47c34c79ad0512d9efb8602e9b2e",
-    "semantic_hash": "829d47c34c79ad0512d9efb8602e9b2e"
+    "mtime": 1785669104.248675,
+    "ast_hash": "5a42a67f480f1c9436423d5c1d48d852",
+    "semantic_hash": ""
   },
   "src/components/OverlayLogo.tsx": {
-    "mtime": 1785054928.3459246,
-    "ast_hash": "adaee16d4701deda3139787bced81dfc",
-    "semantic_hash": "adaee16d4701deda3139787bced81dfc"
+    "mtime": 1785669104.283232,
+    "ast_hash": "61e60cfab784f8fa3cc704bc017f0014",
+    "semantic_hash": ""
   },
   "src/native/VoiceAccessibilityService.kt": {
-    "mtime": 1785156743.2138855,
-    "ast_hash": "ddab14c696ca3111bca1f81d7a192d5d",
+    "mtime": 1785669104.3321707,
+    "ast_hash": "bd923fc0a2c137459576f7b67fa685c1",
     "semantic_hash": ""
   },
   "ui/lumina_sonic/DESIGN.md": {
-    "mtime": 1785051415.6239445,
-    "ast_hash": "ff12594b973ffc0e3a0fd34cb482ed95",
-    "semantic_hash": "ff12594b973ffc0e3a0fd34cb482ed95"
+    "mtime": 1785669104.3692563,
+    "ast_hash": "9f6f3ecc11a912c618c99d9a5d189285",
+    "semantic_hash": ""
   },
   "ui/shader/code.html": {
-    "mtime": 1785051415.6239445,
-    "ast_hash": "35dce17ac3447758fd7d102df9e9baba",
-    "semantic_hash": "35dce17ac3447758fd7d102df9e9baba"
+    "mtime": 1785669104.3912146,
+    "ast_hash": "77e6003985fd4b30728528f68dae407e",
+    "semantic_hash": ""
   },
   "ui/the_engine_room/code.html": {
-    "mtime": 1785051415.6239445,
-    "ast_hash": "8ec0f8fb2cd7b53547e650fecafe67c8",
-    "semantic_hash": "8ec0f8fb2cd7b53547e650fecafe67c8"
+    "mtime": 1785669104.4068613,
+    "ast_hash": "268154f85d69738957b4021b6ba845df",
+    "semantic_hash": ""
   },
   "ui/the_studio/code.html": {
-    "mtime": 1785051415.6239445,
-    "ast_hash": "13e6ea6da031cd5e63dd52d23132f35a",
-    "semantic_hash": "13e6ea6da031cd5e63dd52d23132f35a"
+    "mtime": 1785669104.4325583,
+    "ast_hash": "e988f465638038069dd854861f12bea7",
+    "semantic_hash": ""
   },
   "ui/the_voice_hub/code.html": {
-    "mtime": 1785051415.6395426,
-    "ast_hash": "6b9a2c62d5383232b8d950a9b4cb0e63",
-    "semantic_hash": "6b9a2c62d5383232b8d950a9b4cb0e63"
+    "mtime": 1785669104.4700089,
+    "ast_hash": "8c7499261850a3728d73babd98f2b960",
+    "semantic_hash": ""
   },
   "ui/velavoice_project_prd.md": {
-    "mtime": 1785051415.6395426,
-    "ast_hash": "8fc1735ee32550b2e83c145e42c3a97e",
-    "semantic_hash": "8fc1735ee32550b2e83c145e42c3a97e"
+    "mtime": 1785669104.488661,
+    "ast_hash": "f4ccf39182858604f75f19811650da6c",
+    "semantic_hash": ""
   },
   "assets/logo.png": {
-    "mtime": 1785051415.6239445,
+    "mtime": 1785669103.1861858,
     "ast_hash": "46577796b7d9b1fa2ef32aa9b0e3d793",
     "semantic_hash": "46577796b7d9b1fa2ef32aa9b0e3d793"
   },
   "ui/logo/screen.png": {
-    "mtime": 1785051415.6239445,
+    "mtime": 1785669104.3664932,
     "ast_hash": "46577796b7d9b1fa2ef32aa9b0e3d793",
     "semantic_hash": "46577796b7d9b1fa2ef32aa9b0e3d793"
   },
   "ui/the_engine_room/screen.png": {
-    "mtime": 1785051415.6239445,
+    "mtime": 1785669104.4154677,
     "ast_hash": "4914ef65a38af4a80044f563a581fbe0",
     "semantic_hash": "4914ef65a38af4a80044f563a581fbe0"
   },
   "ui/the_studio/screen.png": {
-    "mtime": 1785051415.6239445,
+    "mtime": 1785669104.450524,
     "ast_hash": "1c510ae7af0da5127672d8523f28a282",
     "semantic_hash": "1c510ae7af0da5127672d8523f28a282"
   },
   "docs/blueprint-sdk-heliboard.md": {
-    "mtime": 1785055792.191859,
-    "ast_hash": "8f3a46b797817dde81c926b0aee5a497",
-    "semantic_hash": "8f3a46b797817dde81c926b0aee5a497"
+    "mtime": 1785669103.2827806,
+    "ast_hash": "aa14136c2ac11d09b7ac936289d7eb2e",
+    "semantic_hash": ""
   },
   "build.gradle.kts": {
-    "mtime": 1785080976.4300866,
-    "ast_hash": "b26499bcb02ca304bea835f7a109aee8",
-    "semantic_hash": "b26499bcb02ca304bea835f7a109aee8"
+    "mtime": 1785669103.1972039,
+    "ast_hash": "44447d8752d1097f7738aa1c73a6c1ba",
+    "semantic_hash": ""
   },
   "gradlew": {
-    "mtime": 499162500.0,
-    "ast_hash": "1db6d150e9a9442ca929c1fa8b2fd25e",
-    "semantic_hash": "1db6d150e9a9442ca929c1fa8b2fd25e"
+    "mtime": 1785669103.4138176,
+    "ast_hash": "d71558d06a8c97628fdb0e38b0c36a2d",
+    "semantic_hash": ""
   },
   "settings.gradle.kts": {
-    "mtime": 1785080959.3303294,
-    "ast_hash": "b65708f35dba7ab1ef1016446acc6350",
-    "semantic_hash": "b65708f35dba7ab1ef1016446acc6350"
+    "mtime": 1785669104.2802105,
+    "ast_hash": "abfb5f259e15abaa74938b21d6fe76ab",
+    "semantic_hash": ""
   },
   "vela-cleaner/build.gradle.kts": {
-    "mtime": 1785124802.58269,
-    "ast_hash": "19d52e23dbc3744dc2651213a3673b06",
-    "semantic_hash": "19d52e23dbc3744dc2651213a3673b06"
+    "mtime": 1785669104.49877,
+    "ast_hash": "8df2efcffc15933df7070f3ab729ea69",
+    "semantic_hash": ""
   },
   "vela-cleaner/src/main/kotlin/com/velavoice/sdk/cleaner/CleanerConfig.kt": {
-    "mtime": 1785085402.0751958,
-    "ast_hash": "d0ee09e84aca923b2c3b98af42964a0b",
-    "semantic_hash": "d0ee09e84aca923b2c3b98af42964a0b"
+    "mtime": 1785669104.5255773,
+    "ast_hash": "f9afb260ac2ca0252c7d59d5c50cb665",
+    "semantic_hash": ""
   },
   "vela-cleaner/src/main/kotlin/com/velavoice/sdk/cleaner/PersonalDictionary.kt": {
-    "mtime": 1785085381.5174773,
-    "ast_hash": "f8227a78c04f44b1aba9c2f56a0c466f",
-    "semantic_hash": "f8227a78c04f44b1aba9c2f56a0c466f"
+    "mtime": 1785669104.5635152,
+    "ast_hash": "7238039dd11ea6fb11580b42d1f4c5fa",
+    "semantic_hash": ""
   },
   "vela-cleaner/src/main/kotlin/com/velavoice/sdk/cleaner/TextCleaner.kt": {
-    "mtime": 1785123982.0193388,
-    "ast_hash": "208d2c16cd8d0ad132537b0a7ebc79e1",
-    "semantic_hash": "208d2c16cd8d0ad132537b0a7ebc79e1"
+    "mtime": 1785669104.5801518,
+    "ast_hash": "d703ab694ff925efd9322516e4a92379",
+    "semantic_hash": ""
   },
   "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/CleanerConfigTest.kt": {
-    "mtime": 1785115825.2160432,
-    "ast_hash": "3b77ac9f32f5c3c199df987c974a4738",
-    "semantic_hash": "3b77ac9f32f5c3c199df987c974a4738"
+    "mtime": 1785669104.596849,
+    "ast_hash": "1030b8d2a5cdcf285b1ba3d8a7fce1b5",
+    "semantic_hash": ""
   },
   "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/PersonalDictionaryTest.kt": {
-    "mtime": 1785115826.749578,
-    "ast_hash": "4a02ae7f460c398160ac723fb7510171",
-    "semantic_hash": "4a02ae7f460c398160ac723fb7510171"
+    "mtime": 1785669104.609785,
+    "ast_hash": "cba085fe272e268b99107f7243fca0ad",
+    "semantic_hash": ""
   },
   "vela-cleaner/src/test/kotlin/com/velavoice/sdk/cleaner/TextCleanerTest.kt": {
-    "mtime": 1785115819.5623717,
-    "ast_hash": "10983e7c2548d2c85ad44335daf45de2",
-    "semantic_hash": "10983e7c2548d2c85ad44335daf45de2"
+    "mtime": 1785669104.6165185,
+    "ast_hash": "c8e23ad67247f18ff4b1475fff2924e6",
+    "semantic_hash": ""
   },
   "vela-core/build.gradle.kts": {
-    "mtime": 1785115756.920009,
-    "ast_hash": "c3eaa4c44bf4e87b612174b054e0f894",
-    "semantic_hash": "c3eaa4c44bf4e87b612174b054e0f894"
+    "mtime": 1785669104.6388667,
+    "ast_hash": "1819ea3730d3ab3111ec3fefa504c11b",
+    "semantic_hash": ""
   },
   "vela-core/src/main/kotlin/com/velavoice/sdk/AudioRecorder.kt": {
-    "mtime": 1785086047.382812,
-    "ast_hash": "98c7540e7afd256466bca8bd6c88a00e",
-    "semantic_hash": "98c7540e7afd256466bca8bd6c88a00e"
+    "mtime": 1785669104.6388667,
+    "ast_hash": "2ac89c8554ce3151e65b726ca8b31bea",
+    "semantic_hash": ""
   },
   "vela-core/src/main/kotlin/com/velavoice/sdk/TranscriptionResult.kt": {
-    "mtime": 1785086019.5953174,
-    "ast_hash": "0b99586ebd999a42f6cdbf17d17c351b",
-    "semantic_hash": "0b99586ebd999a42f6cdbf17d17c351b"
+    "mtime": 1785669104.6488388,
+    "ast_hash": "8e098be5c25bc48200953c95d145347f",
+    "semantic_hash": ""
   },
   "vela-core/src/main/kotlin/com/velavoice/sdk/VelaException.kt": {
-    "mtime": 1785085969.3881774,
-    "ast_hash": "53c858588f780750696733b0dc972c6a",
-    "semantic_hash": "53c858588f780750696733b0dc972c6a"
+    "mtime": 1785669104.6654313,
+    "ast_hash": "76473b1cfc5dd444d180e13f48de6f06",
+    "semantic_hash": ""
   },
   "vela-core/src/main/kotlin/com/velavoice/sdk/VelaRecordingCallback.kt": {
-    "mtime": 1785085991.9197962,
-    "ast_hash": "9a64476acda1083de7d7dd95ffcb5fe6",
-    "semantic_hash": "9a64476acda1083de7d7dd95ffcb5fe6"
+    "mtime": 1785669104.6801498,
+    "ast_hash": "8faa8f75adf4e6b0900a98200ea47e29",
+    "semantic_hash": ""
   },
   "vela-core/src/main/kotlin/com/velavoice/sdk/VelaTranscriber.kt": {
-    "mtime": 1785086070.9298756,
-    "ast_hash": "31b131328801898a52121df714678264",
-    "semantic_hash": "31b131328801898a52121df714678264"
+    "mtime": 1785669104.6859725,
+    "ast_hash": "a24c17e564d25f9f598246ae4ed69fc1",
+    "semantic_hash": ""
   },
   "vela-core/src/test/kotlin/com/velavoice/sdk/TranscriptionResultTest.kt": {
-    "mtime": 1785115853.765802,
-    "ast_hash": "aaa6f3c637bfba1093a1f06a117e349b",
-    "semantic_hash": "aaa6f3c637bfba1093a1f06a117e349b"
+    "mtime": 1785669104.7160356,
+    "ast_hash": "d286a855b4c8cbf5ceb74405e38ac5f8",
+    "semantic_hash": ""
   },
   "vela-core/src/test/kotlin/com/velavoice/sdk/VelaExceptionTest.kt": {
-    "mtime": 1785115855.7967756,
-    "ast_hash": "178844ee61a663dff5e2f072e9eb784b",
-    "semantic_hash": "178844ee61a663dff5e2f072e9eb784b"
+    "mtime": 1785669104.7310073,
+    "ast_hash": "9ddf3f9f7076f3024b719926487a231a",
+    "semantic_hash": ""
   },
   "vela-core/src/test/kotlin/com/velavoice/sdk/VelaRecordingCallbackTest.kt": {
-    "mtime": 1785115857.597679,
-    "ast_hash": "89243aa5291fd5f9ee2e66a030c98804",
-    "semantic_hash": "89243aa5291fd5f9ee2e66a030c98804"
+    "mtime": 1785669104.7392745,
+    "ast_hash": "813f68e5395bf8c848d2a8069b07b775",
+    "semantic_hash": ""
   },
   "vela-core/src/test/kotlin/com/velavoice/sdk/VelaTranscriberTest.kt": {
-    "mtime": 1785123898.410044,
-    "ast_hash": "401443939ad296f501a585c4ab01eb0e",
-    "semantic_hash": "401443939ad296f501a585c4ab01eb0e"
+    "mtime": 1785669104.748885,
+    "ast_hash": "0d1ab82a545bb6665804e8a919e0d569",
+    "semantic_hash": ""
   },
   "vela-voice-ui/build.gradle.kts": {
-    "mtime": 1785115756.032864,
-    "ast_hash": "046abc8fa838e835601a61e031a92131",
-    "semantic_hash": "046abc8fa838e835601a61e031a92131"
+    "mtime": 1785669104.7657876,
+    "ast_hash": "a0c42d1fe153edc9f449dfd615f54bc6",
+    "semantic_hash": ""
   },
   "vela-voice-ui/src/main/kotlin/com/velavoice/sdk/ui/VoiceRecordingPane.kt": {
-    "mtime": 1785155246.8959484,
-    "ast_hash": "a038036c5890f5eddca21917c000c7ae",
+    "mtime": 1785669104.7881403,
+    "ast_hash": "84ace687f1c14384ef0661bc5035055c",
     "semantic_hash": ""
   },
   "vela-voice-ui/src/main/kotlin/com/velavoice/sdk/ui/WaveformView.kt": {
-    "mtime": 1785085537.6539059,
-    "ast_hash": "612eca2ddd12e983a79a1fbce8dbc5a2",
-    "semantic_hash": "612eca2ddd12e983a79a1fbce8dbc5a2"
+    "mtime": 1785669104.8010154,
+    "ast_hash": "1d5f91545a4b4350e6a0746ddf17e2e3",
+    "semantic_hash": ""
   },
   "vela-voice-ui/src/test/kotlin/com/velavoice/sdk/ui/VoiceRecordingPaneTest.kt": {
-    "mtime": 1785123896.430602,
-    "ast_hash": "723f38ad3444918938b5eea1c7d25815",
-    "semantic_hash": "723f38ad3444918938b5eea1c7d25815"
+    "mtime": 1785669104.8160748,
+    "ast_hash": "efa81da9f7b4db14a9db2664755dac86",
+    "semantic_hash": ""
   },
   "vela-voice-ui/src/test/kotlin/com/velavoice/sdk/ui/WaveformViewTest.kt": {
-    "mtime": 1785123895.9550042,
-    "ast_hash": "7258da7bb9aeb51c6ef26bb7ee653d77",
-    "semantic_hash": "7258da7bb9aeb51c6ef26bb7ee653d77"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/arm64-v8a/.cmake/api/v1/reply/cache-v2-376f17b8fa1f4b1b2504.json": {
-    "mtime": 1785088492.7476053,
-    "ast_hash": "c3abbb1dfe9119775a3111ae14305c47",
-    "semantic_hash": "c3abbb1dfe9119775a3111ae14305c47"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/arm64-v8a/.cmake/api/v1/reply/cmakeFiles-v1-7d1cdd2d377adbaf75d0.json": {
-    "mtime": 1785088492.765368,
-    "ast_hash": "7d61cbe0004d86682cf7432ad52a5649",
-    "semantic_hash": "7d61cbe0004d86682cf7432ad52a5649"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/arm64-v8a/.cmake/api/v1/reply/codemodel-v2-0014961d329363925718.json": {
-    "mtime": 1785088492.8304288,
-    "ast_hash": "a6e37292a78fd7291b7b7ff1401ae028",
-    "semantic_hash": "a6e37292a78fd7291b7b7ff1401ae028"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/arm64-v8a/.cmake/api/v1/reply/directory-.-Debug-d0094a50bb2071803777.json": {
-    "mtime": 1785088492.809476,
-    "ast_hash": "9f40cd23d42f6f64a253672a38c7ce57",
-    "semantic_hash": "9f40cd23d42f6f64a253672a38c7ce57"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/arm64-v8a/.cmake/api/v1/reply/index-2026-07-26T17-54-52-0846.json": {
-    "mtime": 1785088492.846575,
-    "ast_hash": "32d1acf44201efab47cecc2aab26a066",
-    "semantic_hash": "32d1acf44201efab47cecc2aab26a066"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/arm64-v8a/.cmake/api/v1/reply/target-whisper-Debug-15f3649a0e8e561eabd6.json": {
-    "mtime": 1785088492.7857056,
-    "ast_hash": "733274d33d357c2809a0938109587116",
-    "semantic_hash": "733274d33d357c2809a0938109587116"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdCXX/CMakeCXXCompilerId.cpp": {
-    "mtime": 1785088490.0310075,
-    "ast_hash": "493a7cc5e29a3cf2b0d95a50ee58d987",
-    "semantic_hash": "493a7cc5e29a3cf2b0d95a50ee58d987"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdC/CMakeCCompilerId.c": {
-    "mtime": 1785088489.329874,
-    "ast_hash": "245b894a1d9b5e1b569506b0cfe5d36b",
-    "semantic_hash": "245b894a1d9b5e1b569506b0cfe5d36b"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/arm64-v8a/android_gradle_build.json": {
-    "mtime": 1785088492.9590502,
-    "ast_hash": "4448429483adfadc6bdf4705848fffc6",
-    "semantic_hash": "4448429483adfadc6bdf4705848fffc6"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/arm64-v8a/android_gradle_build_mini.json": {
-    "mtime": 1785088493.0268815,
-    "ast_hash": "945b0f921544d58383802386a864888b",
-    "semantic_hash": "945b0f921544d58383802386a864888b"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/arm64-v8a/compile_commands.json": {
-    "mtime": 1785088492.667706,
-    "ast_hash": "794f7b4c376c15fceb49562ffec788a2",
-    "semantic_hash": "794f7b4c376c15fceb49562ffec788a2"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/arm64-v8a/prefab_config.json": {
-    "mtime": 1785088493.037854,
-    "ast_hash": "053b2e56bb53f9d316b0f6b5e31b3649",
-    "semantic_hash": "053b2e56bb53f9d316b0f6b5e31b3649"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/armeabi-v7a/.cmake/api/v1/reply/cache-v2-3c803b0154be59de3139.json": {
-    "mtime": 1785088518.4113789,
-    "ast_hash": "4ed23cbc91bc698728ea0de5ea3b96f0",
-    "semantic_hash": "4ed23cbc91bc698728ea0de5ea3b96f0"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/armeabi-v7a/.cmake/api/v1/reply/cmakeFiles-v1-d8859b2f4cd3c2e7e966.json": {
-    "mtime": 1785088518.4273088,
-    "ast_hash": "7521d924d3caef4344d6e7f6d36bc521",
-    "semantic_hash": "7521d924d3caef4344d6e7f6d36bc521"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/armeabi-v7a/.cmake/api/v1/reply/codemodel-v2-0137c6b1049be88b22e7.json": {
-    "mtime": 1785088518.4751766,
-    "ast_hash": "20470fb5ecaba3990772546d8716c8ff",
-    "semantic_hash": "20470fb5ecaba3990772546d8716c8ff"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/armeabi-v7a/.cmake/api/v1/reply/directory-.-Debug-d0094a50bb2071803777.json": {
-    "mtime": 1785088518.4611244,
-    "ast_hash": "9f40cd23d42f6f64a253672a38c7ce57",
-    "semantic_hash": "9f40cd23d42f6f64a253672a38c7ce57"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/armeabi-v7a/.cmake/api/v1/reply/index-2026-07-26T17-55-18-0489.json": {
-    "mtime": 1785088518.4822662,
-    "ast_hash": "bfdbfc84747ebb489f966506e7faf5b5",
-    "semantic_hash": "bfdbfc84747ebb489f966506e7faf5b5"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/armeabi-v7a/.cmake/api/v1/reply/target-whisper-Debug-9ea43957a83589b44b10.json": {
-    "mtime": 1785088518.4433806,
-    "ast_hash": "55fd92b7b84d31c8d5d41f4c8c72cf85",
-    "semantic_hash": "55fd92b7b84d31c8d5d41f4c8c72cf85"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/armeabi-v7a/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdCXX/CMakeCXXCompilerId.cpp": {
-    "mtime": 1785088516.8113265,
-    "ast_hash": "493a7cc5e29a3cf2b0d95a50ee58d987",
-    "semantic_hash": "493a7cc5e29a3cf2b0d95a50ee58d987"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/armeabi-v7a/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdC/CMakeCCompilerId.c": {
-    "mtime": 1785088516.3594382,
-    "ast_hash": "245b894a1d9b5e1b569506b0cfe5d36b",
-    "semantic_hash": "245b894a1d9b5e1b569506b0cfe5d36b"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/armeabi-v7a/android_gradle_build.json": {
-    "mtime": 1785088518.5219681,
-    "ast_hash": "c5a8a3103f5de35285777e133d241d9f",
-    "semantic_hash": "c5a8a3103f5de35285777e133d241d9f"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/armeabi-v7a/android_gradle_build_mini.json": {
-    "mtime": 1785088518.5600393,
-    "ast_hash": "786ad38bb0bc19e85c0aadbfc804fd64",
-    "semantic_hash": "786ad38bb0bc19e85c0aadbfc804fd64"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/armeabi-v7a/compile_commands.json": {
-    "mtime": 1785088518.3511827,
-    "ast_hash": "bde6ab776ddcaa9b1f1a45f8eb9d32ee",
-    "semantic_hash": "bde6ab776ddcaa9b1f1a45f8eb9d32ee"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/armeabi-v7a/prefab_config.json": {
-    "mtime": 1785088518.5600393,
-    "ast_hash": "053b2e56bb53f9d316b0f6b5e31b3649",
-    "semantic_hash": "053b2e56bb53f9d316b0f6b5e31b3649"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86/.cmake/api/v1/reply/cache-v2-d22c652a5ee2a46265a3.json": {
-    "mtime": 1785088537.1106367,
-    "ast_hash": "4fb839cff8eb9f8c736efab544e17fd6",
-    "semantic_hash": "4fb839cff8eb9f8c736efab544e17fd6"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86/.cmake/api/v1/reply/cmakeFiles-v1-87ed831db853f4225cce.json": {
-    "mtime": 1785088537.1319573,
-    "ast_hash": "66a5dd1b1550e7217afe5fb81321402d",
-    "semantic_hash": "66a5dd1b1550e7217afe5fb81321402d"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86/.cmake/api/v1/reply/codemodel-v2-78f6b50df861aa6e742e.json": {
-    "mtime": 1785088537.1618607,
-    "ast_hash": "ee4559b04acff4cc3cfc2a058b64de0c",
-    "semantic_hash": "ee4559b04acff4cc3cfc2a058b64de0c"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86/.cmake/api/v1/reply/directory-.-Debug-d0094a50bb2071803777.json": {
-    "mtime": 1785088537.1598523,
-    "ast_hash": "9f40cd23d42f6f64a253672a38c7ce57",
-    "semantic_hash": "9f40cd23d42f6f64a253672a38c7ce57"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86/.cmake/api/v1/reply/index-2026-07-26T17-55-37-0174.json": {
-    "mtime": 1785088537.1737666,
-    "ast_hash": "b570ff2ef9243ac933bf62136f09c54e",
-    "semantic_hash": "b570ff2ef9243ac933bf62136f09c54e"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86/.cmake/api/v1/reply/target-whisper-Debug-6ec9b587d05507825456.json": {
-    "mtime": 1785088537.1421514,
-    "ast_hash": "04ca7b9abeec85e9dd58f71a89faa8fe",
-    "semantic_hash": "04ca7b9abeec85e9dd58f71a89faa8fe"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdCXX/CMakeCXXCompilerId.cpp": {
-    "mtime": 1785088535.8661542,
-    "ast_hash": "493a7cc5e29a3cf2b0d95a50ee58d987",
-    "semantic_hash": "493a7cc5e29a3cf2b0d95a50ee58d987"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdC/CMakeCCompilerId.c": {
-    "mtime": 1785088535.482329,
-    "ast_hash": "245b894a1d9b5e1b569506b0cfe5d36b",
-    "semantic_hash": "245b894a1d9b5e1b569506b0cfe5d36b"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86/android_gradle_build.json": {
-    "mtime": 1785088537.1969583,
-    "ast_hash": "b9a62918bfdf014bc9a52698ca428b31",
-    "semantic_hash": "b9a62918bfdf014bc9a52698ca428b31"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86/android_gradle_build_mini.json": {
-    "mtime": 1785088537.2215211,
-    "ast_hash": "790e2184a15b9248d809f9b1c9d8eec3",
-    "semantic_hash": "790e2184a15b9248d809f9b1c9d8eec3"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86/compile_commands.json": {
-    "mtime": 1785088537.0638063,
-    "ast_hash": "44971dd4e3e9742f18d218f8a18b2ac8",
-    "semantic_hash": "44971dd4e3e9742f18d218f8a18b2ac8"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86/prefab_config.json": {
-    "mtime": 1785088537.2215211,
-    "ast_hash": "053b2e56bb53f9d316b0f6b5e31b3649",
-    "semantic_hash": "053b2e56bb53f9d316b0f6b5e31b3649"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86_64/.cmake/api/v1/reply/cache-v2-bc7fe77667378c7ef866.json": {
-    "mtime": 1785088556.3826923,
-    "ast_hash": "df31772d881526bcd3029f007fcc02b5",
-    "semantic_hash": "df31772d881526bcd3029f007fcc02b5"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86_64/.cmake/api/v1/reply/cmakeFiles-v1-df381bb74d1949b7a54d.json": {
-    "mtime": 1785088556.4133308,
-    "ast_hash": "4d2061e88caa42e45fa38e51e1d0c438",
-    "semantic_hash": "4d2061e88caa42e45fa38e51e1d0c438"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86_64/.cmake/api/v1/reply/codemodel-v2-8aab35ea4da99fb5e8b4.json": {
-    "mtime": 1785088556.4539006,
-    "ast_hash": "bb9ad664ed1453b4eaa0e8f42126bfeb",
-    "semantic_hash": "bb9ad664ed1453b4eaa0e8f42126bfeb"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86_64/.cmake/api/v1/reply/directory-.-Debug-d0094a50bb2071803777.json": {
-    "mtime": 1785088556.4487207,
-    "ast_hash": "9f40cd23d42f6f64a253672a38c7ce57",
-    "semantic_hash": "9f40cd23d42f6f64a253672a38c7ce57"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86_64/.cmake/api/v1/reply/index-2026-07-26T17-55-56-0468.json": {
-    "mtime": 1785088556.4604137,
-    "ast_hash": "30aff3ac4335a5cf9271bd5d50e6bc92",
-    "semantic_hash": "30aff3ac4335a5cf9271bd5d50e6bc92"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86_64/.cmake/api/v1/reply/target-whisper-Debug-06c1eabecc8ce5692df0.json": {
-    "mtime": 1785088556.4289725,
-    "ast_hash": "112caa1f47568adffb2d195a4bb2b937",
-    "semantic_hash": "112caa1f47568adffb2d195a4bb2b937"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86_64/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdCXX/CMakeCXXCompilerId.cpp": {
-    "mtime": 1785088555.0866323,
-    "ast_hash": "493a7cc5e29a3cf2b0d95a50ee58d987",
-    "semantic_hash": "493a7cc5e29a3cf2b0d95a50ee58d987"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86_64/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdC/CMakeCCompilerId.c": {
-    "mtime": 1785088554.7578454,
-    "ast_hash": "245b894a1d9b5e1b569506b0cfe5d36b",
-    "semantic_hash": "245b894a1d9b5e1b569506b0cfe5d36b"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86_64/android_gradle_build.json": {
-    "mtime": 1785088556.501905,
-    "ast_hash": "53fa6f501b5929d14c6b864609b22057",
-    "semantic_hash": "53fa6f501b5929d14c6b864609b22057"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86_64/android_gradle_build_mini.json": {
-    "mtime": 1785088556.5493217,
-    "ast_hash": "a106cc2527fdf9588a643034b7698fed",
-    "semantic_hash": "a106cc2527fdf9588a643034b7698fed"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86_64/compile_commands.json": {
-    "mtime": 1785088556.3288147,
-    "ast_hash": "5649b7e4b3700a35586f94f8ab17d9b5",
-    "semantic_hash": "5649b7e4b3700a35586f94f8ab17d9b5"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86_64/prefab_config.json": {
-    "mtime": 1785088556.551337,
-    "ast_hash": "053b2e56bb53f9d316b0f6b5e31b3649",
-    "semantic_hash": "053b2e56bb53f9d316b0f6b5e31b3649"
-  },
-  "vela-whisper/.cxx/tools/debug/arm64-v8a/compile_commands.json": {
-    "mtime": 1785088492.667706,
-    "ast_hash": "794f7b4c376c15fceb49562ffec788a2",
-    "semantic_hash": "794f7b4c376c15fceb49562ffec788a2"
-  },
-  "vela-whisper/.cxx/tools/debug/armeabi-v7a/compile_commands.json": {
-    "mtime": 1785088518.3511827,
-    "ast_hash": "bde6ab776ddcaa9b1f1a45f8eb9d32ee",
-    "semantic_hash": "bde6ab776ddcaa9b1f1a45f8eb9d32ee"
-  },
-  "vela-whisper/.cxx/tools/debug/x86/compile_commands.json": {
-    "mtime": 1785088537.0638063,
-    "ast_hash": "44971dd4e3e9742f18d218f8a18b2ac8",
-    "semantic_hash": "44971dd4e3e9742f18d218f8a18b2ac8"
-  },
-  "vela-whisper/.cxx/tools/debug/x86_64/compile_commands.json": {
-    "mtime": 1785088556.3288147,
-    "ast_hash": "5649b7e4b3700a35586f94f8ab17d9b5",
-    "semantic_hash": "5649b7e4b3700a35586f94f8ab17d9b5"
+    "mtime": 1785669104.847879,
+    "ast_hash": "6001d4b3012412a1fc3d35c50b6b36aa",
+    "semantic_hash": ""
   },
   "vela-whisper/build.gradle.kts": {
-    "mtime": 1785124801.5546496,
-    "ast_hash": "403d775bf5e7186d953bf302991db16a",
-    "semantic_hash": "403d775bf5e7186d953bf302991db16a"
+    "mtime": 1785669104.8635468,
+    "ast_hash": "b8ac5d3afaf1df420fb7073332dd6bac",
+    "semantic_hash": ""
   },
   "vela-whisper/src/main/cpp/ggml-alloc.c": {
-    "mtime": 1785051415.6010377,
-    "ast_hash": "3e84f82d6707729742a6036a410cb88b",
-    "semantic_hash": "3e84f82d6707729742a6036a410cb88b"
+    "mtime": 1785669104.8885975,
+    "ast_hash": "f9b9982ea51d413b69d97fcb9113c886",
+    "semantic_hash": ""
   },
   "vela-whisper/src/main/cpp/ggml-alloc.h": {
-    "mtime": 1785051415.6020374,
-    "ast_hash": "626c292ccf61430c689f62001ad5470c",
-    "semantic_hash": "626c292ccf61430c689f62001ad5470c"
+    "mtime": 1785669104.8994396,
+    "ast_hash": "e0a66607f62da4cf001eee962b8cc8d1",
+    "semantic_hash": ""
   },
   "vela-whisper/src/main/cpp/ggml-backend-impl.h": {
-    "mtime": 1785051415.6030376,
-    "ast_hash": "d87e8e237fae6d674d1730ed12ae9c3e",
-    "semantic_hash": "d87e8e237fae6d674d1730ed12ae9c3e"
+    "mtime": 1785669104.9155369,
+    "ast_hash": "767ded371e4c7f9a267a113bf63bb4cf",
+    "semantic_hash": ""
   },
   "vela-whisper/src/main/cpp/ggml-backend.c": {
-    "mtime": 1785051415.6040359,
-    "ast_hash": "b146a2a72638506fd6f4100a32fca8b2",
-    "semantic_hash": "b146a2a72638506fd6f4100a32fca8b2"
+    "mtime": 1785669105.0330427,
+    "ast_hash": "405b6a2445f305d7e0c63e31ed9168db",
+    "semantic_hash": ""
   },
   "vela-whisper/src/main/cpp/ggml-backend.h": {
-    "mtime": 1785051415.6050804,
-    "ast_hash": "0e4e602819184aecee9cb1035581d1d7",
-    "semantic_hash": "0e4e602819184aecee9cb1035581d1d7"
+    "mtime": 1785669105.0478594,
+    "ast_hash": "a38e48af068dd080f9086e4fcf3a8d29",
+    "semantic_hash": ""
   },
   "vela-whisper/src/main/cpp/ggml-impl.h": {
-    "mtime": 1785051415.6070278,
-    "ast_hash": "dff8963206b278531362f0d86ccc3828",
-    "semantic_hash": "dff8963206b278531362f0d86ccc3828"
+    "mtime": 1785669105.052234,
+    "ast_hash": "6a6c88b455526a7dfc4fa59c92bddc9d",
+    "semantic_hash": ""
   },
   "vela-whisper/src/main/cpp/ggml-quants.c": {
-    "mtime": 1785051415.609668,
-    "ast_hash": "ba17709786f0aa5321a7e0a1ed257fb4",
-    "semantic_hash": "ba17709786f0aa5321a7e0a1ed257fb4"
+    "mtime": 1785669105.0702274,
+    "ast_hash": "13bae47f3a00102cfe802e88cba8f092",
+    "semantic_hash": ""
   },
   "vela-whisper/src/main/cpp/ggml-quants.h": {
-    "mtime": 1785051415.6106303,
-    "ast_hash": "152945ae8a060c2f43fa57c27a315819",
-    "semantic_hash": "152945ae8a060c2f43fa57c27a315819"
+    "mtime": 1785669105.0821123,
+    "ast_hash": "317cbf3a7f40c20aa074aad11e1154f3",
+    "semantic_hash": ""
   },
   "vela-whisper/src/main/cpp/ggml.c": {
-    "mtime": 1785051415.6146245,
-    "ast_hash": "ffdf9e2b2c095eb9b385466f5c7c21af",
-    "semantic_hash": "ffdf9e2b2c095eb9b385466f5c7c21af"
+    "mtime": 1785669105.0983553,
+    "ast_hash": "86bae82d9e1abddaa01ce505cc754150",
+    "semantic_hash": ""
   },
   "vela-whisper/src/main/cpp/ggml.h": {
-    "mtime": 1785051415.6166668,
-    "ast_hash": "1878d09eb35e85b3d8aad300d6ae94b6",
-    "semantic_hash": "1878d09eb35e85b3d8aad300d6ae94b6"
+    "mtime": 1785669105.115521,
+    "ast_hash": "eea58ac6147ecbd4f301acf5755642aa",
+    "semantic_hash": ""
   },
   "vela-whisper/src/main/cpp/whisper-jni.cpp": {
-    "mtime": 1785081186.6572633,
-    "ast_hash": "608d81212c5ecd8cd5bdae736df553c7",
-    "semantic_hash": "608d81212c5ecd8cd5bdae736df553c7"
+    "mtime": 1785669105.116518,
+    "ast_hash": "0f30b70b596986c5def902f94f49c894",
+    "semantic_hash": ""
   },
   "vela-whisper/src/main/cpp/whisper.cpp": {
-    "mtime": 1785051415.6196694,
-    "ast_hash": "104c7467f92504888fa6e462b635ae12",
-    "semantic_hash": "104c7467f92504888fa6e462b635ae12"
+    "mtime": 1785669105.1321492,
+    "ast_hash": "1a345b07e4a431e89c1df4b1923b6471",
+    "semantic_hash": ""
   },
   "vela-whisper/src/main/cpp/whisper.h": {
-    "mtime": 1785051415.62167,
-    "ast_hash": "eaabbfbdc8cd6e6c5a29922a67184ca6",
-    "semantic_hash": "eaabbfbdc8cd6e6c5a29922a67184ca6"
+    "mtime": 1785669105.148711,
+    "ast_hash": "a33a075de294aca85bd549f2bc683732",
+    "semantic_hash": ""
   },
   "vela-whisper/src/main/kotlin/com/velavoice/sdk/whisper/AudioConverter.kt": {
-    "mtime": 1785081253.8960001,
-    "ast_hash": "f19a0aafb137051eafc9edec4e0ebe37",
-    "semantic_hash": "f19a0aafb137051eafc9edec4e0ebe37"
+    "mtime": 1785669105.164511,
+    "ast_hash": "e4de1b54280fc809574dd10a1008a376",
+    "semantic_hash": ""
   },
   "vela-whisper/src/main/kotlin/com/velavoice/sdk/whisper/WhisperConfig.kt": {
-    "mtime": 1785081231.144792,
-    "ast_hash": "cc6861982b24dfc7aa558cd35ff73576",
-    "semantic_hash": "cc6861982b24dfc7aa558cd35ff73576"
+    "mtime": 1785669105.165347,
+    "ast_hash": "0b776597c1f0e8de0b341b98a53aab86",
+    "semantic_hash": ""
   },
   "vela-whisper/src/main/kotlin/com/velavoice/sdk/whisper/WhisperEngine.kt": {
-    "mtime": 1785085227.8789217,
-    "ast_hash": "cc6fb85c4b4afabc5353a18f943b340d",
-    "semantic_hash": "cc6fb85c4b4afabc5353a18f943b340d"
+    "mtime": 1785669105.1830819,
+    "ast_hash": "b87e393c14f1ee5264bbca8bd852833d",
+    "semantic_hash": ""
   },
   "vela-whisper/src/test/kotlin/com/velavoice/sdk/whisper/AudioConverterTest.kt": {
-    "mtime": 1785115783.675989,
-    "ast_hash": "16d68489a201814452add268689d578b",
-    "semantic_hash": "16d68489a201814452add268689d578b"
+    "mtime": 1785669105.1986034,
+    "ast_hash": "67af0bdc58a9ec503c7fd66337aed71b",
+    "semantic_hash": ""
   },
   "vela-whisper/src/test/kotlin/com/velavoice/sdk/whisper/WhisperConfigTest.kt": {
-    "mtime": 1785115785.2633579,
-    "ast_hash": "dff382057b8e9ab34aeb48332b034555",
-    "semantic_hash": "dff382057b8e9ab34aeb48332b034555"
+    "mtime": 1785669105.1986034,
+    "ast_hash": "4e6fdd6c022e0756693f152a07224360",
+    "semantic_hash": ""
   },
   "vela-whisper/src/test/kotlin/com/velavoice/sdk/whisper/WhisperEngineTest.kt": {
-    "mtime": 1785123895.949987,
-    "ast_hash": "166e69a86c2638ea7e62d1517d9be1f0",
-    "semantic_hash": "166e69a86c2638ea7e62d1517d9be1f0"
+    "mtime": 1785669105.2151318,
+    "ast_hash": "c46c871858680cf108ee7ba1f0c81047",
+    "semantic_hash": ""
   },
   "docs/init/issues.md": {
-    "mtime": 1785051378.034246,
-    "ast_hash": "903df2da3e7425a866f5e5be83b1a4f7",
-    "semantic_hash": "903df2da3e7425a866f5e5be83b1a4f7"
+    "mtime": 1785669103.305264,
+    "ast_hash": "91adc8328e3b772087779bb52bff90b1",
+    "semantic_hash": ""
   },
   "docs/init/spec.md": {
-    "mtime": 1785051415.5763793,
+    "mtime": 1785669103.3244593,
     "ast_hash": "cec1855649e14812457e279a1342f8c3",
     "semantic_hash": "cec1855649e14812457e279a1342f8c3"
   },
-  "vela-whisper/.cxx/Debug/ok2a1w11/arm64-v8a/CMakeCache.txt": {
-    "mtime": 1785088492.621009,
-    "ast_hash": "6db2b81b986f74f781e357683f653e35",
-    "semantic_hash": "6db2b81b986f74f781e357683f653e35"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/arm64-v8a/CMakeFiles/TargetDirectories.txt": {
-    "mtime": 1785088492.6623065,
-    "ast_hash": "35bf014de3336a0b15d5a6854488b929",
-    "semantic_hash": "35bf014de3336a0b15d5a6854488b929"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/arm64-v8a/additional_project_files.txt": {
-    "mtime": 1785088492.9466472,
-    "ast_hash": "1cd21654afcc25e030945cec86cf12f4",
-    "semantic_hash": "1cd21654afcc25e030945cec86cf12f4"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/arm64-v8a/build_file_index.txt": {
-    "mtime": 1785088493.037854,
-    "ast_hash": "b3cee1ed24c3f020302238f8d9fe1f13",
-    "semantic_hash": "b3cee1ed24c3f020302238f8d9fe1f13"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/arm64-v8a/metadata_generation_command.txt": {
-    "mtime": 1785088493.035842,
-    "ast_hash": "5b686fc5249a217ad3a5939288e157c0",
-    "semantic_hash": "5b686fc5249a217ad3a5939288e157c0"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/arm64-v8a/symbol_folder_index.txt": {
-    "mtime": 1785088493.037854,
-    "ast_hash": "641e989115a00b554e87cdea02307d7b",
-    "semantic_hash": "641e989115a00b554e87cdea02307d7b"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/armeabi-v7a/CMakeCache.txt": {
-    "mtime": 1785088518.3077,
-    "ast_hash": "a23cc4f904c4142580ae7ca6142293ed",
-    "semantic_hash": "a23cc4f904c4142580ae7ca6142293ed"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/armeabi-v7a/CMakeFiles/TargetDirectories.txt": {
-    "mtime": 1785088518.345473,
-    "ast_hash": "b9cf553c7db5563c61d77c99fb7171d3",
-    "semantic_hash": "b9cf553c7db5563c61d77c99fb7171d3"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/armeabi-v7a/additional_project_files.txt": {
-    "mtime": 1785088518.5219681,
-    "ast_hash": "1cd21654afcc25e030945cec86cf12f4",
-    "semantic_hash": "1cd21654afcc25e030945cec86cf12f4"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/armeabi-v7a/build_file_index.txt": {
-    "mtime": 1785088518.5600393,
-    "ast_hash": "b3cee1ed24c3f020302238f8d9fe1f13",
-    "semantic_hash": "b3cee1ed24c3f020302238f8d9fe1f13"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/armeabi-v7a/metadata_generation_command.txt": {
-    "mtime": 1785088518.5600393,
-    "ast_hash": "44fd9ffa77c14cbef2645688c030ffe1",
-    "semantic_hash": "44fd9ffa77c14cbef2645688c030ffe1"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/armeabi-v7a/symbol_folder_index.txt": {
-    "mtime": 1785088518.5600393,
-    "ast_hash": "0c702453b5861296c3c3d66314088e5c",
-    "semantic_hash": "0c702453b5861296c3c3d66314088e5c"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/hash_key.txt": {
-    "mtime": 1785088493.181563,
-    "ast_hash": "7bde15d7c17e325c0522977b296b4eff",
-    "semantic_hash": "7bde15d7c17e325c0522977b296b4eff"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86/CMakeCache.txt": {
-    "mtime": 1785088537.030437,
-    "ast_hash": "79ae5da8ffd0db2eb5155178e1bea260",
-    "semantic_hash": "79ae5da8ffd0db2eb5155178e1bea260"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86/CMakeFiles/TargetDirectories.txt": {
-    "mtime": 1785088537.0552526,
-    "ast_hash": "f0d4baad308a134def154b86884e5b29",
-    "semantic_hash": "f0d4baad308a134def154b86884e5b29"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86/additional_project_files.txt": {
-    "mtime": 1785088537.1969583,
-    "ast_hash": "1cd21654afcc25e030945cec86cf12f4",
-    "semantic_hash": "1cd21654afcc25e030945cec86cf12f4"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86/build_file_index.txt": {
-    "mtime": 1785088537.2215211,
-    "ast_hash": "b3cee1ed24c3f020302238f8d9fe1f13",
-    "semantic_hash": "b3cee1ed24c3f020302238f8d9fe1f13"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86/metadata_generation_command.txt": {
-    "mtime": 1785088537.2215211,
-    "ast_hash": "bc86ac14712aa4ecb54d218ea8816591",
-    "semantic_hash": "bc86ac14712aa4ecb54d218ea8816591"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86/symbol_folder_index.txt": {
-    "mtime": 1785088537.2215211,
-    "ast_hash": "2372ee8a31db0cc517138c55594d9672",
-    "semantic_hash": "2372ee8a31db0cc517138c55594d9672"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86_64/CMakeCache.txt": {
-    "mtime": 1785088556.2771187,
-    "ast_hash": "3ae5a21b304f0f36e3bba0cd3ed30918",
-    "semantic_hash": "3ae5a21b304f0f36e3bba0cd3ed30918"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86_64/CMakeFiles/TargetDirectories.txt": {
-    "mtime": 1785088556.3195949,
-    "ast_hash": "dbed9e1ba726546d61a1800db1d860d4",
-    "semantic_hash": "dbed9e1ba726546d61a1800db1d860d4"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86_64/additional_project_files.txt": {
-    "mtime": 1785088556.501905,
-    "ast_hash": "1cd21654afcc25e030945cec86cf12f4",
-    "semantic_hash": "1cd21654afcc25e030945cec86cf12f4"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86_64/build_file_index.txt": {
-    "mtime": 1785088556.551337,
-    "ast_hash": "b3cee1ed24c3f020302238f8d9fe1f13",
-    "semantic_hash": "b3cee1ed24c3f020302238f8d9fe1f13"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86_64/metadata_generation_command.txt": {
-    "mtime": 1785088556.5493217,
-    "ast_hash": "06a8eb5f83569a8b6961ec0e087d4e42",
-    "semantic_hash": "06a8eb5f83569a8b6961ec0e087d4e42"
-  },
-  "vela-whisper/.cxx/Debug/ok2a1w11/x86_64/symbol_folder_index.txt": {
-    "mtime": 1785088556.551337,
-    "ast_hash": "55de6645b8dc9b14521d8d6263e11659",
-    "semantic_hash": "55de6645b8dc9b14521d8d6263e11659"
-  },
   "vela-whisper/src/main/cpp/CMakeLists.txt": {
-    "mtime": 1785051415.6000383,
-    "ast_hash": "4f1ba165b0e72df154b41b22f4f78fcf",
-    "semantic_hash": "4f1ba165b0e72df154b41b22f4f78fcf"
+    "mtime": 1785669104.8665705,
+    "ast_hash": "fabd631ec7af991e1b1acc6e2b50ddb4",
+    "semantic_hash": ""
   },
   ".opencode/opencode.json": {
-    "mtime": 1785149786.7435043,
-    "ast_hash": "1efe24ecf938911d4f23e4b1c6ec91f7",
+    "mtime": 1785669103.0972707,
+    "ast_hash": "19a51febeea85351e9fcc679b3df35f4",
     "semantic_hash": ""
   },
   ".opencode/plugins/graphify.js": {
-    "mtime": 1785125224.4203477,
+    "mtime": 1785669103.1233776,
     "ast_hash": "111287aed37970b605d3ab422d1c93ec",
     "semantic_hash": ""
   },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/arm64-v8a/.cmake/api/v1/reply/cache-v2-afaf7a1791f2a0894115.json": {
-    "mtime": 1785124099.3374739,
-    "ast_hash": "c31037a5e85c013da8321ebdd0317930",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/arm64-v8a/.cmake/api/v1/reply/cmakeFiles-v1-c594128883d4bcbf7193.json": {
-    "mtime": 1785124099.3680222,
-    "ast_hash": "fe866a08ebfc13f0cafe0b3f03dcb258",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/arm64-v8a/.cmake/api/v1/reply/codemodel-v2-34e7d1fb054bb14d8336.json": {
-    "mtime": 1785124099.4365497,
-    "ast_hash": "6b831e8a6d51eb852ea2ff5550317242",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/arm64-v8a/.cmake/api/v1/reply/directory-.-RelWithDebInfo-d0094a50bb2071803777.json": {
-    "mtime": 1785124099.4175494,
-    "ast_hash": "9f40cd23d42f6f64a253672a38c7ce57",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/arm64-v8a/.cmake/api/v1/reply/index-2026-07-27T03-48-19-0461.json": {
-    "mtime": 1785124099.4605577,
-    "ast_hash": "4aebb1a79f187752c51619b1ca766345",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/arm64-v8a/.cmake/api/v1/reply/target-whisper-RelWithDebInfo-f8bdbf6cf659db264100.json": {
-    "mtime": 1785124099.3910213,
-    "ast_hash": "c8df3198ba4c71839f3208221f7f62ca",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdCXX/CMakeCXXCompilerId.cpp": {
-    "mtime": 1785124097.1004078,
-    "ast_hash": "493a7cc5e29a3cf2b0d95a50ee58d987",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/arm64-v8a/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdC/CMakeCCompilerId.c": {
-    "mtime": 1785124096.4120686,
-    "ast_hash": "245b894a1d9b5e1b569506b0cfe5d36b",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/arm64-v8a/android_gradle_build.json": {
-    "mtime": 1785124099.5733404,
-    "ast_hash": "f6503cbb0f26f24ae3877d65fabcc6f4",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/arm64-v8a/android_gradle_build_mini.json": {
-    "mtime": 1785124099.6594338,
-    "ast_hash": "8f187b377251059b76066cd7801feee8",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/arm64-v8a/compile_commands.json": {
-    "mtime": 1785124099.2643964,
-    "ast_hash": "2e0072c650dbb30254ebf5233350ecf3",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/arm64-v8a/prefab_config.json": {
-    "mtime": 1785124099.664434,
-    "ast_hash": "053b2e56bb53f9d316b0f6b5e31b3649",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/armeabi-v7a/.cmake/api/v1/reply/cache-v2-d9abb44293993be11f40.json": {
-    "mtime": 1785124142.0026836,
-    "ast_hash": "c9f779a5cc8221d13b37ba157c993d8f",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/armeabi-v7a/.cmake/api/v1/reply/cmakeFiles-v1-a4cdce3fddef8d3094d2.json": {
-    "mtime": 1785124142.050238,
-    "ast_hash": "258917a8d5598fb9b2f94385bbe5e090",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/armeabi-v7a/.cmake/api/v1/reply/codemodel-v2-29dc0dee5bc89d1cf192.json": {
-    "mtime": 1785124142.1830916,
-    "ast_hash": "aa9c72c3a453e9e57eb5bdaa3e732489",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/armeabi-v7a/.cmake/api/v1/reply/directory-.-RelWithDebInfo-d0094a50bb2071803777.json": {
-    "mtime": 1785124142.154043,
-    "ast_hash": "9f40cd23d42f6f64a253672a38c7ce57",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/armeabi-v7a/.cmake/api/v1/reply/index-2026-07-27T03-49-02-0211.json": {
-    "mtime": 1785124142.2111056,
-    "ast_hash": "2d2058c8d4e1ebc18c4f80f69b32761b",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/armeabi-v7a/.cmake/api/v1/reply/target-whisper-RelWithDebInfo-869cdd3f8fd5b30095ad.json": {
-    "mtime": 1785124142.089823,
-    "ast_hash": "32e8928db1343243d16efcca6bffb124",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/armeabi-v7a/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdCXX/CMakeCXXCompilerId.cpp": {
-    "mtime": 1785124138.2100854,
-    "ast_hash": "493a7cc5e29a3cf2b0d95a50ee58d987",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/armeabi-v7a/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdC/CMakeCCompilerId.c": {
-    "mtime": 1785124137.3746088,
-    "ast_hash": "245b894a1d9b5e1b569506b0cfe5d36b",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/armeabi-v7a/android_gradle_build.json": {
-    "mtime": 1785124142.2947123,
-    "ast_hash": "72b29961135f3e2b416732f3600fff25",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/armeabi-v7a/android_gradle_build_mini.json": {
-    "mtime": 1785124142.3420851,
-    "ast_hash": "405959c1857c823361c0cc23f90aff7d",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/armeabi-v7a/compile_commands.json": {
-    "mtime": 1785124141.8834565,
-    "ast_hash": "3fa80e287e5c45fbd0d4852f6160582e",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/armeabi-v7a/prefab_config.json": {
-    "mtime": 1785124142.3460844,
-    "ast_hash": "053b2e56bb53f9d316b0f6b5e31b3649",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86/.cmake/api/v1/reply/cache-v2-383e6bf10bc496809998.json": {
-    "mtime": 1785124172.442826,
-    "ast_hash": "749ed249d31760a568bf921c14d54389",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86/.cmake/api/v1/reply/cmakeFiles-v1-5f9a16318e0784b2f4b6.json": {
-    "mtime": 1785124172.465833,
-    "ast_hash": "4df08afb49e1668298e8eaea8c9b00e1",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86/.cmake/api/v1/reply/codemodel-v2-6a273b5c83e72130b610.json": {
-    "mtime": 1785124172.5130217,
-    "ast_hash": "211a0a4c5ba0fb7ff2ea71f8d609bf93",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86/.cmake/api/v1/reply/directory-.-RelWithDebInfo-d0094a50bb2071803777.json": {
-    "mtime": 1785124172.5080216,
-    "ast_hash": "9f40cd23d42f6f64a253672a38c7ce57",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86/.cmake/api/v1/reply/index-2026-07-27T03-49-32-0533.json": {
-    "mtime": 1785124172.532043,
-    "ast_hash": "241475896eed894ce24d95232bd80aee",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86/.cmake/api/v1/reply/target-whisper-RelWithDebInfo-de0f254ab49e1eedc186.json": {
-    "mtime": 1785124172.4843304,
-    "ast_hash": "5e92a625de1854e2f7080eadc76fb06d",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdCXX/CMakeCXXCompilerId.cpp": {
-    "mtime": 1785124170.3462315,
-    "ast_hash": "493a7cc5e29a3cf2b0d95a50ee58d987",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdC/CMakeCCompilerId.c": {
-    "mtime": 1785124169.8009584,
-    "ast_hash": "245b894a1d9b5e1b569506b0cfe5d36b",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86/android_gradle_build.json": {
-    "mtime": 1785124172.5780256,
-    "ast_hash": "1405c4ea56257f78f734c2f2c8cbcd75",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86/android_gradle_build_mini.json": {
-    "mtime": 1785124172.6285677,
-    "ast_hash": "850473a503129b9a695d0f56a7677e49",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86/compile_commands.json": {
-    "mtime": 1785124172.3802817,
-    "ast_hash": "7724b5f2d1118884686c0334d7b60213",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86/prefab_config.json": {
-    "mtime": 1785124172.6295757,
-    "ast_hash": "053b2e56bb53f9d316b0f6b5e31b3649",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86_64/.cmake/api/v1/reply/cache-v2-e5fdab75d23df832e721.json": {
-    "mtime": 1785124212.998139,
-    "ast_hash": "95933494e53eb3cfd56b52578d4449db",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86_64/.cmake/api/v1/reply/cmakeFiles-v1-25828fe487386d964446.json": {
-    "mtime": 1785124213.0347004,
-    "ast_hash": "46d3624ec7e9c02a3cd3520c86bd2828",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86_64/.cmake/api/v1/reply/codemodel-v2-b25db604516a811e5e9d.json": {
-    "mtime": 1785124213.1062262,
-    "ast_hash": "11d7fa47ded8462220782c187f3ef940",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86_64/.cmake/api/v1/reply/directory-.-RelWithDebInfo-d0094a50bb2071803777.json": {
-    "mtime": 1785124213.1002262,
-    "ast_hash": "9f40cd23d42f6f64a253672a38c7ce57",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86_64/.cmake/api/v1/reply/index-2026-07-27T03-50-13-0127.json": {
-    "mtime": 1785124213.1271405,
-    "ast_hash": "d69e6a48701ca042bcd9a6dd68f192c7",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86_64/.cmake/api/v1/reply/target-whisper-RelWithDebInfo-5c007a2bc67f4b9dfe71.json": {
-    "mtime": 1785124213.0712266,
-    "ast_hash": "2a0fd7ecf1508828da5e8555650d541c",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86_64/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdCXX/CMakeCXXCompilerId.cpp": {
-    "mtime": 1785124209.8106122,
-    "ast_hash": "493a7cc5e29a3cf2b0d95a50ee58d987",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86_64/CMakeFiles/3.22.1-g37088a8-dirty/CompilerIdC/CMakeCCompilerId.c": {
-    "mtime": 1785124208.9390674,
-    "ast_hash": "245b894a1d9b5e1b569506b0cfe5d36b",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86_64/android_gradle_build.json": {
-    "mtime": 1785124213.179742,
-    "ast_hash": "55191761fb4f2bd485ba3576b735c57d",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86_64/android_gradle_build_mini.json": {
-    "mtime": 1785124213.2167275,
-    "ast_hash": "15b05d8872a3639953cbac9514741e36",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86_64/compile_commands.json": {
-    "mtime": 1785124212.8970618,
-    "ast_hash": "80e87945ef5d03dd2759d59b85fa49a9",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86_64/prefab_config.json": {
-    "mtime": 1785124213.219733,
-    "ast_hash": "053b2e56bb53f9d316b0f6b5e31b3649",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/tools/release/arm64-v8a/compile_commands.json": {
-    "mtime": 1785124099.2643964,
-    "ast_hash": "2e0072c650dbb30254ebf5233350ecf3",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/tools/release/armeabi-v7a/compile_commands.json": {
-    "mtime": 1785124141.8834565,
-    "ast_hash": "3fa80e287e5c45fbd0d4852f6160582e",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/tools/release/x86/compile_commands.json": {
-    "mtime": 1785124172.3802817,
-    "ast_hash": "7724b5f2d1118884686c0334d7b60213",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/tools/release/x86_64/compile_commands.json": {
-    "mtime": 1785124212.8970618,
-    "ast_hash": "80e87945ef5d03dd2759d59b85fa49a9",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/arm64-v8a/CMakeCache.txt": {
-    "mtime": 1785124099.2218764,
-    "ast_hash": "5a51f4f2e0a49cb3db39881bca7989b1",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/arm64-v8a/CMakeFiles/TargetDirectories.txt": {
-    "mtime": 1785124099.2568765,
-    "ast_hash": "c0dbcf0fc1c6a07a0accdf8b921d7348",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/arm64-v8a/additional_project_files.txt": {
-    "mtime": 1785124099.5631797,
-    "ast_hash": "1cd21654afcc25e030945cec86cf12f4",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/arm64-v8a/build_file_index.txt": {
-    "mtime": 1785124099.6654358,
-    "ast_hash": "b3cee1ed24c3f020302238f8d9fe1f13",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/arm64-v8a/metadata_generation_command.txt": {
-    "mtime": 1785124099.664434,
-    "ast_hash": "480390bca68b638bfcf10f6b43ecfa07",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/arm64-v8a/symbol_folder_index.txt": {
-    "mtime": 1785124099.6654358,
-    "ast_hash": "398a6b2c164c803a7cef85f9089024dd",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/armeabi-v7a/CMakeCache.txt": {
-    "mtime": 1785124141.7933207,
-    "ast_hash": "dbfe2542ad6fabd47d2957fd6ae805c1",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/armeabi-v7a/CMakeFiles/TargetDirectories.txt": {
-    "mtime": 1785124141.874919,
-    "ast_hash": "82b780f8ce7211be858c1dc8e3efa222",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/armeabi-v7a/additional_project_files.txt": {
-    "mtime": 1785124142.2887099,
-    "ast_hash": "1cd21654afcc25e030945cec86cf12f4",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/armeabi-v7a/build_file_index.txt": {
-    "mtime": 1785124142.348092,
-    "ast_hash": "b3cee1ed24c3f020302238f8d9fe1f13",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/armeabi-v7a/metadata_generation_command.txt": {
-    "mtime": 1785124142.3440866,
-    "ast_hash": "07bf8e20f83128d038533f539f8fe884",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/armeabi-v7a/symbol_folder_index.txt": {
-    "mtime": 1785124142.3470867,
-    "ast_hash": "7f5b4e755c5fdcc8dbf84f970bb0468d",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/hash_key.txt": {
-    "mtime": 1785124099.7365892,
-    "ast_hash": "6cce5f79965b77635b10222c30436ce9",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86/CMakeCache.txt": {
-    "mtime": 1785124172.3162763,
-    "ast_hash": "24e282090e2de4ee532c2d1d0c46e0db",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86/CMakeFiles/TargetDirectories.txt": {
-    "mtime": 1785124172.3742805,
-    "ast_hash": "09949e364286d855bb1597455be7aa96",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86/additional_project_files.txt": {
-    "mtime": 1785124172.5750203,
-    "ast_hash": "1cd21654afcc25e030945cec86cf12f4",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86/build_file_index.txt": {
-    "mtime": 1785124172.6315656,
-    "ast_hash": "b3cee1ed24c3f020302238f8d9fe1f13",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86/metadata_generation_command.txt": {
-    "mtime": 1785124172.6295757,
-    "ast_hash": "9375dc003735e251fcc81059393856e2",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86/symbol_folder_index.txt": {
-    "mtime": 1785124172.6305678,
-    "ast_hash": "41d1b383a1184a29918133a295d5d470",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86_64/CMakeCache.txt": {
-    "mtime": 1785124212.834529,
-    "ast_hash": "99083342bcd3969bdae346ef63015a84",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86_64/CMakeFiles/TargetDirectories.txt": {
-    "mtime": 1785124212.8910623,
-    "ast_hash": "7e01f108dd698bf98e876adae847ad70",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86_64/additional_project_files.txt": {
-    "mtime": 1785124213.1777365,
-    "ast_hash": "1cd21654afcc25e030945cec86cf12f4",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86_64/build_file_index.txt": {
-    "mtime": 1785124213.2217271,
-    "ast_hash": "b3cee1ed24c3f020302238f8d9fe1f13",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86_64/metadata_generation_command.txt": {
-    "mtime": 1785124213.219733,
-    "ast_hash": "93fe1995503916a44730d367d7f38d1a",
-    "semantic_hash": ""
-  },
-  "vela-whisper/.cxx/RelWithDebInfo/4b6w6k2o/x86_64/symbol_folder_index.txt": {
-    "mtime": 1785124213.2207499,
-    "ast_hash": "0ee3e7de0c7207de8303b6b2d268c04e",
-    "semantic_hash": ""
-  },
-  ".opencode/package.json": {
-    "mtime": 1785149807.922351,
-    "ast_hash": "424af126c5a683ca942c6036d2b8f34d",
-    "semantic_hash": ""
-  },
   "src/native/GoogleDriveSyncModule.kt": {
-    "mtime": 1785156729.5970223,
-    "ast_hash": "eb4f31eddc709dd64883bce97c605302",
+    "mtime": 1785669104.298609,
+    "ast_hash": "c7c9c1552b83a8479a1cda4f91f4245a",
     "semantic_hash": ""
   },
   "src/native/TranscriptionStorage.kt": {
-    "mtime": 1785156710.2919896,
-    "ast_hash": "9d18a8c22c8ed6c412f2098ccfcf2b9c",
+    "mtime": 1785669104.3321707,
+    "ast_hash": "d439a28986c841c364b6a65a049f70ad",
+    "semantic_hash": ""
+  },
+  "vela-cleaner/src/main/kotlin/com/velavoice/sdk/cleaner/DictionaryKeywords.kt": {
+    "mtime": 1785669104.5369203,
+    "ast_hash": "6ae104781cea43be119fd6fd79337299",
+    "semantic_hash": ""
+  },
+  ".opencode/package.json": {
+    "mtime": 1785669202.0874548,
+    "ast_hash": "be8400d31d2ded77a3ea1ded5781885b",
+    "semantic_hash": ""
+  },
+  "docs/agents/domain.md": {
+    "mtime": 1785670060.8590398,
+    "ast_hash": "35089ed6a70a657c91fd100ade31b642",
+    "semantic_hash": ""
+  },
+  "docs/agents/issue-tracker.md": {
+    "mtime": 1785670058.0475202,
+    "ast_hash": "3cd8509285524d31a33279b8cb0870e5",
+    "semantic_hash": ""
+  },
+  "docs/agents/triage-labels.md": {
+    "mtime": 1785670062.3679419,
+    "ast_hash": "22add54cb98451c55b20e6b7992d4a85",
+    "semantic_hash": ""
+  },
+  "docs/research/heliboard-sdk-config.md": {
+    "mtime": 1785670909.0960207,
+    "ast_hash": "8b22d3dbbe6b43d513bdd68a86cac123",
     "semantic_hash": ""
   }
 }
