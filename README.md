@@ -1,6 +1,6 @@
 # Vela Voice SDK
 
-On-device voice transcription and text-cleaning SDK for the Vela Voice keyboard (VelaBoard).
+On-device voice transcription and text-cleaning SDK for the Vela Voice keyboard (velaboard).
 
 The SDK is a set of Android library modules published to mavenLocal under `com.velavoice.sdk:*`:
 
@@ -86,12 +86,12 @@ built on appcompat/material.
 ### One-time local setup (required before building)
 
 Because `onnxruntime-genai-android` is not published to a Maven repository, it must be
-published to **mavenLocal** on each machine that builds the SDK or VelaBoard:
+published to **mavenLocal** on each machine that builds the SDK or velaboard:
 
 ```powershell
 # 1. Download the release AAR (20.6 MB)
 #    https://github.com/microsoft/onnxruntime-genai/releases/download/v0.15.0/onnxruntime-genai-android-0.15.0.aar
-#    Save it as: vela-cleaner/libs/onnxruntime-genai-android-0.15.0.aar
+#    Save it as: sdk/vela-cleaner/libs/onnxruntime-genai-android-0.15.0.aar
 #    (the file is gitignored; keep it out of version control)
 
 # 2. Publish it to mavenLocal as a normal Maven coordinate
@@ -100,7 +100,7 @@ published to **mavenLocal** on each machine that builds the SDK or VelaBoard:
 #    or re-create it: a minimal project with maven-publish that declares
 #    groupId=com.microsoft.onnxruntime, artifactId=onnxruntime-genai-android,
 #    version=0.15.0 and publishes the AAR file. Then run:
-gradlew.bat --no-daemon -p <path-to-publish-project> publishToMavenLocal
+cd sdk; gradlew.bat --no-daemon -p <path-to-publish-project> publishToMavenLocal
 ```
 
 After this step, `:vela-cleaner:publishReleasePublicationToMavenLocal` resolves the
@@ -125,13 +125,13 @@ the full `model.onnx_data*` set must be downloaded, not just `model.onnx`).
 
 ```powershell
 # Compile + test the whole SDK
-gradlew.bat :vela-core:compileDebugKotlin :vela-whisper:compileDebugKotlin :vela-cleaner:compileDebugKotlin :vela-voice-ui:compileDebugKotlin
+cd sdk; .\gradlew.bat :vela-core:compileDebugKotlin :vela-whisper:compileDebugKotlin :vela-cleaner:compileDebugKotlin :vela-voice-ui:compileDebugKotlin
 
 # Unit tests (vela-cleaner: 34 tests)
-gradlew.bat :vela-cleaner:testDebugUnitTest
+cd sdk; .\gradlew.bat :vela-cleaner:testDebugUnitTest
 
 # Publish all modules to mavenLocal (consumed by VelaBoard)
-gradlew.bat :vela-core:publishReleasePublicationToMavenLocal :vela-whisper:publishReleasePublicationToMavenLocal :vela-cleaner:publishReleasePublicationToMavenLocal :vela-voice-ui:publishReleasePublicationToMavenLocal
+cd sdk; .\gradlew.bat :vela-core:publishReleasePublicationToMavenLocal :vela-whisper:publishReleasePublicationToMavenLocal :vela-cleaner:publishReleasePublicationToMavenLocal :vela-voice-ui:publishReleasePublicationToMavenLocal
 ```
 
 If the Gradle daemon stalls, stop it with `gradlew.bat --stop`; prefer `--no-daemon`

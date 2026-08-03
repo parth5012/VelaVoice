@@ -26,13 +26,13 @@ _Avoid_: Final transcript, formatted text
 
 ## HeliBoard-vela (Keyboard Integration)
 
-**Location**: `D:\work\projects\VelaBoard` 
+**Location**: `velaboard/` 
 
 A fork of [HeliBoard](https://github.com/HeliBorg/HeliBoard) (privacy-focused AOSP/OpenBoard keyboard) with Vela Voice SDK integrated as the voice input engine.
 
 **Key details**:
 - **Build**: Uses NDK 27.1, compileSdk 35, minSdk 23, Kotlin 2.3.20
-- **SDK dependency**: `com.velavoice.sdk:vela-core:1.0.0` + `vela-voice-ui:1.0.0` published to mavenLocal from the workspace modules (`vela-core/`, `vela-whisper/`, `vela-cleaner/`, `vela-voice-ui/`)
+- **SDK dependency**: `com.velavoice.sdk:vela-core:1.0.0` + `vela-voice-ui:1.0.0` published to mavenLocal from the workspace modules (`sdk/vela-core/`, `sdk/vela-whisper/`, `sdk/vela-cleaner/`, `sdk/vela-voice-ui/`)
 - **Voice settings** accessible at **Settings → Voice Input Settings**: model management, transcription engine mode (local/Groq/OpenAI), LLM cleaner toggle, personal dictionary, language/threads/fillers
 - **Mic trigger**: `LatinIME.java` checks `isVelaReady()` (model file existence) → shows Vela voice pane or falls back to system voice IME
 - **Current state**: Builds successfully. Requires Whisper model file (`ggml-tiny.en.bin`) on device at configured path to use Vela instead of Google STT
