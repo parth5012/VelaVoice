@@ -87,6 +87,9 @@ export default function App() {
   const [openaiApiKey, setOpenaiApiKey] = useState<string>('');
   const [openaiModel, setOpenaiModel] = useState<string>('whisper-1');
   const [openaiEndpoint, setOpenaiEndpoint] = useState<string>('https://api.openai.com/v1');
+  const [customApiKey, setCustomApiKey] = useState<string>('');
+  const [customModel, setCustomModel] = useState<string>('whisper-1');
+  const [customEndpoint, setCustomEndpoint] = useState<string>('');
 
   const updatePreference = async (key: string, value: string, setter: (val: string) => void) => {
     setter(value);
@@ -348,14 +351,21 @@ export default function App() {
         setIsAccessibilityEnabled(enabled);
         setUseLlmCleaner(useLlm);
 
-        if (prefsJson) {
-          setTranscriptionMode(prefsJson.transcriptionMode || 'local');
-          setGroqApiKey(prefsJson.groqApiKey || '');
-          setGroqModel(prefsJson.groqModel || 'whisper-large-v3');
-          setOpenaiApiKey(prefsJson.openaiApiKey || '');
-          setOpenaiModel(prefsJson.openaiModel || 'whisper-1');
-          setOpenaiEndpoint(prefsJson.openaiEndpoint || 'https://api.openai.com/v1');
+      if (prefsJson) {
+        let mode = prefsJson.transcriptionMode || 'local';
+        if (mode === 'openai') {
+          mode = 'local';
         }
+        setTranscriptionMode(mode);
+        setGroqApiKey(prefsJson.groqApiKey || '')
+        setGroqModel(prefsJson.groqModel || 'whisper-large-v3')
+        setOpenaiApiKey(prefsJson.openaiApiKey || '')
+        setOpenaiModel(prefsJson.openaiModel || 'whisper-1')
+        setOpenaiEndpoint(prefsJson.openaiEndpoint || 'https://api.openai.com/v1');
+        setCustomApiKey(prefsJson.customApiKey || '')
+        setCustomModel(prefsJson.customModel || 'whisper-1')
+        setCustomEndpoint(prefsJson.customEndpoint || '')
+      }
     } catch (e) {
       console.error('Failed to load preferences', e);
     }
@@ -1173,11 +1183,11 @@ export default function App() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.modeButton, transcriptionMode === 'openai' && styles.modeButtonActive]}
-            onPress={() => updatePreference('transcriptionMode', 'openai', setTranscriptionMode)}
+            style={[styles.modeButton, transcriptionMode === 'custom' && styles.modeButtonActive]}
+            onPress={() => updatePreference('transcriptionMode', 'custom', setTranscriptionMode)}
           >
-            <Text style={[styles.modeButtonText, transcriptionMode === 'openai' && styles.modeButtonTextActive]}>
-              OpenAI API
+            <Text style={[styles.modeButtonText, transcriptionMode === 'custom' && styles.modeButtonTextActive]}>
+              Custom Provider
             </Text>
           </TouchableOpacity>
         </View>
@@ -1204,35 +1214,40 @@ export default function App() {
           </View>
         )}
 
-        {transcriptionMode === 'openai' && (
+        {transcriptionMode === 'custom' && (
           <View style={styles.apiFields}>
-            <Text style={styles.fieldLabel}>OpenAI API Key</Text>
-            <TextInput
-              style={styles.inputField}
-              placeholder="sk-..."
-              placeholderTextColor="#859491"
-              value={openaiApiKey}
-              onChangeText={(val) => updatePreference('openaiApiKey', val, setOpenaiApiKey)}
-              secureTextEntry
-            />
             <Text style={styles.fieldLabel}>API Endpoint URL</Text>
             <TextInput
               style={styles.inputField}
-              placeholder="https://api.openai.com/v1"
+              placeholder="https://api.yourprovider.com/v1"
               placeholderTextColor="#859491"
-              value={openaiEndpoint}
-              onChangeText={(val) => updatePreference('openaiEndpoint', val, setOpenaiEndpoint)}
+              value={customEndpoint}
+              onChangeText={(val) => updatePreference('customEndpoint', val, setCustomEndpoint)}
             />
-            <Text style={styles.fieldLabel}>OpenAI Model</Text>
+            <Text style={styles.fieldLabel}>API Key</Text>
+            <TextInput
+              style={styles.inputField}
+              placeholder="API Key Bearer Token"
+              placeholderTextColor="#859491"
+              value={customApiKey}
+              onChangeText={(val) => updatePreference('customApiKey', val, setCustomApiKey)}
+              secureTextEntry
+            />
+            {!customApiKey && (
+              <Text style={styles.warningText}>API Key is required for custom provider</Text>
+            )}
+            <Text style={styles.fieldLabel}>Model Name</Text>
             <TextInput
               style={styles.inputField}
               placeholder="whisper-1"
               placeholderTextColor="#859491"
-              value={openaiModel}
-              onChangeText={(val) => updatePreference('openaiModel', val, setOpenaiModel)}
+              value={customModel}
+              onChangeText={(val) => updatePreference('customModel', val, setCustomModel)}
             />
           </View>
         )}
+
+
       </View>
 
       {/* Google Drive Sync */}
@@ -2628,5 +2643,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginBottom: 4,
     marginTop: 6,
+  },
+  warningText: {
+    color: '#ffb4ab',
+    fontSize: 11,
+    marginTop: -6,
+    marginBottom: 10,
   },
 });
