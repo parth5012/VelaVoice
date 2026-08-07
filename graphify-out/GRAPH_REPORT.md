@@ -1,16 +1,16 @@
-# Graph Report - Vela Voice  (2026-08-03)
+# Graph Report - VelaVoice  (2026-08-07)
 
 ## Corpus Check
-- 763 files · ~1,067,545 words
+- 763 files · ~1,958,093 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 11441 nodes · 26611 edges · 503 communities (418 shown, 85 thin omitted)
-- Extraction: 87% EXTRACTED · 13% INFERRED · 0% AMBIGUOUS · INFERRED: 3488 edges (avg confidence: 0.8)
+- 11443 nodes · 21018 edges · 2419 communities (293 shown, 2126 thin omitted)
+- Extraction: 86% EXTRACTED · 14% INFERRED · 0% AMBIGUOUS · INFERRED: 2934 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b82776a1`
+- Built from commit: `aa6c8e1f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -171,7 +171,11 @@
 - [[_COMMUNITY_DicNodeStateOutput|DicNodeStateOutput]]
 - [[_COMMUNITY_DictionaryFacilitator|DictionaryFacilitator]]
 - [[_COMMUNITY_SubtypeScreen|SubtypeScreen]]
+- [[_COMMUNITY_0001-separate-transcription-ime|0001-separate-transcription-ime.md]]
+- [[_COMMUNITY_0002-model-storage-and-access-architecture|0002-model-storage-and-access-architecture.md]]
 - [[_COMMUNITY_Model Storage and Access Architecture|Model Storage and Access Architecture]]
+- [[_COMMUNITY_0003-hybrid-cleaner-architecture|0003-hybrid-cleaner-architecture.md]]
+- [[_COMMUNITY_0004-voice-typing-pane-layout|0004-voice-typing-pane-layout.md]]
 - [[_COMMUNITY_vela-cleaner|vela-cleaner]]
 - [[_COMMUNITY_DictionaryEntry|DictionaryEntry]]
 - [[_COMMUNITY_vela-core|vela-core]]
@@ -271,7 +275,6 @@
 - [[_COMMUNITY_detectFormatVersion|detectFormatVersion]]
 - [[_COMMUNITY_writeBufferToFileTail|writeBufferToFileTail]]
 - [[_COMMUNITY_DynamicPtWritingUtils|DynamicPtWritingUtils]]
-- [[_COMMUNITY_TypingTraversal|TypingTraversal]]
 - [[_COMMUNITY_TranscriptionStorage|TranscriptionStorage]]
 - [[_COMMUNITY_ResourceUtils.java|ResourceUtils.java]]
 - [[_COMMUNITY_AudioAndHapticFeedbackManager|AudioAndHapticFeedbackManager]]
@@ -299,7 +302,6 @@
 - [[_COMMUNITY_KeyPreviewChoreographer|KeyPreviewChoreographer]]
 - [[_COMMUNITY_SentenceLevelAdapter.java|SentenceLevelAdapter.java]]
 - [[_COMMUNITY_build.gradle|build.gradle]]
-- [[_COMMUNITY_DicNodeProperties|DicNodeProperties]]
 - [[_COMMUNITY_SettingsActivity|SettingsActivity]]
 - [[_COMMUNITY_.contains|.contains]]
 - [[_COMMUNITY_header_read_write_utils.cpp|header_read_write_utils.cpp]]
@@ -331,7 +333,6 @@
 - [[_COMMUNITY_runInLocale|runInLocale]]
 - [[_COMMUNITY_ContactsBinaryDictionary.java|ContactsBinaryDictionary.java]]
 - [[_COMMUNITY_ReadOnlyBinaryDictionary|ReadOnlyBinaryDictionary]]
-- [[_COMMUNITY_SubtypeUtilsAdditional|SubtypeUtilsAdditional]]
 - [[_COMMUNITY_GoogleDriveSync|GoogleDriveSync]]
 - [[_COMMUNITY_com_android_inputmethod_latin_DicTraverseSession.cpp|com_android_inputmethod_latin_DicTraverseSession.cpp]]
 - [[_COMMUNITY_BigramDictContent|BigramDictContent]]
@@ -349,8 +350,6 @@
 - [[_COMMUNITY_BloomFilter|BloomFilter]]
 - [[_COMMUNITY_DictionaryCollection|DictionaryCollection]]
 - [[_COMMUNITY_TypingScoring|TypingScoring]]
-- [[_COMMUNITY_TEST|TEST]]
-- [[_COMMUNITY_.createRows|.createRows]]
 - [[_COMMUNITY_ScriptUtils.kt|ScriptUtils.kt]]
 - [[_COMMUNITY_SubtypeLocaleUtils|SubtypeLocaleUtils]]
 - [[_COMMUNITY_header_policy.cpp|header_policy.cpp]]
@@ -378,22 +377,13 @@
 - [[_COMMUNITY_UniqueKeysCache|UniqueKeysCache]]
 - [[_COMMUNITY_KeyboardTypeface|KeyboardTypeface]]
 - [[_COMMUNITY_TEST|TEST]]
-- [[_COMMUNITY_Shadows.kt|Shadows.kt]]
 - [[_COMMUNITY_PunctuationSuggestions|PunctuationSuggestions]]
 - [[_COMMUNITY_TypefaceUtils|TypefaceUtils]]
-- [[_COMMUNITY_KeyboardScaleDialog|KeyboardScaleDialog]]
 - [[_COMMUNITY_ver4_dict_buffers.cpp|ver4_dict_buffers.cpp]]
 - [[_COMMUNITY_JarUtils|JarUtils]]
-- [[_COMMUNITY_HardwareEventDecoder|HardwareEventDecoder]]
 - [[_COMMUNITY_Settings.kt|Settings.kt]]
-- [[_COMMUNITY_.getResolvedDownloadPath|.getResolvedDownloadPath]]
-- [[_COMMUNITY_FileUtils|FileUtils]]
-- [[_COMMUNITY_EmojiUCDTestFileParser|EmojiUCDTestFileParser]]
-- [[_COMMUNITY_ClipboardManagerCompat.java|ClipboardManagerCompat.java]]
 - [[_COMMUNITY_Profiler|Profiler]]
-- [[_COMMUNITY_BigramListPolicy|BigramListPolicy]]
 - [[_COMMUNITY_ggml-impl.h|ggml-impl.h]]
-- [[_COMMUNITY_WhisperEngine|WhisperEngine]]
 - [[_COMMUNITY_ClipboardHistoryEntry|ClipboardHistoryEntry]]
 - [[_COMMUNITY_.splitAndSuggest|.splitAndSuggest]]
 - [[_COMMUNITY_PopupKeysUtils.kt|PopupKeysUtils.kt]]
@@ -403,7 +393,6 @@
 - [[_COMMUNITY_Scoring|Scoring]]
 - [[_COMMUNITY_InputTest|InputTest]]
 - [[_COMMUNITY_Build Reference — HeliBoard + Vela Voice|Build Reference — HeliBoard + Vela Voice]]
-- [[_COMMUNITY_TextInputDialog|TextInputDialog]]
 - [[_COMMUNITY_ProbabilityUtils|ProbabilityUtils]]
 - [[_COMMUNITY_Database|Database]]
 - [[_COMMUNITY_ClipboardAdapter|ClipboardAdapter]]
@@ -420,7 +409,6 @@
 - [[_COMMUNITY_ProximityInfoProximityInfo|ProximityInfo::ProximityInfo]]
 - [[_COMMUNITY_.build|.build]]
 - [[_COMMUNITY_EmojiCategoryPageIndicatorView|EmojiCategoryPageIndicatorView]]
-- [[_COMMUNITY_FormatSpec.java|FormatSpec.java]]
 - [[_COMMUNITY_SliderDialog|SliderDialog]]
 - [[_COMMUNITY_ver4_patricia_trie_node_writer.h|ver4_patricia_trie_node_writer.h]]
 - [[_COMMUNITY_expo|expo]]
@@ -436,7 +424,6 @@
 - [[_COMMUNITY_BinaryDictionaryShortcutIterator|BinaryDictionaryShortcutIterator]]
 - [[_COMMUNITY_suggest_policy.h|suggest_policy.h]]
 - [[_COMMUNITY_SaveGestureDataTest|SaveGestureDataTest]]
-- [[_COMMUNITY_ShadowBinaryDictionaryUtils|ShadowBinaryDictionaryUtils]]
 - [[_COMMUNITY_AndroidEmojiSupportFileParser|AndroidEmojiSupportFileParser]]
 - [[_COMMUNITY_ClipboardHistoryRecyclerView|ClipboardHistoryRecyclerView]]
 - [[_COMMUNITY_KeyTypeSerializer|KeyTypeSerializer]]
@@ -481,34 +468,1971 @@
 - [[_COMMUNITY_LayoutTest|LayoutTest]]
 - [[_COMMUNITY_VoiceAccessibilityService.kt|VoiceAccessibilityService.kt]]
 - [[_COMMUNITY_AGENTS|AGENTS.md]]
+- [[_COMMUNITY_ConfigurationCompat.kt|ConfigurationCompat.kt]]
 - [[_COMMUNITY_ModifierKeyState.kt|ModifierKeyState.kt]]
 - [[_COMMUNITY_.onContent|.onContent]]
 - [[_COMMUNITY_.onTextInput|.onTextInput]]
 - [[_COMMUNITY_Constants.kt|Constants.kt]]
+- [[_COMMUNITY_DateRangePickerModal.kt|DateRangePickerModal.kt]]
+- [[_COMMUNITY_build.gradle.kts|build.gradle.kts]]
+- [[_COMMUNITY_settings.gradle.kts|settings.gradle.kts]]
+- [[_COMMUNITY_build.gradle.kts|build.gradle.kts]]
+- [[_COMMUNITY_build.gradle.kts|build.gradle.kts]]
+- [[_COMMUNITY_build.gradle.kts|build.gradle.kts]]
+- [[_COMMUNITY_build.gradle.kts|build.gradle.kts]]
+- [[_COMMUNITY_Emoji.kt|Emoji.kt]]
+- [[_COMMUNITY_ver4_dict_constants.cpp|ver4_dict_constants.cpp]]
+- [[_COMMUNITY_dynamic_language_model_probability_utils.cpp|dynamic_language_model_probability_utils.cpp]]
+- [[_COMMUNITY_language_model_dict_content_global_counters.cpp|language_model_dict_content_global_counters.cpp]]
+- [[_COMMUNITY_ver4_dict_constants.cpp|ver4_dict_constants.cpp]]
+- [[_COMMUNITY_byte_array_utils.cpp|byte_array_utils.cpp]]
+- [[_COMMUNITY_probability_utils.cpp|probability_utils.cpp]]
+- [[_COMMUNITY_dic_node.cpp|dic_node.cpp]]
+- [[_COMMUNITY_error_type_utils.cpp|error_type_utils.cpp]]
+- [[_COMMUNITY_additional_proximity_chars.cpp|additional_proximity_chars.cpp]]
+- [[_COMMUNITY_scoring_params.cpp|scoring_params.cpp]]
+- [[_COMMUNITY_typing_scoring.cpp|typing_scoring.cpp]]
+- [[_COMMUNITY_typing_suggest_policy.cpp|typing_suggest_policy.cpp]]
+- [[_COMMUNITY_typing_traversal.cpp|typing_traversal.cpp]]
+- [[_COMMUNITY_build.gradle.kts|build.gradle.kts]]
+- [[_COMMUNITY_feature_request|feature_request.md]]
+- [[_COMMUNITY_other|other.md]]
+- [[_COMMUNITY_PULL_REQUEST_TEMPLATE|PULL_REQUEST_TEMPLATE.md]]
+- [[_COMMUNITY_settings.gradle|settings.gradle]]
+- [[_COMMUNITY_convert_new_emojis.py|convert_new_emojis.py]]
+- [[_COMMUNITY_index.js|index.js]]
+- [[_COMMUNITY_jfloatArray|jfloatArray]]
+- [[_COMMUNITY_jlong|jlong]]
+- [[_COMMUNITY_JNIEnv|JNIEnv]]
+- [[_COMMUNITY_jobject|jobject]]
+- [[_COMMUNITY_jstring|jstring]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_TranscriptionPair|TranscriptionPair]]
+- [[_COMMUNITY_AccessibilityEvent|AccessibilityEvent]]
+- [[_COMMUNITY_FrameLayout|FrameLayout]]
+- [[_COMMUNITY_EditorInfo|EditorInfo]]
+- [[_COMMUNITY_Handler|Handler]]
+- [[_COMMUNITY_whisper_global|whisper_global]]
+- [[_COMMUNITY_ggml_compute_forward_rope_f16|ggml_compute_forward_rope_f16]]
+- [[_COMMUNITY_SystemBroadcastReceiver.java|SystemBroadcastReceiver.java]]
+- [[_COMMUNITY_AppWorkarounds|AppWorkarounds]]
+- [[_COMMUNITY_dynamic_pt_gc_event_listeners.cpp|dynamic_pt_gc_event_listeners.cpp]]
+- [[_COMMUNITY_CalcEditDistance|CalcEditDistance]]
+- [[_COMMUNITY_ggml_map_unary_impl_f32|ggml_map_unary_impl_f32]]
+- [[_COMMUNITY_TEST|TEST]]
+- [[_COMMUNITY_PopupKeysDetector|PopupKeysDetector]]
+- [[_COMMUNITY_ver4_patricia_trie_reading_utils.h|ver4_patricia_trie_reading_utils.h]]
+- [[_COMMUNITY_App.tsx|App.tsx]]
+- [[_COMMUNITY_TEST|TEST]]
+- [[_COMMUNITY_ShadowInputMethodManager2|ShadowInputMethodManager2]]
+- [[_COMMUNITY_.toString|.toString]]
+- [[_COMMUNITY_.newInstance|.newInstance]]
+- [[_COMMUNITY_.writeFlags|.writeFlags]]
+- [[_COMMUNITY_OverlayLogo.tsx|OverlayLogo.tsx]]
+- [[_COMMUNITY_.DynamicPtReadingHelper|.DynamicPtReadingHelper]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Promise|Promise]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_AudioRecord|AudioRecord]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Button|Button]]
+- [[_COMMUNITY_Float|Float]]
+- [[_COMMUNITY_GradientDrawable|GradientDrawable]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_LinearLayout|LinearLayout]]
+- [[_COMMUNITY_SQLiteDatabase|SQLiteDatabase]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_TextView|TextView]]
+- [[_COMMUNITY_Thread|Thread]]
+- [[_COMMUNITY_Typeface|Typeface]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_ImageView|ImageView]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_MotionEvent|MotionEvent]]
+- [[_COMMUNITY_TextView|TextView]]
+- [[_COMMUNITY_Typeface|Typeface]]
+- [[_COMMUNITY_ViewGroup|ViewGroup]]
+- [[_COMMUNITY_ViewHolder|ViewHolder]]
+- [[_COMMUNITY_Adapter|Adapter]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_EditorInfo|EditorInfo]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_Long|Long]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_TextView|TextView]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_RecyclerView|RecyclerView]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_Long|Long]]
+- [[_COMMUNITY_ArrayDeque|ArrayDeque]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_Collection|Collection]]
+- [[_COMMUNITY_Integer|Integer]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Object|Object]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Array|Array]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_MutableList|MutableList]]
+- [[_COMMUNITY_AttributeSet|AttributeSet]]
+- [[_COMMUNITY_Canvas|Canvas]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_Paint|Paint]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_ViewPager2|ViewPager2]]
+- [[_COMMUNITY_AccessibilityEvent|AccessibilityEvent]]
+- [[_COMMUNITY_AttributeSet|AttributeSet]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Handler|Handler]]
+- [[_COMMUNITY_MotionEvent|MotionEvent]]
+- [[_COMMUNITY_Nullable|Nullable]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_Runnable|Runnable]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_SuppressLint|SuppressLint]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_ViewGroup|ViewGroup]]
+- [[_COMMUNITY_WeakHashMap|WeakHashMap]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_ViewGroup|ViewGroup]]
+- [[_COMMUNITY_ViewHolder|ViewHolder]]
+- [[_COMMUNITY_AttributeSet|AttributeSet]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_EditorInfo|EditorInfo]]
+- [[_COMMUNITY_Integer|Integer]]
+- [[_COMMUNITY_Map|Map]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_RecyclerView|RecyclerView]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_SuppressLint|SuppressLint]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_ViewGroup|ViewGroup]]
+- [[_COMMUNITY_ViewPager2|ViewPager2]]
+- [[_COMMUNITY_Bundle|Bundle]]
+- [[_COMMUNITY_Configuration|Configuration]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_EditorInfo|EditorInfo]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_MutableList|MutableList]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Canvas|Canvas]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_Resources|Resources]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_AttributeSet|AttributeSet]]
+- [[_COMMUNITY_Canvas|Canvas]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_Nullable|Nullable]]
+- [[_COMMUNITY_Canvas|Canvas]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_Paint|Paint]]
+- [[_COMMUNITY_RectF|RectF]]
+- [[_COMMUNITY_TypedArray|TypedArray]]
+- [[_COMMUNITY_TypedArray|TypedArray]]
+- [[_COMMUNITY_TypedArray|TypedArray]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_TypedArray|TypedArray]]
+- [[_COMMUNITY_Canvas|Canvas]]
+- [[_COMMUNITY_Paint|Paint]]
+- [[_COMMUNITY_Rect|Rect]]
+- [[_COMMUNITY_Bitmap|Bitmap]]
+- [[_COMMUNITY_Canvas|Canvas]]
+- [[_COMMUNITY_Handler|Handler]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_Paint|Paint]]
+- [[_COMMUNITY_Rect|Rect]]
+- [[_COMMUNITY_SparseArray|SparseArray]]
+- [[_COMMUNITY_TypedArray|TypedArray]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Float|Float]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Pair|Pair]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Collection|Collection]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Collection|Collection]]
+- [[_COMMUNITY_Float|Float]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_MutableList|MutableList]]
+- [[_COMMUNITY_Pair|Pair]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_MutableList|MutableList]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Collection|Collection]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_InputStream|InputStream]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Pair|Pair]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_Resources|Resources]]
+- [[_COMMUNITY_HashMap|HashMap]]
+- [[_COMMUNITY_Integer|Integer]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Drawable|Drawable]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Map|Map]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_AttributeSet|AttributeSet]]
+- [[_COMMUNITY_Comparator|Comparator]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_SortedSet|SortedSet]]
+- [[_COMMUNITY_SparseIntArray|SparseIntArray]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Typeface|Typeface]]
+- [[_COMMUNITY_ArrayDeque|ArrayDeque]]
+- [[_COMMUNITY_HashMap|HashMap]]
+- [[_COMMUNITY_ViewGroup|ViewGroup]]
+- [[_COMMUNITY_TypedArray|TypedArray]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_AttributeSet|AttributeSet]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_HashSet|HashSet]]
+- [[_COMMUNITY_Rect|Rect]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_TextPaint|TextPaint]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Nullable|Nullable]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Nullable|Nullable]]
+- [[_COMMUNITY_SparseIntArray|SparseIntArray]]
+- [[_COMMUNITY_TypedArray|TypedArray]]
+- [[_COMMUNITY_Typeface|Typeface]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_MotionEvent|MotionEvent]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_HashSet|HashSet]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Nullable|Nullable]]
+- [[_COMMUNITY_Object|Object]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_SparseIntArray|SparseIntArray]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Rect|Rect]]
+- [[_COMMUNITY_RectF|RectF]]
+- [[_COMMUNITY_Canvas|Canvas]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_Paint|Paint]]
+- [[_COMMUNITY_TypedArray|TypedArray]]
+- [[_COMMUNITY_Message|Message]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_SuppressWarnings|SuppressWarnings]]
+- [[_COMMUNITY_HashMap|HashMap]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_Drawable|Drawable]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Nullable|Nullable]]
+- [[_COMMUNITY_Object|Object]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_Rect|Rect]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Typeface|Typeface]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Nullable|Nullable]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_ProximityInfo|ProximityInfo]]
+- [[_COMMUNITY_SparseArray|SparseArray]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_InputContentInfoCompat|InputContentInfoCompat]]
+- [[_COMMUNITY_KeyEvent|KeyEvent]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_InputContentInfoCompat|InputContentInfoCompat]]
+- [[_COMMUNITY_InputMethodSubtype|InputMethodSubtype]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_KeyEvent|KeyEvent]]
+- [[_COMMUNITY_SparseArray|SparseArray]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_EditorInfo|EditorInfo]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_EditorInfo|EditorInfo]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_CharSequence|CharSequence]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_EditorInfo|EditorInfo]]
+- [[_COMMUNITY_FrameLayout|FrameLayout]]
+- [[_COMMUNITY_Handler|Handler]]
+- [[_COMMUNITY_ImageView|ImageView]]
+- [[_COMMUNITY_InputMethodSubtype|InputMethodSubtype]]
+- [[_COMMUNITY_LinearLayout|LinearLayout]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Nullable|Nullable]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_SuppressLint|SuppressLint]]
+- [[_COMMUNITY_TextView|TextView]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_Any|Any]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Drawable|Drawable]]
+- [[_COMMUNITY_EnumMap|EnumMap]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_CharSequence|CharSequence]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_TextView|TextView]]
+- [[_COMMUNITY_Typeface|Typeface]]
+- [[_COMMUNITY_AttributeSet|AttributeSet]]
+- [[_COMMUNITY_Bitmap|Bitmap]]
+- [[_COMMUNITY_Canvas|Canvas]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Drawable|Drawable]]
+- [[_COMMUNITY_HashSet|HashSet]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Nullable|Nullable]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_Paint|Paint]]
+- [[_COMMUNITY_Rect|Rect]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_AttributeSet|AttributeSet]]
+- [[_COMMUNITY_Canvas|Canvas]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_MotionEvent|MotionEvent]]
+- [[_COMMUNITY_Nullable|Nullable]]
+- [[_COMMUNITY_Object|Object]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_Paint|Paint]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_SuppressLint|SuppressLint]]
+- [[_COMMUNITY_SuppressWarnings|SuppressWarnings]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_WeakHashMap|WeakHashMap]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_MotionEvent|MotionEvent]]
+- [[_COMMUNITY_Nullable|Nullable]]
+- [[_COMMUNITY_Object|Object]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_TypedArray|TypedArray]]
+- [[_COMMUNITY_WeakHashMap|WeakHashMap]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_Paint|Paint]]
+- [[_COMMUNITY_AttributeSet|AttributeSet]]
+- [[_COMMUNITY_Canvas|Canvas]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Drawable|Drawable]]
+- [[_COMMUNITY_MotionEvent|MotionEvent]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_Paint|Paint]]
+- [[_COMMUNITY_SuppressLint|SuppressLint]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_ViewGroup|ViewGroup]]
+- [[_COMMUNITY_AttributeSet|AttributeSet]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_Handler|Handler]]
+- [[_COMMUNITY_Runnable|Runnable]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Canvas|Canvas]]
+- [[_COMMUNITY_Float|Float]]
+- [[_COMMUNITY_FrameLayout|FrameLayout]]
+- [[_COMMUNITY_ImageButton|ImageButton]]
+- [[_COMMUNITY_LinearLayout|LinearLayout]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_TextView|TextView]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Drawable|Drawable]]
+- [[_COMMUNITY_HashSet|HashSet]]
+- [[_COMMUNITY_Intent|Intent]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Triple|Triple]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_AudioManager|AudioManager]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_ImageView|ImageView]]
+- [[_COMMUNITY_InputContentInfoCompat|InputContentInfoCompat]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_TextView|TextView]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_EditorInfo|EditorInfo]]
+- [[_COMMUNITY_InputContentInfoCompat|InputContentInfoCompat]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_Long|Long]]
+- [[_COMMUNITY_Uri|Uri]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_ViewGroup|ViewGroup]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Drawable|Drawable]]
+- [[_COMMUNITY_ImageView|ImageView]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_TypedArray|TypedArray]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_IntArray|IntArray]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_FilenameFilter|FilenameFilter]]
+- [[_COMMUNITY_InputStream|InputStream]]
+- [[_COMMUNITY_OutputStream|OutputStream]]
+- [[_COMMUNITY_Uri|Uri]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Collection|Collection]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Resources|Resources]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_T|T]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_CharSequence|CharSequence]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Nullable|Nullable]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_CharSequence|CharSequence]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_IntArray|IntArray]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_CharSequence|CharSequence]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_InputMethodService|InputMethodService]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_AtomicBoolean|AtomicBoolean]]
+- [[_COMMUNITY_ContentObserver|ContentObserver]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Cursor|Cursor]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Uri|Uri]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_ClipDescription|ClipDescription]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Long|Long]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Uri|Uri]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_SQLiteDatabase|SQLiteDatabase]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Throwable|Throwable]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Uri|Uri]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_WordProperty|WordProperty]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_Collection|Collection]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Array|Array]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Dictionary|Dictionary]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_MutableList|MutableList]]
+- [[_COMMUNITY_Pair|Pair]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_Iterable|Iterable]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_AtomicBoolean|AtomicBoolean]]
+- [[_COMMUNITY_BinaryDictionary|BinaryDictionary]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Map|Map]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_Nullable|Nullable]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_ReentrantReadWriteLock|ReentrantReadWriteLock]]
+- [[_COMMUNITY_Runnable|Runnable]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_WordProperty|WordProperty]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_WordProperty|WordProperty]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_BinaryDictionary|BinaryDictionary]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_ReentrantReadWriteLock|ReentrantReadWriteLock]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_WordProperty|WordProperty]]
+- [[_COMMUNITY_ContentObserver|ContentObserver]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Cursor|Cursor]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Intent|Intent]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_LruCache|LruCache]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Nullable|Nullable]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_SuggestionResults|SuggestionResults]]
+- [[_COMMUNITY_TimeUnit|TimeUnit]]
+- [[_COMMUNITY_Array|Array]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Collection|Collection]]
+- [[_COMMUNITY_ConcurrentHashMap|ConcurrentHashMap]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Dictionary|Dictionary]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_Float|Float]]
+- [[_COMMUNITY_FloatArray|FloatArray]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Long|Long]]
+- [[_COMMUNITY_LruCache|LruCache]]
+- [[_COMMUNITY_Map|Map]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_Pair|Pair]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_SuggestionResults|SuggestionResults]]
+- [[_COMMUNITY_TimeUnit|TimeUnit]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Object|Object]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Intent|Intent]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Integer|Integer]]
+- [[_COMMUNITY_KeyEvent|KeyEvent]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Pair|Pair]]
+- [[_COMMUNITY_Resources|Resources]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_EditorInfo|EditorInfo]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_SuppressWarnings|SuppressWarnings]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_CharSequence|CharSequence]]
+- [[_COMMUNITY_EditorInfo|EditorInfo]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Long|Long]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Nullable|Nullable]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_TreeSet|TreeSet]]
+- [[_COMMUNITY_Handler|Handler]]
+- [[_COMMUNITY_Message|Message]]
+- [[_COMMUNITY_Object|Object]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_Runnable|Runnable]]
+- [[_COMMUNITY_Bundle|Bundle]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_AttributeSet|AttributeSet]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_MotionEvent|MotionEvent]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_Rect|Rect]]
+- [[_COMMUNITY_SuppressLint|SuppressLint]]
+- [[_COMMUNITY_Unit|Unit]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_ImageButton|ImageButton]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_CharSequence|CharSequence]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_AlertDialog|AlertDialog]]
+- [[_COMMUNITY_BroadcastReceiver|BroadcastReceiver]]
+- [[_COMMUNITY_Bundle|Bundle]]
+- [[_COMMUNITY_CompletionInfo|CompletionInfo]]
+- [[_COMMUNITY_Configuration|Configuration]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_EditorInfo|EditorInfo]]
+- [[_COMMUNITY_InlineSuggestionsRequest|InlineSuggestionsRequest]]
+- [[_COMMUNITY_InputMethodSubtype|InputMethodSubtype]]
+- [[_COMMUNITY_Intent|Intent]]
+- [[_COMMUNITY_KeyEvent|KeyEvent]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Message|Message]]
+- [[_COMMUNITY_Nullable|Nullable]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_RequiresApi|RequiresApi]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_SuppressLint|SuppressLint]]
+- [[_COMMUNITY_SuppressWarnings|SuppressWarnings]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_HashMap|HashMap]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_Object|Object]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_Object|Object]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Object|Object]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_Integer|Integer]]
+- [[_COMMUNITY_NgramProperty|NgramProperty]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Object|Object]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_CharSequence|CharSequence]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Object|Object]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Bundle|Bundle]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_ConcurrentHashMap|ConcurrentHashMap]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Map|Map]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Bundle|Bundle]]
+- [[_COMMUNITY_CharSequence|CharSequence]]
+- [[_COMMUNITY_CompletionInfo|CompletionInfo]]
+- [[_COMMUNITY_EditorInfo|EditorInfo]]
+- [[_COMMUNITY_InputContentInfoCompat|InputContentInfoCompat]]
+- [[_COMMUNITY_InputMethodService|InputMethodService]]
+- [[_COMMUNITY_KeyEvent|KeyEvent]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Nullable|Nullable]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_StringBuilder|StringBuilder]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_InputMethodInfo|InputMethodInfo]]
+- [[_COMMUNITY_InputMethodManager|InputMethodManager]]
+- [[_COMMUNITY_InputMethodService|InputMethodService]]
+- [[_COMMUNITY_InputMethodSubtype|InputMethodSubtype]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Any|Any]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_InputMethodSubtype|InputMethodSubtype]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_InputMethodSubtype|InputMethodSubtype]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Configuration|Configuration]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_EditorInfo|EditorInfo]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Resources|Resources]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_CharSequence|CharSequence]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Resources|Resources]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Long|Long]]
+- [[_COMMUNITY_LruCache|LruCache]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_SuggestionResults|SuggestionResults]]
+- [[_COMMUNITY_TimeUnit|TimeUnit]]
+- [[_COMMUNITY_WordProperty|WordProperty]]
+- [[_COMMUNITY_ConcurrentHashMap|ConcurrentHashMap]]
+- [[_COMMUNITY_InputMethodSubtype|InputMethodSubtype]]
+- [[_COMMUNITY_Integer|Integer]]
+- [[_COMMUNITY_Intent|Intent]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_Session|Session]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_SuggestionResults|SuggestionResults]]
+- [[_COMMUNITY_SuggestionsInfo|SuggestionsInfo]]
+- [[_COMMUNITY_Array|Array]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_SentenceSuggestionsInfo|SentenceSuggestionsInfo]]
+- [[_COMMUNITY_SuggestionsInfo|SuggestionsInfo]]
+- [[_COMMUNITY_TextInfo|TextInfo]]
+- [[_COMMUNITY_Session|Session]]
+- [[_COMMUNITY_Array|Array]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Float|Float]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_SuggestionResults|SuggestionResults]]
+- [[_COMMUNITY_SuggestionsInfo|SuggestionsInfo]]
+- [[_COMMUNITY_TextInfo|TextInfo]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_CharSequence|CharSequence]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Resources|Resources]]
+- [[_COMMUNITY_SentenceSuggestionsInfo|SentenceSuggestionsInfo]]
+- [[_COMMUNITY_SuggestionsInfo|SuggestionsInfo]]
+- [[_COMMUNITY_TextInfo|TextInfo]]
+- [[_COMMUNITY_Bundle|Bundle]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Float|Float]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_MutableList|MutableList]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_Pair|Pair]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_SuggestionResults|SuggestionResults]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_CompletionInfo|CompletionInfo]]
+- [[_COMMUNITY_Dictionary|Dictionary]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Drawable|Drawable]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_Paint|Paint]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_MotionEvent|MotionEvent]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_AttributeSet|AttributeSet]]
+- [[_COMMUNITY_CharSequence|CharSequence]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Drawable|Drawable]]
+- [[_COMMUNITY_Nullable|Nullable]]
+- [[_COMMUNITY_Resources|Resources]]
+- [[_COMMUNITY_Spannable|Spannable]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_TextPaint|TextPaint]]
+- [[_COMMUNITY_TextView|TextView]]
+- [[_COMMUNITY_Typeface|Typeface]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_ViewGroup|ViewGroup]]
+- [[_COMMUNITY_AccessibilityEvent|AccessibilityEvent]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Drawable|Drawable]]
+- [[_COMMUNITY_ImageButton|ImageButton]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_MotionEvent|MotionEvent]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_TextView|TextView]]
+- [[_COMMUNITY_ViewGroup|ViewGroup]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Intent|Intent]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_EditorInfo|EditorInfo]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_SuppressWarnings|SuppressWarnings]]
+- [[_COMMUNITY_Object|Object]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_CharSequence|CharSequence]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_InputStream|InputStream]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Float|Float]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_HashMap|HashMap]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_WordProperty|WordProperty]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Array|Array]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_CharSequence|CharSequence]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_AnnotatedString|AnnotatedString]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Pair|Pair]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_Runnable|Runnable]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Thread|Thread]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_Pair|Pair]]
+- [[_COMMUNITY_Resources|Resources]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_ViewGroup|ViewGroup]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Collection|Collection]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Long|Long]]
+- [[_COMMUNITY_Sequence|Sequence]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_CharSequence|CharSequence]]
+- [[_COMMUNITY_Collection|Collection]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_EditorInfo|EditorInfo]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Collection|Collection]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_EditorInfo|EditorInfo]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_SortedSet|SortedSet]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_AttributeSet|AttributeSet]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_InlineSuggestionsRequest|InlineSuggestionsRequest]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_Rect|Rect]]
+- [[_COMMUNITY_RequiresApi|RequiresApi]]
+- [[_COMMUNITY_SuppressLint|SuppressLint]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_AlertDialog|AlertDialog]]
+- [[_COMMUNITY_EditorInfo|EditorInfo]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_SuppressLint|SuppressLint]]
+- [[_COMMUNITY_Closeable|Closeable]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Object|Object]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Collection|Collection]]
+- [[_COMMUNITY_ComponentActivity|ComponentActivity]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Float|Float]]
+- [[_COMMUNITY_MutableList|MutableList]]
+- [[_COMMUNITY_Pair|Pair]]
+- [[_COMMUNITY_Resources|Resources]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_T|T]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_InputMethodSubtype|InputMethodSubtype]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Collection|Collection]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Nullable|Nullable]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_MutableList|MutableList]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Throwable|Throwable]]
+- [[_COMMUNITY_CharSequence|CharSequence]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Array|Array]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Pair|Pair]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Resources|Resources]]
+- [[_COMMUNITY_TypedArray|TypedArray]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Resources|Resources]]
+- [[_COMMUNITY_T|T]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_CharSequence|CharSequence]]
+- [[_COMMUNITY_Spannable|Spannable]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_SuppressWarnings|SuppressWarnings]]
+- [[_COMMUNITY_InputMethodSubtype|InputMethodSubtype]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_SuppressWarnings|SuppressWarnings]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_SuppressWarnings|SuppressWarnings]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_InputMethodSubtype|InputMethodSubtype]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Resources|Resources]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Collection|Collection]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_InputMethodSubtype|InputMethodSubtype]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Resources|Resources]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_InputMethodSubtype|InputMethodSubtype]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_MutableList|MutableList]]
+- [[_COMMUNITY_Resources|Resources]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_InputMethodSubtype|InputMethodSubtype]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_Collection|Collection]]
+- [[_COMMUNITY_Comparator|Comparator]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_CharSequence|CharSequence]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_Object|Object]]
+- [[_COMMUNITY_Override|Override]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_EnumMap|EnumMap]]
+- [[_COMMUNITY_ImageButton|ImageButton]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Pair|Pair]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_ViewGroup|ViewGroup]]
+- [[_COMMUNITY_Float|Float]]
+- [[_COMMUNITY_Paint|Paint]]
+- [[_COMMUNITY_Rect|Rect]]
+- [[_COMMUNITY_SparseArray|SparseArray]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_InputMethodInfo|InputMethodInfo]]
+- [[_COMMUNITY_InputMethodManager|InputMethodManager]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_ViewGroup|ViewGroup]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_CharSequence|CharSequence]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_NonNull|NonNull]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_SuppressWarnings|SuppressWarnings]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Collection|Collection]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Composable|Composable]]
+- [[_COMMUNITY_Modifier|Modifier]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Unit|Unit]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_AnnotatedString|AnnotatedString]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Collection|Collection]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Composable|Composable]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Modifier|Modifier]]
+- [[_COMMUNITY_T|T]]
+- [[_COMMUNITY_Unit|Unit]]
+- [[_COMMUNITY_Composable|Composable]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Modifier|Modifier]]
+- [[_COMMUNITY_T|T]]
+- [[_COMMUNITY_Unit|Unit]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Pair|Pair]]
+- [[_COMMUNITY_Composable|Composable]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Modifier|Modifier]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_T|T]]
+- [[_COMMUNITY_Unit|Unit]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_ClosedFloatingPointRange|ClosedFloatingPointRange]]
+- [[_COMMUNITY_Composable|Composable]]
+- [[_COMMUNITY_Float|Float]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_Modifier|Modifier]]
+- [[_COMMUNITY_Unit|Unit]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Composable|Composable]]
+- [[_COMMUNITY_DialogProperties|DialogProperties]]
+- [[_COMMUNITY_Modifier|Modifier]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Unit|Unit]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Composable|Composable]]
+- [[_COMMUNITY_DialogProperties|DialogProperties]]
+- [[_COMMUNITY_Modifier|Modifier]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Unit|Unit]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_TextFieldValue|TextFieldValue]]
+- [[_COMMUNITY_ActivityResult|ActivityResult]]
+- [[_COMMUNITY_Intent|Intent]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_ManagedActivityResultLauncher|ManagedActivityResultLauncher]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_TranscriptionPair|TranscriptionPair]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Composable|Composable]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Modifier|Modifier]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_T|T]]
+- [[_COMMUNITY_Unit|Unit]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Uri|Uri]]
+- [[_COMMUNITY_ActivityResult|ActivityResult]]
+- [[_COMMUNITY_Any|Any]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_Intent|Intent]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_ManagedActivityResultLauncher|ManagedActivityResultLauncher]]
+- [[_COMMUNITY_Map|Map]]
+- [[_COMMUNITY_OutputStream|OutputStream]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_Array|Array]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_ClosedFloatingPointRange|ClosedFloatingPointRange]]
+- [[_COMMUNITY_Float|Float]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Modifier|Modifier]]
+- [[_COMMUNITY_Pair|Pair]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Pair|Pair]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_T|T]]
+- [[_COMMUNITY_Unit|Unit]]
+- [[_COMMUNITY_Composable|Composable]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_Modifier|Modifier]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Unit|Unit]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_ClosedFloatingPointRange|ClosedFloatingPointRange]]
+- [[_COMMUNITY_Float|Float]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_Modifier|Modifier]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_T|T]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Modifier|Modifier]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Pair|Pair]]
+- [[_COMMUNITY_BinaryDictionary|BinaryDictionary]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Modifier|Modifier]]
+- [[_COMMUNITY_MutableList|MutableList]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_T|T]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_ActivityResult|ActivityResult]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_Intent|Intent]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Long|Long]]
+- [[_COMMUNITY_ManagedActivityResultLauncher|ManagedActivityResultLauncher]]
+- [[_COMMUNITY_OutputStream|OutputStream]]
+- [[_COMMUNITY_Sequence|Sequence]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Uri|Uri]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_InputMethodSubtype|InputMethodSubtype]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_TreeSet|TreeSet]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Cursor|Cursor]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Any|Any]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Composable|Composable]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Modifier|Modifier]]
+- [[_COMMUNITY_Pair|Pair]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_TextFieldValue|TextFieldValue]]
+- [[_COMMUNITY_Unit|Unit]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Bundle|Bundle]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Uri|Uri]]
+- [[_COMMUNITY_Any|Any]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Map|Map]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_ByteArray|ByteArray]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Long|Long]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_TranscriptionPair|TranscriptionPair]]
+- [[_COMMUNITY_jclass|jclass]]
+- [[_COMMUNITY_jfloatArray|jfloatArray]]
+- [[_COMMUNITY_jint|jint]]
+- [[_COMMUNITY_jintArray|jintArray]]
+- [[_COMMUNITY_jlong|jlong]]
+- [[_COMMUNITY_JNIEnv|JNIEnv]]
+- [[_COMMUNITY_jboolean|jboolean]]
+- [[_COMMUNITY_jbooleanArray|jbooleanArray]]
+- [[_COMMUNITY_jclass|jclass]]
+- [[_COMMUNITY_jfloatArray|jfloatArray]]
+- [[_COMMUNITY_jint|jint]]
+- [[_COMMUNITY_jintArray|jintArray]]
+- [[_COMMUNITY_jlong|jlong]]
+- [[_COMMUNITY_JNIEnv|JNIEnv]]
+- [[_COMMUNITY_jobject|jobject]]
+- [[_COMMUNITY_jobjectArray|jobjectArray]]
+- [[_COMMUNITY_jstring|jstring]]
+- [[_COMMUNITY_StructurePolicyPtr|StructurePolicyPtr]]
+- [[_COMMUNITY_jboolean|jboolean]]
+- [[_COMMUNITY_jclass|jclass]]
+- [[_COMMUNITY_jfloat|jfloat]]
+- [[_COMMUNITY_jint|jint]]
+- [[_COMMUNITY_jintArray|jintArray]]
+- [[_COMMUNITY_jlong|jlong]]
+- [[_COMMUNITY_JNIEnv|JNIEnv]]
+- [[_COMMUNITY_jobjectArray|jobjectArray]]
+- [[_COMMUNITY_jstring|jstring]]
+- [[_COMMUNITY_jclass|jclass]]
+- [[_COMMUNITY_jint|jint]]
+- [[_COMMUNITY_jintArray|jintArray]]
+- [[_COMMUNITY_jlong|jlong]]
+- [[_COMMUNITY_JNIEnv|JNIEnv]]
+- [[_COMMUNITY_jstring|jstring]]
+- [[_COMMUNITY_jint|jint]]
+- [[_COMMUNITY_JNIEnv|JNIEnv]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_AttributeMap|AttributeMap]]
+- [[_COMMUNITY_BufferWithExtendableBuffer|BufferWithExtendableBuffer]]
+- [[_COMMUNITY_EntryCounts|EntryCounts]]
+- [[_COMMUNITY_NgramType|NgramType]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_AttributeMap|AttributeMap]]
+- [[_COMMUNITY_DictionaryFlags|DictionaryFlags]]
+- [[_COMMUNITY_EntryCounts|EntryCounts]]
+- [[_COMMUNITY_FORMAT_VERSION|FORMAT_VERSION]]
+- [[_COMMUNITY_AttributeMap|AttributeMap]]
+- [[_COMMUNITY_BufferWithExtendableBuffer|BufferWithExtendableBuffer]]
+- [[_COMMUNITY_DictionaryFlags|DictionaryFlags]]
+- [[_COMMUNITY_FORMAT_VERSION|FORMAT_VERSION]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_DictionaryFlags|DictionaryFlags]]
+- [[_COMMUNITY_DictionaryStructureWithBufferPolicy|DictionaryStructureWithBufferPolicy]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_WordIdArray|WordIdArray]]
+- [[_COMMUNITY_WordIdArrayView|WordIdArrayView]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_UnigramProperty|UnigramProperty]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_NgramProperty|NgramProperty]]
+- [[_COMMUNITY_BigramDictContent|BigramDictContent]]
+- [[_COMMUNITY_TerminalIdMap|TerminalIdMap]]
+- [[_COMMUNITY_ProbabilityDictContent|ProbabilityDictContent]]
+- [[_COMMUNITY_ProbabilityEntry|ProbabilityEntry]]
+- [[_COMMUNITY_TerminalIdMap|TerminalIdMap]]
+- [[_COMMUNITY_ShortcutDictContent|ShortcutDictContent]]
+- [[_COMMUNITY_TerminalIdMap|TerminalIdMap]]
+- [[_COMMUNITY_BufferWithExtendableBuffer|BufferWithExtendableBuffer]]
+- [[_COMMUNITY_MmappedBufferPtr|MmappedBufferPtr]]
+- [[_COMMUNITY_BufferWithExtendableBuffer|BufferWithExtendableBuffer]]
+- [[_COMMUNITY_MmappedBufferPtr|MmappedBufferPtr]]
+- [[_COMMUNITY_TerminalIdMap|TerminalIdMap]]
+- [[_COMMUNITY_ShortcutDictContent|ShortcutDictContent]]
+- [[_COMMUNITY_TerminalPositionLookupTable|TerminalPositionLookupTable]]
+- [[_COMMUNITY_BufferWithExtendableBuffer|BufferWithExtendableBuffer]]
+- [[_COMMUNITY_FORMAT_VERSION|FORMAT_VERSION]]
+- [[_COMMUNITY_HeaderPolicy|HeaderPolicy]]
+- [[_COMMUNITY_MmappedBufferPtr|MmappedBufferPtr]]
+- [[_COMMUNITY_Ver4DictBuffersPtr|Ver4DictBuffersPtr]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_BigramDictContent|BigramDictContent]]
+- [[_COMMUNITY_BufferWithExtendableBuffer|BufferWithExtendableBuffer]]
+- [[_COMMUNITY_HeaderPolicy|HeaderPolicy]]
+- [[_COMMUNITY_MmappedBufferPtr|MmappedBufferPtr]]
+- [[_COMMUNITY_ProbabilityDictContent|ProbabilityDictContent]]
+- [[_COMMUNITY_ShortcutDictContent|ShortcutDictContent]]
+- [[_COMMUNITY_TerminalPositionLookupTable|TerminalPositionLookupTable]]
+- [[_COMMUNITY_PtNodeParams|PtNodeParams]]
+- [[_COMMUNITY_PtNodeParams|PtNodeParams]]
+- [[_COMMUNITY_DictPositionRelocationMap|DictPositionRelocationMap]]
+- [[_COMMUNITY_NgramProperty|NgramProperty]]
+- [[_COMMUNITY_ProbabilityEntry|ProbabilityEntry]]
+- [[_COMMUNITY_PtNodeParams|PtNodeParams]]
+- [[_COMMUNITY_UnigramProperty|UnigramProperty]]
+- [[_COMMUNITY_WordIdArrayView|WordIdArrayView]]
+- [[_COMMUNITY_DynamicPtReadingHelper|DynamicPtReadingHelper]]
+- [[_COMMUNITY_PtNodeArrayReader|PtNodeArrayReader]]
+- [[_COMMUNITY_PtNodeReader|PtNodeReader]]
+- [[_COMMUNITY_BinaryDictionaryShortcutIterator|BinaryDictionaryShortcutIterator]]
+- [[_COMMUNITY_DicNode|DicNode]]
+- [[_COMMUNITY_DicNodeVector|DicNodeVector]]
+- [[_COMMUNITY_MultiBigramMap|MultiBigramMap]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_NgramListener|NgramListener]]
+- [[_COMMUNITY_NgramProperty|NgramProperty]]
+- [[_COMMUNITY_PtNodeParams|PtNodeParams]]
+- [[_COMMUNITY_UnigramProperty|UnigramProperty]]
+- [[_COMMUNITY_WordIdArrayView|WordIdArrayView]]
+- [[_COMMUNITY_WordProperty|WordProperty]]
+- [[_COMMUNITY_BufferWithExtendableBuffer|BufferWithExtendableBuffer]]
+- [[_COMMUNITY_DictionaryHeaderStructurePolicy|DictionaryHeaderStructurePolicy]]
+- [[_COMMUNITY_HeaderPolicy|HeaderPolicy]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_Ver4DictBuffersPtr|Ver4DictBuffersPtr]]
+- [[_COMMUNITY_Ver4PatriciaTrieNodeReader|Ver4PatriciaTrieNodeReader]]
+- [[_COMMUNITY_Ver4PatriciaTrieNodeWriter|Ver4PatriciaTrieNodeWriter]]
+- [[_COMMUNITY_Ver4PatriciaTrieWritingHelper|Ver4PatriciaTrieWritingHelper]]
+- [[_COMMUNITY_Ver4PtNodeArrayReader|Ver4PtNodeArrayReader]]
+- [[_COMMUNITY_Ver4ShortcutListPolicy|Ver4ShortcutListPolicy]]
+- [[_COMMUNITY_EntryCounts|EntryCounts]]
+- [[_COMMUNITY_HeaderPolicy|HeaderPolicy]]
+- [[_COMMUNITY_PtNodeParams|PtNodeParams]]
+- [[_COMMUNITY_Ver4DictBuffers|Ver4DictBuffers]]
+- [[_COMMUNITY_Ver4PatriciaTrieNodeReader|Ver4PatriciaTrieNodeReader]]
+- [[_COMMUNITY_Ver4PatriciaTrieNodeWriter|Ver4PatriciaTrieNodeWriter]]
+- [[_COMMUNITY_AttributeMap|AttributeMap]]
+- [[_COMMUNITY_FORMAT_VERSION|FORMAT_VERSION]]
+- [[_COMMUNITY_MmappedBufferPtr|MmappedBufferPtr]]
+- [[_COMMUNITY_StructurePolicyPtr|StructurePolicyPtr]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_BigramFlags|BigramFlags]]
+- [[_COMMUNITY_ReadOnlyByteArrayView|ReadOnlyByteArrayView]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_BigramFlags|BigramFlags]]
+- [[_COMMUNITY_PtNodeParams|PtNodeParams]]
+- [[_COMMUNITY_PtNodeParams|PtNodeParams]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_PtNodeParams|PtNodeParams]]
+- [[_COMMUNITY_PtNodeReader|PtNodeReader]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_NodeFlags|NodeFlags]]
+- [[_COMMUNITY_DynamicPtReadingHelper|DynamicPtReadingHelper]]
+- [[_COMMUNITY_NgramProperty|NgramProperty]]
+- [[_COMMUNITY_PtNodeParams|PtNodeParams]]
+- [[_COMMUNITY_UnigramProperty|UnigramProperty]]
+- [[_COMMUNITY_BufferWithExtendableBuffer|BufferWithExtendableBuffer]]
+- [[_COMMUNITY_NodeFlags|NodeFlags]]
+- [[_COMMUNITY_NodeFlags|NodeFlags]]
+- [[_COMMUNITY_DictionaryBigramsStructurePolicy|DictionaryBigramsStructurePolicy]]
+- [[_COMMUNITY_DictionaryShortcutsStructurePolicy|DictionaryShortcutsStructurePolicy]]
+- [[_COMMUNITY_NodeFlags|NodeFlags]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_NodeFlags|NodeFlags]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_NodeFlags|NodeFlags]]
+- [[_COMMUNITY_ReadOnlyByteArrayView|ReadOnlyByteArrayView]]
+- [[_COMMUNITY_ShortcutFlags|ShortcutFlags]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_ReadOnlyByteArrayView|ReadOnlyByteArrayView]]
+- [[_COMMUNITY_ShortcutFlags|ShortcutFlags]]
+- [[_COMMUNITY_ReadOnlyByteArrayView|ReadOnlyByteArrayView]]
+- [[_COMMUNITY_BinaryDictionaryShortcutIterator|BinaryDictionaryShortcutIterator]]
+- [[_COMMUNITY_DicNode|DicNode]]
+- [[_COMMUNITY_DicNodeVector|DicNodeVector]]
+- [[_COMMUNITY_MultiBigramMap|MultiBigramMap]]
+- [[_COMMUNITY_NgramListener|NgramListener]]
+- [[_COMMUNITY_PtNodeParams|PtNodeParams]]
+- [[_COMMUNITY_WordIdArrayView|WordIdArrayView]]
+- [[_COMMUNITY_WordProperty|WordProperty]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_DictionaryHeaderStructurePolicy|DictionaryHeaderStructurePolicy]]
+- [[_COMMUNITY_HeaderPolicy|HeaderPolicy]]
+- [[_COMMUNITY_MmappedBufferPtr|MmappedBufferPtr]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_NgramProperty|NgramProperty]]
+- [[_COMMUNITY_ReadOnlyByteArrayView|ReadOnlyByteArrayView]]
+- [[_COMMUNITY_UnigramProperty|UnigramProperty]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_ReadOnlyByteArrayView|ReadOnlyByteArrayView]]
+- [[_COMMUNITY_PtNodeParams|PtNodeParams]]
+- [[_COMMUNITY_ReadOnlyByteArrayView|ReadOnlyByteArrayView]]
+- [[_COMMUNITY_ReadOnlyByteArrayView|ReadOnlyByteArrayView]]
+- [[_COMMUNITY_NgramType|NgramType]]
+- [[_COMMUNITY_EntryCounts|EntryCounts]]
+- [[_COMMUNITY_FILE|FILE]]
+- [[_COMMUNITY_HeaderPolicy|HeaderPolicy]]
+- [[_COMMUNITY_LanguageModelDictContent|LanguageModelDictContent]]
+- [[_COMMUNITY_ProbabilityEntry|ProbabilityEntry]]
+- [[_COMMUNITY_TerminalIdMap|TerminalIdMap]]
+- [[_COMMUNITY_TrieMapRange|TrieMapRange]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_WordIdArrayView|WordIdArrayView]]
+- [[_COMMUNITY_BufferWithExtendableBuffer|BufferWithExtendableBuffer]]
+- [[_COMMUNITY_ReadWriteByteArrayView|ReadWriteByteArrayView]]
+- [[_COMMUNITY_ProbabilityEntry|ProbabilityEntry]]
+- [[_COMMUNITY_ReadWriteByteArrayView|ReadWriteByteArrayView]]
+- [[_COMMUNITY_NgramProperty|NgramProperty]]
+- [[_COMMUNITY_UnigramProperty|UnigramProperty]]
+- [[_COMMUNITY_ShortcutDictContent|ShortcutDictContent]]
+- [[_COMMUNITY_TerminalIdMap|TerminalIdMap]]
+- [[_COMMUNITY_FILE|FILE]]
+- [[_COMMUNITY_BufferWithExtendableBuffer|BufferWithExtendableBuffer]]
+- [[_COMMUNITY_FILE|FILE]]
+- [[_COMMUNITY_ReadWriteByteArrayView|ReadWriteByteArrayView]]
+- [[_COMMUNITY_FILE|FILE]]
+- [[_COMMUNITY_BufferWithExtendableBuffer|BufferWithExtendableBuffer]]
+- [[_COMMUNITY_FILE|FILE]]
+- [[_COMMUNITY_TerminalIdMap|TerminalIdMap]]
+- [[_COMMUNITY_ReadWriteByteArrayView|ReadWriteByteArrayView]]
+- [[_COMMUNITY_ShortcutDictContent|ShortcutDictContent]]
+- [[_COMMUNITY_TerminalPositionLookupTable|TerminalPositionLookupTable]]
+- [[_COMMUNITY_BufferWithExtendableBuffer|BufferWithExtendableBuffer]]
+- [[_COMMUNITY_FILE|FILE]]
+- [[_COMMUNITY_FORMAT_VERSION|FORMAT_VERSION]]
+- [[_COMMUNITY_HeaderPolicy|HeaderPolicy]]
+- [[_COMMUNITY_MmappedBufferPtr|MmappedBufferPtr]]
+- [[_COMMUNITY_ReadWriteByteArrayView|ReadWriteByteArrayView]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_Ver4DictBuffersPtr|Ver4DictBuffersPtr]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_BufferWithExtendableBuffer|BufferWithExtendableBuffer]]
+- [[_COMMUNITY_HeaderPolicy|HeaderPolicy]]
+- [[_COMMUNITY_LanguageModelDictContent|LanguageModelDictContent]]
+- [[_COMMUNITY_MmappedBufferPtr|MmappedBufferPtr]]
+- [[_COMMUNITY_ShortcutDictContent|ShortcutDictContent]]
+- [[_COMMUNITY_TerminalPositionLookupTable|TerminalPositionLookupTable]]
+- [[_COMMUNITY_PtNodeParams|PtNodeParams]]
+- [[_COMMUNITY_PtNodeParams|PtNodeParams]]
+- [[_COMMUNITY_DictPositionRelocationMap|DictPositionRelocationMap]]
+- [[_COMMUNITY_NgramProperty|NgramProperty]]
+- [[_COMMUNITY_PtNodeParams|PtNodeParams]]
+- [[_COMMUNITY_UnigramProperty|UnigramProperty]]
+- [[_COMMUNITY_WordIdArrayView|WordIdArrayView]]
+- [[_COMMUNITY_DynamicPtReadingHelper|DynamicPtReadingHelper]]
+- [[_COMMUNITY_PtNodeArrayReader|PtNodeArrayReader]]
+- [[_COMMUNITY_PtNodeReader|PtNodeReader]]
+- [[_COMMUNITY_BinaryDictionaryShortcutIterator|BinaryDictionaryShortcutIterator]]
+- [[_COMMUNITY_DicNode|DicNode]]
+- [[_COMMUNITY_DicNodeVector|DicNodeVector]]
+- [[_COMMUNITY_MultiBigramMap|MultiBigramMap]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_NgramListener|NgramListener]]
+- [[_COMMUNITY_NgramProperty|NgramProperty]]
+- [[_COMMUNITY_UnigramProperty|UnigramProperty]]
+- [[_COMMUNITY_WordIdArrayView|WordIdArrayView]]
+- [[_COMMUNITY_WordProperty|WordProperty]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_BufferWithExtendableBuffer|BufferWithExtendableBuffer]]
+- [[_COMMUNITY_DictionaryHeaderStructurePolicy|DictionaryHeaderStructurePolicy]]
+- [[_COMMUNITY_HeaderPolicy|HeaderPolicy]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_Ver4DictBuffersPtr|Ver4DictBuffersPtr]]
+- [[_COMMUNITY_Ver4PatriciaTrieNodeReader|Ver4PatriciaTrieNodeReader]]
+- [[_COMMUNITY_Ver4PatriciaTrieNodeWriter|Ver4PatriciaTrieNodeWriter]]
+- [[_COMMUNITY_Ver4PatriciaTrieWritingHelper|Ver4PatriciaTrieWritingHelper]]
+- [[_COMMUNITY_Ver4PtNodeArrayReader|Ver4PtNodeArrayReader]]
+- [[_COMMUNITY_Ver4ShortcutListPolicy|Ver4ShortcutListPolicy]]
+- [[_COMMUNITY_EntryCounts|EntryCounts]]
+- [[_COMMUNITY_HeaderPolicy|HeaderPolicy]]
+- [[_COMMUNITY_PtNodeParams|PtNodeParams]]
+- [[_COMMUNITY_Ver4DictBuffers|Ver4DictBuffers]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_DictionaryBigramsStructurePolicy|DictionaryBigramsStructurePolicy]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_DictionaryShortcutsStructurePolicy|DictionaryShortcutsStructurePolicy]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_BufferWithExtendableBuffer|BufferWithExtendableBuffer]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_ReadWriteByteArrayView|ReadWriteByteArrayView]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_AttributeMap|AttributeMap]]
+- [[_COMMUNITY_BufferWithExtendableBuffer|BufferWithExtendableBuffer]]
+- [[_COMMUNITY_FILE|FILE]]
+- [[_COMMUNITY_FORMAT_VERSION|FORMAT_VERSION]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_NgramType|NgramType]]
+- [[_COMMUNITY_EntryCounts|EntryCounts]]
+- [[_COMMUNITY_HeaderPolicy|HeaderPolicy]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_FORMAT_VERSION|FORMAT_VERSION]]
+- [[_COMMUNITY_ReadOnlyByteArrayView|ReadOnlyByteArrayView]]
+- [[_COMMUNITY_MmappedBufferPtr|MmappedBufferPtr]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_ReadOnlyByteArrayView|ReadOnlyByteArrayView]]
+- [[_COMMUNITY_ReadWriteByteArrayView|ReadWriteByteArrayView]]
+- [[_COMMUNITY_DictionaryStructureWithBufferPolicy|DictionaryStructureWithBufferPolicy]]
+- [[_COMMUNITY_WordIdArrayView|WordIdArrayView]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_BufferWithExtendableBuffer|BufferWithExtendableBuffer]]
+- [[_COMMUNITY_Entry|Entry]]
+- [[_COMMUNITY_FILE|FILE]]
+- [[_COMMUNITY_ReadWriteByteArrayView|ReadWriteByteArrayView]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_BufferWithExtendableBuffer|BufferWithExtendableBuffer]]
+- [[_COMMUNITY_Entry|Entry]]
+- [[_COMMUNITY_TrieMapRange|TrieMapRange]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_DoubleLetterLevel|DoubleLetterLevel]]
+- [[_COMMUNITY_ErrorType|ErrorType]]
+- [[_COMMUNITY_ProximityInfoState|ProximityInfoState]]
+- [[_COMMUNITY_WordIdArrayView|WordIdArrayView]]
+- [[_COMMUNITY_DicNode|DicNode]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_DicNode|DicNode]]
+- [[_COMMUNITY_DicNode|DicNode]]
+- [[_COMMUNITY_DicNodeVector|DicNodeVector]]
+- [[_COMMUNITY_DictionaryStructureWithBufferPolicy|DictionaryStructureWithBufferPolicy]]
+- [[_COMMUNITY_MultiBigramMap|MultiBigramMap]]
+- [[_COMMUNITY_WordIdArrayView|WordIdArrayView]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_DicNode|DicNode]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_MAX_PREV_WORD_COUNT_FOR_N_GRAM|MAX_PREV_WORD_COUNT_FOR_N_GRAM]]
+- [[_COMMUNITY_WordIdArray|WordIdArray]]
+- [[_COMMUNITY_WordIdArrayView|WordIdArrayView]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_DigraphCodePointIndex|DigraphCodePointIndex]]
+- [[_COMMUNITY_DoubleLetterLevel|DoubleLetterLevel]]
+- [[_COMMUNITY_ErrorType|ErrorType]]
+- [[_COMMUNITY_DictionaryStructureWithBufferPolicy|DictionaryStructureWithBufferPolicy]]
+- [[_COMMUNITY_DicTraverseSession|DicTraverseSession]]
+- [[_COMMUNITY_JNIEnv|JNIEnv]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_NgramProperty|NgramProperty]]
+- [[_COMMUNITY_ProximityInfo|ProximityInfo]]
+- [[_COMMUNITY_StructurePolicyPtr|StructurePolicyPtr]]
+- [[_COMMUNITY_SuggestionResults|SuggestionResults]]
+- [[_COMMUNITY_SuggestOptions|SuggestOptions]]
+- [[_COMMUNITY_UnigramProperty|UnigramProperty]]
+- [[_COMMUNITY_WordIdArrayView|WordIdArrayView]]
+- [[_COMMUNITY_WordProperty|WordProperty]]
+- [[_COMMUNITY_StructurePolicyPtr|StructurePolicyPtr]]
+- [[_COMMUNITY_DicNode|DicNode]]
+- [[_COMMUNITY_DictionaryStructureWithBufferPolicy|DictionaryStructureWithBufferPolicy]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_DictionaryHeaderStructurePolicy|DictionaryHeaderStructurePolicy]]
+- [[_COMMUNITY_digraph_t|digraph_t]]
+- [[_COMMUNITY_DigraphCodePointIndex|DigraphCodePointIndex]]
+- [[_COMMUNITY_DigraphType|DigraphType]]
+- [[_COMMUNITY_digraph_t|digraph_t]]
+- [[_COMMUNITY_DigraphType|DigraphType]]
+- [[_COMMUNITY_ErrorType|ErrorType]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_jfloat|jfloat]]
+- [[_COMMUNITY_jfloatArray|jfloatArray]]
+- [[_COMMUNITY_jint|jint]]
+- [[_COMMUNITY_jintArray|jintArray]]
+- [[_COMMUNITY_JNIEnv|JNIEnv]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_unordered_map|unordered_map]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_ProximityInfo|ProximityInfo]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_ProximityInfo|ProximityInfo]]
+- [[_COMMUNITY_unordered_map|unordered_map]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_unordered_map|unordered_map]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_CorrectionType|CorrectionType]]
+- [[_COMMUNITY_DicNode|DicNode]]
+- [[_COMMUNITY_DicTraverseSession|DicTraverseSession]]
+- [[_COMMUNITY_Weighting|Weighting]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_jfloatArray|jfloatArray]]
+- [[_COMMUNITY_jintArray|jintArray]]
+- [[_COMMUNITY_JNIEnv|JNIEnv]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_BinaryDictionaryShortcutIterator|BinaryDictionaryShortcutIterator]]
+- [[_COMMUNITY_DicNode|DicNode]]
+- [[_COMMUNITY_DicTraverseSession|DicTraverseSession]]
+- [[_COMMUNITY_Scoring|Scoring]]
+- [[_COMMUNITY_SuggestionResults|SuggestionResults]]
+- [[_COMMUNITY_SuggestOptions|SuggestOptions]]
+- [[_COMMUNITY_Dictionary|Dictionary]]
+- [[_COMMUNITY_DictionaryStructureWithBufferPolicy|DictionaryStructureWithBufferPolicy]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_ProximityInfo|ProximityInfo]]
+- [[_COMMUNITY_SuggestOptions|SuggestOptions]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_DicNode|DicNode]]
+- [[_COMMUNITY_jlong|jlong]]
+- [[_COMMUNITY_JNIEnv|JNIEnv]]
+- [[_COMMUNITY_jstring|jstring]]
+- [[_COMMUNITY_MAX_PREV_WORD_COUNT_FOR_N_GRAM|MAX_PREV_WORD_COUNT_FOR_N_GRAM]]
+- [[_COMMUNITY_MultiBigramMap|MultiBigramMap]]
+- [[_COMMUNITY_ProximityInfoState|ProximityInfoState]]
+- [[_COMMUNITY_WordIdArray|WordIdArray]]
+- [[_COMMUNITY_WordIdArrayView|WordIdArrayView]]
+- [[_COMMUNITY_DicNode|DicNode]]
+- [[_COMMUNITY_DicTraverseSession|DicTraverseSession]]
+- [[_COMMUNITY_ProximityInfo|ProximityInfo]]
+- [[_COMMUNITY_SuggestionResults|SuggestionResults]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_ErrorType|ErrorType]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_DicNode|DicNode]]
+- [[_COMMUNITY_DicTraverseSession|DicTraverseSession]]
+- [[_COMMUNITY_CorrectionType|CorrectionType]]
+- [[_COMMUNITY_DicNode|DicNode]]
+- [[_COMMUNITY_DicTraverseSession|DicTraverseSession]]
+- [[_COMMUNITY_ErrorType|ErrorType]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_DicTraverseSession|DicTraverseSession]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_jbooleanArray|jbooleanArray]]
+- [[_COMMUNITY_jintArray|jintArray]]
+- [[_COMMUNITY_JNIEnv|JNIEnv]]
+- [[_COMMUNITY_jobject|jobject]]
+- [[_COMMUNITY_WordProperty|WordProperty]]
+- [[_COMMUNITY_AttributeMap|AttributeMap]]
+- [[_COMMUNITY_jboolean|jboolean]]
+- [[_COMMUNITY_jbooleanArray|jbooleanArray]]
+- [[_COMMUNITY_jfloatArray|jfloatArray]]
+- [[_COMMUNITY_jintArray|jintArray]]
+- [[_COMMUNITY_JNIEnv|JNIEnv]]
+- [[_COMMUNITY_jobjectArray|jobjectArray]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_JNIEnv|JNIEnv]]
+- [[_COMMUNITY_AK_FORCE_INLINE|AK_FORCE_INLINE]]
+- [[_COMMUNITY_unordered_map|unordered_map]]
+- [[_COMMUNITY_TestSetAndGet|TestSetAndGet]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_TestSetAndGet|TestSetAndGet]]
+- [[_COMMUNITY_TestIteration|TestIteration]]
+- [[_COMMUNITY_TestSetAndGet|TestSetAndGet]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_vector|vector]]
+- [[_COMMUNITY_TestIteration|TestIteration]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_Long|Long]]
+- [[_COMMUNITY_EditorInfo|EditorInfo]]
+- [[_COMMUNITY_InputMethodSubtype|InputMethodSubtype]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Long|Long]]
+- [[_COMMUNITY_Pair|Pair]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Char|Char]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_Long|Long]]
+- [[_COMMUNITY_Message|Message]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_ArrayList|ArrayList]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Float|Float]]
+- [[_COMMUNITY_FloatArray|FloatArray]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Locale|Locale]]
+- [[_COMMUNITY_Long|Long]]
+- [[_COMMUNITY_NgramContext|NgramContext]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Char|Char]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_Float|Float]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_Map|Map]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Closeable|Closeable]]
+- [[_COMMUNITY_InputStream|InputStream]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Array|Array]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_IntArray|IntArray]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Map|Map]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Float|Float]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_IntArray|IntArray]]
+- [[_COMMUNITY_Pair|Pair]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Any|Any]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Pair|Pair]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_T|T]]
+- [[_COMMUNITY_Unit|Unit]]
+- [[_COMMUNITY_Promise|Promise]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_ByteArray|ByteArray]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Long|Long]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_TranscriptionPair|TranscriptionPair]]
+- [[_COMMUNITY_AccessibilityEvent|AccessibilityEvent]]
+- [[_COMMUNITY_AudioRecord|AudioRecord]]
+- [[_COMMUNITY_Button|Button]]
+- [[_COMMUNITY_Float|Float]]
+- [[_COMMUNITY_FrameLayout|FrameLayout]]
+- [[_COMMUNITY_GradientDrawable|GradientDrawable]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_LinearLayout|LinearLayout]]
+- [[_COMMUNITY_SQLiteDatabase|SQLiteDatabase]]
+- [[_COMMUNITY_TextView|TextView]]
+- [[_COMMUNITY_Thread|Thread]]
+- [[_COMMUNITY_Typeface|Typeface]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_List|List]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_Button|Button]]
+- [[_COMMUNITY_Context|Context]]
+- [[_COMMUNITY_EditorInfo|EditorInfo]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_Float|Float]]
+- [[_COMMUNITY_GradientDrawable|GradientDrawable]]
+- [[_COMMUNITY_Handler|Handler]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_LinearLayout|LinearLayout]]
+- [[_COMMUNITY_SQLiteDatabase|SQLiteDatabase]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_Typeface|Typeface]]
+- [[_COMMUNITY_View|View]]
+- [[_COMMUNITY_getEntryInfo|getEntryInfo]]
+- [[_COMMUNITY_TEST|TEST]]
+- [[_COMMUNITY_TEST|TEST]]
+- [[_COMMUNITY_TEST|TEST]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `Key` - 250 edges
-2. `PointerTracker` - 143 edges
-3. `LatinIME` - 136 edges
-4. `KeyboardSwitcher` - 109 edges
-5. `InputLogic` - 104 edges
-6. `Settings` - 99 edges
-7. `SuggestedWordInfo` - 91 edges
-8. `KeyboardParams` - 89 edges
-9. `MainKeyboardView` - 85 edges
-10. `Keyboard` - 83 edges
+1. `intArrayToCharArray()` - 168 edges
+2. `LatinIME` - 114 edges
+3. `PointerTracker` - 101 edges
+4. `InputLogic` - 100 edges
+5. `Settings` - 99 edges
+6. `KeyboardSwitcher` - 98 edges
+7. `Key` - 91 edges
+8. `KeyboardParams` - 83 edges
+9. `ggml_dup_tensor()` - 81 edges
+10. `Keyboard` - 80 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `KeyboardSwitcher` --references--> `VelaTranscriber`  [EXTRACTED]
+- `KeyboardSwitcher` --references--> `ScribeInput`  [EXTRACTED]
   velaboard/app/src/main/java/helium314/keyboard/keyboard/KeyboardSwitcher.java → sdk/vela-core/src/main/kotlin/com/velavoice/sdk/VelaTranscriber.kt
-- `VoiceInputMethodService` --references--> `VelaTranscriber`  [EXTRACTED]
+- `VoiceInputMethodService` --references--> `ScribeInput`  [EXTRACTED]
   velavoice app/src/native/VoiceInputMethodService.kt → sdk/vela-core/src/main/kotlin/com/velavoice/sdk/VelaTranscriber.kt
+- `BottomBar()` --calls--> `appendLink()`  [INFERRED]
+  velaboard/app/src/main/java/helium314/keyboard/settings/screens/gesturedata/GestureDataScreen.kt → velaboard/app/src/main/java/helium314/keyboard/latin/utils/Ktx.kt
+- `TopBar()` --calls--> `InfoDialog()`  [INFERRED]
+  velaboard/app/src/main/java/helium314/keyboard/settings/screens/gesturedata/ReviewScreen.kt → velaboard/app/src/main/java/helium314/keyboard/settings/dialogs/InfoDialog.kt
 - `VoiceInputMethodService` --references--> `VoiceRecordingPane`  [EXTRACTED]
   velavoice app/src/native/VoiceInputMethodService.kt → sdk/vela-voice-ui/src/main/kotlin/com/velavoice/sdk/ui/VoiceRecordingPane.kt
-- `VoiceAccessibilityService` --references--> `WaveformView`  [EXTRACTED]
-  velavoice app/src/native/VoiceAccessibilityService.kt → sdk/vela-voice-ui/src/main/kotlin/com/velavoice/sdk/ui/WaveformView.kt
-- `whisper_kv_cell` --references--> `set`  [EXTRACTED]
-  sdk/vela-whisper/src/main/cpp/whisper.cpp → velaboard/app/src/main/jni/src/dictionary/utils/sparse_table.h
 
 ## Import Cycles
 - None detected.
@@ -520,23 +2444,19 @@
 - **whisper native library built for 4 Android ABIs** — arm64_v8a_abi, armeabi_v7a_abi, x86_abi, x86_64_abi, whisper_cmake_project [EXTRACTED 1.00]
 - **All source files compiled into the whisper shared library** — whisper_cpp_source, whisper_jni_cpp_source, ggml_c_source, ggml_alloc_c_source, ggml_backend_c_source, ggml_quants_c_source, whisper_shared_library [EXTRACTED 1.00]
 
-## Communities (503 total, 85 thin omitted)
+## Communities (2419 total, 2126 thin omitted)
 
 ### Community 0 - "Model Verification Module"
-Cohesion: 0.07
-Nodes (18): NativeModule, ReactApplicationContext, ReactContextBaseJavaModule, ReactPackage, GoogleDriveSyncModule, Boolean, File, Promise (+10 more)
-
-### Community 1 - "Native Build Toolchain"
-Cohesion: 0.04
-Nodes (16): Nullable, Object, Override, Key, Spacer, MotionEvent, Object, Override (+8 more)
+Cohesion: 0.06
+Nodes (15): ModelVerifierModule, VoiceImePackage, NativeModule, ReactApplicationContext, ReactContextBaseJavaModule, ReactPackage, GoogleDriveSyncModule, Boolean (+7 more)
 
 ### Community 2 - "GGML Inference Engine"
-Cohesion: 0.07
-Nodes (9): InputTransaction, Int, InputLogic, CharSequence, Locale, Long, String, String (+1 more)
+Cohesion: 0.08
+Nodes (3): createDeadEvent(), InputTransaction, InputLogic
 
 ### Community 3 - "Expo App Configuration"
-Cohesion: 0.04
-Nodes (112): ggml_acc_impl(), ggml_acc_or_set(), ggml_add(), ggml_add1(), ggml_add1_impl(), ggml_add1_inplace(), ggml_add1_or_set(), ggml_add_impl() (+104 more)
+Cohesion: 0.03
+Nodes (116): ggml_add_rel_pos(), ggml_add_rel_pos_impl(), ggml_add_rel_pos_inplace(), ggml_alibi(), ggml_argmax(), ggml_argsort(), ggml_calc_conv_output_size(), ggml_calc_conv_transpose_1d_output_size() (+108 more)
 
 ### Community 4 - "IME Architecture & Design"
 Cohesion: 0.50
@@ -546,1548 +2466,1079 @@ Nodes (5): Lumina Sonic Design System, WebGL Shader Animation, The Engine Room, 
 Cohesion: 0.17
 Nodes (12): AI-Powered Transcript Cleanup Feature, Custom Dictionary Testing Sandbox, Raw vs Cleaned Transcript Comparison, Dictionary Sandbox Testing Card, Edit Transcript Button, Local Cleaner Engine Badge, Empty State - No Recording Selected, Active Recording Title & Date Header (+4 more)
 
-### Community 6 - "JavaScript Dependencies"
-Cohesion: 0.04
-Nodes (46): FormatUtilsTest, ProbabilityEntryTest, TerminalPositionLookupTableTest, TestDetectFormatVersion, TestEncodeDecode, TestEncodeDecodeWithHistoricalInfo, TestGC, TestGetFromEmptyTable (+38 more)
-
 ### Community 7 - "Core Domain Pipeline"
-Cohesion: 0.04
-Nodes (44): Deprecated, TreeSet, CapsMode, ProductionFlags, NgramContext, addDebugInfo(), capitalize(), capitalizeAndAddTrailingSingleQuotes() (+36 more)
+Cohesion: 0.10
+Nodes (4): DictionaryCollection, DictionaryFactory, KoreanDictionary, Dictionary
 
 ### Community 8 - "RN Package Registration"
 Cohesion: 0.03
-Nodes (86): mt19937, byteswap(), byteswap_tensor(), byteswap_tensor_data(), ggml_tensor, string, T, fill_sin_cos_table() (+78 more)
+Nodes (104): ggml_time_init(), byteswap(), byteswap_tensor_data(), decode_utf8(), dft(), fft(), fill_sin_cos_table(), get_signal_energy() (+96 more)
 
 ### Community 9 - "Build Scripts"
-Cohesion: 0.06
-Nodes (12): Listener, InputMethodSubtype, KeyEvent, Override, String, SuppressWarnings, View, LatinIME (+4 more)
+Cohesion: 0.05
+Nodes (8): LatinIME, FoldableObserver, getDisplayContext(), Log, LogLine, FileDescriptor, Listener, PrintWriter
 
 ### Community 10 - "RN Runtime Dependencies"
-Cohesion: 0.10
-Nodes (55): function, ggml_allocr_t, ggml_gallocr_t, add_allocated_tensor(), aligned_offset(), allocate_node(), ggml_tallocr_t, free_node() (+47 more)
+Cohesion: 0.09
+Nodes (57): add_allocated_tensor(), aligned_offset(), allocate_node(), free_node(), ggml_allocr_alloc(), ggml_allocr_alloc_graph(), ggml_allocr_free(), ggml_allocr_get_buffer() (+49 more)
 
 ### Community 11 - "Brand Identity"
 Cohesion: 0.40
 Nodes (6): Brand Neon Cyan (#62f9ee), Dark App Theme (#0e1514), V Shape Logo Mark, Vela Voice Application, Vela Voice Logo (PNG), VelaVoice Wordmark
 
 ### Community 12 - "TypeScript Configuration"
-Cohesion: 0.05
-Nodes (21): Boolean, CharSequence, Context, EditorInfo, FrameLayout, Handler, ImageView, InputMethodSubtype (+13 more)
-
-### Community 54 - "build.gradle.kts"
 Cohesion: 0.04
-Nodes (25): FontMetrics, NonNull, Typeface, KeyDrawParams, Nullable, SparseIntArray, Typeface, KeyVisualAttributes (+17 more)
+Nodes (5): DrawingProxy, TimerHandler, Adapter, TimerProxy, PointerTrackerParams
 
 ### Community 55 - "settings.gradle.kts"
-Cohesion: 0.06
-Nodes (85): autospace(), `autospace after selecting a suggestion`(), `autospace in json editor`(), `autospace propagates over "`(), `autospace still happens after "`(), `autospace still happens after " if nex word is in " and after comma`(), `autospace still happens after " if next word is in quotes`(), `autospace works in URL field when input isn't URL`() (+77 more)
+Cohesion: 0.10
+Nodes (11): Comparator, ComposedData, createForWord(), ProductionFlags, PhonyDictionary, UnlearnEvent, WordInfo, SettingsValuesForSuggestion (+3 more)
 
 ### Community 56 - "ggml_compute_forward"
-Cohesion: 0.02
-Nodes (181): ggml_custom3_op_f32_t, float32x4_t, ggml_abs(), ggml_abs_inplace(), ggml_acc(), ggml_acc_inplace(), ggml_add_inplace(), ggml_add_rel_pos() (+173 more)
+Cohesion: 0.06
+Nodes (3): KeyboardSwitcher, KeyboardSwitchState, dpToPx()
 
 ### Community 57 - "ggml_init"
-Cohesion: 0.05
-Nodes (88): ggml_add_cast(), ggml_add_cast_impl(), ggml_are_same_shape(), ggml_can_repeat(), ggml_can_repeat_rows(), ggml_compute_forward_abs(), ggml_compute_forward_abs_f32(), ggml_compute_forward_acc_f32() (+80 more)
+Cohesion: 0.04
+Nodes (94): ggml_add_cast(), ggml_add_cast_impl(), ggml_are_same_shape(), ggml_can_repeat_rows(), ggml_compute_forward_abs(), ggml_compute_forward_abs_f32(), ggml_compute_forward_acc_f32(), ggml_compute_forward_add() (+86 more)
 
 ### Community 58 - "whisper_state"
-Cohesion: 0.07
-Nodes (57): BlendModeCompat, ColorFilter, ColorStateList, ColorSetting, determineAutoColor(), determineUserColor(), getAvailableDefaultColors(), getColorsForCurrentTheme() (+49 more)
+Cohesion: 0.10
+Nodes (12): BlendModeCompat, ColorFilter, ColorStateList, activatedStateList(), AllColors, colorFilter(), Colors, ColorType (+4 more)
 
 ### Community 59 - "vector"
-Cohesion: 0.23
-Nodes (7): LinearLayout, MarginLayoutParams, View, ViewGroup, ViewLayoutUtils, Window, WindowManager
+Cohesion: 0.04
+Nodes (8): OnGetSuggestedWordsCallback, SuggestedWordInfo, SuggestedWords, SuggestionStripViewAccessor, AutoCorrectionUtils, BackgroundGatheringCache, Deprecated, Suggest
 
 ### Community 60 - "ggml-quants.c"
 Cohesion: 0.12
 Nodes (33): block_q2_K, block_q3_K, block_q4_K, block_q5_K, block_q6_K, block_q8_K, dequantize_row_q2_K(), dequantize_row_q3_K() (+25 more)
 
 ### Community 61 - "whisper_full_with_state"
-Cohesion: 0.05
-Nodes (65): atomic_int, GGML_API, pthread_t, atomic_fetch_add(), atomic_fetch_sub(), atomic_load(), atomic_store(), LONG (+57 more)
+Cohesion: 0.06
+Nodes (6): EmojiPageKeyboardView, EmojiViewCallback, Controller, onShowPopupKeysPanel(), PopupKeysPanel, PopupTextView
 
 ### Community 62 - "whisper_context"
-Cohesion: 0.21
-Nodes (4): Model, Boolean, String, Tokenizer
+Cohesion: 0.10
+Nodes (46): ggml_acc(), ggml_acc_impl(), ggml_acc_inplace(), ggml_acc_or_set(), ggml_blck_size(), ggml_compute_backward(), ggml_compute_forward_dup_bytes(), ggml_compute_forward_dup_f16() (+38 more)
 
 ### Community 63 - "data"
-Cohesion: 0.05
-Nodes (29): TextView, GridKey, EmojiPageKeyboardView, AccessibilityEvent, AttributeSet, Context, Handler, MotionEvent (+21 more)
-
-### Community 64 - "ggml_fp16_t"
-Cohesion: 0.09
-Nodes (27): ggml_float, __avx_f32cx8_load(), __avx_f32cx8_store(), ggml_fp16_t, __m128, __m256, ggml_compute_forward_flash_ff(), ggml_compute_forward_flash_ff_f16() (+19 more)
+Cohesion: 0.06
+Nodes (37): TouchPositionCorrection, KeyboardId, assertAreExpected(), assertIsExpected(), autoMultiTextKey(), buildKeyboard(), canLoadKeyboard(), caseSelector() (+29 more)
 
 ### Community 65 - "whisper_build_graph_decoder"
-Cohesion: 0.05
-Nodes (107): ggml_backend_buffer_context_t, ggml_backend_eval_callback, ggml_backend_graph_plan_t, ggml_backend_init_fn, ggml_backend_sched_t, ggml_type_traits_t, ggml_backend_buffer_t, ggml_backend_buffer_type_t (+99 more)
+Cohesion: 0.04
+Nodes (88): ggml_backend_alloc_ctx_tensors(), ggml_backend_alloc_ctx_tensors_from_buft(), ggml_tallocr_free(), fmt_size(), get_allocr_backend(), get_buffer_backend(), ggml_are_same_layout(), ggml_backend_buffer_free() (+80 more)
 
 ### Community 66 - "ggml_dup_tensor"
-Cohesion: 0.14
-Nodes (19): JNIEXPORT, ggml_backend_buffer_free(), ggml_backend_free(), ggml_backend_graph_copy_free(), jfloatArray, jlong, JNIEnv, jobject (+11 more)
+Cohesion: 0.05
+Nodes (16): codePointAt(), endsWithWordCodepoint(), getFullEmojiAtEnd(), getTouchedWordRange(), hasLetterBeforeLastSpaceBeforeCursor(), isEmoji(), isPartOfCompositionForScript(), loopOverCodePoints() (+8 more)
 
 ### Community 67 - "ggml_compute_forward_unary"
-Cohesion: 0.06
-Nodes (30): 1. Overview & Goals, 2.1 Module Structure, 2.2 Public API Surface, 2.3 File Migration Map, 2.4 JNI Renames, 2.5 Build Configuration, 2.6 Vela Voice App Migration, 2. Phase 1: vela-transcription-sdk (+22 more)
-
-### Community 68 - "whisper_layer_decoder"
-Cohesion: 0.04
-Nodes (23): ObjectAnimator, TypedArray, View, KeyPreviewDrawParams, AttributeSet, Canvas, Context, List (+15 more)
+Cohesion: 0.05
+Nodes (38): BufferWithExtendableBuffer, HeaderPolicy, ProbabilityDictContent, Ver4PatriciaTrieNodeReader, mBuffer, mHeaderPolicy, mProbabilityDictContent, DictionaryShortcutsStructurePolicy (+30 more)
 
 ### Community 69 - "ggml_compute_backward"
-Cohesion: 0.04
-Nodes (52): ggml_allocr, ggml_backend_buffer_t, whisper_allocr, alloc, buffer, meta, whisper_kv_cache, buffer (+44 more)
+Cohesion: 0.03
+Nodes (57): ProximityInfoParams, ANGLE_WEIGHT, CENTER_VALUE_OF_NORMALIZED_DISTRIBUTION, CORNER_ANGLE_THRESHOLD, CORNER_ANGLE_THRESHOLD_FOR_POINT_SCORE, CORNER_CHECK_DISTANCE_THRESHOLD_SCALE, CORNER_SCORE, CORNER_SUM_ANGLE_THRESHOLD (+49 more)
 
 ### Community 70 - "whisper_decoder"
-Cohesion: 0.06
-Nodes (35): A, B, whisper_decoder, completed, failed, grammar, has_ts, i_batch (+27 more)
+Cohesion: 0.08
+Nodes (5): KeySpecParser, Constants, codePointBefore(), StringUtils, DictionaryStats
 
 ### Community 71 - "whisper_model"
-Cohesion: 0.04
-Nodes (51): e_model, whisper_hparams, eps, ftype, n_audio_ctx, n_audio_head, n_audio_layer, n_audio_state (+43 more)
+Cohesion: 0.07
+Nodes (36): mShortcuts, WordProperty, mNgrams, mUnigramProperty, BufferWithExtendableBuffer, HeaderPolicy, Ver4BigramListPolicy, Ver4DictBuffers (+28 more)
 
 ### Community 72 - "ggml_vec_dot_q2_K_q8_K"
-Cohesion: 0.15
-Nodes (24): ggml_int16x8x2_t, ggml_int8x16x2_t, ggml_int8x16x4_t, ggml_uint8x16x2_t, ggml_uint8x16x4_t, int16x8_t, int32x4_t, int8x16_t (+16 more)
+Cohesion: 0.13
+Nodes (22): get_scale_shuffle(), get_scale_shuffle_k4(), get_scale_shuffle_q3k(), ggml_vec_dot_q2_K_q8_K(), ggml_vec_dot_q4_K_q8_K(), ggml_vec_dot_q5_K_q8_K(), ggml_vec_dot_q6_K_q8_K(), ggml_vld1q_s16_x2() (+14 more)
 
 ### Community 73 - "WhisperEngine"
-Cohesion: 0.08
-Nodes (19): CorrectionInfo, InputConnection, UnicodeSurrogate, Bundle, CharSequence, CompletionInfo, EditorInfo, InputContentInfoCompat (+11 more)
+Cohesion: 0.32
+Nodes (3): ClipboardManager, ClipData, ClipboardManagerCompat
 
 ### Community 74 - "whisper_print_system_info"
-Cohesion: 0.05
-Nodes (68): RowScope, AddColorRow(), ColorItemRow(), ColorThemePickerDialog(), Boolean, Collection, SharedPreferences, String (+60 more)
+Cohesion: 0.13
+Nodes (25): checkTimestampFormat(), getTimestamp(), getTimestampFormatter(), getPrefOfType(), ListPreference(), putPrefOfType(), KeyAndState, ReorderSwitchPreference() (+17 more)
 
 ### Community 75 - "gguf_get_n_kv"
-Cohesion: 0.06
-Nodes (44): VarMap, Action, Always, And, BnKhiproCombiner, Commit, Cond, CondBranch (+36 more)
+Cohesion: 0.05
+Nodes (39): Action, Always, And, BnKhiproCombiner, Commit, Cond, CondBranch, Condition (+31 more)
 
 ### Community 76 - "ggml_vdotq_s32"
-Cohesion: 0.22
-Nodes (20): __m128i, __m256i, bytes_from_bits_32(), bytes_from_nibbles_32(), __m128, __m256, get_scale_shuffle(), ggml_vec_dot_q4_0_q8_0() (+12 more)
+Cohesion: 0.23
+Nodes (20): bytes_from_bits_32(), bytes_from_nibbles_32(), ggml_vdotq_s32(), ggml_vec_dot_q3_K_q8_K(), ggml_vec_dot_q4_0_q8_0(), ggml_vec_dot_q4_1_q8_1(), ggml_vec_dot_q5_0_q8_0(), ggml_vec_dot_q5_1_q8_1() (+12 more)
 
 ### Community 77 - "whisper_bench_ggml_mul_mat_str"
-Cohesion: 0.05
-Nodes (33): CombinerChain, ArrayList, CharSequence, createCombiningEvent(), createConsumedEvent(), createCursorMovedEvent(), createDeadEvent(), createEventForCodePointFromAlreadyTypedText() (+25 more)
+Cohesion: 0.08
+Nodes (8): DictionaryInitializationListener, createSubDict(), DictionaryFacilitatorImpl, DictionaryGroup, findDictionaryGroupWithLocale(), getUsedLocales(), includeAtLeastTwoWordSuggestions(), isEmojiOrTypedWord()
 
 ### Community 78 - "ggml_quantize_chunk"
-Cohesion: 0.40
-Nodes (5): block_q4_0, ggml_quantize_q4_0(), dequantize_row_q4_0(), quantize_row_q4_0(), quantize_row_q4_0_reference()
+Cohesion: 0.12
+Nodes (17): block_q4_1, block_q5_0, block_q8_0, ggml_fp32_to_fp16_row(), ggml_quantize_chunk(), ggml_quantize_q4_1(), ggml_quantize_q5_0(), ggml_quantize_q8_0() (+9 more)
 
 ### Community 79 - "whisper_vocab"
-Cohesion: 0.05
-Nodes (24): RelativeLayout, AbstractDrawingPreview, Canvas, View, DrawingPreviewPlacerView, ArrayList, AttributeSet, Canvas (+16 more)
+Cohesion: 0.04
+Nodes (34): HeaderPolicy, DATE_KEY, DEFAULT_FORGETTING_CURVE_PROBABILITY_VALUES_TABLE_ID, DEFAULT_MAX_NGRAM_COUNTS, DEFAULT_MULTIPLE_WORDS_DEMOTION_RATE, EntryCounts, EXTENDED_REGION_SIZE_KEY, FORGETTING_CURVE_DURATION_TO_LEVEL_DOWN_IN_SECONDS_KEY (+26 more)
 
 ### Community 80 - "whisper_batch"
-Cohesion: 0.19
-Nodes (14): whisper_batch, logits, n_seq_id, n_tokens, pos, seq_id, token, whisper_kv_cache_seq_cp() (+6 more)
+Cohesion: 0.05
+Nodes (43): whisper_allocr, alloc, buffer, meta, whisper_state, alloc_conv, alloc_cross, alloc_decode (+35 more)
 
 ### Community 81 - "ggml_build_forward_expand"
-Cohesion: 0.06
-Nodes (23): OnLongClickListener, Boolean, ImageView, MotionEvent, TextView, ViewHolder, KeyboardWrapperView, Boolean (+15 more)
+Cohesion: 0.08
+Nodes (6): Listener, SuggestionStripView, addPinnedKey(), removePinnedKey(), OnLongClickListener, OnSharedPreferenceChangeListener
 
 ### Community 82 - "gguf_get_or_add_key"
 Cohesion: 0.08
-Nodes (27): createSubDict(), DictionaryFacilitatorImpl, DictionaryGroup, findDictionaryGroupWithLocale(), getUsedLocales(), includeAtLeastTwoWordSuggestions(), isEmojiOrTypedWord(), Array (+19 more)
+Nodes (5): NgramProperty, ProbabilityInfo, WeightedString, WordProperty, CombinedFormatUtils
 
 ### Community 83 - "whisper_layer_encoder"
-Cohesion: 0.07
-Nodes (20): ReentrantLock, SwipeAction, createPrefKeyForBooleanSettings(), findIndexOfDefaultSetting(), Configuration, Context, Drawable, File (+12 more)
+Cohesion: 0.08
+Nodes (16): SwipeAction, createPrefKeyForBooleanSettings(), findIndexOfDefaultSetting(), getTransitionAnimationScale(), isFloatingKeyboardEnabled(), readFloatingHeight(), readFloatingWidth(), setFloatingSize() (+8 more)
 
 ### Community 84 - "ggml_view_tensor"
-Cohesion: 0.05
-Nodes (45): ggml_type, ggml_backend_cpu_set_n_threads(), ggml_backend_is_cpu(), ggml_ftype_to_ggml_type(), ggml_time_us(), map, ggml_graph_compute_helper(), whisper_backend_init() (+37 more)
+Cohesion: 0.06
+Nodes (12): AndroidEmojiSupportFileParser, EmojiUCDTestFileParser, main(), MakeEmojiKeys, Options, writeEmojiGroup(), writeEmojis(), writeMinApiLevels() (+4 more)
 
 ### Community 85 - "quantize_row_q8_1"
-Cohesion: 0.18
-Nodes (13): block_q8_0, block_q8_1, ggml_quantize_q8_0(), float32x4_t, dequantize_row_q8_0(), hsum_i32_4(), hsum_i32_8(), quantize_row_q8_0() (+5 more)
+Cohesion: 0.29
+Nodes (8): block_q8_1, hsum_i32_4(), hsum_i32_8(), quantize_row_q8_0(), quantize_row_q8_1(), quantize_row_q8_1_reference(), vcvtnq_s32_f32(), vmaxvq_f32()
 
 ### Community 86 - "whisper_hparams"
-Cohesion: 0.05
-Nodes (66): BinaryDictionaryShortcutIterator, DicNode, DicNodeVector, MultiBigramMap, NgramContext, NgramListener, NgramProperty, PtNodeParams (+58 more)
+Cohesion: 0.06
+Nodes (43): Ver4PatriciaTriePolicy, BIGRAM_COUNT_QUERY, createAndGetAllChildDicNodes, DUMMY_PROBABILITY_FOR_VALID_WORDS, flush, flushWithGC, getBigramsPositionOfPtNode, getCodePointsAndReturnCodePointCount (+35 more)
 
 ### Community 87 - "ggml_set_op_params"
-Cohesion: 0.08
-Nodes (18): isSpaceOrEnter(), KeyboardState, Boolean, Int, String, Mode, SavedKeyboardState, SwitchActions (+10 more)
+Cohesion: 0.07
+Nodes (14): CombinerChain, createCombiningEvent(), createConsumedEvent(), createCursorMovedEvent(), createEventForCodePointFromAlreadyTypedText(), createEventForCodePointFromUnknownSource(), createHardwareKeypressEvent(), createPunctuationSuggestionPickedEvent() (+6 more)
 
 ### Community 88 - "string"
-Cohesion: 0.04
-Nodes (13): BogusMoveEventDetector, String, Spec, TimerProxy, TypingTimeRecorder, ArrayList, Nullable, TypedArray (+5 more)
+Cohesion: 0.19
+Nodes (19): whisper_grammar, whisper_grammar_accept(), whisper_grammar_advance_stack(), whisper_grammar_candidate, code_points, partial_utf8, whisper_grammar_init(), whisper_grammar_is_end_of_sequence() (+11 more)
 
 ### Community 89 - "ggml_rope_impl"
-Cohesion: 0.29
-Nodes (6): 1. `models`, 2. `personal_dictionary`, 3. `dictionary_keywords`, 4. `corrections`, Database Schema Documentation, Tables
+Cohesion: 0.06
+Nodes (17): PtNodeParams, mBigramLinkedNodePos, mBigramPos, mChildrenPos, mChildrenPosFieldPos, mCodePointCount, mCodePoints, mFlags (+9 more)
 
 ### Community 90 - "gguf_write_to_buf"
-Cohesion: 0.05
-Nodes (49): ColumnScope, BackButton(), Boolean, Theme(), initPreview(), Context, AboutScreen(), Preview() (+41 more)
+Cohesion: 0.07
+Nodes (34): ColumnScope, SearchIcon(), initPreview(), AboutScreen(), Preview(), AdvancedSettingsScreen(), Preview(), AppearanceScreen() (+26 more)
 
 ### Community 91 - "whisper_global"
-Cohesion: 0.06
-Nodes (44): String, SuppressWarnings, TouchPositionCorrection, assertAreExpected(), assertIsExpected(), autoMultiTextKey(), buildKeyboard(), canLoadKeyboard() (+36 more)
+Cohesion: 0.04
+Nodes (44): ScoringParams, ACCENT_ERROR_PENALTY_FOR_EXACT_MATCH, ADDITIONAL_PROXIMITY_COST, AUTOCORRECT_OUTPUT_THRESHOLD, CASE_ERROR_PENALTY_FOR_EXACT_MATCH, COST_COMPLETION, COST_FIRST_COMPLETION, COST_SECOND_OR_LATER_WORD_FIRST_CHAR_UPPERCASE (+36 more)
 
 ### Community 92 - "ggml_cont_4d"
-Cohesion: 0.18
-Nodes (9): Exception, AudioCaptureFailed, InvalidAudio, ModelNotFound, VelaException, WhisperError, VelaExceptionTest, String (+1 more)
-
-### Community 93 - "ggml_compute_forward_rope_f16"
-Cohesion: 0.05
-Nodes (28): Comparable, DictionaryHeader, Locale, String, NgramContext, Object, Override, NgramProperty (+20 more)
+Cohesion: 0.15
+Nodes (9): AudioRecorder, AudioCaptureFailed, InvalidAudio, ModelNotFound, VelaException, WhisperError, VelaExceptionTest, UnsupportedFormatException (+1 more)
 
 ### Community 94 - "AudioConverterTest"
-Cohesion: 0.07
-Nodes (27): getAllIcons(), KeyboardIconsSet, Context, Drawable, Int, List, Map, String (+19 more)
+Cohesion: 0.05
+Nodes (4): DictionaryFacilitator, DictionaryFacilitatorLruCache, DictionaryFacilitatorProvider, StatsUtilsManager
 
 ### Community 95 - "whisper_pair"
-Cohesion: 0.07
-Nodes (50): ggml_opt_callback, clear_numa_thread_affinity(), ggml_compute_forward_out_prod(), ggml_compute_forward_out_prod_f32(), ggml_compute_forward_out_prod_q_f32(), ggml_compute_forward_repeat_back(), ggml_compute_forward_repeat_back_f32(), ggml_cycles() (+42 more)
+Cohesion: 0.06
+Nodes (54): ggml_backend_cpu_graph_compute(), ggml_backend_cpu_graph_plan_compute(), ggml_compute_forward_out_prod(), ggml_compute_forward_out_prod_f32(), ggml_compute_forward_out_prod_q_f32(), ggml_cross_entropy_loss(), ggml_cycles(), ggml_cycles_per_ms() (+46 more)
 
 ### Community 96 - "ggml_map_binary_impl_f32"
-Cohesion: 0.06
-Nodes (46): DictionaryStructureWithBufferPolicy, BinaryDictionaryShortcutIterator, DicNode, DicNodeVector, MultiBigramMap, NgramListener, PtNodeParams, WordIdArrayView (+38 more)
+Cohesion: 0.14
+Nodes (18): BigramMap, MultiBigramMap, addBigramsForWord, MultiBigramMap::BigramMap::getBigramProbability(), MultiBigramMap::BigramMap::init(), getBigramProbability, MAX_CACHED_PREV_WORDS_IN_BIGRAM_MAP, mBigramMaps (+10 more)
 
 ### Community 97 - "ggml_compute_forward_sum"
-Cohesion: 0.05
-Nodes (22): Callback, HandlerThread, Suggest, EditorInfo, NonNull, Nullable, TreeSet, InputLogicHandler (+14 more)
+Cohesion: 0.07
+Nodes (6): Callback, CapsMode, InputLogicHandler, PrivateCommandPerformer, LastComposedWord, GestureConsumer
 
 ### Community 98 - "ggml_map_unary_impl_f32"
-Cohesion: 0.53
-Nodes (6): ggml_unary_op_f32_t, ggml_compute_forward_map_unary(), ggml_compute_forward_map_unary_f32(), ggml_map_unary_f32(), ggml_map_unary_impl_f32(), ggml_map_unary_inplace_f32()
+Cohesion: 0.08
+Nodes (14): AndroidSpellCheckerSession, AndroidSpellCheckerSessionFactory, AndroidWordLevelSpellCheckerSession, Checkabiliy, getCheckabilityInScript(), getResult(), Result, SuggestionsCache (+6 more)
 
 ### Community 99 - "quantize_row_q5_0_reference"
-Cohesion: 0.05
-Nodes (56): BinaryDictionaryShortcutIterator, DicNode, DicNodeVector, MultiBigramMap, NgramContext, NgramListener, NgramProperty, UnigramProperty (+48 more)
+Cohesion: 0.06
+Nodes (28): Dictionary, DictionaryStructureWithBufferPolicy, DicTraverseSession, CACHE_START_INPUT_LENGTH_THRESHOLD, const, DICTIONARY_SIZE_THRESHOLD_TO_USE_LARGE_CACHE_FOR_SUGGESTION, DicTraverseSession, getDictionaryStructurePolicy (+20 more)
 
 ### Community 100 - "quantize_row_q5_1_reference"
-Cohesion: 0.05
-Nodes (10): DicNodeProperties, DicNodeState, false, DicNode, mDicNodeProperties, mDicNodeState, AK_FORCE_INLINE, ErrorType (+2 more)
+Cohesion: 0.08
+Nodes (5): DicNode, mDicNodeProperties, mDicNodeState, DicNodeProperties, DicNodeState
 
 ### Community 101 - "ggml_map_custom1_impl_f32"
-Cohesion: 0.06
-Nodes (33): KP, LocaleList, decodePrivateImeOptions(), EmojiSearchActivity, encodePrivateImeOptions(), initDictionaryFacilitator(), Bundle, Configuration (+25 more)
+Cohesion: 0.13
+Nodes (15): decodePrivateImeOptions(), EmojiSearchActivity, encodePrivateImeOptions(), initDictionaryFacilitator(), PrivateImeOptions, EmojiParser, getCode(), getEmojiDefaultVersion() (+7 more)
 
 ### Community 102 - "ggml_map_custom2_impl_f32"
-Cohesion: 0.09
-Nodes (38): pair, vector, decode_utf8(), dft(), fft(), get_signal_energy(), hann_window(), log_mel_spectrogram() (+30 more)
-
-### Community 103 - "ggml_set_f32"
-Cohesion: 0.09
-Nodes (16): Lock, ExpandableBinaryDictionary, ArrayList, AtomicBoolean, BinaryDictionary, Context, File, Locale (+8 more)
+Cohesion: 0.05
+Nodes (29): ProximityInfo, CELL_HEIGHT, CELL_WIDTH, GRID_HEIGHT, GRID_WIDTH, HAS_TOUCH_POSITION_CORRECTION_DATA, KEY_COUNT, KEYBOARD_HEIGHT (+21 more)
 
 ### Community 104 - ".convertPcmToFloat"
-Cohesion: 0.06
-Nodes (58): SuggestInterfacePtr, CodePointArrayView, DictionaryStructureWithBufferPolicy, DicTraverseSession, JNIEnv, NgramContext, NgramProperty, ProximityInfo (+50 more)
+Cohesion: 0.08
+Nodes (43): Dictionary, addNgramEntry, addUnigramEntry, Dictionary::Dictionary(), flush, flushWithGC, getMaxProbabilityOfExactMatches, getNextWordAndNextToken (+35 more)
 
 ### Community 105 - "ggml_map_custom1_impl"
-Cohesion: 0.04
-Nodes (41): DictionaryHeaderStructurePolicy, AK_FORCE_INLINE, AttributeMap, DictionaryFlags, EntryCounts, FORMAT_VERSION, HeaderPolicy, DATE_KEY (+33 more)
+Cohesion: 0.22
+Nodes (11): DictionaryHeaderStructurePolicy, DigraphUtils, GERMAN_UMLAUT_DIGRAPHS, getAllDigraphsForDigraphTypeAndReturnSize, getDigraphCodePointForIndex, getDigraphForCodePoint, getDigraphForDigraphTypeAndCodePoint, getDigraphTypeForDictionary (+3 more)
 
 ### Community 106 - "ggml_map_custom2_impl"
-Cohesion: 1.00
-Nodes (3): export_corrections(), main(), pull_adb_db()
+Cohesion: 0.06
+Nodes (31): KeyLabel, KeyType, KeyTypeSerializer, PopupSet, SimplePopups, AutoTextKeyData, createActionPopupKeys(), getActionKeyPopupKeys() (+23 more)
 
 ### Community 107 - "ggml_compute_forward_leaky_relu_f32"
-Cohesion: 0.15
-Nodes (12): Building & publishing, Consuming from VelaBoard, License, Model format, Modules, On-device LLM dependencies, One-time local setup (required before building), vela-cleaner (+4 more)
+Cohesion: 0.11
+Nodes (5): InputView, KeyboardTopPaddingForwarder, MoreSuggestionsViewCanceler, MotionEventForwarder, ShadowKeyboardSwitcher
 
 ### Community 108 - "CMakeCCompilerId.c"
-Cohesion: 0.14
-Nodes (13): Bottom Sheets, Brand & Style, Buttons, Cards & Lists, Chips, Colors, Components, Elevation & Depth (+5 more)
+Cohesion: 0.07
+Nodes (9): EventDecoder, HardwareEventDecoder, HardwareKeyboardEventDecoder, isDpadDirection(), isMetaLock(), KeyboardActionListenerImpl, MetaPressState, toMetaState() (+1 more)
 
 ### Community 109 - "VoiceAccessibilityService"
-Cohesion: 0.03
-Nodes (58): ProximityInfoParams, ANGLE_WEIGHT, CENTER_VALUE_OF_NORMALIZED_DISTRIBUTION, CORNER_ANGLE_THRESHOLD, CORNER_ANGLE_THRESHOLD_FOR_POINT_SCORE, CORNER_CHECK_DISTANCE_THRESHOLD_SCALE, CORNER_SCORE, CORNER_SUM_ANGLE_THRESHOLD (+50 more)
+Cohesion: 0.05
+Nodes (33): AI / LLM Usage, About the Code, Adding / Adjusting Layouts, Dictionaries, Getting Started, Guidelines, Necessary, Recommended (+25 more)
 
 ### Community 110 - "CMakeCCompilerId.c"
-Cohesion: 0.08
-Nodes (45): isDeviceLocked(), isUserLocked(), Boolean, Context, AppUpgrade, checkVersionUpgrade(), Context, File (+37 more)
+Cohesion: 0.09
+Nodes (29): Application, isDeviceLocked(), isUserLocked(), App, getApp(), AppUpgrade, checkVersionUpgrade(), transferOldPinnedClips() (+21 more)
 
 ### Community 111 - "CMakeCXXCompilerId.cpp"
-Cohesion: 0.18
-Nodes (10): 1. Project Overview, 2. Target Audience, 3. Product Features & Scope, 4. Design System (Lumina Sonic), 5. Technical Requirements, 6. Success Metrics, Core Value Proposition, Phase 1: Core Experience (Current) (+2 more)
+Cohesion: 0.09
+Nodes (3): DynamicGridKeyboard, GridKey, RecentEmojis
 
 ### Community 112 - "CMakeCCompilerId.c"
 Cohesion: 0.09
-Nodes (49): DicNode, DicNodeVector, DictionaryStructureWithBufferPolicy, WordIdArrayView, DicNode, DicNodeUtils, getAllChildDicNodes, initAsRoot (+41 more)
+Nodes (5): TypingTraversal, CORRECT_NEW_WORD_SPACE_SUBSTITUTION, CORRECT_OMISSION, ProximityType, sInstance
+
+### Community 113 - "CMakeCXXCompilerId.cpp"
+Cohesion: 0.11
+Nodes (6): LayoutUtils, ShadowFacilitator, suggestion(), suggestionResults(), SuggestTest, TestDict
 
 ### Community 114 - "CMakeCCompilerId.c"
-Cohesion: 0.25
-Nodes (7): Combined Issues: Offline Transcription IME, Issue 01: Setup Project Scaffolding & Native Android IME Service, Issue 02: Model Downloader and Scoped Storage Manager, Issue 03: Native IME Voice Typing Pane and Waveform UI, Issue 04: On-device Transcriber Engine (Whisper) Integration, Issue 05: Hybrid Cleaner Pipeline (Regex + LLM), Issue 06: IME Commit Integration & Final End-to-End Testing
+Cohesion: 0.08
+Nodes (14): Ver4DictBuffers, flushDictBuffers, flushHeaderAndDictBuffers, mDictBuffer, mExpandableHeaderBuffer, mExpandableTrieBuffer, mHeaderBuffer, mHeaderPolicy (+6 more)
 
 ### Community 115 - "CMakeCXXCompilerId.cpp"
-Cohesion: 0.53
-Nodes (6): ggml_binary_op_f32_t, ggml_compute_forward_map_binary(), ggml_compute_forward_map_binary_f32(), ggml_map_binary_f32(), ggml_map_binary_impl_f32(), ggml_map_binary_inplace_f32()
+Cohesion: 0.11
+Nodes (9): AbstractKeyData, CaseSelector, CharWidthSelector, KanaSelector, KeyboardStateSelector, LayoutDirectionSelector, ShiftStateSelector, VariationSelector (+1 more)
 
 ### Community 116 - "CMakeCCompilerId.c"
-Cohesion: 0.29
-Nodes (6): Core Domain Vocabulary, Core Features, Overview, Spec: Offline Transcription IME, Target Platform, UI/UX Design (Voice Typing Pane)
+Cohesion: 0.09
+Nodes (3): EditorInfoCompatUtils, UIHandler, ShadowHandler
 
 ### Community 117 - "VelaRecordingCallback"
-Cohesion: 0.05
-Nodes (38): unordered_map, ProximityInfo, CELL_HEIGHT, CELL_WIDTH, getCodePointOf, getKeyCenterXOfKeyIdG, getKeyCenterYOfKeyIdG, getKeyKeyDistanceG (+30 more)
+Cohesion: 0.10
+Nodes (5): CleanerConfig, TextCleaner, TextCleanerTest, Model, Tokenizer
 
 ### Community 118 - "CMakeCCompilerId.c"
-Cohesion: 0.10
-Nodes (15): ArrayList, Boolean, Float, FloatArray, Int, List, Locale, Long (+7 more)
+Cohesion: 0.08
+Nodes (23): readPtNodeInfo, PatriciaTriePolicy, createAndGetAllChildDicNodes, createAndGetLeavingChildNode, getBigramsPositionOfPtNode, getNextWordAndNextToken, getShortcutIterator, getShortcutPositionOfPtNode (+15 more)
 
 ### Community 119 - "CMakeCXXCompilerId.cpp"
 Cohesion: 0.07
 Nodes (28): Recording, RecordingCard, styles, OverlayLogoProps, styles, styles, TranscriptionEditor(), TranscriptionEditorProps (+20 more)
 
 ### Community 120 - "ggml_compute_forward_sum"
-Cohesion: 0.05
-Nodes (33): DicNode_InputStateG, copy(), DicNodeProfiler, CorrectionType, DicNode, DicTraverseSession, Weighting, DicNode (+25 more)
+Cohesion: 0.09
+Nodes (28): DicNode, DicNode_InputStateG, DicTraverseSession, MultiBigramMap, profile(), Weighting, addCostAndForwardInputIndex, getAdditionalProximityCost (+20 more)
 
 ### Community 121 - "ggml_compute_forward_out_prod_f32"
-Cohesion: 0.09
-Nodes (42): DumppedFullEntryInfo, EntryInfoToTurncate, EntryRange, EntryCounts, FILE, HeaderPolicy, LanguageModelDictContent, ProbabilityEntry (+34 more)
+Cohesion: 0.14
+Nodes (22): LanguageModelDictContent, createAndGetBitmapEntryIndex, exportAllNgramEntriesRelatedToWord, exportAllNgramEntriesRelatedToWordInner, getBitmapEntryIndex, getNgramProbabilityEntry, getProbabilityEntries, GLOBAL_COUNTERS_BUFFER_INDEX (+14 more)
 
 ### Community 122 - "pthread_create"
-Cohesion: 0.27
-Nodes (10): ggml_custom1_op_f32_t, ggml_custom2_op_f32_t, ggml_compute_forward_map_custom1_f32(), ggml_compute_forward_map_custom2_f32(), ggml_map_custom1_f32(), ggml_map_custom1_impl_f32(), ggml_map_custom1_inplace_f32(), ggml_map_custom2_f32() (+2 more)
+Cohesion: 0.06
+Nodes (35): A, B, whisper_decoder, completed, failed, grammar, has_ts, i_batch (+27 more)
 
 ### Community 123 - "ggml_allocr_free"
-Cohesion: 0.05
-Nodes (42): GestureDataInfo, ConfirmationDialog(), Composable, Modifier, String, Unit, PreviewConfirmDialog(), CustomizeIconsDialog() (+34 more)
+Cohesion: 0.08
+Nodes (30): Ver4PatriciaTriePolicy, BIGRAM_COUNT_QUERY, createAndGetAllChildDicNodes, flush, flushWithGC, getCodePointsAndReturnCodePointCount, getNextWordAndNextToken, getShortcutIterator (+22 more)
 
 ### Community 124 - "build.gradle.kts"
-Cohesion: 0.11
-Nodes (24): U, AbstractKeyData, KeyType, PopupSet, SimplePopups, AutoTextKeyData, createActionPopupKeys(), getActionKeyPopupKeys() (+16 more)
+Cohesion: 0.12
+Nodes (32): getAllChildDicNodes, DicNode, DicTraverseSession, ProximityInfo, SuggestInterface, getSuggestions, SuggestionResults, ProximityInfo (+24 more)
 
 ### Community 125 - "ggml_rope_impl"
-Cohesion: 0.08
-Nodes (24): AccessibilityNodeInfoCompat, AccessibilityNodeProviderCompat, KeyboardAccessibilityNodeProvider, AccessibilityEvent, Boolean, Bundle, Int, String (+16 more)
+Cohesion: 0.05
+Nodes (9): AccessibilityDelegateCompat, AccessibilityNodeInfoCompat, AccessibilityNodeProviderCompat, KeyboardAccessibilityDelegate, KeyboardAccessibilityNodeProvider, MainKeyboardAccessibilityDelegate, PopupKeysKeyboardAccessibilityDelegate, PopupKeysKeyboardView (+1 more)
 
 ### Community 126 - "ggml_set_f32"
-Cohesion: 0.08
-Nodes (26): RuntimeException, actionName(), equivalentEditorInfoForKeyboard(), KeyboardElement, KeyboardId, KeyboardMode, Boolean, EditorInfo (+18 more)
+Cohesion: 0.12
+Nodes (12): KeySpecParserError, buildEmojiClipBottomRow(), Builder, clearKeyboardCache(), getFakeKeyboardId(), InternalAction, KeyboardLayoutSet, KeyboardLayoutSetException (+4 more)
 
 ### Community 127 - "ggml_map_custom2_impl_f32"
-Cohesion: 0.83
-Nodes (4): ggml_custom1_op_t, ggml_map_custom1(), ggml_map_custom1_impl(), ggml_map_custom1_inplace()
-
-### Community 129 - "ggml_nbytes"
-Cohesion: 0.29
-Nodes (6): Conventions, Issue tracker: GitHub, Pull requests as a triage surface, Wayfinding operations, When a skill says "fetch the relevant ticket", When a skill says "publish to the issue tracker"
-
-### Community 131 - "byteswap_tensor_data"
-Cohesion: 0.17
-Nodes (11): 1. Source constraint, 2. What config must the fork give the SDK, 3. Where config lives: Vela app (models.db) vs HeliBoard-style (SharedPreferences), 4. PersonalDictionary interface → mirroring/extending for shortcut expansions, 5. Licensing / boundary — config ownership, 6. Concrete recommendation, 7. Assumptions, inferences & open questions, Can Vela-app `models.db` shortcuts be reached from the fork? (+3 more)
-
-### Community 132 - "string"
-Cohesion: 0.09
-Nodes (15): DynamicGridKeyboard, ArrayDeque, ArrayList, Collection, Integer, List, NonNull, Object (+7 more)
-
-### Community 134 - "ggml_map_custom3_impl_f32"
-Cohesion: 0.83
-Nodes (4): ggml_custom3_op_t, ggml_map_custom3(), ggml_map_custom3_impl(), ggml_map_custom3_inplace()
-
-### Community 135 - "PersonalDictionaryTest"
-Cohesion: 0.10
-Nodes (27): HistoricalInfo, mCount, mLevel, mTimestamp, BigramDictContent, NgramProperty, HeaderPolicy, NgramProperty (+19 more)
-
-### Community 136 - "whisper_global"
-Cohesion: 0.25
-Nodes (8): ggml_log_callback, ggml_log_level, whisper_global, log_callback, log_callback_user_data, whisper_log_callback_default(), whisper_log_internal(), whisper_log_set()
-
-### Community 137 - "ggml_add_rel_pos_impl"
-Cohesion: 0.33
-Nodes (5): Agent skills, Domain docs, graphify, Issue tracker, Triage labels
-
-### Community 138 - "ggml_cont_4d"
-Cohesion: 0.06
-Nodes (28): BufferWithExtendableBuffer, FORMAT_VERSION, HeaderPolicy, MmappedBufferPtr, Ver4DictBuffersPtr, AK_FORCE_INLINE, BigramDictContent, BufferWithExtendableBuffer (+20 more)
-
-### Community 139 - "ggml_backend_cpu_supports_op"
-Cohesion: 0.09
-Nodes (23): AtomicInteger, Comparator, ContentResolver, Runnable, ContactsContentObserver, AtomicBoolean, ContentObserver, Context (+15 more)
-
-### Community 140 - "build.gradle.kts"
-Cohesion: 0.07
-Nodes (25): DictionaryShortcutsStructurePolicy, ShortcutDictContent, TerminalPositionLookupTable, Ver4ShortcutListPolicy, mShortcutDictContent, ReadOnlyByteArrayView, ShortcutFlags, AK_FORCE_INLINE (+17 more)
-
-### Community 142 - "PopupKeysKeyboardView"
-Cohesion: 0.09
-Nodes (13): Int, MotionEvent, PopupKeysKeyboardAccessibilityDelegate, AttributeSet, Canvas, Context, Drawable, MotionEvent (+5 more)
-
-### Community 143 - "PtNodeParams"
-Cohesion: 0.08
-Nodes (19): AK_FORCE_INLINE, NodeFlags, PtNodeParams, mBigramLinkedNodePos, mBigramPos, mChildrenPos, mChildrenPosFieldPos, mCodePointCount (+11 more)
-
-### Community 144 - "build.gradle.kts"
-Cohesion: 0.04
-Nodes (45): ScoringParams, ACCENT_ERROR_PENALTY_FOR_EXACT_MATCH, ADDITIONAL_PROXIMITY_COST, AUTOCORRECT_OUTPUT_THRESHOLD, CASE_ERROR_PENALTY_FOR_EXACT_MATCH, COST_COMPLETION, COST_FIRST_COMPLETION, COST_SECOND_OR_LATER_WORD_FIRST_CHAR_UPPERCASE (+37 more)
-
-### Community 145 - "quantize_row_q4_1_reference"
-Cohesion: 0.07
-Nodes (27): CharUtilsTest, TestIsAsciiUpper, TestIsIntentionalOmissionCodePoint, TestIsInUnicodeSpace, TestToBaseCodePoint, TestToBaseLowerCase, TestToLowerCase, isUsed() (+19 more)
-
-### Community 146 - "TranscriptionResult"
-Cohesion: 0.11
-Nodes (25): PtNodeReadingState, TraversingEventListener, PtNodeParams, DynamicPtReadingHelper, followForwardLink, getCodePointsAndReturnCodePointCount, getTerminalPtNodePositionOfWord, MAX_CHILD_COUNT_TO_AVOID_INFINITE_LOOP (+17 more)
-
-### Community 147 - "withVoiceIme.js"
-Cohesion: 0.11
-Nodes (44): ggml_tensor, ggml_blck_size(), ggml_compute_forward_conv_transpose_1d(), ggml_compute_forward_conv_transpose_1d_f16_f32(), ggml_compute_forward_conv_transpose_1d_f32(), ggml_compute_forward_conv_transpose_2d(), ggml_compute_forward_diag_mask_f32(), ggml_compute_forward_dup_bytes() (+36 more)
-
-### Community 148 - "WaveformView"
-Cohesion: 0.12
-Nodes (9): Path, Rect, RectF, RoundedLine, fs, path, fs, path (+1 more)
-
-### Community 149 - "Domain Docs"
-Cohesion: 0.33
-Nodes (5): Before exploring, read these, Domain Docs, File structure, Flag ADR conflicts, Use the glossary's vocabulary
-
-### Community 150 - "RichInputMethodSubtype"
-Cohesion: 0.08
-Nodes (29): get(), Any, Boolean, InputMethodSubtype, Int, Locale, String, RichInputMethodSubtype (+21 more)
-
-### Community 151 - "quantize_row_q5_0_reference"
-Cohesion: 0.12
-Nodes (17): block_q4_1, block_q5_0, block_q5_1, ggml_quantize_chunk(), ggml_quantize_q4_1(), ggml_quantize_q5_0(), ggml_quantize_q5_1(), dequantize_row_q4_1() (+9 more)
-
-### Community 152 - "SingleDictionaryFacilitator"
-Cohesion: 0.09
-Nodes (14): Boolean, Context, Int, List, Locale, Long, LruCache, NgramContext (+6 more)
-
-### Community 153 - "DicNodeStateOutput"
 Cohesion: 0.05
-Nodes (19): DicNodeStateScoring, DicNodeState, DicNodeState, mDicNodeStateInput, mDicNodeStateOutput, mDicNodeStateScoring, AK_FORCE_INLINE, DicNodeStateInput (+11 more)
+Nodes (22): DicNodePriorityQueue, explicit, mDicNodePool, mDicNodesQueue, mMaxSize, DicNode, DicNodesCache, explicit (+14 more)
 
-### Community 154 - "DictionaryFacilitator"
-Cohesion: 0.09
-Nodes (14): DictionaryFacilitator, DictionaryInitializationListener, Boolean, Context, List, Locale, LruCache, NgramContext (+6 more)
-
-### Community 155 - "SubtypeScreen"
-Cohesion: 0.07
-Nodes (38): Alignment, Painter, Composable, List, Modifier, T, Unit, MultiListPickerDialog() (+30 more)
-
-### Community 162 - "DictionaryEntry"
-Cohesion: 0.12
-Nodes (16): CharacterStyle, ArrayList, AttributeSet, CharSequence, Context, Drawable, Nullable, Resources (+8 more)
-
-### Community 166 - "InputAttributes"
-Cohesion: 0.10
-Nodes (13): InputType, AppWorkarounds, Int, String, InputAttributes, EditorInfo, NonNull, Override (+5 more)
-
-### Community 171 - "index.js"
-Cohesion: 0.09
-Nodes (32): DictionaryBigramsStructurePolicy, DictionaryShortcutsStructurePolicy, NodeFlags, DictionaryBigramsStructurePolicy, DictionaryShortcutsStructurePolicy, AK_FORCE_INLINE, NodeFlags, PatriciaTrieReadingUtils (+24 more)
-
-### Community 175 - "KeyboardAccessibilityDelegate"
-Cohesion: 0.08
-Nodes (12): AccessibilityDelegateCompat, KV, AccessibilityLongPressTimer, Message, LongPressTimerCallback, KeyboardAccessibilityDelegate, Boolean, Int (+4 more)
-
-### Community 176 - "LocaleKeyboardInfos"
-Cohesion: 0.11
-Nodes (26): Iterable, MutableCollection, addFixedColumnOrder(), addLocaleKeyTextsToParams(), adjustAutoColumnOrder(), createLocaleKeyTexts(), genericCurrencyKey(), getCurrency() (+18 more)
-
-### Community 177 - "MutableEntryCounters"
-Cohesion: 0.07
-Nodes (26): LanguageModelDictContentTest, TestGetWordProbability, TestIterateProbabilityEntry, TestUnigramProbability, TestUnigramProbabilityWithHistoricalInfo, EntryCounts, HeaderPolicy, PtNodeParams (+18 more)
-
-### Community 178 - "KeyboardActionListenerImpl"
-Cohesion: 0.12
-Nodes (9): isMetaLock(), KeyboardActionListenerImpl, Boolean, InputMethodSubtype, Int, KeyEvent, SparseArray, MetaPressState (+1 more)
-
-### Community 179 - "CONTRIBUTING.md"
-Cohesion: 0.05
-Nodes (33): AI / LLM Usage, About the Code, Adding / Adjusting Layouts, Dictionaries, Getting Started, Guidelines, Necessary, Recommended (+25 more)
-
-### Community 180 - "SpacingAndPunctuations"
-Cohesion: 0.06
-Nodes (8): Boolean, List, Resources, String, SpacingAndPunctuations, Int, String, StringUtilsTest
-
-### Community 181 - "AudioRecord"
-Cohesion: 0.20
-Nodes (37): jboolean, jbooleanArray, jclass, jfloatArray, jint, jintArray, jlong, JNIEnv (+29 more)
-
-### Community 182 - "DicNodesCache"
-Cohesion: 0.08
-Nodes (17): DicNode, DicNodesCache, explicit, LARGE_PRIORITY_QUEUE_CAPACITY, mActiveDicNodes, mCachedDicNodesForContinuousSuggestion, mDicNodePriorityQueue0, mDicNodePriorityQueue1 (+9 more)
-
-### Community 183 - "ByteArray"
-Cohesion: 0.06
-Nodes (28): Dictionary, DictionaryStructureWithBufferPolicy, DicTraverseSession, CACHE_START_INPUT_LENGTH_THRESHOLD, const, DICTIONARY_SIZE_THRESHOLD_TO_USE_LARGE_CACHE_FOR_SUGGESTION, DicTraverseSession, mDicNodesCache (+20 more)
-
-### Community 184 - "SettingsValuesForSuggestion"
-Cohesion: 0.09
-Nodes (18): ConcurrentLinkedQueue, OnSharedPreferenceChangeListener, Semaphore, SettingsValuesForSuggestion, AndroidSpellCheckerService, ConcurrentHashMap, Integer, Intent (+10 more)
-
-### Community 185 - "LatinIME.java"
-Cohesion: 0.07
-Nodes (25): FileDescriptor, InlineSuggestionsResponse, Outline, ImeCompat, Boolean, InputMethodInfo, InputMethodSubtype, InsetsOutlineProvider (+17 more)
-
-### Community 186 - "RichInputMethodManager"
-Cohesion: 0.10
-Nodes (21): IBinder, SpannableStringBuilder, canSwitchLanguage(), forceSubtype(), getInstance(), init(), InputMethodInfoCache, Boolean (+13 more)
-
-### Community 187 - "pt_node_params.h"
-Cohesion: 0.08
-Nodes (27): PtNodeReader, BufferWithExtendableBuffer, HeaderPolicy, ProbabilityDictContent, Ver4PatriciaTrieNodeReader, mBuffer, mHeaderPolicy, mProbabilityDictContent (+19 more)
-
-### Community 188 - "ColorsScreen"
-Cohesion: 0.07
-Nodes (27): Color, Constants, ExtraValue, ImeOption, NonNull, String, Separators, Subtype (+19 more)
-
-### Community 189 - "TimerHandler"
-Cohesion: 0.11
-Nodes (4): DrawingProxy, Message, Override, TimerHandler
-
-### Community 190 - "StringUtils"
-Cohesion: 0.14
-Nodes (8): codePointAt(), CharSequence, Locale, NonNull, Nullable, String, StringUtils, of()
-
-### Community 191 - "InputView.java"
-Cohesion: 0.12
-Nodes (13): FrameLayout, InputView, AttributeSet, Context, MotionEvent, Override, Rect, SuppressLint (+5 more)
-
-### Community 192 - "gguf_get_n_kv"
-Cohesion: 0.08
-Nodes (36): gguf_find_key(), gguf_get_arr_data(), gguf_get_arr_n(), gguf_get_arr_str(), gguf_get_arr_type(), gguf_get_key(), gguf_get_kv_type(), gguf_get_n_kv() (+28 more)
-
-### Community 193 - "WordAttributes"
-Cohesion: 0.10
-Nodes (28): WordAttributes, mIsBlacklisted, mIsNotAWord, mIsPossiblyOffensive, mProbability, getProbabilityOfWord, MultiBigramMap, getBigramNodeImprobability (+20 more)
-
-### Community 194 - "Ver4DictConstants"
+### Community 128 - "ggml_can_repeat"
 Cohesion: 0.06
 Nodes (35): Ver4DictConstants, BIGRAM_ADDRESS_TABLE_BLOCK_SIZE, BIGRAM_ADDRESS_TABLE_DATA_SIZE, BIGRAM_CONTENT_TABLE_FILE_EXTENSION, BIGRAM_FILE_EXTENSION, BIGRAM_FLAGS_FIELD_SIZE, BIGRAM_HAS_NEXT_MASK, BIGRAM_LARGE_PROBABILITY_FIELD_SIZE (+27 more)
 
-### Community 195 - "proximity_info_state_utils.cpp"
-Cohesion: 0.18
-Nodes (34): NearKeycodesSet, NearKeysDistanceMap, ProximityInfo, vector, ProximityInfoState::initInputParams(), ProximityInfo, unordered_map, vector (+26 more)
+### Community 129 - "ggml_nbytes"
+Cohesion: 0.24
+Nodes (9): HeaderPolicy, Ver4DictBuffers, Ver4PatriciaTrieNodeReader, Ver4PatriciaTrieNodeWriter, Ver4PatriciaTrieWritingHelper, mBuffers, runGC, truncateUnigrams (+1 more)
 
-### Community 196 - "ForgettingCurveUtils"
-Cohesion: 0.10
-Nodes (30): ProbabilityTable, getProperty, needsToRunGC, getProperty, needsToRunGC, EntryCounts, HeaderPolicy, ForgettingCurveUtils (+22 more)
-
-### Community 197 - "TextCleaner"
-Cohesion: 0.15
-Nodes (3): CleanerConfig, TextCleaner, TextCleanerTest
-
-### Community 198 - "trie_map.cpp"
-Cohesion: 0.18
-Nodes (18): Entry, ReadWriteByteArrayView, AK_FORCE_INLINE, addNewEntryByExpandingTable, addNewEntryByResolvingConflict, allocateTable, dump, freeTable (+10 more)
-
-### Community 199 - "Ver4PatriciaTrieNodeWriter"
-Cohesion: 0.13
-Nodes (33): PtNodeWriter, DictPositionRelocationMap, NgramProperty, ProbabilityEntry, PtNodeParams, UnigramProperty, WordIdArrayView, DynamicPtReadingHelper (+25 more)
-
-### Community 200 - "ClipboardDao"
-Cohesion: 0.15
-Nodes (13): ClipboardDao, getInstance(), getMimeTypes(), Boolean, ClipDescription, Context, Int, List (+5 more)
-
-### Community 201 - "GestureDataGatheringSettings"
-Cohesion: 0.14
-Nodes (9): GestureDataGatheringSettings, Boolean, Collection, Context, EditorInfo, Int, SharedPreferences, SortedSet (+1 more)
-
-### Community 202 - "Ver4DictConstants"
+### Community 130 - "ggml_graph_import"
 Cohesion: 0.06
-Nodes (33): Ver4DictConstants, BIGRAM_BUFFERS_INDEX, BODY_FILE_EXTENSION, FLAG_BLACKLISTED, FLAG_NOT_A_VALID_ENTRY, FLAG_NOT_A_WORD, FLAG_POSSIBLY_OFFENSIVE, FLAG_REPRESENTS_BEGINNING_OF_SENTENCE (+25 more)
+Nodes (32): Ver4DictConstants, BIGRAM_BUFFERS_INDEX, BODY_FILE_EXTENSION, FLAG_BLACKLISTED, FLAG_NOT_A_VALID_ENTRY, FLAG_NOT_A_WORD, FLAG_POSSIBLY_OFFENSIVE, FLAG_REPRESENTS_BEGINNING_OF_SENTENCE (+24 more)
 
-### Community 203 - "EditDistancePolicy"
-Cohesion: 0.08
-Nodes (23): AutocorrectionThresholdUtilsTest, SameData, EditDistance, AK_FORCE_INLINE, EditDistancePolicy, allowTransposition, getDeletionCost, getInsertionCost (+15 more)
+### Community 132 - "string"
+Cohesion: 0.12
+Nodes (3): Builder, PopupKeysKeyboard, PopupKeysKeyboardParams
 
-### Community 204 - "ByteArrayUtils"
-Cohesion: 0.15
-Nodes (12): ByteArrayUtilsTest, TestReadCodePoint, TestReadCodePointTable, TestReadInt, TestWriteAndReadCodePoint, TestWriteAndReadInt, ByteArrayUtils, CHARACTER_ARRAY_TERMINATOR (+4 more)
+### Community 133 - "ggml_backend_graph_copy"
+Cohesion: 0.10
+Nodes (12): HangulEventDecoder, LocaleUtils, LanguageOnSpacebarUtils, getEnabledPopupKeys(), getHasLocalizedNumberRow(), getMoreKeys(), getPopupKeyHintOrder(), getPopupKeyOrder() (+4 more)
 
-### Community 205 - "SubtypeSettings"
-Cohesion: 0.17
-Nodes (10): Boolean, Collection, Context, InputMethodSubtype, List, Locale, Resources, SharedPreferences (+2 more)
+### Community 134 - "ggml_map_custom3_impl_f32"
+Cohesion: 0.10
+Nodes (9): PunctuationSuggestions, DeviceProtectedUtils, protectedPrefs(), ReentrantLock, Configuration, Context, Drawable, File (+1 more)
 
-### Community 206 - "Ver4DictBuffers"
-Cohesion: 0.09
-Nodes (18): AK_FORCE_INLINE, BufferWithExtendableBuffer, HeaderPolicy, LanguageModelDictContent, MmappedBufferPtr, ShortcutDictContent, TerminalPositionLookupTable, Ver4DictBuffers (+10 more)
+### Community 135 - "PersonalDictionaryTest"
+Cohesion: 0.06
+Nodes (30): 1. Overview & Goals, 2.1 Module Structure, 2.2 Public API Surface, 2.3 File Migration Map, 2.4 JNI Renames, 2.5 Build Configuration, 2.6 Vela Voice App Migration, 2. Phase 1: vela-transcription-sdk (+22 more)
 
-### Community 207 - "AudioRecord"
+### Community 136 - "whisper_global"
+Cohesion: 0.14
+Nodes (4): KeyboardState, Alphabet, ShiftMode, of()
+
+### Community 137 - "ggml_add_rel_pos_impl"
+Cohesion: 0.04
+Nodes (27): DicNodeStateScoring, mCompletionCount, mContainedErrorTypes, mDigraphIndex, mDoubleLetterLevel, mEditCorrectionCount, mLanguageDistance, mNormalizedCompoundDistance (+19 more)
+
+### Community 138 - "ggml_cont_4d"
 Cohesion: 0.07
-Nodes (16): DicNodeStateScoring, DicNodeStateScoring, mCompletionCount, mContainedErrorTypes, mDigraphIndex, mDoubleLetterLevel, mEditCorrectionCount, mLanguageDistance (+8 more)
+Nodes (14): Ver4DictBuffers, flushHeaderAndDictBuffers, mBigramDictContent, mDictBuffer, mExpandableHeaderBuffer, mExpandableTrieBuffer, mHeaderBuffer, mHeaderPolicy (+6 more)
 
-### Community 208 - ".get"
+### Community 139 - "ggml_backend_cpu_supports_op"
 Cohesion: 0.11
-Nodes (10): EnumEntries, MutableList, TypedArray, Element, ArrayList, NonNull, Override, String (+2 more)
+Nodes (9): AtomicInteger, ContactsContentObserver, AffinityComparator, ContactsChangedListener, ContactsManager, RankedContact, ContactsBinaryDictionary, PermissionsUtil (+1 more)
 
-### Community 209 - "PersonalizationHelper.java"
-Cohesion: 0.12
-Nodes (19): FilenameFilter, SoftReference, DictFilter, ConcurrentHashMap, Context, File, Locale, NonNull (+11 more)
-
-### Community 210 - "SuggestionResults"
-Cohesion: 0.09
-Nodes (21): priority_queue, vector, SuggestedWord, mAutoCommitFirstWordConfidence, mCodePoints, mIndexToPartialCommit, mScore, mType (+13 more)
-
-### Community 211 - "Adapter"
-Cohesion: 0.10
-Nodes (6): Adapter, CustomAction, InputContentInfoCompat, KeyEvent, Override, String
-
-### Community 212 - "Dictionary"
-Cohesion: 0.10
-Nodes (13): ComposedData, createForWord(), Int, IntArray, String, Dictionary, ArrayList, Locale (+5 more)
-
-### Community 213 - "LayoutType"
-Cohesion: 0.13
-Nodes (14): LayoutType, Collection, Context, List, Locale, String, LayoutUtils, Boolean (+6 more)
-
-### Community 214 - "BufferWithExtendableBuffer"
-Cohesion: 0.12
-Nodes (22): BufferWithExtendableBuffer, checkAndPrepareWriting, copy, DEFAULT_MAX_ADDITIONAL_BUFFER_SIZE, extend, EXTEND_ADDITIONAL_BUFFER_SIZE_STEP, extendBuffer, mAdditionalBuffer (+14 more)
-
-### Community 215 - "DynamicPtUpdatingHelper"
-Cohesion: 0.14
-Nodes (27): PtNodePosArrayView, BufferWithExtendableBuffer, DynamicPtReadingHelper, NgramProperty, PtNodeParams, UnigramProperty, DynamicPtReadingHelper, DynamicPtUpdatingHelper (+19 more)
-
-### Community 216 - "ShareGestureData"
-Cohesion: 0.15
-Nodes (27): CancellationSignal, FileProvider, ParcelFileDescriptor, ClipboardContentProvider, createSendIntentChooser(), createZipFile(), deobfuscateEmail(), fileGetDelegate() (+19 more)
-
-### Community 217 - "GestureDataScreen"
-Cohesion: 0.14
-Nodes (25): Double, addWords(), AssetsDictWithInfo, BottomBar(), ButtonWithText(), CacheDictWithInfo, calculateWordWeight(), DictWithInfo (+17 more)
-
-### Community 218 - ".getOwnerInstance"
-Cohesion: 0.10
-Nodes (12): Handler, Looper, EditorInfoCompatUtils, EditorInfo, Int, List, Locale, String (+4 more)
-
-### Community 219 - "EmojiPalettesView"
-Cohesion: 0.10
-Nodes (9): OnClickListener, EmojiLayoutParams, Int, View, ViewPager2, EmojiPalettesView, EditorInfo, String (+1 more)
-
-### Community 220 - "LayoutEditDialog"
+### Community 140 - "build.gradle.kts"
 Cohesion: 0.11
-Nodes (27): TextFieldColors, CloseIcon(), DefaultButton(), DeleteButton(), EditButton(), ExpandButton(), Boolean, Int (+19 more)
+Nodes (9): Ver4ShortcutListPolicy, mShortcutDictContent, Ver4ShortcutListPolicy, mShortcutDictContent, BinaryDictionaryShortcutIterator, mHasNextShortcutTarget, mPos, mShortcutStructurePolicy (+1 more)
 
-### Community 221 - "MoreSuggestions.java"
-Cohesion: 0.14
-Nodes (11): Builder, Divider, Context, Drawable, NonNull, Override, Paint, String (+3 more)
-
-### Community 222 - "AppsManager"
-Cohesion: 0.12
-Nodes (15): AppsChangedListener, AppsManager, Context, Drawable, HashSet, Intent, List, String (+7 more)
-
-### Community 223 - "StringUtils.kt"
-Cohesion: 0.16
-Nodes (28): codePointBefore(), containsValueWhenSplit(), decapitalize(), decodeBase36(), encodeBase36(), endsWithWordCodepoint(), getFullEmojiAtEnd(), getSecondInSymbolPair() (+20 more)
-
-### Community 224 - "ClipboardHistoryManager"
-Cohesion: 0.10
-Nodes (11): ClipboardManager, ClipboardHistoryManager, Boolean, Context, EditorInfo, Int, Long, Uri (+3 more)
-
-### Community 225 - "VoiceInputMethodService"
-Cohesion: 0.13
-Nodes (12): InputMethodService, Boolean, Button, Context, EditorInfo, File, Handler, LinearLayout (+4 more)
-
-### Community 226 - "AndroidWordLevelSpellCheckerSession"
-Cohesion: 0.14
-Nodes (17): SpellCheckerService, AndroidWordLevelSpellCheckerSession, Checkabiliy, getCheckabilityInScript(), getResult(), Array, Boolean, Float (+9 more)
-
-### Community 227 - "KeySpecParser"
-Cohesion: 0.20
-Nodes (7): NonNull, Nullable, String, KeySpecParser, KeySpecParserError, Boolean, CharSequence
-
-### Community 228 - "FILE"
-Cohesion: 0.13
-Nodes (15): DictionaryStats, File, Iterable, Locale, Override, String, ContentObserver, Context (+7 more)
-
-### Community 229 - "StatsUtils"
+### Community 141 - "ggml_compute_forward_flash_attn_back_f32"
 Cohesion: 0.09
-Nodes (4): InputMethodSubtype, String, SuppressWarnings, StatsUtils
+Nodes (4): BogusMoveEventDetector, Element, PointerTrackerQueue, JsonUtils
 
-### Community 230 - "dependencies"
+### Community 143 - "PtNodeParams"
+Cohesion: 0.06
+Nodes (28): CharUtilsTest, isUsed(), ProximityInfoState::getProximityTypeG(), TouchPositionCorrectionUtils, DicNode, DicNode_InputStateG, MultiBigramMap, TypingWeighting (+20 more)
+
+### Community 144 - "build.gradle.kts"
 Cohesion: 0.07
 Nodes (28): dependencies, expo, expo-constants, expo-file-system, expo-sqlite, expo-status-bar, react, react-native (+20 more)
 
-### Community 231 - "apply"
-Cohesion: 0.14
-Nodes (13): DictionaryKeywords, List, String, PersonalDictionary, Builder, Boolean, Int, List (+5 more)
-
-### Community 232 - "EmojiPalettesView.java"
-Cohesion: 0.14
-Nodes (15): List, Pair, String, AttributeSet, Context, Integer, Map, NonNull (+7 more)
-
-### Community 233 - "ResizableIntArray"
-Cohesion: 0.10
-Nodes (4): NonNull, Override, String, ResizableIntArray
-
-### Community 234 - "InputPointers"
-Cohesion: 0.10
-Nodes (5): InputPointers, NonNull, Override, String, Runnable
-
-### Community 235 - "PtNodeWriter"
-Cohesion: 0.08
-Nodes (24): PtNodeParams, DynamicPtGcEventListeners, DynamicPtGcEventListeners::TraversePolicyToPlaceAndWriteValidPtNodesToBuffer
-        ::onDescend(), DynamicPtGcEventListeners::TraversePolicyToPlaceAndWriteValidPtNodesToBuffer
-        ::onVisitingPtNode(), DynamicPtGcEventListeners::TraversePolicyToUpdateAllPositionFields
-        ::onVisitingPtNode(), DynamicPtGcEventListeners::TraversePolicyToUpdateBigramProbability
-        ::onVisitingPtNode(), DynamicPtGcEventListeners
-        ::TraversePolicyToUpdateUnigramProbabilityAndMarkUselessPtNodesAsDeleted
-                ::onVisitingPtNode(), PtNodeParams (+16 more)
-
-### Community 236 - "TypingWeighting"
-Cohesion: 0.15
-Nodes (9): TouchPositionCorrectionUtils, DicNode, DicNode_InputStateG, AK_FORCE_INLINE, DicTraverseSession, MultiBigramMap, TypingWeighting, sInstance (+1 more)
-
-### Community 237 - "Ver2PtNodeArrayReader"
-Cohesion: 0.11
-Nodes (18): PtNodeArrayReader, BufferWithExtendableBuffer, Ver4PtNodeArrayReader, mBuffer, readForwardLinkAndReturnIfValid, readPtNodeArrayInfoAndReturnIfValid, getForwardLinkPosition, getPtNodeArraySizeAndAdvancePosition (+10 more)
-
-### Community 238 - ".restartSuggestions"
-Cohesion: 0.11
-Nodes (14): Spanned, SuggestionSpan, getTextWithAutoCorrectionIndicatorUnderline(), getTextWithSuggestionSpan(), CharSequence, Context, Locale, String (+6 more)
-
-### Community 239 - "YapsUiManager"
-Cohesion: 0.15
-Nodes (13): getInstance(), Boolean, Canvas, Float, FrameLayout, ImageButton, LinearLayout, String (+5 more)
-
-### Community 240 - "NgramContext"
-Cohesion: 0.15
-Nodes (8): DecoderSpecificConstants, CharSequence, NonNull, Object, Override, String, NgramContext, WordInfo
-
-### Community 241 - "DynamicPtReadingUtils"
-Cohesion: 0.11
-Nodes (20): PtNodeParams, PtNodeParams, fetchPtNodeInfoFromBufferAndProcessMovedPtNode, DynamicPtReadingUtils, DICT_OFFSET_INVALID, DICT_OFFSET_ZERO_OFFSET, FLAG_IS_DELETED, FLAG_IS_MOVED (+12 more)
-
-### Community 242 - "Ver4PatriciaTrieNodeWriter"
-Cohesion: 0.16
-Nodes (26): DictPositionRelocationMap, NgramProperty, PtNodeParams, UnigramProperty, WordIdArrayView, DynamicPtReadingHelper, Ver4PatriciaTrieNodeWriter, addNgramEntry (+18 more)
-
-### Community 243 - "VoiceAccessibilityService"
-Cohesion: 0.14
-Nodes (16): AccessibilityService, AccessibilityEvent, AudioRecord, Boolean, Button, Float, FrameLayout, GradientDrawable (+8 more)
-
-### Community 244 - "SparseTable"
-Cohesion: 0.14
-Nodes (19): SparseTableTest, getShortcutListHeadPos, getShortcutListHeadPos, BufferWithExtendableBuffer, SparseTable, contains, get, getIndexFromContentTablePos (+11 more)
-
-### Community 245 - "latinime_BinaryDictionaryUtils_createEmptyDictFile"
-Cohesion: 0.10
-Nodes (21): TestTestMode, TimeKeeperTest, jboolean, jclass, jfloat, jint, jintArray, jlong (+13 more)
-
-### Community 246 - ".processEvent"
-Cohesion: 0.22
-Nodes (17): Consonant, createEventChainFromSequence(), Final, HangulCombiner, HangulJamo, HangulSyllable, Initial, ArrayList (+9 more)
-
-### Community 247 - "KeyDetector"
-Cohesion: 0.10
-Nodes (7): GestureEnabler, MotionEvent, String, NonDistinctMultitouchHelper, KeyDetector, Override, PopupKeysDetector
-
-### Community 248 - "TrieMap"
-Cohesion: 0.08
-Nodes (23): BufferWithExtendableBuffer, Entry, TrieMapRange, TrieMap, EMPTY_BITMAP_ENTRY, ENTRY_SIZE, FIELD0_SIZE, FIELD1_SIZE (+15 more)
-
-### Community 249 - "SettingsValues.java"
-Cohesion: 0.10
-Nodes (15): Application, EnumSet, App, getApp(), Configuration, Context, EditorInfo, List (+7 more)
-
-### Community 250 - "LanguageModelDictContentGlobalCounters"
-Cohesion: 0.10
-Nodes (15): LanguageModelDictContentGlobalCountersTest, TestIncrementTotalCount, TestUpdateMaxValueOfCounters, BufferWithExtendableBuffer, ReadWriteByteArrayView, LanguageModelDictContentGlobalCounters, COUNTER_SIZE_IN_BYTES, COUNTER_VALUE_NEAR_LIMIT_THRESHOLD (+7 more)
-
-### Community 251 - "getKnownDictionariesForLocale"
+### Community 145 - "quantize_row_q4_1_reference"
 Cohesion: 0.13
-Nodes (16): MutableSet, cleanUnusedMainDicts(), createDictionaryTextAnnotated(), getDictionaryLocales(), getKnownDictionariesForLocale(), hasAnythingOtherThanExtractedMainDictionary(), AnnotatedString, Context (+8 more)
+Nodes (21): updatePtNodeProbabilityAndGetNeedsToKeepPtNodeAfterGC, ForgettingCurveUtils, backoff, clampToValidCountRange, clampToValidLevelRange, clampToValidTimeStepCountRange, clampToVisibleEntryLevelRange, createHistoricalInfoToSave (+13 more)
 
-### Community 252 - "whisper_layer_decoder"
+### Community 146 - "TranscriptionResult"
+Cohesion: 0.11
+Nodes (19): DynamicPtReadingHelper, followForwardLink, getCodePointsAndReturnCodePointCount, getTerminalPtNodePositionOfWord, MAX_CHILD_COUNT_TO_AVOID_INFINITE_LOOP, MAX_PT_NODE_ARRAY_COUNT_TO_AVOID_INFINITE_LOOP, MAX_READING_STATE_STACK_SIZE, mIsError (+11 more)
+
+### Community 147 - "withVoiceIme.js"
+Cohesion: 0.07
+Nodes (58): ggml_backend_cpu_buffer_type_supports_backend(), ggml_backend_cpu_set_n_threads(), ggml_backend_is_cpu(), ggml_add(), ggml_build_forward_expand(), ggml_cpy(), ggml_critical_section_end(), ggml_element_size() (+50 more)
+
+### Community 148 - "WaveformView"
+Cohesion: 0.07
+Nodes (6): AbstractDrawingPreview, GestureFloatingTextDrawingPreview, GesturePreviewTextParams, GestureTrailsDrawingPreview, NonDistinctMultitouchHelper, SlidingKeyInputDrawingPreview
+
+### Community 149 - "Domain Docs"
+Cohesion: 0.11
+Nodes (7): LayoutParser, encodeBase36(), LayoutType, LayoutUtilsCustom, Defaults, Context, SharedPreferences
+
+### Community 150 - "RichInputMethodSubtype"
 Cohesion: 0.08
-Nodes (25): whisper_layer_decoder, attn_k_w, attn_ln_0_b, attn_ln_0_w, attn_ln_1_b, attn_ln_1_w, attn_q_b, attn_q_w (+17 more)
+Nodes (23): DictionaryBigramsStructurePolicy, DictionaryShortcutsStructurePolicy, PatriciaTrieReadingUtils, FLAG_CHILDREN_POSITION_TYPE_NOPOSITION, FLAG_CHILDREN_POSITION_TYPE_THREEBYTES, FLAG_CHILDREN_POSITION_TYPE_TWOBYTES, FLAG_HAS_BIGRAMS, FLAG_HAS_MULTIPLE_CHARS (+15 more)
 
-### Community 253 - ".w"
-Cohesion: 0.12
-Nodes (13): DictionaryPackConstants, Resources, DictionaryPackInstallBroadcastReceiver, Context, Intent, Override, String, Int (+5 more)
+### Community 151 - "quantize_row_q5_0_reference"
+Cohesion: 0.11
+Nodes (20): Theme(), ListPickerDialog(), PreviewListPickerDialog(), MultiListPickerDialog(), Preview(), Preview(), ReorderDialog(), PreviewSliderDialog() (+12 more)
 
-### Community 254 - "Boolean"
-Cohesion: 0.16
-Nodes (9): CaseSelector, CharWidthSelector, KanaSelector, KeyboardStateSelector, Boolean, String, LayoutDirectionSelector, ShiftStateSelector (+1 more)
+### Community 153 - "DicNodeStateOutput"
+Cohesion: 0.05
+Nodes (19): DicNodeState, DicNodeState, mDicNodeStateInput, mDicNodeStateOutput, mDicNodeStateScoring, DicNodeStateInput, mInputIndex, mPrevCodePoint (+11 more)
 
-### Community 255 - "KeyboardParams"
-Cohesion: 0.16
-Nodes (11): KeyLabel, String, AttributeSet, Comparator, Context, List, Locale, SortedSet (+3 more)
+### Community 155 - "SubtypeScreen"
+Cohesion: 0.18
+Nodes (17): CloseIcon(), DefaultButton(), DeleteButton(), ExpandButton(), NextScreenIcon(), Preview(), LayoutEditDialog(), Preview() (+9 more)
 
-### Community 256 - "TranscriptionStorage"
-Cohesion: 0.19
-Nodes (11): Boolean, ByteArray, Context, File, Int, List, Long, String (+3 more)
-
-### Community 257 - "detectFormatVersion"
-Cohesion: 0.15
-Nodes (22): StructurePolicyPtr, runGCAndGetNewStructurePolicy(), AttributeMap, FORMAT_VERSION, MmappedBufferPtr, StructurePolicyPtr, vector, DictionaryStructureWithBufferPolicyFactory (+14 more)
-
-### Community 258 - "writeBufferToFileTail"
-Cohesion: 0.12
-Nodes (21): flush, FILE, flush, BufferWithExtendableBuffer, AttributeMap, BufferWithExtendableBuffer, FILE, FORMAT_VERSION (+13 more)
-
-### Community 259 - "DynamicPtWritingUtils"
+### Community 156 - "0001-separate-transcription-ime.md"
 Cohesion: 0.14
-Nodes (22): DynamicPtGcEventListeners::TraversePolicyToPlaceAndWriteValidPtNodesToBuffer
-        ::onReadingPtNodeArrayTail(), BufferWithExtendableBuffer, BufferWithExtendableBuffer, DynamicPtWritingUtils, DICT_OFFSET_FIELD_SIZE, DICT_OFFSET_NEGATIVE_FLAG, LARGE_PTNODE_ARRAY_SIZE_FIELD_SIZE, LARGE_PTNODE_ARRAY_SIZE_FIELD_SIZE_FLAG (+14 more)
+Nodes (17): BufferWithExtendableBuffer, checkAndPrepareWriting, copy, DEFAULT_MAX_ADDITIONAL_BUFFER_SIZE, extend, EXTEND_ADDITIONAL_BUFFER_SIZE_STEP, extendBuffer, mAdditionalBuffer (+9 more)
 
-### Community 260 - "TypingTraversal"
-Cohesion: 0.19
-Nodes (8): AK_FORCE_INLINE, DicNode, DicTraverseSession, TypingTraversal, CORRECT_NEW_WORD_SPACE_OMISSION, CORRECT_NEW_WORD_SPACE_SUBSTITUTION, CORRECT_OMISSION, sInstance
-
-### Community 261 - "TranscriptionStorage"
-Cohesion: 0.19
-Nodes (11): Boolean, ByteArray, Context, File, Int, List, Long, String (+3 more)
-
-### Community 262 - "ResourceUtils.java"
+### Community 157 - "0002-model-storage-and-access-architecture.md"
 Cohesion: 0.17
-Nodes (7): Insets, TypedValue, TypedArray, Context, Resources, TypedArray, ResourceUtils
+Nodes (5): ComponentActivity, BackButton(), getActivity(), SettingsActivity, SettingsActivity2
 
-### Community 263 - "AudioAndHapticFeedbackManager"
-Cohesion: 0.14
-Nodes (6): HapticEvent, AudioAndHapticFeedbackManager, AudioManager, Context, View, Vibrator
+### Community 159 - "0003-hybrid-cleaner-architecture.md"
+Cohesion: 0.03
+Nodes (60): whisper_hparams, eps, ftype, n_audio_ctx, n_audio_head, n_audio_layer, n_audio_state, n_mels (+52 more)
 
-### Community 264 - "EmojiCategory"
-Cohesion: 0.20
-Nodes (10): canShowFlagEmoji(), Category, CategoryProperties, EmojiCategory, getCategoryKeyboardMapKey(), Array, Boolean, Int (+2 more)
-
-### Community 265 - "SettingsSubtype"
-Cohesion: 0.16
-Nodes (8): getExtraValueOf(), hasExtraValueOf(), Boolean, InputMethodSubtype, SharedPreferences, String, SettingsSubtype, toSettingsSubtype()
-
-### Community 266 - "GestureDataDao"
-Cohesion: 0.21
-Nodes (12): String, filterExcludedSuggestions(), GestureDataDao, getInstance(), Boolean, Collection, Context, Int (+4 more)
-
-### Community 267 - "DictionaryInfoUtils"
+### Community 160 - "0004-voice-typing-pane-layout.md"
 Cohesion: 0.19
-Nodes (10): DictionaryInfoUtils, Array, Boolean, CharSequence, Context, File, Int, List (+2 more)
+Nodes (5): Builder, Divider, MoreSuggestionKey, MoreSuggestions, MoreSuggestionsParam
 
-### Community 268 - "getUserAndInternalDictionaries"
+### Community 162 - "DictionaryEntry"
+Cohesion: 0.07
+Nodes (78): autospace(), `autospace after selecting a suggestion`(), `autospace in json editor`(), `autospace propagates over "`(), `autospace still happens after "`(), `autospace still happens after " if nex word is in " and after comma`(), `autospace still happens after " if next word is in quotes`(), `autospace works in URL field when input isn't URL`() (+70 more)
+
+### Community 166 - "InputAttributes"
 Cohesion: 0.12
-Nodes (21): DictionaryDetails(), DictionaryDialog(), File, Locale, Preview(), dictionaryFilePicker(), filePicker(), ActivityResult (+13 more)
+Nodes (19): FileUtils, existsDir, getBasename, getDirPath, getFilePath, getFilePathBufSize, getFilePathWithoutSuffix, getFilePathWithSuffix (+11 more)
 
-### Community 269 - "DictionaryStructureWithBufferPolicy"
-Cohesion: 0.08
-Nodes (23): DictionaryStructureWithBufferPolicy, addNgramEntry, addUnigramEntry, createAndGetAllChildDicNodes, flush, flushWithGC, getCodePointsAndReturnCodePointCount, getHeaderStructurePolicy (+15 more)
-
-### Community 270 - "outputWordProperty"
-Cohesion: 0.12
-Nodes (17): jbooleanArray, jintArray, JNIEnv, jobject, WordProperty, AttributeMap, jboolean, jbooleanArray (+9 more)
-
-### Community 271 - "AccessibilityUtils"
-Cohesion: 0.15
-Nodes (15): AccessibilityManager, AccessibilityUtils, init(), isTouchExplorationEvent(), AccessibilityEvent, AudioManager, Boolean, CharSequence (+7 more)
-
-### Community 272 - "EmojiViewCallback"
-Cohesion: 0.14
-Nodes (11): Adapter, EmojiPalettesAdapter, NonNull, Override, String, View, ViewGroup, ViewHolder (+3 more)
-
-### Community 273 - "VoiceRecordingPane"
-Cohesion: 0.13
-Nodes (10): Button, Float, GradientDrawable, Int, String, TextView, Typeface, Unit (+2 more)
-
-### Community 274 - "GestureStrokeRecognitionPoints"
-Cohesion: 0.19
-Nodes (3): GestureStrokeRecognitionParams, GestureStrokeRecognitionPoints, String
-
-### Community 275 - "GestureStrokeDrawingPoints"
-Cohesion: 0.14
-Nodes (4): GestureStrokeDrawingParams, TypedArray, GestureStrokeDrawingPoints, HermiteInterpolator
-
-### Community 276 - "Ktx.kt"
-Cohesion: 0.10
-Nodes (20): addCollections(), appendLink(), dpToPx(), getActivity(), getStringResourceOrName(), Collection, ComponentActivity, Context (+12 more)
-
-### Community 277 - "HeaderReadWriteUtils"
-Cohesion: 0.11
-Nodes (22): BufferWithExtendableBuffer, DictionaryFlags, FORMAT_VERSION, AK_FORCE_INLINE, DictionaryFlags, HeaderReadWriteUtils, CODE_POINT_TABLE_KEY, fetchAllHeaderAttributes (+14 more)
-
-### Community 278 - "TerminalPositionLookupTable"
-Cohesion: 0.14
-Nodes (14): BufferWithExtendableBuffer, FILE, ReadWriteByteArrayView, SingleDictContent, mExpandableContentBuffer, FILE, TerminalIdMap, ReadWriteByteArrayView (+6 more)
-
-### Community 279 - "ErrorTypeUtils"
-Cohesion: 0.11
-Nodes (16): ErrorTypeUtils, COMPLETION, EDIT_CORRECTION, ERRORS_TREATED_AS_A_PERFECT_MATCH, ERRORS_TREATED_AS_AN_EXACT_MATCH, ERRORS_TREATED_AS_AN_EXACT_MATCH_WITH_INTENTIONAL_OMISSION, INTENTIONAL_OMISSION, MATCH_WITH_DIGRAPH (+8 more)
-
-### Community 280 - "VoiceSettingsScreen"
+### Community 171 - "index.js"
 Cohesion: 0.23
-Nodes (21): android, addDictionaryEntry(), addKeyword(), DictionaryEntryRow(), DictionaryForm(), KeywordChipRow(), KeywordsForm(), Float (+13 more)
+Nodes (4): DictionaryKeywords, PersonalDictionary, Builder, apply()
 
-### Community 281 - "NgramContext"
-Cohesion: 0.12
-Nodes (18): N, DictionaryStructureWithBufferPolicy, NgramContext, DictionaryStructureWithBufferPolicy, getPrevWordIds(), WordIdArray, WordIdArrayView, NgramContext (+10 more)
-
-### Community 282 - "NormalDistribution2D"
-Cohesion: 0.10
-Nodes (15): NormalDistribution2DTest, ProbabilityDensity, Rotate, NormalDistribution2D, mCosTheta, mSinTheta, mUX, mUY (+7 more)
-
-### Community 283 - "AudioRecorder"
-Cohesion: 0.14
-Nodes (9): AudioRecorder, AudioRecord, Boolean, Thread, Float, VelaRecordingCallback, ByteArray, ScribeInput (+1 more)
-
-### Community 284 - "WaveformView"
-Cohesion: 0.14
-Nodes (6): Boolean, Canvas, Float, Int, WaveformView, WaveformViewTest
-
-### Community 285 - "KeyPreviewChoreographer"
-Cohesion: 0.16
-Nodes (11): ArrayDeque, HashMap, ViewGroup, KeyPreviewChoreographer, AttributeSet, Context, HashSet, Rect (+3 more)
-
-### Community 286 - "SentenceLevelAdapter.java"
-Cohesion: 0.21
-Nodes (12): EmptySentenceSuggestionsInfosInitializationHolder, ArrayList, CharSequence, Locale, Resources, SentenceSuggestionsInfo, SuggestionsInfo, TextInfo (+4 more)
-
-### Community 287 - "build.gradle"
+### Community 175 - "KeyboardAccessibilityDelegate"
 Cohesion: 0.15
-Nodes (10): DeviceProtectedUtils, Context, File, SharedPreferences, String, CharSequence, Spannable, String (+2 more)
+Nodes (6): canSwitchLanguage(), getInstance(), init(), InputMethodInfoCache, RichInputMethodManager, Shortcut
 
-### Community 288 - "DicNodeProperties"
+### Community 176 - "LocaleKeyboardInfos"
 Cohesion: 0.10
-Nodes (12): DicNodeProperties, DicNodeProperties, mChildrenPtNodeArrayPos, mDepth, mDicNodeCodePoint, mLeavingDepth, mPrevWordCount, mPrevWordIds (+4 more)
+Nodes (15): addFixedColumnOrder(), addLocaleKeyTextsToParams(), adjustAutoColumnOrder(), createLocaleKeyTexts(), genericCurrencyKey(), getCurrency(), getCurrencyKey(), getOrCreate() (+7 more)
 
-### Community 289 - "SettingsActivity"
-Cohesion: 0.13
-Nodes (10): ComponentActivity, SharedPreferences, String, Boolean, File, List, String, Uri (+2 more)
+### Community 177 - "MutableEntryCounters"
+Cohesion: 0.05
+Nodes (37): latinime_BinaryDictionary_addNgramEntry(), latinime_BinaryDictionary_addUnigramEntry(), latinime_BinaryDictionary_getHeaderInfo(), latinime_BinaryDictionary_getMaxProbabilityOfExactMatches(), latinime_BinaryDictionary_getNextWord(), latinime_BinaryDictionary_getNgramProbability(), latinime_BinaryDictionary_getProbability(), latinime_BinaryDictionary_getSuggestions() (+29 more)
 
-### Community 290 - ".contains"
-Cohesion: 0.20
-Nodes (10): HashSet, EmojiAltPhysicalKeyDetector, EmojiHotKeys, HotKeySet, Integer, KeyEvent, List, Pair (+2 more)
+### Community 178 - "KeyboardActionListenerImpl"
+Cohesion: 0.21
+Nodes (11): Color, ColorPickerDialog(), WidePreview(), isWideScreen(), ColorsScreen(), getColorPrefsToHideInitially(), getColorString(), Preview() (+3 more)
 
-### Community 291 - "header_read_write_utils.cpp"
-Cohesion: 0.22
-Nodes (19): HeaderReadWriteUtilsTest, key_type, TestAttributeMapCodeForPoints, TestAttributeMapForInt, TestInsertCharactersIntoVector, AttributeMap, vector, createAndGetDictionaryFlagsUsingAttributeMap (+11 more)
+### Community 179 - "CONTRIBUTING.md"
+Cohesion: 0.09
+Nodes (22): DictionaryStructureWithBufferPolicy, addNgramEntry, addUnigramEntry, createAndGetAllChildDicNodes, flush, flushWithGC, getCodePointsAndReturnCodePointCount, getHeaderStructurePolicy (+14 more)
 
-### Community 292 - "InlineAutofillUtils.java"
-Cohesion: 0.17
-Nodes (14): HorizontalScrollView, InlineSuggestion, OnDrawListener, InlineAutofillUtils, InlineContentClipView, AttributeSet, Context, InlineSuggestionsRequest (+6 more)
+### Community 180 - "SpacingAndPunctuations"
+Cohesion: 0.15
+Nodes (10): ShortcutListReadingUtils, FLAG_ATTRIBUTE_HAS_NEXT, getFlagsAndForwardPointer, getShortcutListSizeAndForwardPointer, readShortcutTarget, SHORTCUT_LIST_SIZE_FIELD_SIZE, WHITELIST_SHORTCUT_PROBABILITY, getWordProperty (+2 more)
 
-### Community 293 - "jni_common.cpp"
+### Community 181 - "AudioRecord"
 Cohesion: 0.12
-Nodes (15): JavaVM, JNINativeMethod, jclass, jfloatArray, jint, jintArray, jlong, JNIEnv (+7 more)
+Nodes (11): MAX_SKIP_PROBABILITY, DoubleLetterLevel getDoubleLetterLevel(), existsAdjacentProximityChars(), existsCodePointInProximityAt(), getBeelineSpeedPercentile(), getInputX(), getInputY(), getPrimaryCodePointAt() (+3 more)
 
-### Community 294 - "ggml_graph_dump_dot"
-Cohesion: 0.13
-Nodes (21): FILE, ggml_get_i32_1d(), ggml_get_i32_nd(), ggml_graph_dump_dot(), ggml_graph_dump_dot_leaf_edge(), ggml_graph_dump_dot_node_edge(), ggml_graph_export(), ggml_graph_export_leaf() (+13 more)
-
-### Community 295 - "ShortcutDictContent"
-Cohesion: 0.18
-Nodes (14): SparseTableDictContent, ShortcutDictContent, TerminalIdMap, FILE, ReadWriteByteArrayView, ShortcutDictContent, copyShortcutList, copyShortcutListFromDictContent (+6 more)
-
-### Community 296 - "GestureTrailsDrawingPreview"
-Cohesion: 0.19
-Nodes (9): GestureTrailsDrawingPreview, Bitmap, Canvas, Handler, Override, Paint, Rect, SparseArray (+1 more)
-
-### Community 297 - "UIHandler"
-Cohesion: 0.12
-Nodes (3): UIHandler, Message, ShadowHandler
-
-### Community 298 - "GestureDataGathering.kt"
-Cohesion: 0.19
-Nodes (15): DictInfo, fromPointers(), GestureData, isBackgroundGatheringUsed(), KeyboardInfo, KeyInfo, Boolean, Collection (+7 more)
-
-### Community 299 - "SparseTableDictContent"
+### Community 182 - "DicNodesCache"
 Cohesion: 0.11
-Nodes (16): createNewShortcutList, BufferWithExtendableBuffer, MmappedBufferPtr, SparseTableDictContent, BufferWithExtendableBuffer, mAddressLookupTable, mAddressTableBuffer, mContentBuffer (+8 more)
+Nodes (23): ggml_add1(), ggml_add1_impl(), ggml_add1_inplace(), ggml_add1_or_set(), ggml_add_impl(), ggml_add_inplace(), ggml_add_or_set(), ggml_build_backward_expand() (+15 more)
 
-### Community 300 - "proximity_info_state.h"
-Cohesion: 0.14
-Nodes (11): DoubleLetterLevel getDoubleLetterLevel(), existsAdjacentProximityChars(), existsCodePointInProximityAt(), getBeelineSpeedPercentile(), getInputX(), getInputY(), getPrimaryCodePointAt(), getProximityCodePointsAt() (+3 more)
+### Community 184 - "SettingsValuesForSuggestion"
+Cohesion: 0.09
+Nodes (10): ConcurrentLinkedQueue, getDescriptionForActionKey(), getDescriptionForShiftKey(), getDescriptionForSwitchAlphaSymbol(), KeyCodeDescriptionMapper, Keyboard, AndroidSpellCheckerService, prefs() (+2 more)
 
-### Community 301 - "FileUtils.java"
-Cohesion: 0.18
-Nodes (11): CountDownLatch, FileUtils, Context, File, FilenameFilter, InputStream, OutputStream, Uri (+3 more)
-
-### Community 302 - "DicNodePriorityQueue"
-Cohesion: 0.22
-Nodes (8): DicNodesQueue, DicNodePriorityQueue, explicit, mDicNodePool, mDicNodesQueue, mMaxSize, AK_FORCE_INLINE, DicNode
-
-### Community 303 - "ExecutorUtils.java"
-Cohesion: 0.19
-Nodes (9): ScheduledExecutorService, ThreadFactory, ExecutorFactory, ExecutorUtils, Override, Runnable, String, Thread (+1 more)
-
-### Community 304 - "restoreLauncher"
-Cohesion: 0.17
-Nodes (18): backupLauncher(), BackupRestorePreference(), ActivityResult, Any, Boolean, File, Intent, List (+10 more)
-
-### Community 305 - "TypingSuggestPolicy"
+### Community 185 - "LatinIME.java"
 Cohesion: 0.12
-Nodes (9): SuggestPolicy, SuggestPolicy, TypingSuggestPolicyFactory, AK_FORCE_INLINE, Scoring, Traversal, TypingSuggestPolicy, sInstance (+1 more)
+Nodes (3): DrawingPreviewPlacerView, CoordinateUtils, RelativeLayout
 
-### Community 306 - "ClipboardHistoryView"
-Cohesion: 0.16
-Nodes (6): ClipboardHistoryView, Boolean, EditorInfo, Int, Long, TextView
-
-### Community 308 - "KoreanDictionary"
-Cohesion: 0.23
-Nodes (6): ArrayList, NgramContext, Override, String, WordProperty, KoreanDictionary
-
-### Community 309 - "Ver4PatriciaTrieWritingHelper"
-Cohesion: 0.14
-Nodes (17): EntryCounts, HeaderPolicy, PtNodeParams, Ver4DictBuffers, Ver4PatriciaTrieNodeReader, Ver4PatriciaTrieNodeWriter, HeaderPolicy, Ver4DictBuffers (+9 more)
-
-### Community 310 - "BigramListReadWriteUtils"
-Cohesion: 0.18
-Nodes (15): BigramListReadWriteUtils, FLAG_ATTRIBUTE_ADDRESS_TYPE_ONEBYTE, FLAG_ATTRIBUTE_ADDRESS_TYPE_THREEBYTES, FLAG_ATTRIBUTE_ADDRESS_TYPE_TWOBYTES, FLAG_ATTRIBUTE_HAS_NEXT, FLAG_ATTRIBUTE_OFFSET_NEGATIVE, getBigramAddressAndAdvancePosition, getBigramEntryPropertiesAndAdvancePosition (+7 more)
-
-### Community 311 - "ProbabilityEntry"
-Cohesion: 0.12
-Nodes (6): NgramProperty, UnigramProperty, ProbabilityEntry, mFlags, mHistoricalInfo, mProbability
-
-### Community 312 - "dic_node_vector.h"
+### Community 187 - "pt_node_params.h"
 Cohesion: 0.13
-Nodes (15): clear(), front(), AK_FORCE_INLINE, DicNode, operator[](), pushLeavingChild(), pushPassingChild(), DicNode (+7 more)
+Nodes (3): hasExtraValueOf(), SubtypeSettings, getResourceSubtypes()
 
-### Community 313 - "Traversal"
+### Community 188 - "ColorsScreen"
+Cohesion: 0.13
+Nodes (6): getTextWithAutoCorrectionIndicatorUnderline(), getTextWithSuggestionSpan(), SpannableStringUtils, TextRange, Spanned, SuggestionSpan
+
+### Community 189 - "TimerHandler"
+Cohesion: 0.13
+Nodes (3): GestureStrokeDrawingParams, GestureStrokeDrawingPoints, HermiteInterpolator
+
+### Community 191 - "InputView.java"
+Cohesion: 0.24
+Nodes (12): addDebugInfo(), capitalize(), capitalizeAndAddTrailingSingleQuotes(), getCapsModeForGesture(), getCapsModeForTyping(), getSuggestionsInfoListWithDebugInfo(), isAllowedByAutoCorrectionWithSpaceFilter(), makeFirstTwoSuggestionsNonEmoji() (+4 more)
+
+### Community 192 - "gguf_get_n_kv"
+Cohesion: 0.06
+Nodes (20): DictContent, isValid, SingleDictContent, mExpandableContentBuffer, mIsValid, mMmappedBuffer, SparseTableDictContent, BufferWithExtendableBuffer (+12 more)
+
+### Community 193 - "WordAttributes"
 Cohesion: 0.10
 Nodes (18): DicTraverseSession, Traversal, allowsErrorCorrections, canDoLookAheadCorrection, getDefaultExpandDicNodeSize, getMaxCacheSize, getMaxPointerCount, getMaxSpatialDistance (+10 more)
 
-### Community 314 - "SuggestOptions"
-Cohesion: 0.18
-Nodes (10): AK_FORCE_INLINE, SuggestOptions, ADDITIONAL_FEATURES_OPTIONS, BLOCK_OFFENSIVE_WORDS, IS_GESTURE, mLength, mOptions, SPACE_AWARE_GESTURE_ENABLED (+2 more)
-
-### Community 315 - "getTimestamp"
+### Community 194 - "Ver4DictConstants"
 Cohesion: 0.15
-Nodes (14): PrintWriter, SimpleDateFormat, Thread, CrashReportExceptionHandler, DebugFlags, Boolean, Context, String (+6 more)
+Nodes (8): SuggestOptions, ADDITIONAL_FEATURES_OPTIONS, BLOCK_OFFENSIVE_WORDS, IS_GESTURE, mLength, SPACE_AWARE_GESTURE_ENABLED, USE_FULL_EDIT_DISTANCE, WEIGHT_FOR_LOCALE_IN_THOUSANDS
 
-### Community 317 - "runInLocale"
-Cohesion: 0.14
-Nodes (12): Collection, Int, Locale, Resources, String, T, LocaleUtils, Context (+4 more)
-
-### Community 318 - "ContactsBinaryDictionary.java"
-Cohesion: 0.19
-Nodes (9): ContactsDictionaryConstants, String, ContactsBinaryDictionary, Context, File, Locale, Override, String (+1 more)
-
-### Community 319 - "ReadOnlyBinaryDictionary"
-Cohesion: 0.20
-Nodes (9): ArrayList, BinaryDictionary, Locale, NgramContext, Override, ReentrantReadWriteLock, String, WordProperty (+1 more)
-
-### Community 320 - "SubtypeUtilsAdditional"
-Cohesion: 0.27
-Nodes (8): Boolean, Context, InputMethodSubtype, Int, List, Locale, String, SubtypeUtilsAdditional
-
-### Community 321 - "GoogleDriveSync"
-Cohesion: 0.26
-Nodes (8): GoogleDriveSync, Boolean, Context, File, SharedPreferences, String, TranscriptionPair, SyncResult
-
-### Community 322 - "com_android_inputmethod_latin_DicTraverseSession.cpp"
-Cohesion: 0.15
-Nodes (15): jclass, jint, jintArray, jlong, JNIEnv, jstring, Dictionary, latinime_initDicTraverseSession() (+7 more)
-
-### Community 323 - "BigramDictContent"
-Cohesion: 0.20
-Nodes (9): BigramDictContent, copyBigramList, getBigramEntryAndAdvancePosition, mHasHistoricalInfo, runGC, runGCBigramList, writeBigramEntryAndAdvancePosition, BigramDictContent (+1 more)
-
-### Community 324 - "AdditionalProximityChars"
-Cohesion: 0.13
-Nodes (15): AdditionalProximityChars, EN_US_ADDITIONAL_A, EN_US_ADDITIONAL_A_SIZE, EN_US_ADDITIONAL_E, EN_US_ADDITIONAL_E_SIZE, EN_US_ADDITIONAL_I, EN_US_ADDITIONAL_I_SIZE, EN_US_ADDITIONAL_O (+7 more)
-
-### Community 325 - ".calculateProximities"
-Cohesion: 0.20
-Nodes (6): AK_FORCE_INLINE, vector, AK_FORCE_INLINE, unordered_map, vector, ProximityInfoUtils
-
-### Community 326 - "EmojiData"
-Cohesion: 0.19
-Nodes (8): EmojiData, Boolean, Float, Int, IntArray, Pair, String, EmojiGroup
-
-### Community 327 - "DamerauLevenshteinEditDistancePolicy"
+### Community 195 - "proximity_info_state_utils.cpp"
 Cohesion: 0.16
-Nodes (10): DamerauLevenshteinEditDistancePolicyTest, TestConstructPolicy, TestEditDistance, DamerauLevenshteinEditDistancePolicy, mString0, mString0Length, mString1, mString1Length (+2 more)
+Nodes (31): GeometryUtils, ProximityInfoState::initInputParams(), ProximityInfoStateUtils, calculateBeelineSpeedRate, calculateNormalizedSquaredDistance, calculateSquaredDistanceFromSweetSpotCenter, checkAndReturnIsContinuousSuggestionPossible, dump (+23 more)
 
-### Community 328 - "DicNodePool"
-Cohesion: 0.14
-Nodes (11): deque, DicNodePoolTest, TestGet, TestPlaceBack, TestReset, DicNodePool, mDicNodes, mPooledDicNodes (+3 more)
-
-### Community 329 - "UnigramProperty"
-Cohesion: 0.12
-Nodes (10): ShortcutProperty, vector, UnigramProperty, mHistoricalInfo, mIsBlacklisted, mIsNotAWord, mIsPossiblyOffensive, mProbability (+2 more)
-
-### Community 330 - ".getAvailableDictsForLocale"
-Cohesion: 0.24
-Nodes (11): DictionaryFactory, Array, Boolean, Context, Dictionary, File, List, Locale (+3 more)
-
-### Community 331 - "GestureConsumer"
+### Community 196 - "ForgettingCurveUtils"
 Cohesion: 0.15
-Nodes (7): Bundle, String, PrivateCommandPerformer, GestureConsumer, EditorInfo, Locale, SuppressWarnings
+Nodes (20): Ver4BigramListPolicy, addNewEntry, createUpdatedBigramEntryFrom, getBigramEntryConut, getEntryPosToUpdate, getNextBigram, mBigramDictContent, mHeaderPolicy (+12 more)
 
-### Community 332 - "ShortcutDictContent"
-Cohesion: 0.23
-Nodes (12): ShortcutDictContent, TerminalIdMap, ShortcutDictContent, copyShortcutList, copyShortcutListFromDictContent, createAndGetShortcutFlags, findShortcutEntryAndGetPos, flushToFile (+4 more)
+### Community 198 - "trie_map.cpp"
+Cohesion: 0.07
+Nodes (44): TrieMap, addNewEntryByExpandingTable, addNewEntryByResolvingConflict, allocateTable, dump, EMPTY_BITMAP_ENTRY, ENTRY_SIZE, FIELD0_SIZE (+36 more)
 
-### Community 333 - "DigraphUtils"
-Cohesion: 0.21
-Nodes (16): DictionaryHeaderStructurePolicy, digraph_t, DigraphCodePointIndex, DigraphType, DictionaryHeaderStructurePolicy, DigraphUtils, GERMAN_UMLAUT_DIGRAPHS, getAllDigraphsForDigraphTypeAndReturnSize (+8 more)
+### Community 203 - "EditDistancePolicy"
+Cohesion: 0.12
+Nodes (8): DicNodeProperties, mChildrenPtNodeArrayPos, mDepth, mDicNodeCodePoint, mLeavingDepth, mPrevWordCount, mPrevWordIds, mWordId
 
-### Community 334 - "Warnings"
+### Community 204 - "ByteArrayUtils"
+Cohesion: 0.10
+Nodes (16): ByteArrayUtilsTest, PtReadingUtils::getCodePointAndAdvancePosition(), PtReadingUtils::getFlagsAndAdvancePosition(), PtReadingUtils::getPtNodeArraySizeAndAdvancePosition(), PtReadingUtils::readChildrenPositionAndAdvancePosition(), PtReadingUtils::readProbabilityAndAdvancePosition(), ByteArrayUtils, CHARACTER_ARRAY_TERMINATOR (+8 more)
+
+### Community 205 - "SubtypeSettings"
+Cohesion: 0.14
+Nodes (4): WhisperConfig, WhisperEngine, WhisperConfigTest, WhisperEngineTest
+
+### Community 206 - "Ver4DictBuffers"
+Cohesion: 0.03
+Nodes (70): ggml_compute_forward(), ggml_compute_forward_acc(), ggml_compute_forward_add_rel_pos(), ggml_compute_forward_add_rel_pos_f32(), ggml_compute_forward_argsort(), ggml_compute_forward_argsort_f32(), ggml_compute_forward_clamp(), ggml_compute_forward_clamp_f32() (+62 more)
+
+### Community 207 - "AudioRecord"
+Cohesion: 0.12
+Nodes (6): KeyboardBuilder, actionName(), equivalentEditorInfoForKeyboard(), KeyboardElement, KeyboardMode, KP
+
+### Community 208 - ".get"
+Cohesion: 0.16
+Nodes (3): AppsChangedListener, AppsManager, AppsBinaryDictionary
+
+### Community 209 - "PersonalizationHelper.java"
+Cohesion: 0.10
+Nodes (8): CountDownLatch, FileUtils, DictFilter, PersonalizationHelper, UserHistoryDictionary, AsyncResultHolder, FilenameFilter, SoftReference
+
+### Community 210 - "SuggestionResults"
+Cohesion: 0.12
+Nodes (16): SuggestedWord, mAutoCommitFirstWordConfidence, mCodePoints, mIndexToPartialCommit, mScore, mType, SuggestionResults, addPrediction (+8 more)
+
+### Community 211 - "Adapter"
+Cohesion: 0.09
+Nodes (16): filterExcludedSuggestions(), GestureDataDao, getInstance(), DictInfo, fromPointers(), GestureData, GestureDataInfo, getKnownDictHashes() (+8 more)
+
+### Community 212 - "Dictionary"
+Cohesion: 0.13
+Nodes (4): ProbabilityEntry, mFlags, mHistoricalInfo, mProbability
+
+### Community 214 - "BufferWithExtendableBuffer"
 Cohesion: 0.11
 Nodes (17): CR-01: Privacy Vulnerability & Battery Drain: Microphone Left Recording in Background, CR-02: Severe Memory Leak: Static Context Leak of LatinIME, CR-03: Main Thread Block / UI Freeze (ANR Risk) during Whisper Model Load, Critical Issues, IN-01: Inconsistent Prefs Default Values, IN-02: Hardcoded Whisper Settings, IN-03: Fully-Qualified Inline References in LatinIME, IN-04: Lack of Layout Content View in PermissionsActivity (+9 more)
 
-### Community 335 - "BloomFilter"
-Cohesion: 0.17
-Nodes (10): bitset, BloomFilterTest, TestFilter, BloomFilter, BIGRAM_FILTER_MODULO, mFilter, AK_FORCE_INLINE, ProximityInfo (+2 more)
+### Community 215 - "DynamicPtUpdatingHelper"
+Cohesion: 0.10
+Nodes (31): DynamicPtGcEventListeners, DynamicPtGcEventListeners::TraversePolicyToPlaceAndWriteValidPtNodesToBuffer
+        ::onDescend(), DynamicPtGcEventListeners::TraversePolicyToPlaceAndWriteValidPtNodesToBuffer
+        ::onReadingPtNodeArrayTail(), PtNodeParams, BufferWithExtendableBuffer, DynamicPtReadingHelper, DynamicPtUpdatingHelper, addNgramEntry (+23 more)
 
-### Community 336 - "DictionaryCollection"
+### Community 216 - "ShareGestureData"
+Cohesion: 0.22
+Nodes (7): CancellationSignal, ClipboardContentProvider, getInstance(), getMimeTypes(), GestureFileProvider, FileProvider, ParcelFileDescriptor
+
+### Community 217 - "GestureDataScreen"
+Cohesion: 0.16
+Nodes (17): BackgroundGatheringSettings(), ExcludedWordsDialog(), addWords(), AssetsDictWithInfo, BottomBar(), ButtonWithText(), CacheDictWithInfo, calculateWordWeight() (+9 more)
+
+### Community 218 - ".getOwnerInstance"
+Cohesion: 0.14
+Nodes (4): TranscriptionResult, VelaRecordingCallback, TranscriptionResultTest, VelaRecordingCallbackTest
+
+### Community 219 - "EmojiPalettesView"
+Cohesion: 0.07
+Nodes (6): EmojiCategoryPageIndicatorView, EmojiLayoutParams, EmojiPalettesView, getKeyboardTheme(), KeyboardTheme, OnClickListener
+
+### Community 220 - "LayoutEditDialog"
+Cohesion: 0.11
+Nodes (3): GestureEnabler, KeyDetector, PopupKeysDetector
+
+### Community 222 - "AppsManager"
+Cohesion: 0.17
+Nodes (5): getInstance(), TranscribingDotsView, YapsUiManager, YapsWaveformView, LinearLayout
+
+### Community 223 - "StringUtils.kt"
+Cohesion: 0.08
+Nodes (7): DecoderSpecificConstants, DictionaryHeader, DictionaryOptions, FormatSpec, NgramContext, NgramContextUtils, Pattern
+
+### Community 225 - "VoiceInputMethodService"
+Cohesion: 0.09
+Nodes (4): UnicodeSurrogate, RichInputConnection, DebugLogUtils, InputMethodService
+
+### Community 226 - "AndroidWordLevelSpellCheckerSession"
+Cohesion: 0.04
+Nodes (36): DictionaryStructureWithBufferPolicy, getPrevWordIds(), NgramContext, clear, getNthPrevWordCodePoints, getWordId, isNthPrevWordBeginningOfSentence, isValid (+28 more)
+
+### Community 227 - "KeySpecParser"
+Cohesion: 0.14
+Nodes (3): ScribeInput, VelaTranscriber, VelaTranscriberTest
+
+### Community 228 - "FILE"
+Cohesion: 0.27
+Nodes (10): ggml_graph_export(), ggml_graph_export_leaf(), ggml_graph_export_node(), ggml_n_dims(), ggml_nbytes_pad(), ggml_op_desc(), ggml_op_name(), ggml_type_name() (+2 more)
+
+### Community 229 - "StatsUtils"
 Cohesion: 0.23
-Nodes (8): Dictionary, DictionaryCollection, ArrayList, Collection, Locale, NgramContext, Override, String
+Nodes (16): gguf_get_or_add_key(), gguf_set_arr_data(), gguf_set_arr_str(), gguf_set_kv(), gguf_set_val_bool(), gguf_set_val_f32(), gguf_set_val_f64(), gguf_set_val_i16() (+8 more)
 
-### Community 337 - "TypingScoring"
+### Community 230 - "dependencies"
+Cohesion: 0.06
+Nodes (37): ggml_backend_free(), ggml_ftype_to_ggml_type(), read_safe(), tokenize(), whisper_backend_init(), whisper_context, backend, itype (+29 more)
+
+### Community 231 - "apply"
+Cohesion: 0.12
+Nodes (16): whisper_layer_encoder, attn_k_w, attn_ln_0_b, attn_ln_0_w, attn_ln_1_b, attn_ln_1_w, attn_q_b, attn_q_w (+8 more)
+
+### Community 234 - "InputPointers"
+Cohesion: 0.13
+Nodes (5): get(), RichInputMethodSubtype, getExtraValueOf(), SettingsSubtype, toSettingsSubtype()
+
+### Community 235 - "PtNodeWriter"
+Cohesion: 0.12
+Nodes (7): RoundedLine, Path, fs, path, fs, path, { withAndroidManifest, withDangerousMod }
+
+### Community 237 - "Ver2PtNodeArrayReader"
+Cohesion: 0.09
+Nodes (19): Ver4PtNodeArrayReader, mBuffer, readForwardLinkAndReturnIfValid, readPtNodeArrayInfoAndReturnIfValid, getForwardLinkPosition, getPtNodeArraySizeAndAdvancePosition, PtNodeArrayReader, readForwardLinkAndReturnIfValid (+11 more)
+
+### Community 238 - ".restartSuggestions"
+Cohesion: 0.18
+Nodes (7): DynamicLanguageModelProbabilityUtils, ASSUMED_MIN_COUNTS, DURATION_TO_DISCARD_ENTRY_IN_SECONDS, ENCODED_BACKOFF_WEIGHTS, getWordAttributes, addNgramEntry, removeNgramEntry
+
+### Community 240 - "NgramContext"
 Cohesion: 0.21
-Nodes (8): Scoring, DicNode, DicTraverseSession, AK_FORCE_INLINE, ErrorType, SuggestionResults, TypingScoring, sInstance
+Nodes (11): getBigramConditionalProbability, getProbabilityOfWord, iterateNgramEntries, getProbabilityOfWord, iterateNgramEntries, BinaryDictionaryBigramsIterator, mBigramPos, mBigramsStructurePolicy (+3 more)
 
-### Community 338 - "TEST"
-Cohesion: 0.13
-Nodes (13): TableIterationState, TestMultiLevel, TestRandSetAndGetLarge, TestRemove, TestSetAndGetLarge, TrieMapTest, Result, vector (+5 more)
+### Community 241 - "DynamicPtReadingUtils"
+Cohesion: 0.05
+Nodes (62): fetchPtNodeInfoFromBufferAndProcessMovedPtNode, markPtNodeAsDeleted, markPtNodeAsMoved, markPtNodeAsWillBecomeNonTerminal, updatePtNodeFlags, writePtNodeAndGetTerminalIdAndAdvancePosition, DynamicPtReadingUtils, DICT_OFFSET_INVALID (+54 more)
 
-### Community 339 - ".createRows"
-Cohesion: 0.25
-Nodes (6): TextKeyData, KeyboardParser, ArrayList, List, MutableList, Pair
-
-### Community 340 - "ScriptUtils.kt"
+### Community 242 - "Ver4PatriciaTrieNodeWriter"
 Cohesion: 0.17
-Nodes (8): ContactsDictionaryUtils, Locale, String, Boolean, Int, Locale, String, ScriptUtils
+Nodes (5): OMISSION_COST, DicNode, DicTraverseSession, TypingScoring, sInstance
 
-### Community 341 - "SubtypeLocaleUtils"
-Cohesion: 0.28
-Nodes (6): Context, InputMethodSubtype, Locale, Resources, String, SubtypeLocaleUtils
+### Community 243 - "VoiceAccessibilityService"
+Cohesion: 0.06
+Nodes (16): ViewHolder, InsetsOutlineProvider, setInsetsOutlineProvider(), KeyboardWrapperView, FloatingKeyboardUtils, onClickToolbarKey(), onLongClickToolbarKey(), repeatToolbarKey() (+8 more)
 
-### Community 342 - "header_policy.cpp"
+### Community 244 - "SparseTable"
 Cohesion: 0.18
-Nodes (15): AttributeMap, BufferWithExtendableBuffer, EntryCounts, NgramType, vector, getIndexFromNgramType(), createAttributeMapAndReadAllAttributes, fillInAndWriteHeaderToBuffer (+7 more)
+Nodes (16): getShortcutListHeadPos, SparseTable, contains, get, getIndexFromContentTablePos, getPosInContentTable, getPosInIndexTable, INDEX_SIZE (+8 more)
 
-### Community 343 - "SparseTableDictContent"
-Cohesion: 0.13
-Nodes (13): createNewShortcutList, BufferWithExtendableBuffer, SparseTableDictContent, ADDRESS_TABLE_BUFFER_INDEX, CONTENT_BUFFER_INDEX, LOOKUP_TABLE_BUFFER_INDEX, mAddressLookupTable, mExpandableAddressTableBuffer (+5 more)
+### Community 245 - "latinime_BinaryDictionaryUtils_createEmptyDictFile"
+Cohesion: 0.10
+Nodes (12): register_ProximityInfo(), register_BinaryDictionary(), register_BinaryDictionaryUtils(), Dictionary, latinime_releaseDicTraverseSession(), latinime_setDicTraverseSession(), register_DicTraverseSession(), JNI_OnLoad() (+4 more)
 
-### Community 344 - "MmappedBuffer"
-Cohesion: 0.13
-Nodes (12): MmappedBufferPtr, AK_FORCE_INLINE, ReadOnlyByteArrayView, ReadWriteByteArrayView, MmappedBuffer, mAlignedSize, mByteArrayView, mIsUpdatable (+4 more)
+### Community 246 - ".processEvent"
+Cohesion: 0.14
+Nodes (13): Bottom Sheets, Brand & Style, Buttons, Cards & Lists, Chips, Colors, Components, Elevation & Depth (+5 more)
 
-### Community 345 - "ReadWriteByteArrayView"
-Cohesion: 0.17
-Nodes (8): AK_FORCE_INLINE, ReadOnlyByteArrayView, mPtr, mSize, ReadWriteByteArrayView, mPtr, mSize, ReadOnlyByteArrayView
-
-### Community 346 - "TEST"
-Cohesion: 0.18
-Nodes (11): AssertionResult, GeometryUtilsTest, testGetAngle, testGetAngleDiff, testGetDistanceInt, testSquareFloat, GeometryUtils, AK_FORCE_INLINE (+3 more)
-
-### Community 347 - ".getCapsMode"
+### Community 247 - "KeyDetector"
 Cohesion: 0.15
-Nodes (7): Pattern, CapsModeUtils, CharSequence, CharSequence, NgramContext, NonNull, NgramContextUtils
+Nodes (17): atomic_int, atomic_fetch_add(), atomic_fetch_sub(), atomic_load(), atomic_store(), clear_numa_thread_affinity(), ggml_critical_section_start(), ggml_graph_compute_perf_stats_node() (+9 more)
 
-### Community 348 - "TranscriptionResult"
-Cohesion: 0.14
-Nodes (6): Any, Boolean, Int, TranscriptionResult, TranscriptionResultTest, VelaRecordingCallbackTest
+### Community 248 - "TrieMap"
+Cohesion: 0.18
+Nodes (8): HistoricalInfo, mCount, mLevel, mTimestamp, HeaderPolicy, createUpdatedEntryFrom, updateAllProbabilityEntriesForGCInner, updateEntriesForWordWithNgramContext
 
-### Community 351 - ".setFloating"
-Cohesion: 0.23
-Nodes (7): FloatingKeyboardUtils, Context, Int, Pair, Resources, View, ViewGroup
+### Community 249 - "SettingsValues.java"
+Cohesion: 0.02
+Nodes (116): ggml_abs(), ggml_abs_inplace(), ggml_compute_forward_argmax(), ggml_compute_forward_argmax_f32(), ggml_compute_forward_sum(), ggml_compute_forward_sum_f16(), ggml_compute_forward_sum_f32(), ggml_cpu_has_arm_fma() (+108 more)
 
-### Community 352 - "DictionaryFacilitatorLruCache"
+### Community 250 - "LanguageModelDictContentGlobalCounters"
+Cohesion: 0.12
+Nodes (12): LanguageModelDictContentGlobalCounters, COUNTER_SIZE_IN_BYTES, COUNTER_VALUE_NEAR_LIMIT_THRESHOLD, MAX_VALUE_OF_COUNTERS_INDEX, mBuffer, mMaxValueOfCounters, mTotalCount, TOTAL_COUNT_VALUE_NEAR_LIMIT_THRESHOLD (+4 more)
+
+### Community 251 - "getKnownDictionariesForLocale"
+Cohesion: 0.11
+Nodes (19): cleanUnusedMainDicts(), createDictionaryTextAnnotated(), getDictionaryLocales(), getKnownDictionariesForLocale(), hasAnythingOtherThanExtractedMainDictionary(), MissingDictionaryDialog(), DictionaryDetails(), DictionaryDialog() (+11 more)
+
+### Community 252 - "whisper_layer_decoder"
 Cohesion: 0.22
-Nodes (6): DictionaryFacilitatorLruCache, Context, Locale, Object, String, DictionaryFacilitatorProvider
+Nodes (8): BigramDictContent, copyBigramList, getBigramEntryAndAdvancePosition, mHasHistoricalInfo, runGC, runGCBigramList, writeBigramEntryAndAdvancePosition, SparseTableDictContent
 
-### Community 353 - "BackgroundGatheringCache"
-Cohesion: 0.23
-Nodes (5): BackgroundGatheringCache, getKnownDictHashes(), CharSequence, String, toJsonWithChecksum()
+### Community 253 - ".w"
+Cohesion: 0.10
+Nodes (15): AdditionalProximityChars, EN_US_ADDITIONAL_A, EN_US_ADDITIONAL_A_SIZE, EN_US_ADDITIONAL_E, EN_US_ADDITIONAL_E_SIZE, EN_US_ADDITIONAL_I, EN_US_ADDITIONAL_I_SIZE, EN_US_ADDITIONAL_O (+7 more)
 
-### Community 354 - "EditWordDialog"
-Cohesion: 0.30
-Nodes (15): createCursor(), deleteWord(), doesWordExist(), EditWordDialog(), getAll(), getLocaleDisplayNameForUserDictSettings(), getSpecificallySortedLocales(), Boolean (+7 more)
+### Community 254 - "Boolean"
+Cohesion: 0.15
+Nodes (12): Building & publishing, Consuming from VelaBoard, License, Model format, Modules, On-device LLM dependencies, One-time local setup (required before building), vela-cleaner (+4 more)
 
-### Community 355 - "ProbabilityDictContent"
-Cohesion: 0.25
-Nodes (13): ProbabilityDictContent, ProbabilityEntry, TerminalIdMap, ProbabilityDictContent, flushToFile, getEntryPos, getEntrySize, getProbabilityEntry (+5 more)
+### Community 255 - "KeyboardParams"
+Cohesion: 0.10
+Nodes (4): GestureStrokeRecognitionParams, KeyDrawParams, KeyVisualAttributes, ResourceUtils
 
-### Community 356 - "main"
-Cohesion: 0.21
-Nodes (14): getMinApi(), Array, File, Int, IntArray, List, Map, String (+6 more)
+### Community 256 - "TranscriptionStorage"
+Cohesion: 0.16
+Nodes (5): AccessibilityService, CrashReportExceptionHandler, DebugFlags, VoiceAccessibilityService, Thread
 
-### Community 357 - "PackageManager"
-Cohesion: 0.18
-Nodes (9): Activity, PackageManager, Bundle, Context, Override, String, PermissionsActivity, Bundle (+1 more)
+### Community 257 - "detectFormatVersion"
+Cohesion: 0.11
+Nodes (12): SparseTableDictContent, ADDRESS_TABLE_BUFFER_INDEX, CONTENT_BUFFER_INDEX, flush, LOOKUP_TABLE_BUFFER_INDEX, mAddressLookupTable, mExpandableAddressTableBuffer, mExpandableContentBuffer (+4 more)
 
-### Community 358 - "MultiBigramMap"
-Cohesion: 0.24
-Nodes (11): BigramMap, DictionaryStructureWithBufferPolicy, WordIdArrayView, MultiBigramMap, addBigramsForWord, MultiBigramMap::BigramMap::getBigramProbability(), MultiBigramMap::BigramMap::init(), getBigramProbability (+3 more)
+### Community 258 - "writeBufferToFileTail"
+Cohesion: 0.12
+Nodes (4): SettingsValues, runInLocale(), EnumSet, Locale
 
-### Community 359 - "MoreSuggestionsView"
-Cohesion: 0.19
-Nodes (6): GestureDetector, Boolean, Int, MotionEvent, View, MoreSuggestionsView
-
-### Community 360 - "TerminalPositionLookupTable"
-Cohesion: 0.18
-Nodes (9): SingleDictContent, BufferWithExtendableBuffer, TerminalIdMap, TerminalPositionLookupTable, flushToFile, getTerminalPtNodePosition, mSize, runGCTerminalIds (+1 more)
-
-### Community 361 - "GestureTrailDrawingPoints"
-Cohesion: 0.32
-Nodes (6): GestureTrailDrawingParams, TypedArray, GestureTrailDrawingPoints, Canvas, Paint, Rect
-
-### Community 362 - "KeyCode"
-Cohesion: 0.18
-Nodes (7): KeyCode, Boolean, Int, HashMap, Integer, String, KeyboardCodesSet
-
-### Community 363 - ".createCacheLambda"
-Cohesion: 0.28
-Nodes (6): Boolean, Context, List, MutableList, String, LayoutParser
-
-### Community 364 - "UniqueKeysCache"
-Cohesion: 0.22
-Nodes (5): HashMap, NonNull, Override, UniqueKeysCache, UniqueKeysCacheImpl
-
-### Community 365 - "KeyboardTypeface"
-Cohesion: 0.31
-Nodes (6): FontFamily, KeyboardTypeface, CharSequence, Context, TextView, Typeface
-
-### Community 366 - "TEST"
-Cohesion: 0.14
-Nodes (14): IntArrayViewTest, TestAccess, TestConstructFromArray, TestConstructFromObject, TestContains, TestCopyToArray, TestFirstOrDefault, TestLastOrDefault (+6 more)
-
-### Community 367 - "Shadows.kt"
-Cohesion: 0.14
-Nodes (6): ShadowInputMethodManager, Context, ShadowDictionaryFacilitatorImpl, ShadowInputMethodManager2, ShadowInputMethodService, ShadowLocaleManagerCompat
-
-### Community 368 - "PunctuationSuggestions"
-Cohesion: 0.32
-Nodes (5): ArrayList, NonNull, Override, String, PunctuationSuggestions
-
-### Community 369 - "TypefaceUtils"
-Cohesion: 0.30
-Nodes (5): Float, Paint, Rect, SparseArray, TypefaceUtils
-
-### Community 370 - "KeyboardScaleDialog"
-Cohesion: 0.27
-Nodes (13): createVariantsAndKeys(), DimensionCheckbox(), KeyboardScaleDialog(), KeyboardScalePreference(), Array, Boolean, ClosedFloatingPointRange, Float (+5 more)
-
-### Community 371 - "ver4_dict_buffers.cpp"
-Cohesion: 0.18
-Nodes (12): BufferWithExtendableBuffer, FILE, FORMAT_VERSION, HeaderPolicy, MmappedBufferPtr, ReadWriteByteArrayView, vector, Ver4DictBuffersPtr (+4 more)
-
-### Community 372 - "JarUtils"
-Cohesion: 0.23
-Nodes (6): Class, JarFile, JarUtils, Closeable, InputStream, String
-
-### Community 373 - "HardwareEventDecoder"
-Cohesion: 0.18
-Nodes (7): EventDecoder, HardwareEventDecoder, KeyEvent, HardwareKeyboardEventDecoder, isDpadDirection(), Int, KeyEvent
-
-### Community 374 - "Settings.kt"
-Cohesion: 0.28
-Nodes (12): customIconIds(), customIconNames(), getTransitionAnimationScale(), isFloatingKeyboardEnabled(), Boolean, Context, Int, SharedPreferences (+4 more)
-
-### Community 375 - ".getResolvedDownloadPath"
-Cohesion: 0.37
-Nodes (6): Boolean, Context, File, SharedPreferences, String, ModelDownloadHelper
-
-### Community 376 - "FileUtils"
-Cohesion: 0.29
-Nodes (11): FileUtils, existsDir, getBasename, getDirPath, getFilePath, getFilePathBufSize, getFilePathWithoutSuffix, getFilePathWithSuffix (+3 more)
-
-### Community 377 - "EmojiUCDTestFileParser"
-Cohesion: 0.22
-Nodes (5): EmojiUCDTestFileParser, String, Boolean, Pair, Unit
-
-### Community 378 - "ClipboardManagerCompat.java"
-Cohesion: 0.21
-Nodes (7): ClipData, ClipboardManagerCompat, Boolean, ClipboardManager, ClipDescription, Long, InputContentInfoCompat
-
-### Community 379 - "Profiler"
-Cohesion: 0.23
-Nodes (8): clockid_t, unordered_map, Profiler, mClockId, mCounters, mStartTime, mStartTimes, mTimes
-
-### Community 380 - "BigramListPolicy"
-Cohesion: 0.18
-Nodes (7): DictionaryBigramsStructurePolicy, DictionaryBigramsStructurePolicy, getNextBigram, skipAllBigrams, BigramListPolicy, mBuffer, ReadOnlyByteArrayView
-
-### Community 381 - "ggml-impl.h"
-Cohesion: 0.27
-Nodes (6): fp32_from_bits(), fp32_to_bits(), ggml_compute_fp16_to_fp32(), ggml_compute_fp32_to_fp16(), ggml_lookup_fp16_to_fp32(), ggml_fp16_t
-
-### Community 382 - "WhisperEngine"
-Cohesion: 0.29
-Nodes (5): ByteArray, FloatArray, Long, String, WhisperEngine
-
-### Community 383 - "ClipboardHistoryEntry"
+### Community 259 - "DynamicPtWritingUtils"
 Cohesion: 0.20
-Nodes (6): ClipboardHistoryEntry, Context, ImageView, InputContentInfoCompat, Int, TextView
+Nodes (5): Category, CategoryProperties, EmojiCategory, getCategoryKeyboardMapKey(), sortKeysGrouped()
 
-### Community 384 - ".splitAndSuggest"
-Cohesion: 0.36
-Nodes (7): AndroidSpellCheckerSession, Array, Boolean, Int, SentenceSuggestionsInfo, SuggestionsInfo, TextInfo
+### Community 261 - "TranscriptionStorage"
+Cohesion: 0.27
+Nodes (3): EmojiAltPhysicalKeyDetector, EmojiHotKeys, HotKeySet
 
-### Community 385 - "PopupKeysUtils.kt"
-Cohesion: 0.33
-Nodes (11): createPopupKeysArray(), findPopupHintLabelOrIcon(), getEnabledPopupKeys(), getHintIcon(), getHintLabel(), getHintText(), Array, List (+3 more)
+### Community 262 - "ResourceUtils.java"
+Cohesion: 0.21
+Nodes (11): ReadWriteByteArrayView, ShortcutDictContent, copyShortcutList, copyShortcutListFromDictContent, createAndGetShortcutFlags, createNewShortcutList, getShortcutEntryAndAdvancePosition, getShortcutListHeadPos (+3 more)
 
-### Community 386 - "NgramProperty"
-Cohesion: 0.23
-Nodes (7): NgramContext, vector, NgramProperty, mHistoricalInfo, mNgramContext, mProbability, mTargetCodePoints
+### Community 265 - "SettingsSubtype"
+Cohesion: 0.15
+Nodes (7): ReadOnlyByteArrayView, mPtr, mSize, ReadWriteByteArrayView, mPtr, mSize, ReadOnlyByteArrayView
 
-### Community 387 - "SingleDictContent"
+### Community 266 - "GestureDataDao"
+Cohesion: 0.09
+Nodes (8): SystemBroadcastReceiver, UncachedInputMethodManagerUtils, ShadowBinaryDictionaryUtils, ShadowDictionaryFacilitatorImpl, ShadowInputMethodManager2, ShadowInputMethodService, ShadowLocaleManagerCompat, ShadowInputMethodManager
+
+### Community 267 - "DictionaryInfoUtils"
 Cohesion: 0.17
-Nodes (7): DictContent, isValid, MmappedBufferPtr, SingleDictContent, mExpandableContentBuffer, mIsValid, mMmappedBuffer
+Nodes (12): Alignment, CustomizeIconsDialog(), Preview(), ActionRow(), GetIconOrEmpty(), IconOrImage(), painterResourceCompat(), Preference() (+4 more)
 
-### Community 388 - "DicNode_InputStateG"
+### Community 268 - "getUserAndInternalDictionaries"
 Cohesion: 0.17
-Nodes (9): DicNode_InputStateG, mDoubleLetterLevel, mInputIndex, mNeedsToUpdateInputStateG, mPointerId, mPrevCodePoint, mRawLength, mTerminalDiffCost (+1 more)
+Nodes (11): 1. Source constraint, 2. What config must the fork give the SDK, 3. Where config lives: Vela app (models.db) vs HeliBoard-style (SharedPreferences), 4. PersonalDictionary interface → mirroring/extending for shortcut expansions, 5. Licensing / boundary — config ownership, 6. Concrete recommendation, 7. Assumptions, inferences & open questions, Can Vela-app `models.db` shortcuts be reached from the fork? (+3 more)
 
-### Community 389 - "Scoring"
+### Community 269 - "DictionaryStructureWithBufferPolicy"
+Cohesion: 0.14
+Nodes (15): ggml_can_repeat(), ggml_compute_forward_div(), ggml_compute_forward_div_f32(), ggml_compute_forward_repeat(), ggml_compute_forward_repeat_back(), ggml_compute_forward_repeat_back_f32(), ggml_compute_forward_repeat_f16(), ggml_compute_forward_repeat_f32() (+7 more)
+
+### Community 271 - "AccessibilityUtils"
+Cohesion: 0.22
+Nodes (4): AccessibilityManager, AccessibilityUtils, init(), obtainEvent()
+
+### Community 272 - "EmojiViewCallback"
+Cohesion: 0.24
+Nodes (11): ShortcutDictContent, copyShortcutList, copyShortcutListFromDictContent, createAndGetShortcutFlags, createNewShortcutList, findShortcutEntryAndGetPos, flushToFile, getShortcutEntryAndAdvancePosition (+3 more)
+
+### Community 273 - "VoiceRecordingPane"
+Cohesion: 0.17
+Nodes (8): DicNode_InputStateG, mDoubleLetterLevel, mInputIndex, mNeedsToUpdateInputStateG, mPointerId, mPrevCodePoint, mRawLength, mTerminalDiffCost
+
+### Community 274 - "GestureStrokeRecognitionPoints"
 Cohesion: 0.17
 Nodes (10): DicNode, DicTraverseSession, Scoring, autoCorrectsToMultiWordSuggestionIfTop, calculateFinalScore, getAdjustedWeightOfLangModelVsSpatialModel, getDoubleLetterDemotionDistanceCost, getMostProbableString (+2 more)
 
-### Community 390 - "InputTest"
-Cohesion: 0.26
-Nodes (3): InputTest, Int, Long
-
-### Community 391 - "Build Reference — HeliBoard + Vela Voice"
+### Community 275 - "GestureStrokeDrawingPoints"
 Cohesion: 0.17
 Nodes (11): 1. Configure a keystore (one-time), 2. Sign manually (without Gradle config), Build Commands, Build Reference — HeliBoard + Vela Voice, Debug (for testing / USB deployment), Prerequisites, Quick Reference, Release (for production / Play Store) (+3 more)
 
-### Community 392 - "TextInputDialog"
-Cohesion: 0.20
-Nodes (10): KeyboardType, TextFieldLabelScope, Boolean, Composable, DialogProperties, Modifier, String, Unit (+2 more)
-
-### Community 393 - "ProbabilityUtils"
-Cohesion: 0.22
-Nodes (6): ProbabilityUtilsTest, TestEncodeRawProbability, AK_FORCE_INLINE, ProbabilityUtils, PROBABILITY_ENCODING_SCALER, TEST()
-
-### Community 394 - "Database"
-Cohesion: 0.29
-Nodes (8): SQLiteOpenHelper, copyFromDb(), Database, getInstance(), Context, File, Int, SQLiteDatabase
-
-### Community 395 - "ClipboardAdapter"
-Cohesion: 0.25
-Nodes (5): ClipboardAdapter, Int, Typeface, ViewGroup, ViewHolder
-
-### Community 397 - "FoldableUtils.kt"
-Cohesion: 0.31
-Nodes (5): FoldableObserver, FoldableUtils, Boolean, Context, String
-
-### Community 398 - "StatsUtilsManager"
-Cohesion: 0.24
-Nodes (3): Context, SuppressWarnings, StatsUtilsManager
-
-### Community 399 - "LanguageScreen"
-Cohesion: 0.29
-Nodes (10): dictsAvailable(), getSortedSubtypes(), Boolean, Context, InputMethodSubtype, List, Locale, LanguageScreen() (+2 more)
-
-### Community 400 - "DictionaryHeaderStructurePolicy"
+### Community 276 - "Ktx.kt"
 Cohesion: 0.18
-Nodes (10): DictionaryHeaderStructurePolicy, getAttributeMap, getFormatVersionNumber, getLocale, getMultiWordCostMultiplier, getSize, readHeaderValueOrQuestionMark, requiresGermanUmlautProcessing (+2 more)
+Nodes (10): 1. Project Overview, 2. Target Audience, 3. Product Features & Scope, 4. Design System (Lumina Sonic), 5. Technical Requirements, 6. Success Metrics, Core Value Proposition, Phase 1: Core Experience (Current) (+2 more)
 
-### Community 401 - "ProbabilityEntry"
-Cohesion: 0.22
+### Community 278 - "TerminalPositionLookupTable"
+Cohesion: 0.24
 Nodes (4): ProbabilityEntry, mFlags, mHistoricalInfo, mProbability
 
-### Community 402 - "ver4_patricia_trie_node_writer.h"
-Cohesion: 0.25
-Nodes (9): BufferWithExtendableBuffer, PtNodeArrayReader, PtNodeReader, HeaderPolicy, Ver4BigramListPolicy, Ver4DictBuffers, Ver4PatriciaTrieNodeReader, Ver4PtNodeArrayReader (+1 more)
+### Community 279 - "ErrorTypeUtils"
+Cohesion: 0.15
+Nodes (12): getIndexFromNgramType(), fillInHeader, readMaxNgramCounts, readMultipleWordCostMultiplier, readNgramCounts, readRequiresGermanUmlautProcessing, readBoolAttributeValue, readIntAttributeValue (+4 more)
 
-### Community 403 - "DynamicLanguageModelProbabilityUtils"
-Cohesion: 0.22
-Nodes (5): DynamicLanguageModelProbabilityUtils, ASSUMED_MIN_COUNTS, DURATION_TO_DISCARD_ENTRY_IN_SECONDS, ENCODED_BACKOFF_WEIGHTS, NgramType
+### Community 280 - "VoiceSettingsScreen"
+Cohesion: 0.20
+Nodes (24): android, addDictionaryEntry(), addKeyword(), DictionaryEntryRow(), DictionaryForm(), KeywordChipRow(), KeywordsForm(), Context (+16 more)
 
-### Community 404 - "dic_traverse_session.cpp"
-Cohesion: 0.25
-Nodes (10): Dictionary, DictionaryStructureWithBufferPolicy, NgramContext, ProximityInfo, SuggestOptions, getDictionaryStructurePolicy, DicTraverseSession::init(), initializeProximityInfoStates (+2 more)
-
-### Community 405 - "release.py"
+### Community 281 - "NgramContext"
 Cohesion: 0.35
 Nodes (10): check_changelog(), check_default_values_diff(), check_git(), main(), read_dicts_readme(), update_dict_hashes(), update_dict_list(), update_khipro_mappings() (+2 more)
 
-### Community 406 - "ProximityInfo::ProximityInfo"
-Cohesion: 0.33
-Nodes (10): jsize, AK_FORCE_INLINE, jfloat, jfloatArray, jint, jintArray, JNIEnv, ProximityInfo::ProximityInfo() (+2 more)
+### Community 282 - "NormalDistribution2D"
+Cohesion: 0.09
+Nodes (15): NormalDistribution2D, mCosTheta, mSinTheta, mUX, mUY, mXDistribution, mYDistribution, NormalDistribution (+7 more)
 
-### Community 407 - ".build"
+### Community 284 - "WaveformView"
+Cohesion: 0.40
+Nodes (9): adjustLuminosityAndKeepAlpha(), brighten(), brightenOrDarken(), colorDistanceSquared(), darken(), getBrightnessSquared(), isBrightColor(), isDarkColor() (+1 more)
+
+### Community 285 - "KeyPreviewChoreographer"
+Cohesion: 0.38
+Nodes (9): ContentResolver, createCursor(), deleteWord(), EditWordDialog(), getAll(), getLocaleDisplayNameForUserDictSettings(), getSpecificallySortedLocales(), PersonalDictionaryScreen() (+1 more)
+
+### Community 286 - "SentenceLevelAdapter.java"
 Cohesion: 0.22
-Nodes (3): WhisperConfig, WhisperConfigTest, WhisperEngineTest
+Nodes (8): latinime_BinaryDictionaryUtils_setCurrentTimeForTest(), TimeKeeper, sSetForTesting, startTestModeWithForceCurrentTime, stopTestMode, TEST(), TestTestMode, TimeKeeperTest
 
-### Community 408 - "EmojiCategoryPageIndicatorView"
-Cohesion: 0.29
-Nodes (6): EmojiCategoryPageIndicatorView, AttributeSet, Canvas, Context, Override, Paint
+### Community 287 - "build.gradle"
+Cohesion: 0.06
+Nodes (27): BufferWithExtendableBuffer, DictionaryHeaderStructurePolicy, getAttributeMap, getFormatVersionNumber, getLocale, getMultiWordCostMultiplier, getSize, readHeaderValueOrQuestionMark (+19 more)
 
-### Community 409 - "FormatSpec.java"
-Cohesion: 0.31
-Nodes (6): DictionaryOptions, FormatSpec, HashMap, NonNull, Override, String
+### Community 289 - "SettingsActivity"
+Cohesion: 0.12
+Nodes (23): ColorSetting, determineAutoColor(), determineUserColor(), getAvailableDefaultColors(), getColorsForCurrentTheme(), getExistingThemeNames(), getThemeColors(), getUnusedThemeName() (+15 more)
 
-### Community 410 - "SliderDialog"
-Cohesion: 0.22
-Nodes (9): Boolean, ClosedFloatingPointRange, Composable, Float, Int, Modifier, Unit, PreviewSliderDialog() (+1 more)
+### Community 290 - ".contains"
+Cohesion: 0.08
+Nodes (9): LettersOnBaseLayout, PopupKeySpec, KeyBackgroundState, KeyParams, OptionalAttributes, Spacer, PopupKeyDivider, CollectionUtils (+1 more)
 
-### Community 411 - "ver4_patricia_trie_node_writer.h"
-Cohesion: 0.24
-Nodes (8): BufferWithExtendableBuffer, PtNodeArrayReader, PtNodeReader, HeaderPolicy, Ver4DictBuffers, Ver4PatriciaTrieNodeReader, Ver4PtNodeArrayReader, Ver4ShortcutListPolicy
+### Community 291 - "header_read_write_utils.cpp"
+Cohesion: 0.09
+Nodes (36): createAttributeMapAndReadAllAttributes, fillInAndWriteHeaderToBuffer, readHeaderValueOrQuestionMark, readLocale, HeaderReadWriteUtils, CODE_POINT_TABLE_KEY, createAndGetDictionaryFlagsUsingAttributeMap, fetchAllHeaderAttributes (+28 more)
 
-### Community 412 - "expo"
+### Community 292 - "InlineAutofillUtils.java"
+Cohesion: 0.19
+Nodes (6): InlineAutofillUtils, InlineContentClipView, HorizontalScrollView, InlineSuggestion, InlineSuggestionsResponse, OnDrawListener
+
+### Community 294 - "ggml_graph_dump_dot"
 Cohesion: 0.20
 Nodes (9): package, expo, android, name, plugins, slug, splash, version (+1 more)
 
-### Community 413 - "SystemBroadcastReceiver.java"
-Cohesion: 0.36
-Nodes (6): BroadcastReceiver, Context, Intent, Override, String, SystemBroadcastReceiver
-
-### Community 415 - "gguf_write_to_buf"
+### Community 295 - "ShortcutDictContent"
 Cohesion: 0.33
 Nodes (9): gguf_buf_free(), gguf_buf_grow(), gguf_buf_init(), gguf_bwrite_el(), gguf_bwrite_str(), gguf_get_meta_data(), gguf_get_meta_size(), gguf_write_to_buf() (+1 more)
 
-### Community 416 - ".getInputMethodInfoOf"
-Cohesion: 0.42
-Nodes (5): Context, InputMethodInfo, InputMethodManager, String, UncachedInputMethodManagerUtils
+### Community 297 - "UIHandler"
+Cohesion: 0.08
+Nodes (8): VoiceRecordingPane, VoiceRecordingPaneTest, LeakGuardHandlerWrapper, VoiceInputMethodService, Handler, HandlerThread, Looper, WeakReference
 
-### Community 417 - "ListPickerDialog"
-Cohesion: 0.25
-Nodes (8): Boolean, Composable, List, Modifier, T, Unit, ListPickerDialog(), PreviewListPickerDialog()
+### Community 298 - "GestureDataGathering.kt"
+Cohesion: 0.15
+Nodes (7): DictionaryDumpBroadcastReceiver, DictionaryPackInstallBroadcastReceiver, getPlatformDialogThemeContext(), createInputMethodPickerDialog(), FrameLayout, IBinder, SpannableStringBuilder
 
-### Community 418 - "ReorderDialog"
-Cohesion: 0.25
-Nodes (8): Composable, List, Modifier, String, T, Unit, Preview(), ReorderDialog()
+### Community 299 - "SparseTableDictContent"
+Cohesion: 0.20
+Nodes (3): KeyCode, Spec, KeyboardCodesSet
 
-### Community 419 - "WordProperty"
-Cohesion: 0.31
-Nodes (7): NgramProperty, UnigramProperty, vector, WordProperty, mCodePoints, mNgrams, mUnigramProperty
-
-### Community 420 - "writeFlagsAndAdvancePosition"
-Cohesion: 0.44
-Nodes (8): markPtNodeAsDeleted, markPtNodeAsMoved, markPtNodeAsWillBecomeNonTerminal, NodeFlags, writeFlagsAndAdvancePosition, getFlagsAndAdvancePosition, markPtNodeAsDeleted, markPtNodeAsMoved
-
-### Community 421 - "BinaryDictionaryBigramsIterator"
-Cohesion: 0.25
-Nodes (7): BinaryDictionaryBigramsIterator, mBigramPos, mBigramsStructurePolicy, mHasNext, mPos, mProbability, DictionaryBigramsStructurePolicy
-
-### Community 422 - "BinaryDictionaryShortcutIterator"
-Cohesion: 0.28
-Nodes (6): BinaryDictionaryShortcutIterator, mHasNextShortcutTarget, mPos, mShortcutStructurePolicy, AK_FORCE_INLINE, DictionaryShortcutsStructurePolicy
-
-### Community 423 - "suggest_policy.h"
-Cohesion: 0.22
-Nodes (7): Scoring, SuggestPolicy, getScoring, getTraversal, getWeighting, Traversal, Weighting
-
-### Community 424 - "SaveGestureDataTest"
-Cohesion: 0.39
-Nodes (3): Int, String, SaveGestureDataTest
-
-### Community 425 - "ShadowBinaryDictionaryUtils"
-Cohesion: 0.39
-Nodes (5): Char, Float, Int, String, ShadowBinaryDictionaryUtils
-
-### Community 426 - "AndroidEmojiSupportFileParser"
-Cohesion: 0.28
-Nodes (4): AndroidEmojiSupportFileParser, Int, Map, String
-
-### Community 427 - "ClipboardHistoryRecyclerView"
-Cohesion: 0.29
-Nodes (5): AdapterDataObserver, RecyclerView, ClipboardHistoryRecyclerView, Adapter, View
-
-### Community 428 - "KeyTypeSerializer"
-Cohesion: 0.25
-Nodes (5): Decoder, Encoder, KSerializer, SerialDescriptor, KeyTypeSerializer
-
-### Community 430 - "DictionaryDumpBroadcastReceiver"
-Cohesion: 0.32
-Nodes (5): DictionaryDumpBroadcastReceiver, Context, Intent, Override, String
-
-### Community 431 - ".jsonStrToList"
-Cohesion: 0.39
-Nodes (5): Closeable, List, Object, String, JsonUtils
-
-### Community 432 - "TextFileParser"
-Cohesion: 0.39
-Nodes (3): String, T, TextFileParser
-
-### Community 433 - "TEST"
-Cohesion: 0.29
-Nodes (6): BufferWithExtendablebufferTest, TestCopy, TestExtend, TestSizeLimit, TestWriteAndRead, TEST()
-
-### Community 434 - "ClipboardLayoutParams"
-Cohesion: 0.29
-Nodes (4): ClipboardLayoutParams, Int, RecyclerView, View
-
-### Community 435 - "SupportedEmojis"
+### Community 302 - "DicNodePriorityQueue"
 Cohesion: 0.38
-Nodes (3): Context, String, SupportedEmojis
+Nodes (11): createSendIntentChooser(), createZipFile(), deobfuscateEmail(), fileGetDelegate(), filterIntentToOnlyIncludeEmailApps(), getData(), getGestureDataFileName(), getGestureZipFile() (+3 more)
 
-### Community 437 - "char_utils.cpp"
-Cohesion: 0.33
-Nodes (5): latin_tolower, LatinCapitalSmallPair, capital, small, main()
+### Community 303 - "ExecutorUtils.java"
+Cohesion: 0.22
+Nodes (6): ExecutorFactory, ExecutorUtils, RunnableChain, Runnable, ScheduledExecutorService, ThreadFactory
 
-### Community 438 - "EmojiSpec"
+### Community 304 - "restoreLauncher"
+Cohesion: 0.10
+Nodes (26): EditButton(), AddColorRow(), ColorItemRow(), ColorThemePickerDialog(), Preview(), ConfirmationDialog(), PreviewConfirmDialog(), InfoDialog() (+18 more)
+
+### Community 305 - "TypingSuggestPolicy"
+Cohesion: 0.07
+Nodes (16): Scoring, SuggestPolicy, getScoring, getTraversal, getWeighting, Traversal, Weighting, SuggestPolicy (+8 more)
+
+### Community 306 - "ClipboardHistoryView"
+Cohesion: 0.25
+Nodes (7): Combined Issues: Offline Transcription IME, Issue 01: Setup Project Scaffolding & Native Android IME Service, Issue 02: Model Downloader and Scoped Storage Manager, Issue 03: Native IME Voice Typing Pane and Waveform UI, Issue 04: On-device Transcriber Engine (Whisper) Integration, Issue 05: Hybrid Cleaner Pipeline (Regex + LLM), Issue 06: IME Commit Integration & Final End-to-End Testing
+
+### Community 308 - "KoreanDictionary"
+Cohesion: 0.36
+Nodes (8): ggml_compute_forward_rope(), ggml_compute_forward_rope_back(), ggml_compute_forward_rope_f16(), ggml_compute_forward_rope_f32(), ggml_rope_yarn_corr_dim(), ggml_rope_yarn_corr_dims(), rope_yarn(), rope_yarn_ramp()
+
+### Community 310 - "BigramListReadWriteUtils"
+Cohesion: 0.15
+Nodes (13): BigramListReadWriteUtils, FLAG_ATTRIBUTE_ADDRESS_TYPE_ONEBYTE, FLAG_ATTRIBUTE_ADDRESS_TYPE_THREEBYTES, FLAG_ATTRIBUTE_ADDRESS_TYPE_TWOBYTES, FLAG_ATTRIBUTE_HAS_NEXT, FLAG_ATTRIBUTE_OFFSET_NEGATIVE, getBigramAddressAndAdvancePosition, getBigramEntryPropertiesAndAdvancePosition (+5 more)
+
+### Community 311 - "ProbabilityEntry"
 Cohesion: 0.29
-Nodes (3): EmojiSpec, Any, Boolean
+Nodes (6): Conventions, Issue tracker: GitHub, Pull requests as a triage surface, Wayfinding operations, When a skill says "fetch the relevant ticket", When a skill says "publish to the issue tracker"
 
-### Community 439 - ".getPopupKeyLabels"
+### Community 312 - "dic_node_vector.h"
+Cohesion: 0.29
+Nodes (6): 1. `models`, 2. `personal_dictionary`, 3. `dictionary_keywords`, 4. `corrections`, Database Schema Documentation, Tables
+
+### Community 313 - "Traversal"
+Cohesion: 0.29
+Nodes (6): Core Domain Vocabulary, Core Features, Overview, Spec: Offline Transcription IME, Target Platform, UI/UX Design (Voice Typing Pane)
+
+### Community 314 - "SuggestOptions"
+Cohesion: 0.27
+Nodes (4): fp32_from_bits(), fp32_to_bits(), ggml_compute_fp16_to_fp32(), ggml_compute_fp32_to_fp16()
+
+### Community 315 - "getTimestamp"
+Cohesion: 0.18
+Nodes (3): appendLink(), replaceFirst(), updateSoftInputWindowLayoutParameters()
+
+### Community 316 - "KeyboardActionListener"
 Cohesion: 0.33
-Nodes (3): Boolean, Collection, String
+Nodes (5): Agent skills, Domain docs, graphify, Issue tracker, Triage labels
 
-### Community 440 - "Defaults.kt"
+### Community 317 - "runInLocale"
 Cohesion: 0.33
-Nodes (3): Defaults, Context, SharedPreferences
+Nodes (5): Before exploring, read these, Domain Docs, File structure, Flag ADR conflicts, Use the glossary's vocabulary
 
-### Community 441 - ".checksum"
+### Community 319 - "ReadOnlyBinaryDictionary"
 Cohesion: 0.33
-Nodes (4): ChecksumCalculator, File, InputStream, String
+Nodes (3): isSpaceOrEnter(), Mode, SavedKeyboardState
 
-### Community 443 - "diacritics.py"
+### Community 323 - "BigramDictContent"
 Cohesion: 0.60
 Nodes (5): check_diacritics(), find_word_lists(), main(), make_all_diacritics(), read_diacritics()
 
-### Community 444 - ".styleButton"
+### Community 325 - ".calculateProximities"
+Cohesion: 0.20
+Nodes (5): NgramProperty, mHistoricalInfo, mNgramContext, mProbability, mTargetCodePoints
+
+### Community 326 - "EmojiData"
+Cohesion: 0.24
+Nodes (8): HeaderPolicy, Ver4DictBuffers, Ver4PatriciaTrieNodeReader, Ver4PatriciaTrieNodeWriter, Ver4PatriciaTrieWritingHelper, mBuffers, writeToDictFile, writeToDictFileWithGC
+
+### Community 328 - "DicNodePool"
+Cohesion: 0.14
+Nodes (9): DicNodePool, mDicNodes, mPooledDicNodes, TEST(), deque, DicNodePoolTest, TestGet, TestPlaceBack (+1 more)
+
+### Community 329 - "UnigramProperty"
+Cohesion: 0.13
+Nodes (8): UnigramProperty, mHistoricalInfo, mIsBlacklisted, mIsNotAWord, mIsPossiblyOffensive, mProbability, mRepresentsBeginningOfSentence, ShortcutProperty
+
+### Community 332 - "ShortcutDictContent"
+Cohesion: 1.00
+Nodes (3): export_corrections(), main(), pull_adb_db()
+
+### Community 335 - "BloomFilter"
+Cohesion: 0.22
+Nodes (7): bitset, BloomFilterTest, BloomFilter, BIGRAM_FILTER_MODULO, mFilter, TEST(), TestFilter
+
+### Community 336 - "DictionaryCollection"
+Cohesion: 0.29
+Nodes (6): BufferWithExtendablebufferTest, TEST(), TestCopy, TestExtend, TestSizeLimit, TestWriteAndRead
+
+### Community 337 - "TypingScoring"
+Cohesion: 0.10
+Nodes (23): WordAttributes, mIsBlacklisted, mIsNotAWord, mIsPossiblyOffensive, mProbability, getProbabilityOfWord, getWordProperty, getBigramNodeImprobability (+15 more)
+
+### Community 344 - "MmappedBuffer"
+Cohesion: 0.50
+Nodes (3): compilerOptions, strict, extends
+
+### Community 346 - "TEST"
+Cohesion: 0.22
+Nodes (8): AssertionResult, ExpectAngleDiffEq(), TEST(), GeometryUtilsTest, testGetAngle, testGetAngleDiff, testGetDistanceInt, testSquareFloat
+
+### Community 357 - "PackageManager"
+Cohesion: 0.04
+Nodes (23): BroadcastReceiver, CorrectionInfo, DictionaryPackConstants, HapticEvent, ExtraValue, ImeOption, Separators, Subtype (+15 more)
+
+### Community 360 - "TerminalPositionLookupTable"
+Cohesion: 0.09
+Nodes (22): ProbabilityDictContent, flushToFile, getEntryPos, getEntrySize, getProbabilityEntry, mHasHistoricalInfo, mSize, runGC (+14 more)
+
+### Community 361 - "GestureTrailDrawingPoints"
+Cohesion: 0.60
+Nodes (5): createVariantsAndKeys(), DimensionCheckbox(), KeyboardScaleDialog(), KeyboardScalePreference(), Preview()
+
+### Community 365 - "KeyboardTypeface"
+Cohesion: 0.10
+Nodes (6): CharacterStyle, KeyboardTypeface, SuggestionStripLayoutHelper, FontFamily, TextView, TypedValue
+
+### Community 366 - "TEST"
+Cohesion: 0.33
+Nodes (3): DictionaryBigramsStructurePolicy, getNextBigram, skipAllBigrams
+
+### Community 372 - "JarUtils"
+Cohesion: 0.27
+Nodes (3): Class, JarUtils, JarFile
+
+### Community 374 - "Settings.kt"
 Cohesion: 0.47
-Nodes (4): Float, GradientDrawable, Int, Typeface
+Nodes (4): BigramDictContent, HeaderPolicy, NgramProperty, TerminalPositionLookupTable
 
-### Community 446 - ".convertPcmToFloat"
+### Community 379 - "Profiler"
+Cohesion: 0.25
+Nodes (7): clockid_t, Profiler, mClockId, mCounters, mStartTime, mStartTimes, mTimes
+
+### Community 381 - "ggml-impl.h"
 Cohesion: 0.40
-Nodes (3): AudioConverter, ByteArray, FloatArray
+Nodes (3): TEST(), ProbabilityUtilsTest, TestEncodeRawProbability
 
-### Community 448 - ".isNonSpacingMark"
+### Community 384 - ".splitAndSuggest"
+Cohesion: 0.10
+Nodes (4): AppWorkarounds, containsValueWhenSplit(), InputAttributes, InputTypeUtils
+
+### Community 385 - "PopupKeysUtils.kt"
 Cohesion: 0.40
-Nodes (3): Boolean, Int, Unicode
+Nodes (5): block_q4_0, ggml_quantize_q4_0(), dequantize_row_q4_0(), quantize_row_q4_0(), quantize_row_q4_0_reference()
 
-### Community 449 - "DictionaryShortcutsStructurePolicy"
+### Community 393 - "ProbabilityUtils"
+Cohesion: 0.33
+Nodes (4): getProbability, getProbability, ProbabilityUtils, PROBABILITY_ENCODING_SCALER
+
+### Community 394 - "Database"
+Cohesion: 0.48
+Nodes (4): copyFromDb(), Database, getInstance(), SQLiteOpenHelper
+
+### Community 403 - "DynamicLanguageModelProbabilityUtils"
+Cohesion: 0.11
+Nodes (22): whisper_batch, logits, n_seq_id, n_tokens, pos, seq_id, token, whisper_kv_cache (+14 more)
+
+### Community 406 - "ProximityInfo::ProximityInfo"
+Cohesion: 0.22
+Nodes (10): getKeyCenterXOfKeyIdG, getKeyCenterYOfKeyIdG, getKeyKeyDistanceG, getNormalizedSquaredDistanceFromCenterFloatG, getOriginalCodePointOf, initializeG, ProximityInfo::ProximityInfo(), safeGetOrFillZeroFloatArrayRegion() (+2 more)
+
+### Community 411 - "ver4_patricia_trie_node_writer.h"
+Cohesion: 0.11
+Nodes (5): Activity, PermissionsActivity, SpellCheckerSettingsActivity, MoreSuggestionsView, GestureDetector
+
+### Community 418 - "ReorderDialog"
 Cohesion: 0.40
-Nodes (4): DictionaryShortcutsStructurePolicy, getNextShortcut, getStartPos, skipAllShortcuts
+Nodes (5): block_q5_1, ggml_quantize_q5_1(), dequantize_row_q5_1(), quantize_row_q5_1(), quantize_row_q5_1_reference()
 
-### Community 450 - "ver4_patricia_trie_reading_utils.h"
+### Community 424 - "SaveGestureDataTest"
+Cohesion: 0.40
+Nodes (3): DictionaryShortcutsStructurePolicy, getStartPos, skipAllShortcuts
+
+### Community 427 - "ClipboardHistoryRecyclerView"
+Cohesion: 0.05
+Nodes (13): Adapter, AdapterDataObserver, ClipboardAdapter, ClipboardHistoryRecyclerView, ClipboardHistoryView, ClipboardLayoutParams, OnKeyEventListener, EmojiPalettesAdapter (+5 more)
+
+### Community 428 - "KeyTypeSerializer"
 Cohesion: 0.40
 Nodes (3): BufferWithExtendableBuffer, Ver4PatriciaTrieReadingUtils, getTerminalIdAndAdvancePosition
 
-### Community 451 - "ver4_patricia_trie_reading_utils.h"
-Cohesion: 0.40
-Nodes (3): BufferWithExtendableBuffer, Ver4PatriciaTrieReadingUtils, getTerminalIdAndAdvancePosition
-
-### Community 452 - "logToJava"
-Cohesion: 0.50
-Nodes (3): JNIEnv, LogUtils, logToJava
-
-### Community 453 - "TEST"
-Cohesion: 0.50
-Nodes (3): DefinesTest, NELEMSForFixedLengthArray, TEST()
-
-### Community 454 - "ggml_map_custom2_impl"
-Cohesion: 0.83
-Nodes (4): ggml_custom2_op_t, ggml_map_custom2(), ggml_map_custom2_impl(), ggml_map_custom2_inplace()
+### Community 433 - "TEST"
+Cohesion: 0.07
+Nodes (32): latinime_BinaryDictionary_createOnMemory(), latinime_BinaryDictionary_open(), DictionaryStructureWithBufferPolicyFactory, getHeaderFilePathInDictDir, newPolicyForDirectoryDict, newPolicyForExistingDictFile, newPolicyForFileDict, newPolicyForOnMemoryDict (+24 more)
 
 ### Community 456 - "loadEnv"
 Cohesion: 0.50
 Nodes (3): Map, String, loadEnv()
 
-### Community 457 - "PtNodeArrayReader"
-Cohesion: 0.50
-Nodes (3): PtNodeArrayReader, readForwardLinkAndReturnIfValid, readPtNodeArrayInfoAndReturnIfValid
+### Community 514 - "whisper_global"
+Cohesion: 0.25
+Nodes (8): whisper_global, log_callback, log_callback_user_data, whisper_log_callback_default(), whisper_log_internal(), whisper_log_set(), ggml_log_callback, ggml_log_level
 
-### Community 461 - "tsconfig.json"
+### Community 519 - "CalcEditDistance"
+Cohesion: 0.05
+Nodes (30): AutocorrectionThresholdUtilsTest, latinime_BinaryDictionaryUtils_calcNormalizedScore(), DamerauLevenshteinEditDistancePolicy, mString0, mString0Length, mString1, mString1Length, EditDistance (+22 more)
+
+### Community 520 - "ggml_map_unary_impl_f32"
+Cohesion: 0.24
+Nodes (12): ggml_compute_forward_map_binary(), ggml_compute_forward_map_binary_f32(), ggml_compute_forward_map_unary(), ggml_compute_forward_map_unary_f32(), ggml_map_binary_f32(), ggml_map_binary_impl_f32(), ggml_map_binary_inplace_f32(), ggml_map_unary_f32() (+4 more)
+
+### Community 521 - "TEST"
+Cohesion: 0.04
+Nodes (37): dumpWord(), dumpWordInfo(), intArrayToCharArray(), vector, mDictFormatVersion, getNextShortcut, getShortcutIterator, ProbabilityEntry (+29 more)
+
+### Community 2414 - "getEntryInfo"
 Cohesion: 0.50
-Nodes (3): compilerOptions, strict, extends
+Nodes (3): LanguageModelDictContent::EntryInfoToTurncate::Comparator::operator()(), getEntryInfo, EntryInfoToTurncate
+
+### Community 2415 - "TEST"
+Cohesion: 0.50
+Nodes (3): TEST(), DefinesTest, NELEMSForFixedLengthArray
+
+### Community 2416 - "TEST"
+Cohesion: 0.50
+Nodes (4): TEST(), ProbabilityEntryTest, TestEncodeDecode, TestEncodeDecodeWithHistoricalInfo
+
+### Community 2417 - "TEST"
+Cohesion: 0.50
+Nodes (4): TEST(), TerminalPositionLookupTableTest, TestGC, TestGetFromEmptyTable
 
 ## Knowledge Gaps
-- **1388 isolated node(s):** `$schema`, `plugin`, `@opencode-ai/plugin`, `n_len`, `n_len_org` (+1383 more)
+- **1357 isolated node(s):** `$schema`, `plugin`, `@opencode-ai/plugin`, `n_len`, `n_len_org` (+1352 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **85 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **2126 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `CrashReportExceptionHandler` connect `getTimestamp` to `Core Domain Pipeline`?**
-  _High betweenness centrality (0.088) - this node is a cross-community bridge._
-- **Why does `Key` connect `Native Build Toolchain` to `string`, `EmojiCategory`, `PopupKeysKeyboardView`, `EmojiViewCallback`, `KeyPreviewChoreographer`, `KeyboardAccessibilityDelegate`, `PopupKeysKeyboardParams`, `build.gradle.kts`, `TimerHandler`, `data`, `whisper_layer_decoder`, `LayoutType`, `string`, `EmojiPalettesView`, `ggml_compute_forward_rope_f16`, `Adapter`, `AudioConverterTest`, `MoreSuggestions.java`, `ggml_map_custom1_impl_f32`, `MoreSuggestionsView`, `EmojiPalettesView.java`, `UniqueKeysCache`, `KeyDetector`, `build.gradle.kts`, `ggml_rope_impl`, `KeyboardParams`?**
-  _High betweenness centrality (0.072) - this node is a cross-community bridge._
-- **Why does `Settings` connect `whisper_layer_encoder` to `GGML Inference Engine`, `string`, `Core Domain Pipeline`, `Build Scripts`, `SettingsSubtype`, `TypeScript Configuration`, `RichInputMethodSubtype`, `KeyPreviewChoreographer`, `SystemBroadcastReceiver.java`, `.getInputMethodInfoOf`, `.contains`, `DictionaryEntry`, `InlineAutofillUtils.java`, `build.gradle.kts`, `SettingsValuesForSuggestion`, `LatinIME.java`, `InputView.java`, `data`, `whisper_layer_decoder`, `WhisperEngine`, `whisper_vocab`, `string`, `ggml_compute_forward_sum`, `apply`, `EmojiPalettesView.java`, `ResizableIntArray`, `GestureTrailDrawingPoints`, `CMakeCCompilerId.c`, `SettingsValues.java`, `KeyboardParams`?**
-  _High betweenness centrality (0.040) - this node is a cross-community bridge._
+- **Why does `intArrayToCharArray()` connect `TEST` to `ggml_can_repeat`, `ggml_nbytes`, `ggml_graph_import`, `CalcEditDistance`, `ProbabilityUtils`, `ggml_add_rel_pos_impl`, `SettingsSubtype`, `PtNodeParams`, `GestureStrokeRecognitionPoints`, `RichInputMethodSubtype`, `ProximityInfo::ProximityInfo`, `DicNodeStateOutput`, `NormalDistribution2D`, `SentenceLevelAdapter.java`, `build.gradle`, `header_read_write_utils.cpp`, `InputAttributes`, `SaveGestureDataTest`, `KeyTypeSerializer`, `MutableEntryCounters`, `TEST`, `TypingSuggestPolicy`, `AudioRecord`, `gguf_get_n_kv`, `WordAttributes`, `Ver4DictConstants`, `ggml_compute_forward_unary`, `proximity_info_state_utils.cpp`, `ggml_compute_backward`, `EmojiData`, `whisper_model`, `DicNodePool`, `com_android_inputmethod_latin_DicTraverseSession.cpp`, `Ver4DictConstants`, `ByteArrayUtils`, `BloomFilter`, `TypingScoring`, `DynamicPtUpdatingHelper`, `whisper_global`, `ggml_compute_forward_sum`, `AndroidWordLevelSpellCheckerSession`, `EditWordDialog`, `quantize_row_q5_0_reference`, `.convertPcmToFloat`, `ggml_map_custom1_impl`, `Ver2PtNodeArrayReader`, `TEST`, `TEST`, `DynamicPtReadingUtils`, `Ver4PatriciaTrieNodeWriter`, `latinime_BinaryDictionaryUtils_createEmptyDictFile`, `Settings.kt`, `CMakeCCompilerId.c`, `TrieMap`, `build.gradle.kts`, `ggml-impl.h`, `ggml_map_custom2_impl_f32`?**
+  _High betweenness centrality (0.142) - this node is a cross-community bridge._
+- **Why does `VoiceAccessibilityService` connect `TranscriptionStorage` to `byteswap_tensor_data`, `GestureDataGathering.kt`, `KeyboardTypeface`, `VoiceAccessibilityService`, `AppsManager`?**
+  _High betweenness centrality (0.056) - this node is a cross-community bridge._
+- **Why does `WordInfo` connect `settings.gradle.kts` to `GGML Inference Engine`, `TypingTraversal`, `Core Domain Pipeline`, `DictionaryEntry`, `MutableEntryCounters`, `vector`, `StringUtils`, `InputView.java`, `ggml_dup_tensor`, `ForgettingCurveUtils`, `.calculateProximities`, `whisper_bench_ggml_mul_mat_str`, `PersonalizationHelper.java`, `gguf_get_or_add_key`, `whisper_hparams`, `ggml_set_op_params`, `AudioConverterTest`, `StringUtils.kt`, `ggml_compute_forward_sum`, `VoiceInputMethodService`, `ggml_map_unary_impl_f32`, `AndroidWordLevelSpellCheckerSession`, `quantize_row_q5_0_reference`, `ggml_set_f32`, `.convertPcmToFloat`, `.restartSuggestions`, `CMakeCCompilerId.c`, `TrieMap`?**
+  _High betweenness centrality (0.039) - this node is a cross-community bridge._
 - **What connects `$schema`, `plugin`, `@opencode-ai/plugin` to the rest of the system?**
-  _1389 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1358 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Model Verification Module` be split into smaller, more focused modules?**
-  _Cohesion score 0.0700354609929078 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06376811594202898 - nodes in this community are weakly interconnected._
 - **Should `Native Build Toolchain` be split into smaller, more focused modules?**
-  _Cohesion score 0.03845063769485121 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06812291743798593 - nodes in this community are weakly interconnected._
 - **Should `GGML Inference Engine` be split into smaller, more focused modules?**
-  _Cohesion score 0.06707033069399161 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.0815018315018315 - nodes in this community are weakly interconnected._

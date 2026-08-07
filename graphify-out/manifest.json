@@ -425,8 +425,8 @@
     "semantic_hash": ""
   },
   "velaboard/app/build.gradle.kts": {
-    "mtime": 1785675938.2188447,
-    "ast_hash": "e1221b592b3757ed1dcd6ffde4594d94",
+    "mtime": 1785763003.555747,
+    "ast_hash": "0eef6f71b634ed2b4e6e73628bc348db",
     "semantic_hash": ""
   },
   "velaboard/app/src/main/assets/layouts/clipboard_bottom/clip_bottom_row.json": {
@@ -1635,13 +1635,13 @@
     "semantic_hash": ""
   },
   "velaboard/app/src/main/java/helium314/keyboard/latin/settings/Defaults.kt": {
-    "mtime": 1785668948.3861613,
-    "ast_hash": "8ec651825590a9137f18d26091aef2cb",
+    "mtime": 1786080093.52531,
+    "ast_hash": "4d38ca98ae3e28451a9551c0235d8067",
     "semantic_hash": ""
   },
   "velaboard/app/src/main/java/helium314/keyboard/latin/settings/Settings.java": {
-    "mtime": 1785668558.6746027,
-    "ast_hash": "b695398ac0c8016bc33e1aa0ccd3f1d5",
+    "mtime": 1786080083.280085,
+    "ast_hash": "1d0f8b2e011a313d0a33b560fd573f45",
     "semantic_hash": ""
   },
   "velaboard/app/src/main/java/helium314/keyboard/latin/settings/Settings.kt": {
@@ -2275,8 +2275,8 @@
     "semantic_hash": ""
   },
   "velaboard/app/src/main/java/helium314/keyboard/settings/screens/VoiceSettingsScreen.kt": {
-    "mtime": 1785668968.9463408,
-    "ast_hash": "e21e95aeaf8b584e848d0ef26f70e26b",
+    "mtime": 1786082438.993227,
+    "ast_hash": "d7af3c92a54e1a1a6f44241376553219",
     "semantic_hash": ""
   },
   "velaboard/app/src/main/java/helium314/keyboard/settings/screens/gesturedata/BackgroundGatheringSettings.kt": {
@@ -3715,8 +3715,8 @@
     "semantic_hash": ""
   },
   "velavoice app/App.tsx": {
-    "mtime": 1785652199.781981,
-    "ast_hash": "13c655c74e9d20d82b2a386a832d00ec",
+    "mtime": 1786081612.8738627,
+    "ast_hash": "169a44481c3af9f579653489965ffe6f",
     "semantic_hash": ""
   },
   "velavoice app/app.config.js": {
@@ -3755,8 +3755,8 @@
     "semantic_hash": ""
   },
   "velavoice app/src/native/GoogleDriveSyncModule.kt": {
-    "mtime": 1785158109.431588,
-    "ast_hash": "d9921a94552a9136679fb2836c958627",
+    "mtime": 1786081358.7736883,
+    "ast_hash": "2370887d94ba6ff51915b086bc5f9e95",
     "semantic_hash": ""
   },
   "velavoice app/src/native/ModelVerifierModule.kt": {
@@ -5042,6 +5042,106 @@
   "velavoice app/assets/logo.png": {
     "mtime": 1785051415.6239445,
     "ast_hash": "46577796b7d9b1fa2ef32aa9b0e3d793",
+    "semantic_hash": ""
+  },
+  "velaboard/build_log.txt": {
+    "mtime": 1785761479.0564518,
+    "ast_hash": "22b4d313626294ab2f0c3eee6257691a",
+    "semantic_hash": ""
+  },
+  "velaboard/build_log_arguments.txt": {
+    "mtime": 1785762383.1746752,
+    "ast_hash": "569973e63e025b92b9acbd2808be987f",
+    "semantic_hash": ""
+  },
+  "velaboard/build_log_arguments2.txt": {
+    "mtime": 1785762574.0900817,
+    "ast_hash": "8c6f0893b57c288da7a2bd4a27cdd6de",
+    "semantic_hash": ""
+  },
+  "velaboard/build_log_arguments3.txt": {
+    "mtime": 1785762659.0592308,
+    "ast_hash": "fc74f3f4d8b6486c7cadcf439e64d5bd",
+    "semantic_hash": ""
+  },
+  "velaboard/build_log_assemble.txt": {
+    "mtime": 1785764414.015322,
+    "ast_hash": "c54f94dd4de01e1815b62ee35e6c285c",
+    "semantic_hash": ""
+  },
+  "velaboard/build_log_assemble_stacktrace.txt": {
+    "mtime": 1785764476.4830124,
+    "ast_hash": "43b2825e80d3f138d8eace7be3ea4ca9",
+    "semantic_hash": ""
+  },
+  "velaboard/build_log_direct.txt": {
+    "mtime": 1785765817.4637115,
+    "ast_hash": "4f3ee5566d511594ff908344a2ee286e",
+    "semantic_hash": ""
+  },
+  "velaboard/build_log_direct2.txt": {
+    "mtime": 1785766107.2643914,
+    "ast_hash": "1f40d93231a424ed7df5f66f5d93bc96",
+    "semantic_hash": ""
+  },
+  "velaboard/build_log_full.txt": {
+    "mtime": 1785764967.6629896,
+    "ast_hash": "52c704babd93ed231cfb0ddc0829c6a6",
+    "semantic_hash": ""
+  },
+  "velaboard/build_log_junction.txt": {
+    "mtime": 1785761662.5569892,
+    "ast_hash": "c49b7f328fa19ae08893a2158c9b926e",
+    "semantic_hash": ""
+  },
+  "velaboard/build_log_junction_clean.txt": {
+    "mtime": 1785761809.6088364,
+    "ast_hash": "7521667a3fee50f2823735b02a08e4de",
+    "semantic_hash": ""
+  },
+  "velaboard/build_log_package_stack.txt": {
+    "mtime": 1785765165.8563845,
+    "ast_hash": "ee9dcb18e80f5b9994dc910f4cd82e19",
+    "semantic_hash": ""
+  },
+  "velaboard/build_log_package_stack2.txt": {
+    "mtime": 1785765480.9991605,
+    "ast_hash": "262ea5bffdd3ea5e5afd05066f35adcb",
+    "semantic_hash": ""
+  },
+  "velaboard/build_log_stack.txt": {
+    "mtime": 1785765035.2532003,
+    "ast_hash": "fc6684f81e537498ddbd7bcb680d3b60",
+    "semantic_hash": ""
+  },
+  "velaboard/build_log_subst.txt": {
+    "mtime": 1785761960.853139,
+    "ast_hash": "a54d21e09450e864841af805416e1a74",
+    "semantic_hash": ""
+  },
+  "velaboard/build_log_subst_cd.txt": {
+    "mtime": 1785762101.5329573,
+    "ast_hash": "bf53a5930d6ea7abdd791e7b5b195238",
+    "semantic_hash": ""
+  },
+  "velaboard/build_log_subst_minSdk.txt": {
+    "mtime": 1785762985.5558865,
+    "ast_hash": "6a7b318ac3df2109441c6ad01a9a366e",
+    "semantic_hash": ""
+  },
+  "velaboard/build_log_subst_minSdk_j8.txt": {
+    "mtime": 1785763130.7652047,
+    "ast_hash": "592c46c34e5f1e76c9befd33ff4d716b",
+    "semantic_hash": ""
+  },
+  "velaboard/build_log_subst_minSdk_j8_final.txt": {
+    "mtime": 1785764123.3937526,
+    "ast_hash": "9a087008057bc4bb623cad6f7e55910d",
+    "semantic_hash": ""
+  },
+  "velaboard/build_log_subst_original.txt": {
+    "mtime": 1785762827.5677357,
+    "ast_hash": "cc0835b6179d89b242b7db724338cef4",
     "semantic_hash": ""
   }
 }

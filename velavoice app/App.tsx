@@ -116,6 +116,7 @@ export default function App() {
   const [syncResult, setSyncResult] = useState<string | null>(null);
   const [unsyncedCount, setUnsyncedCount] = useState(0);
   const [totalTranscriptions, setTotalTranscriptions] = useState(0);
+  const [recentTranscriptions, setRecentTranscriptions] = useState<any[]>([]);
 
   // Recordings Library (Voice Hub / Studio)
   const [recordings, setRecordings] = useState<Recording[]>([
@@ -440,8 +441,13 @@ export default function App() {
         const total = await NativeModules.GoogleDriveSync.getTotalTranscriptionCount();
         setTotalTranscriptions(total);
       }
+      if (NativeModules.GoogleDriveSync.getRecentTranscriptions) {
+        const recentJson = await NativeModules.GoogleDriveSync.getRecentTranscriptions(20);
+        const parsed = JSON.parse(recentJson);
+        setRecentTranscriptions(parsed);
+      }
     } catch (e) {
-      console.error('Failed to refresh Drive status', e);
+      console.error('Failed refresh Drive status', e);
     }
   };
 
@@ -1272,20 +1278,65 @@ export default function App() {
             </View>
           )}
 
-          <View style={styles.engineActions}>
-            {driveConfigured && (
-              <TouchableOpacity
-                style={[styles.engineButton, isSyncing && { opacity: 0.5 }]}
-                onPress={handleSyncToDrive}
-                disabled={isSyncing}
-              >
-                <Text style={styles.engineButtonText}>
-                  {isSyncing ? '⏳ Syncing...' : `☁️ Sync with Drive (${unsyncedCount})`}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
+        <View style={styles.engineActions}>
+          {driveConfigured && (
+            <TouchableOpacity
+              style={[styles.engineButton, isSyncing && { opacity: 0.5 }]}
+              onPress={handleSyncToDrive}
+              disabled={isSyncing}
+            >
+              <Text style={styles.engineButtonText}>
+                {isSyncing ? '⏳ Syncing...' : `☁️ Sync with Drive (${unsyncedCount})`}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
+      </View>
+
+      {/* Recent Transcriptions log/viewer */}
+      <View style={styles.engineCard}>
+        <Text style={styles.engineCardTitle}>Recent Transcriptions</Text>
+        <Text style={styles.dictionaryDescription}>
+          The latest transcription logs saved on your device and their Google Drive sync status.
+        </Text>
+        {recentTranscriptions.length === 0 ? (
+          <Text style={styles.emptyDictText}>No recent transcriptions found.</Text>
+        ) : (
+          <View style={styles.transcriptionList}>
+            {recentTranscriptions.map((item, index) => (
+              <View key={index} style={styles.transcriptionItem}>
+                <View style={styles.transcriptionHeader}>
+                  <Text style={styles.transcriptionDate}>
+                    {item.createdAt ? new Date(item.createdAt).toLocaleString() : item.fileName.replace('.json', '').replace(/_/g, ' ')}
+                  </Text>
+                  <View style={[
+                    styles.syncBadge,
+                    item.isSynced ? styles.syncBadgeSuccess : styles.syncBadgePending
+                  ]}>
+                    <Text style={styles.syncBadgeText}>
+                      {item.isSynced ? 'Synced' : 'Local Only'}
+                    </Text>
+                  </View>
+                </View>
+                
+                <Text style={styles.transcriptLabel}>Raw Text:</Text>
+                <Text style={styles.engineTranscriptText}>{item.raw}</Text>
+                
+                {item.cleaned && item.cleaned !== item.raw ? (
+                  <>
+                    <Text style={styles.transcriptLabel}>Cleaned Text:</Text>
+                    <Text style={styles.engineTranscriptTextCleaned}>{item.cleaned}</Text>
+                  </>
+                ) : null}
+                
+                <Text style={styles.engineTranscriptMeta}>
+                  Duration: {Math.round(item.durationMs / 1000)}s | File: {item.fileName}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
 
       {/* LLM Cleaner toggle */}
         <View style={styles.engineCard}>
@@ -2184,6 +2235,73 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  transcriptionList: {
+    marginTop: 10,
+  },
+  transcriptionItem: {
+    backgroundColor: '#0a0f0e',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#3c4948',
+  },
+  transcriptionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#202928',
+    paddingBottom: 6,
+  },
+  transcriptionDate: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#dde4e2',
+  },
+  syncBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  syncBadgeSuccess: {
+    backgroundColor: '#00504b',
+  },
+  syncBadgePending: {
+    backgroundColor: '#3c1800',
+  },
+  syncBadgeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  transcriptLabel: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#859491',
+    marginTop: 4,
+  },
+  engineTranscriptText: {
+    fontSize: 13,
+    color: '#dde4e2',
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  engineTranscriptTextCleaned: {
+    fontSize: 13,
+    color: '#62f9ee',
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  engineTranscriptMeta: {
+    fontSize: 10,
+    color: '#859491',
+    marginTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: '#202928',
+    paddingTop: 4,
   },
   disabledText: {
     fontSize: 12,

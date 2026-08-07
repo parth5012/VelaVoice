@@ -101,6 +101,43 @@ class GoogleDriveSyncModule(reactContext: ReactApplicationContext) :
         }
     }
 
+    @ReactMethod
+    fun getRecentTranscriptions(limit: Int, promise: Promise) {
+        try {
+            val context = reactApplicationContext
+            val dir = File(context.filesDir, "transcriptions")
+            if (!dir.exists()) {
+                promise.resolve("[]")
+                return
+            }
+            val files = dir.listFiles()?.filter { it.isFile && it.extension == "json" } ?: emptyList()
+            val sortedFiles = files.sortedByDescending { it.name }
+            val jsonArray = JSONArray()
+            val sliceLimit = if (limit <= 0) sortedFiles.size else minOf(limit, sortedFiles.size)
+            for (i in 0 until sliceLimit) {
+                val file = sortedFiles[i]
+                val pair = TranscriptionStorage.readTranscriptionFile(file)
+                if (pair != null) {
+                    val jsonObj = JSONObject()
+                    jsonObj.put("fileName", pair.fileName)
+                    jsonObj.put("raw", pair.raw)
+                    jsonObj.put("cleaned", pair.cleaned)
+                    jsonObj.put("durationMs", pair.durationMs)
+                    jsonObj.put("createdAt", pair.createdAt)
+                    jsonObj.put("audioFileName", pair.audioFileName)
+                    
+                    val isSynced = File(file.parent, "${file.name}.synced").exists()
+                    jsonObj.put("isSynced", isSynced)
+                    
+                    jsonArray.put(jsonObj)
+                }
+            }
+            promise.resolve(jsonArray.toString())
+        } catch (e: Exception) {
+            promise.reject("FETCH_ERROR", e.message)
+        }
+    }
+
     // ──────────────────────────────────────────────
     // Sync: upload all unsynced transcriptions to Drive
     // ──────────────────────────────────────────────
