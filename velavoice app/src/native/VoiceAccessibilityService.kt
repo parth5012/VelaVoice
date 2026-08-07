@@ -344,33 +344,26 @@ class VoiceAccessibilityService : AccessibilityService() {
 
     Thread({
         val prefs = this@VoiceAccessibilityService.getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
-        var mode = prefs.getString("transcriptionMode", "local") ?: "local"
-        if (mode == "openai") {
-            mode = "local"
-        }
+        val mode = prefs.getString("transcriptionMode", "local") ?: "local"
         var rawTranscript = ""
-            var errorMessage: String? = null
+        var errorMessage: String? = null
 
-        if (mode == "groq" || mode == "custom") {
+        if (mode == "groq" || mode == "openai") {
             val apiKey = if (mode == "groq") {
                 prefs.getString("groqApiKey", "") ?: ""
             } else {
-                prefs.getString("customApiKey", "") ?: ""
+                prefs.getString("openaiApiKey", "") ?: ""
             }
-
+            
             val model = if (mode == "groq") {
                 prefs.getString("groqModel", "whisper-large-v3") ?: "whisper-large-v3"
             } else {
-                prefs.getString("customModel", "whisper-1") ?: "whisper-1"
+                prefs.getString("openaiModel", "whisper-1") ?: "whisper-1"
             }
-
-            val endpoint = if (mode == "groq") {
-                null
-            } else {
-                prefs.getString("customEndpoint", "") ?: ""
-            }
-
-            } 
+            
+            val endpoint = if (mode == "openai") {
+                prefs.getString("openaiEndpoint", "https://api.openai.com/v1") ?: "https://api.openai.com/v1"
+            } else null
             
             if (apiKey.isBlank()) {
                 errorMessage = "Error: API Key is missing for $mode"
@@ -398,7 +391,7 @@ class VoiceAccessibilityService : AccessibilityService() {
                     ""
                 } else if (seconds < 3f) {
                     "Hello, testing Vela Voice floating transcription overlay."
-
+                } else {
                     "Thank you for choosing Vela Voice. A longer offline transcription generated on-device using Whisper model."
                 }
             }
@@ -655,7 +648,7 @@ class VoiceAccessibilityService : AccessibilityService() {
         val wavBytes = pcmToWav(audioBytes)
         val urlString = when (mode) {
             "groq" -> "https://api.groq.com/openai/v1/audio/transcriptions"
-            "custom" -> {
+            "openai" -> {
                 val base = if (endpoint.isNullOrBlank()) "https://api.openai.com/v1" else endpoint.trim().removeSuffix("/")
                 "$base/audio/transcriptions"
             }
