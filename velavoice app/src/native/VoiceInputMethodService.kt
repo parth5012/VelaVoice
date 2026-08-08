@@ -22,6 +22,11 @@ import com.velavoice.sdk.VelaTranscriber
 import com.velavoice.sdk.cleaner.DictionaryKeywords
 import com.velavoice.sdk.cleaner.PersonalDictionary
 import com.velavoice.sdk.ui.VoiceRecordingPane
+import com.velavoice.sdk.StreamingTranscriptionCallback
+import com.velavoice.sdk.RevisionMarker
+import com.velavoice.sdk.StreamConfig
+import com.velavoice.sdk.LocalStreamingTranscriber
+import com.velavoice.sdk.whisper.WhisperConfig
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -45,6 +50,17 @@ class VoiceInputMethodService : InputMethodService() {
     private var recordingSeconds = 0
     private var timerHandler: Handler? = null
     private val isRecording = AtomicBoolean(false)
+
+    // Streaming state
+    private val isStreaming = AtomicBoolean(false)
+    private var streamingMode = "instant"
+    private var streamingTranscriber: LocalStreamingTranscriber? = null
+    private var streamingAudioThread: Thread? = null
+    private var streamingAudioRecord: android.media.AudioRecord? = null
+    @Volatile
+    private var streamingAudioActive = false
+    private val streamingBuffer = StringBuilder()
+    private var streamingCommittedLength = 0
 
     override fun onCreate() {
         super.onCreate()
@@ -97,7 +113,12 @@ class VoiceInputMethodService : InputMethodService() {
             setPadding((32 * density).toInt(), 0, (32 * density).toInt(), 0)
             setOnClickListener {
                 showVoicePane()
-                startRecording()
+                loadStreamingMode()
+                if (streamingMode == "streamed") {
+                    startStreaming()
+                } else {
+                    startRecording()
+                }
             }
         }
         keyboardView.addView(voiceButton)
@@ -123,20 +144,239 @@ class VoiceInputMethodService : InputMethodService() {
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
         showVoicePane()
-        startRecording()
+        loadStreamingMode()
+        if (streamingMode == "streamed") {
+            startStreaming()
+        } else {
+            startRecording()
+        }
     }
 
     override fun onFinishInputView(finishingInput: Boolean) {
         super.onFinishInputView(finishingInput)
-        cancelRecording()
+        if (isStreaming.get()) {
+            stopStreaming()
+        } else {
+            cancelRecording()
+        }
+    }
+
+    // ──────────────────────────────────────────────
+    // Streaming Transcription (velaboard IME)
+    // ──────────────────────────────────────────────
+
+    private fun loadStreamingMode() {
+        val prefs = getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
+        streamingMode = prefs.getString("streamingMode", "instant") ?: "instant"
+    }
+
+    private fun startStreaming() {
+        if (isStreaming.get()) return
+        loadStreamingMode()
+
+        if (streamingMode == "instant") {
+            startRecording()
+            return
+        }
+
+        voiceRecordingPane.resetDisplay()
+        voiceRecordingPane.statusText.text = "Streaming..."
+
+        bgHandler?.post {
+            try {
+                loadModelPaths()
+                val whisperPath = cachedWhisperPath
+                if (whisperPath == null) {
+                    mainHandler.post {
+                        voiceRecordingPane.statusText.text = "No whisper model found."
+                    }
+                    return@post
+                }
+
+                val config = WhisperConfig(whisperPath)
+                val transcriber = LocalStreamingTranscriber(config)
+                streamingTranscriber = transcriber
+
+                transcriber.setCallback(object : StreamingTranscriptionCallback {
+                    override fun onRevisionMarker(marker: RevisionMarker) {
+                        mainHandler.post {
+                            when (marker.type) {
+                                "partial" -> {
+                                    updateStreamingBuffer(marker.text, marker.range)
+                                    // Show partial text as composing (gray/italic via spans)
+                                    val ic = currentInputConnection
+                                    if (ic != null) {
+                                        val text = streamingBuffer.toString()
+                                        ic.setComposingText(text, 1)
+                                    }
+                                    voiceRecordingPane.statusText.text = marker.text
+                                }
+                                "commit" -> {
+                                    // Commit text
+                                    val ic = currentInputConnection
+                                    if (ic != null) {
+                                        ic.finishCommittedText()
+                                        streamingCommittedLength = marker.range.last
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    override fun onFinal(text: String) {
+                        mainHandler.post {
+                            val ic = currentInputConnection
+                            if (ic != null && text.isNotBlank()) {
+                                ic.finishCommittedText()
+                                ic.commitText(text + " ", 1)
+                            }
+                            voiceRecordingPane.statusText.text = "Done"
+                            isStreaming.set(false)
+                            // Auto-save
+                            TranscriptionStorage.save(
+                                this@VoiceInputMethodService,
+                                raw = text,
+                                cleaned = text,
+                                durationMs = 0
+                            )
+                            showKeyboardView()
+                        }
+                    }
+
+                    override fun onError(error: VelaException) {
+                        mainHandler.post {
+                            voiceRecordingPane.statusText.text = error.message
+                            isStreaming.set(false)
+                        }
+                    }
+
+                    override fun onAmplitude(normalized: Float) {
+                        voiceRecordingPane.waveformView.post {
+                            voiceRecordingPane.waveformView.addAmplitude(normalized)
+                        }
+                    }
+                })
+
+                val streamConfig = StreamConfig(
+                    modelPath = whisperPath,
+                    chunkDurationMs = 3000,
+                    windowDurationMs = 15000,
+                    overlapMs = 1500,
+                    resetIntervalMs = 30000,
+                    useVad = true,
+                    vadThreshold = 0.02f
+                )
+                transcriber.start(streamConfig)
+
+                mainHandler.post {
+                    isStreaming.set(true)
+                    streamingBuffer.setLength(0)
+                    streamingCommittedLength = 0
+                    startStreamingAudio(transcriber)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("VoiceIME", "Start streaming failed", e)
+                mainHandler.post {
+                    voiceRecordingPane.statusText.text = "Streaming init error"
+                }
+            }
+        }
+    }
+
+    private fun stopStreaming() {
+        if (!isStreaming.get()) return
+        isStreaming.set(false)
+        stopStreamingAudio()
+
+        // Commit remaining text
+        val ic = currentInputConnection
+        if (ic != null) {
+            ic.finishCommittedText()
+            if (streamingBuffer.length > streamingCommittedLength) {
+                val remaining = streamingBuffer.substring(streamingCommittedLength).trim()
+                if (remaining.isNotEmpty()) {
+                    ic.commitText(remaining + " ", 1)
+                }
+            }
+        }
+
+        streamingTranscriber?.stop()
+        streamingTranscriber?.release()
+        streamingTranscriber = null
+    }
+
+    private fun startStreamingAudio(transcriber: LocalStreamingTranscriber) {
+        streamingAudioActive = true
+        streamingAudioThread = Thread({
+            try {
+                val sampleRate = 16000
+                val bufferSize = android.media.AudioRecord.getMinBufferSize(
+                    sampleRate,
+                    android.media.AudioFormat.CHANNEL_IN_MONO,
+                    android.media.AudioFormat.ENCODING_PCM_16BIT
+                )
+                streamingAudioRecord = android.media.AudioRecord(
+                    android.media.MediaRecorder.AudioSource.MIC,
+                    sampleRate,
+                    android.media.AudioFormat.CHANNEL_IN_MONO,
+                    android.media.AudioFormat.ENCODING_PCM_16BIT,
+                    bufferSize
+                )
+
+                if (streamingAudioRecord?.state == android.media.AudioRecord.STATE_INITIALIZED) {
+                    streamingAudioRecord?.startRecording()
+                    val buffer = ShortArray(bufferSize / 2)
+                    val byteBuffer = ByteArray(bufferSize)
+
+                    while (streamingAudioActive) {
+                        val read = streamingAudioRecord?.read(buffer, 0, buffer.size) ?: 0
+                        if (read > 0) {
+                            for (i in 0 until read) {
+                                val sv = buffer[i]
+                                byteBuffer[i * 2] = (sv.toInt() and 0xff).toByte()
+                                byteBuffer[i * 2 + 1] = ((sv.toInt() shr 8) and 0xff).toByte()
+                            }
+                            transcriber.emit(byteBuffer.copyOfRange(0, read * 2))
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("VoiceIME", "Streaming audio error", e)
+            }
+        }, "VoiceIME-StreamingAudio")
+        streamingAudioThread?.start()
+    }
+
+    private fun stopStreamingAudio() {
+        streamingAudioActive = false
+        try {
+            streamingAudioRecord?.stop()
+            streamingAudioRecord?.release()
+            streamingAudioRecord = null
+            streamingAudioThread?.join(2000)
+            streamingAudioThread = null
+        } catch (e: Exception) {
+            android.util.Log.e("VoiceIME", "Error stopping streaming audio", e)
+        }
+    }
+
+    private fun updateStreamingBuffer(text: String, range: IntRange) {
+        if (streamingBuffer.length < range.last) {
+            streamingBuffer.setLength(range.last)
+        }
+        streamingBuffer.replace(range.first, range.last, text)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         isRecording.set(false)
+        isStreaming.set(false)
         timerHandler?.removeCallbacksAndMessages(null)
         transcriber?.release()
         transcriber = null
+        streamingTranscriber?.release()
+        streamingTranscriber = null
+        stopStreamingAudio()
         bgHandlerThread?.quitSafely()
         bgHandlerThread = null
     }
