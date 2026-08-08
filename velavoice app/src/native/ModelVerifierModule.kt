@@ -153,6 +153,7 @@ class ModelVerifierModule(reactContext: ReactApplicationContext) : ReactContextB
             val json = org.json.JSONObject()
             json.put("useLlmCleaner", prefs.getBoolean("useLlmCleaner", false))
             json.put("transcriptionMode", prefs.getString("transcriptionMode", "local") ?: "local")
+            json.put("streamingMode", prefs.getString("streamingMode", "instant") ?: "instant")
             json.put("groqApiKey", prefs.getString("groqApiKey", "") ?: "")
             json.put("groqModel", prefs.getString("groqModel", "whisper-large-v3") ?: "whisper-large-v3")
             json.put("openaiApiKey", prefs.getString("openaiApiKey", "") ?: "")

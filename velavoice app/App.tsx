@@ -82,6 +82,7 @@ export default function App() {
 
   // Transcription API States
   const [transcriptionMode, setTranscriptionMode] = useState<string>('local');
+  const [streamingMode, setStreamingMode] = useState<string>('instant');
   const [groqApiKey, setGroqApiKey] = useState<string>('');
   const [groqModel, setGroqModel] = useState<string>('whisper-large-v3');
   const [openaiApiKey, setOpenaiApiKey] = useState<string>('');
@@ -351,6 +352,7 @@ export default function App() {
 
         if (prefsJson) {
           setTranscriptionMode(prefsJson.transcriptionMode || 'local');
+          setStreamingMode(prefsJson.streamingMode || 'instant');
           setGroqApiKey(prefsJson.groqApiKey || '');
           setGroqModel(prefsJson.groqModel || 'whisper-large-v3');
           setOpenaiApiKey(prefsJson.openaiApiKey || '');
@@ -1184,6 +1186,29 @@ export default function App() {
           >
             <Text style={[styles.modeButtonText, transcriptionMode === 'openai' && styles.modeButtonTextActive]}>
               OpenAI API
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.fieldLabel}>Streaming Mode</Text>
+        <Text style={styles.dictionaryDescription}>
+          Instant transcribes after you stop talking. Streamed types text live as you speak.
+        </Text>
+        <View style={styles.modeContainer}>
+          <TouchableOpacity
+            style={[styles.modeButton, streamingMode === 'instant' && styles.modeButtonActive]}
+            onPress={() => updatePreference('streamingMode', 'instant', setStreamingMode)}
+          >
+            <Text style={[styles.modeButtonText, streamingMode === 'instant' && styles.modeButtonTextActive]}>
+              Instant
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.modeButton, streamingMode === 'streamed' && styles.modeButtonActive]}
+            onPress={() => updatePreference('streamingMode', 'streamed', setStreamingMode)}
+          >
+            <Text style={[styles.modeButtonText, streamingMode === 'streamed' && styles.modeButtonTextActive]}>
+              Streamed
             </Text>
           </TouchableOpacity>
         </View>
