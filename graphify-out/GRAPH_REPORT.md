@@ -1,16 +1,16 @@
-# Graph Report - VelaVoice  (2026-08-07)
+# Graph Report - VelaVoice  (2026-08-08)
 
 ## Corpus Check
-- 763 files · ~1,958,093 words
+- 762 files · ~1,962,641 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 11443 nodes · 21018 edges · 2419 communities (293 shown, 2126 thin omitted)
-- Extraction: 86% EXTRACTED · 14% INFERRED · 0% AMBIGUOUS · INFERRED: 2934 edges (avg confidence: 0.8)
+- 11495 nodes · 21078 edges · 2434 communities (298 shown, 2136 thin omitted)
+- Extraction: 86% EXTRACTED · 14% INFERRED · 0% AMBIGUOUS · INFERRED: 2899 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `aa6c8e1f`
+- Built from commit: `791b392a`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -275,6 +275,7 @@
 - [[_COMMUNITY_detectFormatVersion|detectFormatVersion]]
 - [[_COMMUNITY_writeBufferToFileTail|writeBufferToFileTail]]
 - [[_COMMUNITY_DynamicPtWritingUtils|DynamicPtWritingUtils]]
+- [[_COMMUNITY_TypingTraversal|TypingTraversal]]
 - [[_COMMUNITY_TranscriptionStorage|TranscriptionStorage]]
 - [[_COMMUNITY_ResourceUtils.java|ResourceUtils.java]]
 - [[_COMMUNITY_AudioAndHapticFeedbackManager|AudioAndHapticFeedbackManager]]
@@ -302,6 +303,7 @@
 - [[_COMMUNITY_KeyPreviewChoreographer|KeyPreviewChoreographer]]
 - [[_COMMUNITY_SentenceLevelAdapter.java|SentenceLevelAdapter.java]]
 - [[_COMMUNITY_build.gradle|build.gradle]]
+- [[_COMMUNITY_DicNodeProperties|DicNodeProperties]]
 - [[_COMMUNITY_SettingsActivity|SettingsActivity]]
 - [[_COMMUNITY_.contains|.contains]]
 - [[_COMMUNITY_header_read_write_utils.cpp|header_read_write_utils.cpp]]
@@ -323,7 +325,6 @@
 - [[_COMMUNITY_PopupKeysKeyboardParams|PopupKeysKeyboardParams]]
 - [[_COMMUNITY_KoreanDictionary|KoreanDictionary]]
 - [[_COMMUNITY_Ver4PatriciaTrieWritingHelper|Ver4PatriciaTrieWritingHelper]]
-- [[_COMMUNITY_BigramListReadWriteUtils|BigramListReadWriteUtils]]
 - [[_COMMUNITY_ProbabilityEntry|ProbabilityEntry]]
 - [[_COMMUNITY_dic_node_vector.h|dic_node_vector.h]]
 - [[_COMMUNITY_Traversal|Traversal]]
@@ -338,8 +339,7 @@
 - [[_COMMUNITY_BigramDictContent|BigramDictContent]]
 - [[_COMMUNITY_AdditionalProximityChars|AdditionalProximityChars]]
 - [[_COMMUNITY_.calculateProximities|.calculateProximities]]
-- [[_COMMUNITY_EmojiData|EmojiData]]
-- [[_COMMUNITY_DamerauLevenshteinEditDistancePolicy|DamerauLevenshteinEditDistancePolicy]]
+- [[_COMMUNITY_typing_suggest_policy.h|typing_suggest_policy.h]]
 - [[_COMMUNITY_DicNodePool|DicNodePool]]
 - [[_COMMUNITY_UnigramProperty|UnigramProperty]]
 - [[_COMMUNITY_.getAvailableDictsForLocale|.getAvailableDictsForLocale]]
@@ -349,7 +349,9 @@
 - [[_COMMUNITY_Warnings|Warnings]]
 - [[_COMMUNITY_BloomFilter|BloomFilter]]
 - [[_COMMUNITY_DictionaryCollection|DictionaryCollection]]
-- [[_COMMUNITY_TypingScoring|TypingScoring]]
+- [[_COMMUNITY_ErrorTypeUtils|ErrorTypeUtils]]
+- [[_COMMUNITY_TEST|TEST]]
+- [[_COMMUNITY_ColorUtil.kt|ColorUtil.kt]]
 - [[_COMMUNITY_ScriptUtils.kt|ScriptUtils.kt]]
 - [[_COMMUNITY_SubtypeLocaleUtils|SubtypeLocaleUtils]]
 - [[_COMMUNITY_header_policy.cpp|header_policy.cpp]]
@@ -364,7 +366,6 @@
 - [[_COMMUNITY_.setFloating|.setFloating]]
 - [[_COMMUNITY_DictionaryFacilitatorLruCache|DictionaryFacilitatorLruCache]]
 - [[_COMMUNITY_BackgroundGatheringCache|BackgroundGatheringCache]]
-- [[_COMMUNITY_EditWordDialog|EditWordDialog]]
 - [[_COMMUNITY_ProbabilityDictContent|ProbabilityDictContent]]
 - [[_COMMUNITY_main|main]]
 - [[_COMMUNITY_PackageManager|PackageManager]]
@@ -381,19 +382,18 @@
 - [[_COMMUNITY_TypefaceUtils|TypefaceUtils]]
 - [[_COMMUNITY_ver4_dict_buffers.cpp|ver4_dict_buffers.cpp]]
 - [[_COMMUNITY_JarUtils|JarUtils]]
-- [[_COMMUNITY_Settings.kt|Settings.kt]]
+- [[_COMMUNITY_gguf_write_to_buf|gguf_write_to_buf]]
 - [[_COMMUNITY_Profiler|Profiler]]
-- [[_COMMUNITY_ggml-impl.h|ggml-impl.h]]
+- [[_COMMUNITY_.processMotionEvent|.processMotionEvent]]
 - [[_COMMUNITY_ClipboardHistoryEntry|ClipboardHistoryEntry]]
 - [[_COMMUNITY_.splitAndSuggest|.splitAndSuggest]]
-- [[_COMMUNITY_PopupKeysUtils.kt|PopupKeysUtils.kt]]
 - [[_COMMUNITY_NgramProperty|NgramProperty]]
 - [[_COMMUNITY_SingleDictContent|SingleDictContent]]
 - [[_COMMUNITY_DicNode_InputStateG|DicNode_InputStateG]]
 - [[_COMMUNITY_Scoring|Scoring]]
 - [[_COMMUNITY_InputTest|InputTest]]
 - [[_COMMUNITY_Build Reference — HeliBoard + Vela Voice|Build Reference — HeliBoard + Vela Voice]]
-- [[_COMMUNITY_ProbabilityUtils|ProbabilityUtils]]
+- [[_COMMUNITY_ClipboardManager|ClipboardManager]]
 - [[_COMMUNITY_Database|Database]]
 - [[_COMMUNITY_ClipboardAdapter|ClipboardAdapter]]
 - [[_COMMUNITY_NativeSuggestOptions|NativeSuggestOptions]]
@@ -423,7 +423,7 @@
 - [[_COMMUNITY_BinaryDictionaryBigramsIterator|BinaryDictionaryBigramsIterator]]
 - [[_COMMUNITY_BinaryDictionaryShortcutIterator|BinaryDictionaryShortcutIterator]]
 - [[_COMMUNITY_suggest_policy.h|suggest_policy.h]]
-- [[_COMMUNITY_SaveGestureDataTest|SaveGestureDataTest]]
+- [[_COMMUNITY_.setPreviewPosition|.setPreviewPosition]]
 - [[_COMMUNITY_AndroidEmojiSupportFileParser|AndroidEmojiSupportFileParser]]
 - [[_COMMUNITY_ClipboardHistoryRecyclerView|ClipboardHistoryRecyclerView]]
 - [[_COMMUNITY_KeyTypeSerializer|KeyTypeSerializer]]
@@ -431,7 +431,6 @@
 - [[_COMMUNITY_DictionaryDumpBroadcastReceiver|DictionaryDumpBroadcastReceiver]]
 - [[_COMMUNITY_.jsonStrToList|.jsonStrToList]]
 - [[_COMMUNITY_TextFileParser|TextFileParser]]
-- [[_COMMUNITY_TEST|TEST]]
 - [[_COMMUNITY_ClipboardLayoutParams|ClipboardLayoutParams]]
 - [[_COMMUNITY_SupportedEmojis|SupportedEmojis]]
 - [[_COMMUNITY_proximity_info_state.cpp|proximity_info_state.cpp]]
@@ -524,7 +523,7 @@
 - [[_COMMUNITY_ver4_patricia_trie_reading_utils.h|ver4_patricia_trie_reading_utils.h]]
 - [[_COMMUNITY_App.tsx|App.tsx]]
 - [[_COMMUNITY_TEST|TEST]]
-- [[_COMMUNITY_ShadowInputMethodManager2|ShadowInputMethodManager2]]
+- [[_COMMUNITY_RecentEmojis|RecentEmojis]]
 - [[_COMMUNITY_.toString|.toString]]
 - [[_COMMUNITY_.newInstance|.newInstance]]
 - [[_COMMUNITY_.writeFlags|.writeFlags]]
@@ -2405,9 +2404,22 @@
 - [[_COMMUNITY_String|String]]
 - [[_COMMUNITY_Typeface|Typeface]]
 - [[_COMMUNITY_View|View]]
-- [[_COMMUNITY_getEntryInfo|getEntryInfo]]
 - [[_COMMUNITY_TEST|TEST]]
 - [[_COMMUNITY_TEST|TEST]]
+- [[_COMMUNITY_dic_traverse_session.cpp|dic_traverse_session.cpp]]
+- [[_COMMUNITY_ggml_map_custom1_impl_f32|ggml_map_custom1_impl_f32]]
+- [[_COMMUNITY_ggml_map_custom3_impl_f32|ggml_map_custom3_impl_f32]]
+- [[_COMMUNITY_.initLlm|.initLlm]]
+- [[_COMMUNITY_.addCost|.addCost]]
+- [[_COMMUNITY_OverlayLogo.tsx|OverlayLogo.tsx]]
+- [[_COMMUNITY_LayoutUtils|LayoutUtils]]
+- [[_COMMUNITY_Boolean|Boolean]]
+- [[_COMMUNITY_File|File]]
+- [[_COMMUNITY_Int|Int]]
+- [[_COMMUNITY_Promise|Promise]]
+- [[_COMMUNITY_SharedPreferences|SharedPreferences]]
+- [[_COMMUNITY_String|String]]
+- [[_COMMUNITY_TranscriptionPair|TranscriptionPair]]
 - [[_COMMUNITY_TEST|TEST]]
 
 ## God Nodes (most connected - your core abstractions)
@@ -2416,23 +2428,23 @@
 3. `PointerTracker` - 101 edges
 4. `InputLogic` - 100 edges
 5. `Settings` - 99 edges
-6. `KeyboardSwitcher` - 98 edges
+6. `KeyboardSwitcher` - 97 edges
 7. `Key` - 91 edges
 8. `KeyboardParams` - 83 edges
 9. `ggml_dup_tensor()` - 81 edges
 10. `Keyboard` - 80 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `KeyboardSwitcher` --references--> `ScribeInput`  [EXTRACTED]
-  velaboard/app/src/main/java/helium314/keyboard/keyboard/KeyboardSwitcher.java → sdk/vela-core/src/main/kotlin/com/velavoice/sdk/VelaTranscriber.kt
-- `VoiceInputMethodService` --references--> `ScribeInput`  [EXTRACTED]
-  velavoice app/src/native/VoiceInputMethodService.kt → sdk/vela-core/src/main/kotlin/com/velavoice/sdk/VelaTranscriber.kt
+- `ggml_backend_tensor_set_async()` --calls--> `ggml_nbytes()`  [INFERRED]
+  sdk/vela-whisper/src/main/cpp/ggml-backend.c → sdk/vela-whisper/src/main/cpp/ggml.c
+- `ggml_backend_tensor_get_async()` --calls--> `ggml_nbytes()`  [INFERRED]
+  sdk/vela-whisper/src/main/cpp/ggml-backend.c → sdk/vela-whisper/src/main/cpp/ggml.c
+- `whisper_print_timings()` --calls--> `ggml_time_us()`  [INFERRED]
+  sdk/vela-whisper/src/main/cpp/whisper.cpp → sdk/vela-whisper/src/main/cpp/ggml.c
+- `whisper_reset_timings()` --calls--> `ggml_time_us()`  [INFERRED]
+  sdk/vela-whisper/src/main/cpp/whisper.cpp → sdk/vela-whisper/src/main/cpp/ggml.c
 - `BottomBar()` --calls--> `appendLink()`  [INFERRED]
   velaboard/app/src/main/java/helium314/keyboard/settings/screens/gesturedata/GestureDataScreen.kt → velaboard/app/src/main/java/helium314/keyboard/latin/utils/Ktx.kt
-- `TopBar()` --calls--> `InfoDialog()`  [INFERRED]
-  velaboard/app/src/main/java/helium314/keyboard/settings/screens/gesturedata/ReviewScreen.kt → velaboard/app/src/main/java/helium314/keyboard/settings/dialogs/InfoDialog.kt
-- `VoiceInputMethodService` --references--> `VoiceRecordingPane`  [EXTRACTED]
-  velavoice app/src/native/VoiceInputMethodService.kt → sdk/vela-voice-ui/src/main/kotlin/com/velavoice/sdk/ui/VoiceRecordingPane.kt
 
 ## Import Cycles
 - None detected.
@@ -2444,19 +2456,15 @@
 - **whisper native library built for 4 Android ABIs** — arm64_v8a_abi, armeabi_v7a_abi, x86_abi, x86_64_abi, whisper_cmake_project [EXTRACTED 1.00]
 - **All source files compiled into the whisper shared library** — whisper_cpp_source, whisper_jni_cpp_source, ggml_c_source, ggml_alloc_c_source, ggml_backend_c_source, ggml_quants_c_source, whisper_shared_library [EXTRACTED 1.00]
 
-## Communities (2419 total, 2126 thin omitted)
-
-### Community 0 - "Model Verification Module"
-Cohesion: 0.06
-Nodes (15): ModelVerifierModule, VoiceImePackage, NativeModule, ReactApplicationContext, ReactContextBaseJavaModule, ReactPackage, GoogleDriveSyncModule, Boolean (+7 more)
+## Communities (2434 total, 2136 thin omitted)
 
 ### Community 2 - "GGML Inference Engine"
 Cohesion: 0.08
-Nodes (3): createDeadEvent(), InputTransaction, InputLogic
+Nodes (4): createDeadEvent(), HangulEventDecoder, InputTransaction, InputLogic
 
 ### Community 3 - "Expo App Configuration"
 Cohesion: 0.03
-Nodes (116): ggml_add_rel_pos(), ggml_add_rel_pos_impl(), ggml_add_rel_pos_inplace(), ggml_alibi(), ggml_argmax(), ggml_argsort(), ggml_calc_conv_output_size(), ggml_calc_conv_transpose_1d_output_size() (+108 more)
+Nodes (116): ggml_dup_tensor_layout(), ggml_add1(), ggml_add1_impl(), ggml_add1_inplace(), ggml_add1_or_set(), ggml_add_rel_pos(), ggml_add_rel_pos_impl(), ggml_add_rel_pos_inplace() (+108 more)
 
 ### Community 4 - "IME Architecture & Design"
 Cohesion: 0.50
@@ -2466,21 +2474,25 @@ Nodes (5): Lumina Sonic Design System, WebGL Shader Animation, The Engine Room, 
 Cohesion: 0.17
 Nodes (12): AI-Powered Transcript Cleanup Feature, Custom Dictionary Testing Sandbox, Raw vs Cleaned Transcript Comparison, Dictionary Sandbox Testing Card, Edit Transcript Button, Local Cleaner Engine Badge, Empty State - No Recording Selected, Active Recording Title & Date Header (+4 more)
 
+### Community 6 - "JavaScript Dependencies"
+Cohesion: 0.03
+Nodes (9): KeyboardIconsSet, KeyPreviewView, PopupKeySpec, Key, KeyParams, OptionalAttributes, KeyboardView, CollectionUtils (+1 more)
+
 ### Community 7 - "Core Domain Pipeline"
-Cohesion: 0.10
-Nodes (4): DictionaryCollection, DictionaryFactory, KoreanDictionary, Dictionary
+Cohesion: 0.16
+Nodes (4): DictionaryCollection, DictionaryFactory, DicTraverseSession::init(), Dictionary
 
 ### Community 8 - "RN Package Registration"
 Cohesion: 0.03
-Nodes (104): ggml_time_init(), byteswap(), byteswap_tensor_data(), decode_utf8(), dft(), fft(), fill_sin_cos_table(), get_signal_energy() (+96 more)
+Nodes (48): ggml_backend_free(), byteswap(), byteswap_tensor_data(), fill_sin_cos_table(), Java_com_velavoice_sdk_whisper_WhisperEngine_nativeFree(), Java_com_velavoice_sdk_whisper_WhisperEngine_nativeInit(), Java_com_velavoice_sdk_whisper_WhisperEngine_nativeTranscribe(), read_safe() (+40 more)
 
 ### Community 9 - "Build Scripts"
 Cohesion: 0.05
-Nodes (8): LatinIME, FoldableObserver, getDisplayContext(), Log, LogLine, FileDescriptor, Listener, PrintWriter
+Nodes (6): LatinIME, FoldableObserver, getDisplayContext(), updateSoftInputWindowLayoutParameters(), SubtypeState, Listener
 
 ### Community 10 - "RN Runtime Dependencies"
-Cohesion: 0.09
-Nodes (57): add_allocated_tensor(), aligned_offset(), allocate_node(), free_node(), ggml_allocr_alloc(), ggml_allocr_alloc_graph(), ggml_allocr_free(), ggml_allocr_get_buffer() (+49 more)
+Cohesion: 0.12
+Nodes (36): aligned_offset(), ggml_allocr_alloc_graph(), ggml_allocr_free(), ggml_allocr_get_buffer(), ggml_allocr_is_measure(), ggml_allocr_max_size(), ggml_allocr_new(), ggml_allocr_new_from_backend() (+28 more)
 
 ### Community 11 - "Brand Identity"
 Cohesion: 0.40
@@ -2490,53 +2502,61 @@ Nodes (6): Brand Neon Cyan (#62f9ee), Dark App Theme (#0e1514), V Shape Logo Mar
 Cohesion: 0.04
 Nodes (5): DrawingProxy, TimerHandler, Adapter, TimerProxy, PointerTrackerParams
 
+### Community 54 - "build.gradle.kts"
+Cohesion: 0.08
+Nodes (42): getIndexFromNgramType(), createAttributeMapAndReadAllAttributes, fillInAndWriteHeaderToBuffer, fillInHeader, readHeaderValueOrQuestionMark, readLocale, readMaxNgramCounts, readMultipleWordCostMultiplier (+34 more)
+
 ### Community 55 - "settings.gradle.kts"
-Cohesion: 0.10
-Nodes (11): Comparator, ComposedData, createForWord(), ProductionFlags, PhonyDictionary, UnlearnEvent, WordInfo, SettingsValuesForSuggestion (+3 more)
+Cohesion: 0.09
+Nodes (38): get_signal_energy(), sample_to_timestamp(), should_split_on_word(), timestamp_to_sample(), to_timestamp(), voice_length(), whisper_batch_prep_legacy(), whisper_decode() (+30 more)
 
 ### Community 56 - "ggml_compute_forward"
 Cohesion: 0.06
-Nodes (3): KeyboardSwitcher, KeyboardSwitchState, dpToPx()
+Nodes (5): KeyboardSwitcher, KeyboardSwitchState, getKeyboardTheme(), KeyboardTheme, dpToPx()
 
 ### Community 57 - "ggml_init"
-Cohesion: 0.04
-Nodes (94): ggml_add_cast(), ggml_add_cast_impl(), ggml_are_same_shape(), ggml_can_repeat_rows(), ggml_compute_forward_abs(), ggml_compute_forward_abs_f32(), ggml_compute_forward_acc_f32(), ggml_compute_forward_add() (+86 more)
+Cohesion: 0.03
+Nodes (142): ggml_add_cast(), ggml_add_cast_impl(), ggml_are_same_shape(), ggml_can_repeat(), ggml_can_repeat_rows(), ggml_compute_forward(), ggml_compute_forward_abs(), ggml_compute_forward_abs_f32() (+134 more)
 
 ### Community 58 - "whisper_state"
 Cohesion: 0.10
 Nodes (12): BlendModeCompat, ColorFilter, ColorStateList, activatedStateList(), AllColors, colorFilter(), Colors, ColorType (+4 more)
 
 ### Community 59 - "vector"
-Cohesion: 0.04
-Nodes (8): OnGetSuggestedWordsCallback, SuggestedWordInfo, SuggestedWords, SuggestionStripViewAccessor, AutoCorrectionUtils, BackgroundGatheringCache, Deprecated, Suggest
+Cohesion: 0.06
+Nodes (6): OnGetSuggestedWordsCallback, SuggestedWordInfo, SuggestedWords, SuggestionStripViewAccessor, AutoCorrectionUtils, Deprecated
 
 ### Community 60 - "ggml-quants.c"
 Cohesion: 0.12
 Nodes (33): block_q2_K, block_q3_K, block_q4_K, block_q5_K, block_q6_K, block_q8_K, dequantize_row_q2_K(), dequantize_row_q3_K() (+25 more)
 
 ### Community 61 - "whisper_full_with_state"
-Cohesion: 0.06
-Nodes (6): EmojiPageKeyboardView, EmojiViewCallback, Controller, onShowPopupKeysPanel(), PopupKeysPanel, PopupTextView
+Cohesion: 0.04
+Nodes (8): EmojiPageKeyboardView, EmojiViewCallback, PopupKeysKeyboardView, Controller, onShowPopupKeysPanel(), PopupKeysPanel, PopupTextView, TypedValue
 
 ### Community 62 - "whisper_context"
-Cohesion: 0.10
-Nodes (46): ggml_acc(), ggml_acc_impl(), ggml_acc_inplace(), ggml_acc_or_set(), ggml_blck_size(), ggml_compute_backward(), ggml_compute_forward_dup_bytes(), ggml_compute_forward_dup_f16() (+38 more)
+Cohesion: 0.06
+Nodes (83): ggml_allocr_alloc(), ggml_backend_graph_copy(), graph_dup_tensor(), graph_init_tensor(), ggml_add(), ggml_add_impl(), ggml_add_inplace(), ggml_add_or_set() (+75 more)
 
 ### Community 63 - "data"
-Cohesion: 0.06
-Nodes (37): TouchPositionCorrection, KeyboardId, assertAreExpected(), assertIsExpected(), autoMultiTextKey(), buildKeyboard(), canLoadKeyboard(), caseSelector() (+29 more)
+Cohesion: 0.07
+Nodes (36): TouchPositionCorrection, assertAreExpected(), assertIsExpected(), autoMultiTextKey(), buildKeyboard(), canLoadKeyboard(), caseSelector(), caseSelectorWithPopup() (+28 more)
 
 ### Community 65 - "whisper_build_graph_decoder"
-Cohesion: 0.04
-Nodes (88): ggml_backend_alloc_ctx_tensors(), ggml_backend_alloc_ctx_tensors_from_buft(), ggml_tallocr_free(), fmt_size(), get_allocr_backend(), get_buffer_backend(), ggml_are_same_layout(), ggml_backend_buffer_free() (+80 more)
+Cohesion: 0.06
+Nodes (45): fmt_size(), ggml_backend_buffer_get_alloc_size(), ggml_backend_buffer_get_base(), ggml_backend_buffer_get_size(), ggml_backend_buffer_init(), ggml_backend_buffer_is_host(), ggml_backend_buffer_type(), ggml_backend_buft_alloc_buffer() (+37 more)
 
 ### Community 66 - "ggml_dup_tensor"
 Cohesion: 0.05
 Nodes (16): codePointAt(), endsWithWordCodepoint(), getFullEmojiAtEnd(), getTouchedWordRange(), hasLetterBeforeLastSpaceBeforeCursor(), isEmoji(), isPartOfCompositionForScript(), loopOverCodePoints() (+8 more)
 
 ### Community 67 - "ggml_compute_forward_unary"
-Cohesion: 0.05
-Nodes (38): BufferWithExtendableBuffer, HeaderPolicy, ProbabilityDictContent, Ver4PatriciaTrieNodeReader, mBuffer, mHeaderPolicy, mProbabilityDictContent, DictionaryShortcutsStructurePolicy (+30 more)
+Cohesion: 0.14
+Nodes (9): Button, Context, EditorInfo, LinearLayout, LocalStreamingTranscriber, SQLiteDatabase, VelaTranscriber, VoiceInputMethodService (+1 more)
+
+### Community 68 - "whisper_layer_decoder"
+Cohesion: 0.03
+Nodes (11): AbstractDrawingPreview, KeyPreviewChoreographer, KeyPreviewDrawParams, NonDistinctMultitouchHelper, SlidingKeyInputDrawingPreview, KeyDetector, MainKeyboardView, PopupKeysDetector (+3 more)
 
 ### Community 69 - "ggml_compute_backward"
 Cohesion: 0.03
@@ -2544,23 +2564,23 @@ Nodes (57): ProximityInfoParams, ANGLE_WEIGHT, CENTER_VALUE_OF_NORMALIZED_DISTRI
 
 ### Community 70 - "whisper_decoder"
 Cohesion: 0.08
-Nodes (5): KeySpecParser, Constants, codePointBefore(), StringUtils, DictionaryStats
+Nodes (3): KeySpecParser, codePointBefore(), StringUtils
 
 ### Community 71 - "whisper_model"
-Cohesion: 0.07
-Nodes (36): mShortcuts, WordProperty, mNgrams, mUnigramProperty, BufferWithExtendableBuffer, HeaderPolicy, Ver4BigramListPolicy, Ver4DictBuffers (+28 more)
+Cohesion: 0.09
+Nodes (51): ggml_acc(), ggml_acc_impl(), ggml_acc_inplace(), ggml_acc_or_set(), ggml_blck_size(), ggml_compute_backward(), ggml_compute_forward_dup_bytes(), ggml_compute_forward_dup_f16() (+43 more)
 
 ### Community 72 - "ggml_vec_dot_q2_K_q8_K"
 Cohesion: 0.13
 Nodes (22): get_scale_shuffle(), get_scale_shuffle_k4(), get_scale_shuffle_q3k(), ggml_vec_dot_q2_K_q8_K(), ggml_vec_dot_q4_K_q8_K(), ggml_vec_dot_q5_K_q8_K(), ggml_vec_dot_q6_K_q8_K(), ggml_vld1q_s16_x2() (+14 more)
 
 ### Community 73 - "WhisperEngine"
-Cohesion: 0.32
-Nodes (3): ClipboardManager, ClipData, ClipboardManagerCompat
+Cohesion: 0.09
+Nodes (21): CharUtilsTest, isUsed(), ProximityInfoState::getProximityTypeG(), CharUtils, BASE_CHARS, BASE_CHARS_SIZE, EMPTY_STRING, latin_tolower (+13 more)
 
 ### Community 74 - "whisper_print_system_info"
-Cohesion: 0.13
-Nodes (25): checkTimestampFormat(), getTimestamp(), getTimestampFormatter(), getPrefOfType(), ListPreference(), putPrefOfType(), KeyAndState, ReorderSwitchPreference() (+17 more)
+Cohesion: 0.11
+Nodes (29): checkTimestampFormat(), getTimestamp(), getTimestampFormatter(), Preview(), TextInputDialog(), getPrefOfType(), ListPreference(), putPrefOfType() (+21 more)
 
 ### Community 75 - "gguf_get_n_kv"
 Cohesion: 0.05
@@ -2571,8 +2591,8 @@ Cohesion: 0.23
 Nodes (20): bytes_from_bits_32(), bytes_from_nibbles_32(), ggml_vdotq_s32(), ggml_vec_dot_q3_K_q8_K(), ggml_vec_dot_q4_0_q8_0(), ggml_vec_dot_q4_1_q8_1(), ggml_vec_dot_q5_0_q8_0(), ggml_vec_dot_q5_1_q8_1() (+12 more)
 
 ### Community 77 - "whisper_bench_ggml_mul_mat_str"
-Cohesion: 0.08
-Nodes (8): DictionaryInitializationListener, createSubDict(), DictionaryFacilitatorImpl, DictionaryGroup, findDictionaryGroupWithLocale(), getUsedLocales(), includeAtLeastTwoWordSuggestions(), isEmojiOrTypedWord()
+Cohesion: 0.09
+Nodes (6): createSubDict(), DictionaryFacilitatorImpl, DictionaryGroup, findDictionaryGroupWithLocale(), includeAtLeastTwoWordSuggestions(), isEmojiOrTypedWord()
 
 ### Community 78 - "ggml_quantize_chunk"
 Cohesion: 0.12
@@ -2583,20 +2603,20 @@ Cohesion: 0.04
 Nodes (34): HeaderPolicy, DATE_KEY, DEFAULT_FORGETTING_CURVE_PROBABILITY_VALUES_TABLE_ID, DEFAULT_MAX_NGRAM_COUNTS, DEFAULT_MULTIPLE_WORDS_DEMOTION_RATE, EntryCounts, EXTENDED_REGION_SIZE_KEY, FORGETTING_CURVE_DURATION_TO_LEVEL_DOWN_IN_SECONDS_KEY (+26 more)
 
 ### Community 80 - "whisper_batch"
-Cohesion: 0.05
-Nodes (43): whisper_allocr, alloc, buffer, meta, whisper_state, alloc_conv, alloc_cross, alloc_decode (+35 more)
+Cohesion: 0.04
+Nodes (49): whisper_allocr, alloc, buffer, meta, whisper_segment, speaker_turn_next, t0, t1 (+41 more)
 
 ### Community 81 - "ggml_build_forward_expand"
 Cohesion: 0.08
-Nodes (6): Listener, SuggestionStripView, addPinnedKey(), removePinnedKey(), OnLongClickListener, OnSharedPreferenceChangeListener
+Nodes (6): Listener, SuggestionStripView, addPinnedKey(), removePinnedKey(), OnLongClickListener, TextView
 
 ### Community 82 - "gguf_get_or_add_key"
-Cohesion: 0.08
+Cohesion: 0.09
 Nodes (5): NgramProperty, ProbabilityInfo, WeightedString, WordProperty, CombinedFormatUtils
 
 ### Community 83 - "whisper_layer_encoder"
-Cohesion: 0.08
-Nodes (16): SwipeAction, createPrefKeyForBooleanSettings(), findIndexOfDefaultSetting(), getTransitionAnimationScale(), isFloatingKeyboardEnabled(), readFloatingHeight(), readFloatingWidth(), setFloatingSize() (+8 more)
+Cohesion: 0.13
+Nodes (7): SwipeAction, createPrefKeyForBooleanSettings(), findIndexOfDefaultSetting(), apply(), Float, SharedPreferences, Settings
 
 ### Community 84 - "ggml_view_tensor"
 Cohesion: 0.06
@@ -2607,80 +2627,84 @@ Cohesion: 0.29
 Nodes (8): block_q8_1, hsum_i32_4(), hsum_i32_8(), quantize_row_q8_0(), quantize_row_q8_1(), quantize_row_q8_1_reference(), vcvtnq_s32_f32(), vmaxvq_f32()
 
 ### Community 86 - "whisper_hparams"
-Cohesion: 0.06
-Nodes (43): Ver4PatriciaTriePolicy, BIGRAM_COUNT_QUERY, createAndGetAllChildDicNodes, DUMMY_PROBABILITY_FOR_VALID_WORDS, flush, flushWithGC, getBigramsPositionOfPtNode, getCodePointsAndReturnCodePointCount (+35 more)
+Cohesion: 0.04
+Nodes (57): Ver4PatriciaTriePolicy, BIGRAM_COUNT_QUERY, createAndGetAllChildDicNodes, DUMMY_PROBABILITY_FOR_VALID_WORDS, flush, flushWithGC, getBigramConditionalProbability, getBigramsPositionOfPtNode (+49 more)
 
 ### Community 87 - "ggml_set_op_params"
-Cohesion: 0.07
-Nodes (14): CombinerChain, createCombiningEvent(), createConsumedEvent(), createCursorMovedEvent(), createEventForCodePointFromAlreadyTypedText(), createEventForCodePointFromUnknownSource(), createHardwareKeypressEvent(), createPunctuationSuggestionPickedEvent() (+6 more)
+Cohesion: 0.06
+Nodes (16): CombinerChain, createCombiningEvent(), createConsumedEvent(), createCursorMovedEvent(), createEventForCodePointFromAlreadyTypedText(), createEventForCodePointFromUnknownSource(), createHardwareKeypressEvent(), createPunctuationSuggestionPickedEvent() (+8 more)
 
 ### Community 88 - "string"
-Cohesion: 0.19
-Nodes (19): whisper_grammar, whisper_grammar_accept(), whisper_grammar_advance_stack(), whisper_grammar_candidate, code_points, partial_utf8, whisper_grammar_init(), whisper_grammar_is_end_of_sequence() (+11 more)
+Cohesion: 0.15
+Nodes (24): decode_utf8(), whisper_grammar, whisper_grammar_accept(), whisper_grammar_accept_token(), whisper_grammar_advance_stack(), whisper_grammar_candidate, code_points, partial_utf8 (+16 more)
 
 ### Community 89 - "ggml_rope_impl"
 Cohesion: 0.06
 Nodes (17): PtNodeParams, mBigramLinkedNodePos, mBigramPos, mChildrenPos, mChildrenPosFieldPos, mCodePointCount, mCodePoints, mFlags (+9 more)
 
 ### Community 90 - "gguf_write_to_buf"
-Cohesion: 0.07
-Nodes (34): ColumnScope, SearchIcon(), initPreview(), AboutScreen(), Preview(), AdvancedSettingsScreen(), Preview(), AppearanceScreen() (+26 more)
+Cohesion: 0.06
+Nodes (44): ColumnScope, SearchIcon(), Theme(), initPreview(), AboutScreen(), Preview(), AdvancedSettingsScreen(), Preview() (+36 more)
 
 ### Community 91 - "whisper_global"
 Cohesion: 0.04
 Nodes (44): ScoringParams, ACCENT_ERROR_PENALTY_FOR_EXACT_MATCH, ADDITIONAL_PROXIMITY_COST, AUTOCORRECT_OUTPUT_THRESHOLD, CASE_ERROR_PENALTY_FOR_EXACT_MATCH, COST_COMPLETION, COST_FIRST_COMPLETION, COST_SECOND_OR_LATER_WORD_FIRST_CHAR_UPPERCASE (+36 more)
 
-### Community 92 - "ggml_cont_4d"
-Cohesion: 0.15
-Nodes (9): AudioRecorder, AudioCaptureFailed, InvalidAudio, ModelNotFound, VelaException, WhisperError, VelaExceptionTest, UnsupportedFormatException (+1 more)
+### Community 93 - "ggml_compute_forward_rope_f16"
+Cohesion: 0.16
+Nodes (5): ContactsContentObserver, ContactsDictionaryConstants, ContactsChangedListener, ContactsBinaryDictionary, PermissionsUtil
 
 ### Community 94 - "AudioConverterTest"
 Cohesion: 0.05
 Nodes (4): DictionaryFacilitator, DictionaryFacilitatorLruCache, DictionaryFacilitatorProvider, StatsUtilsManager
 
 ### Community 95 - "whisper_pair"
-Cohesion: 0.06
-Nodes (54): ggml_backend_cpu_graph_compute(), ggml_backend_cpu_graph_plan_compute(), ggml_compute_forward_out_prod(), ggml_compute_forward_out_prod_f32(), ggml_compute_forward_out_prod_q_f32(), ggml_cross_entropy_loss(), ggml_cycles(), ggml_cycles_per_ms() (+46 more)
+Cohesion: 0.07
+Nodes (51): ggml_backend_cpu_graph_compute(), ggml_compute_forward_out_prod(), ggml_compute_forward_out_prod_f32(), ggml_compute_forward_out_prod_q_f32(), ggml_cycles(), ggml_cycles_per_ms(), ggml_get_f32_1d(), ggml_get_f32_nd() (+43 more)
 
 ### Community 96 - "ggml_map_binary_impl_f32"
-Cohesion: 0.14
-Nodes (18): BigramMap, MultiBigramMap, addBigramsForWord, MultiBigramMap::BigramMap::getBigramProbability(), MultiBigramMap::BigramMap::init(), getBigramProbability, MAX_CACHED_PREV_WORDS_IN_BIGRAM_MAP, mBigramMaps (+10 more)
+Cohesion: 0.16
+Nodes (6): DicNodePriorityQueue, explicit, mDicNodePool, mDicNodesQueue, mMaxSize, DicNodesQueue
 
 ### Community 97 - "ggml_compute_forward_sum"
-Cohesion: 0.07
-Nodes (6): Callback, CapsMode, InputLogicHandler, PrivateCommandPerformer, LastComposedWord, GestureConsumer
+Cohesion: 0.10
+Nodes (3): EditorInfoCompatUtils, UIHandler, ShadowHandler
 
 ### Community 98 - "ggml_map_unary_impl_f32"
-Cohesion: 0.08
-Nodes (14): AndroidSpellCheckerSession, AndroidSpellCheckerSessionFactory, AndroidWordLevelSpellCheckerSession, Checkabiliy, getCheckabilityInScript(), getResult(), Result, SuggestionsCache (+6 more)
+Cohesion: 0.05
+Nodes (17): AndroidSpellCheckerSession, AndroidSpellCheckerSessionFactory, AndroidWordLevelSpellCheckerSession, Checkabiliy, getCheckabilityInScript(), getResult(), Result, SuggestionsCache (+9 more)
 
 ### Community 99 - "quantize_row_q5_0_reference"
 Cohesion: 0.06
-Nodes (28): Dictionary, DictionaryStructureWithBufferPolicy, DicTraverseSession, CACHE_START_INPUT_LENGTH_THRESHOLD, const, DICTIONARY_SIZE_THRESHOLD_TO_USE_LARGE_CACHE_FOR_SUGGESTION, DicTraverseSession, getDictionaryStructurePolicy (+20 more)
+Nodes (26): Dictionary, DictionaryStructureWithBufferPolicy, DicTraverseSession, CACHE_START_INPUT_LENGTH_THRESHOLD, const, DICTIONARY_SIZE_THRESHOLD_TO_USE_LARGE_CACHE_FOR_SUGGESTION, DicTraverseSession, initializeProximityInfoStates (+18 more)
 
 ### Community 100 - "quantize_row_q5_1_reference"
 Cohesion: 0.08
 Nodes (5): DicNode, mDicNodeProperties, mDicNodeState, DicNodeProperties, DicNodeState
 
 ### Community 101 - "ggml_map_custom1_impl_f32"
-Cohesion: 0.13
-Nodes (15): decodePrivateImeOptions(), EmojiSearchActivity, encodePrivateImeOptions(), initDictionaryFacilitator(), PrivateImeOptions, EmojiParser, getCode(), getEmojiDefaultVersion() (+7 more)
+Cohesion: 0.12
+Nodes (17): ComponentActivity, decodePrivateImeOptions(), EmojiSearchActivity, encodePrivateImeOptions(), initDictionaryFacilitator(), PrivateImeOptions, EmojiParser, getCode() (+9 more)
 
 ### Community 102 - "ggml_map_custom2_impl_f32"
 Cohesion: 0.05
 Nodes (29): ProximityInfo, CELL_HEIGHT, CELL_WIDTH, GRID_HEIGHT, GRID_WIDTH, HAS_TOUCH_POSITION_CORRECTION_DATA, KEY_COUNT, KEYBOARD_HEIGHT (+21 more)
+
+### Community 103 - "ggml_set_f32"
+Cohesion: 0.08
+Nodes (3): ExpandableBinaryDictionary, UserBinaryDictionary, Runnable
 
 ### Community 104 - ".convertPcmToFloat"
 Cohesion: 0.08
 Nodes (43): Dictionary, addNgramEntry, addUnigramEntry, Dictionary::Dictionary(), flush, flushWithGC, getMaxProbabilityOfExactMatches, getNextWordAndNextToken (+35 more)
 
 ### Community 105 - "ggml_map_custom1_impl"
-Cohesion: 0.22
-Nodes (11): DictionaryHeaderStructurePolicy, DigraphUtils, GERMAN_UMLAUT_DIGRAPHS, getAllDigraphsForDigraphTypeAndReturnSize, getDigraphCodePointForIndex, getDigraphForCodePoint, getDigraphForDigraphTypeAndCodePoint, getDigraphTypeForDictionary (+3 more)
+Cohesion: 0.09
+Nodes (15): ErrorTypeUtils, COMPLETION, EDIT_CORRECTION, ERRORS_TREATED_AS_A_PERFECT_MATCH, ERRORS_TREATED_AS_AN_EXACT_MATCH, ERRORS_TREATED_AS_AN_EXACT_MATCH_WITH_INTENTIONAL_OMISSION, INTENTIONAL_OMISSION, MATCH_WITH_DIGRAPH (+7 more)
 
 ### Community 106 - "ggml_map_custom2_impl"
-Cohesion: 0.06
-Nodes (31): KeyLabel, KeyType, KeyTypeSerializer, PopupSet, SimplePopups, AutoTextKeyData, createActionPopupKeys(), getActionKeyPopupKeys() (+23 more)
+Cohesion: 0.10
+Nodes (13): KeyLabel, createActionPopupKeys(), getActionKeyPopupKeys(), getActionKeyPopupKeyString(), getCommaPopupKeys(), getPunctuationPopupKeys(), getStringInLocale(), KeyData (+5 more)
 
 ### Community 107 - "ggml_compute_forward_leaky_relu_f32"
 Cohesion: 0.11
@@ -2695,8 +2719,8 @@ Cohesion: 0.05
 Nodes (33): AI / LLM Usage, About the Code, Adding / Adjusting Layouts, Dictionaries, Getting Started, Guidelines, Necessary, Recommended (+25 more)
 
 ### Community 110 - "CMakeCCompilerId.c"
-Cohesion: 0.09
-Nodes (29): Application, isDeviceLocked(), isUserLocked(), App, getApp(), AppUpgrade, checkVersionUpgrade(), transferOldPinnedClips() (+21 more)
+Cohesion: 0.15
+Nodes (14): Application, isDeviceLocked(), isUserLocked(), App, getApp(), checkVersionUpgrade(), transferOldPinnedClips(), backupLauncher() (+6 more)
 
 ### Community 111 - "CMakeCXXCompilerId.cpp"
 Cohesion: 0.09
@@ -2707,120 +2731,116 @@ Cohesion: 0.09
 Nodes (5): TypingTraversal, CORRECT_NEW_WORD_SPACE_SUBSTITUTION, CORRECT_OMISSION, ProximityType, sInstance
 
 ### Community 113 - "CMakeCXXCompilerId.cpp"
-Cohesion: 0.11
-Nodes (6): LayoutUtils, ShadowFacilitator, suggestion(), suggestionResults(), SuggestTest, TestDict
+Cohesion: 0.12
+Nodes (5): ShadowFacilitator, suggestion(), suggestionResults(), SuggestTest, TestDict
 
 ### Community 114 - "CMakeCCompilerId.c"
-Cohesion: 0.08
-Nodes (14): Ver4DictBuffers, flushDictBuffers, flushHeaderAndDictBuffers, mDictBuffer, mExpandableHeaderBuffer, mExpandableTrieBuffer, mHeaderBuffer, mHeaderPolicy (+6 more)
+Cohesion: 0.06
+Nodes (17): Ver4DictBuffers, flushDictBuffers, flushHeaderAndDictBuffers, mDictBuffer, mExpandableHeaderBuffer, mExpandableTrieBuffer, mHeaderBuffer, mHeaderPolicy (+9 more)
 
 ### Community 115 - "CMakeCXXCompilerId.cpp"
-Cohesion: 0.11
-Nodes (9): AbstractKeyData, CaseSelector, CharWidthSelector, KanaSelector, KeyboardStateSelector, LayoutDirectionSelector, ShiftStateSelector, VariationSelector (+1 more)
+Cohesion: 0.14
+Nodes (8): AbstractKeyData, CaseSelector, CharWidthSelector, KanaSelector, KeyboardStateSelector, LayoutDirectionSelector, ShiftStateSelector, VariationSelector
 
 ### Community 116 - "CMakeCCompilerId.c"
-Cohesion: 0.09
-Nodes (3): EditorInfoCompatUtils, UIHandler, ShadowHandler
+Cohesion: 0.06
+Nodes (10): DrawingPreviewPlacerView, GestureFloatingTextDrawingPreview, GesturePreviewTextParams, CoordinateUtils, ViewLayoutUtils, Insets, MarginLayoutParams, RelativeLayout (+2 more)
 
 ### Community 117 - "VelaRecordingCallback"
-Cohesion: 0.10
-Nodes (5): CleanerConfig, TextCleaner, TextCleanerTest, Model, Tokenizer
+Cohesion: 0.14
+Nodes (3): CleanerConfig, TextCleaner, TextCleanerTest
 
 ### Community 118 - "CMakeCCompilerId.c"
-Cohesion: 0.08
-Nodes (23): readPtNodeInfo, PatriciaTriePolicy, createAndGetAllChildDicNodes, createAndGetLeavingChildNode, getBigramsPositionOfPtNode, getNextWordAndNextToken, getShortcutIterator, getShortcutPositionOfPtNode (+15 more)
+Cohesion: 0.04
+Nodes (44): NgramListener, onVisitEntry, DictionaryBigramsStructurePolicy, DictionaryShortcutsStructurePolicy, PatriciaTrieReadingUtils, FLAG_CHILDREN_POSITION_TYPE_NOPOSITION, FLAG_CHILDREN_POSITION_TYPE_THREEBYTES, FLAG_CHILDREN_POSITION_TYPE_TWOBYTES (+36 more)
 
 ### Community 119 - "CMakeCXXCompilerId.cpp"
-Cohesion: 0.07
-Nodes (28): Recording, RecordingCard, styles, OverlayLogoProps, styles, styles, TranscriptionEditor(), TranscriptionEditorProps (+20 more)
+Cohesion: 0.08
+Nodes (22): styles, TranscriptionEditorProps, CorrectionAPI, SaveCorrectionPayload, assert(), runTests(), savedArgs, assert() (+14 more)
 
 ### Community 120 - "ggml_compute_forward_sum"
 Cohesion: 0.09
 Nodes (28): DicNode, DicNode_InputStateG, DicTraverseSession, MultiBigramMap, profile(), Weighting, addCostAndForwardInputIndex, getAdditionalProximityCost (+20 more)
 
 ### Community 121 - "ggml_compute_forward_out_prod_f32"
-Cohesion: 0.14
-Nodes (22): LanguageModelDictContent, createAndGetBitmapEntryIndex, exportAllNgramEntriesRelatedToWord, exportAllNgramEntriesRelatedToWordInner, getBitmapEntryIndex, getNgramProbabilityEntry, getProbabilityEntries, GLOBAL_COUNTERS_BUFFER_INDEX (+14 more)
+Cohesion: 0.11
+Nodes (26): LanguageModelDictContent, createAndGetBitmapEntryIndex, LanguageModelDictContent::EntryInfoToTurncate::Comparator::operator()(), exportAllNgramEntriesRelatedToWord, exportAllNgramEntriesRelatedToWordInner, getBitmapEntryIndex, getEntryInfo, getNgramProbabilityEntry (+18 more)
 
 ### Community 122 - "pthread_create"
 Cohesion: 0.06
-Nodes (35): A, B, whisper_decoder, completed, failed, grammar, has_ts, i_batch (+27 more)
+Nodes (37): whisper_context, backend, itype, model, params, path_model, state, t_load_us (+29 more)
 
 ### Community 123 - "ggml_allocr_free"
-Cohesion: 0.08
-Nodes (30): Ver4PatriciaTriePolicy, BIGRAM_COUNT_QUERY, createAndGetAllChildDicNodes, flush, flushWithGC, getCodePointsAndReturnCodePointCount, getNextWordAndNextToken, getShortcutIterator (+22 more)
+Cohesion: 0.05
+Nodes (38): BufferWithExtendableBuffer, HeaderPolicy, ProbabilityDictContent, Ver4PatriciaTrieNodeReader, fetchPtNodeInfoFromBufferAndProcessMovedPtNode, mBuffer, mHeaderPolicy, mProbabilityDictContent (+30 more)
 
 ### Community 124 - "build.gradle.kts"
 Cohesion: 0.12
 Nodes (32): getAllChildDicNodes, DicNode, DicTraverseSession, ProximityInfo, SuggestInterface, getSuggestions, SuggestionResults, ProximityInfo (+24 more)
 
 ### Community 125 - "ggml_rope_impl"
-Cohesion: 0.05
-Nodes (9): AccessibilityDelegateCompat, AccessibilityNodeInfoCompat, AccessibilityNodeProviderCompat, KeyboardAccessibilityDelegate, KeyboardAccessibilityNodeProvider, MainKeyboardAccessibilityDelegate, PopupKeysKeyboardAccessibilityDelegate, PopupKeysKeyboardView (+1 more)
-
-### Community 126 - "ggml_set_f32"
-Cohesion: 0.12
-Nodes (12): KeySpecParserError, buildEmojiClipBottomRow(), Builder, clearKeyboardCache(), getFakeKeyboardId(), InternalAction, KeyboardLayoutSet, KeyboardLayoutSetException (+4 more)
+Cohesion: 0.06
+Nodes (10): AccessibilityDelegateCompat, AccessibilityNodeInfoCompat, AccessibilityNodeProviderCompat, AccessibilityLongPressTimer, LongPressTimerCallback, KeyboardAccessibilityDelegate, KeyboardAccessibilityNodeProvider, MainKeyboardAccessibilityDelegate (+2 more)
 
 ### Community 127 - "ggml_map_custom2_impl_f32"
-Cohesion: 0.05
-Nodes (22): DicNodePriorityQueue, explicit, mDicNodePool, mDicNodesQueue, mMaxSize, DicNode, DicNodesCache, explicit (+14 more)
+Cohesion: 0.07
+Nodes (16): DicNode, DicNodesCache, explicit, LARGE_PRIORITY_QUEUE_CAPACITY, mActiveDicNodes, mCachedDicNodesForContinuousSuggestion, mDicNodePriorityQueue0, mDicNodePriorityQueue1 (+8 more)
 
 ### Community 128 - "ggml_can_repeat"
 Cohesion: 0.06
 Nodes (35): Ver4DictConstants, BIGRAM_ADDRESS_TABLE_BLOCK_SIZE, BIGRAM_ADDRESS_TABLE_DATA_SIZE, BIGRAM_CONTENT_TABLE_FILE_EXTENSION, BIGRAM_FILE_EXTENSION, BIGRAM_FLAGS_FIELD_SIZE, BIGRAM_HAS_NEXT_MASK, BIGRAM_LARGE_PROBABILITY_FIELD_SIZE (+27 more)
 
 ### Community 129 - "ggml_nbytes"
-Cohesion: 0.24
-Nodes (9): HeaderPolicy, Ver4DictBuffers, Ver4PatriciaTrieNodeReader, Ver4PatriciaTrieNodeWriter, Ver4PatriciaTrieWritingHelper, mBuffers, runGC, truncateUnigrams (+1 more)
+Cohesion: 0.11
+Nodes (23): WordAttributes, mIsBlacklisted, mIsNotAWord, mIsPossiblyOffensive, mProbability, getProbabilityOfWord, getWordProperty, getBigramNodeImprobability (+15 more)
 
 ### Community 130 - "ggml_graph_import"
 Cohesion: 0.06
 Nodes (32): Ver4DictConstants, BIGRAM_BUFFERS_INDEX, BODY_FILE_EXTENSION, FLAG_BLACKLISTED, FLAG_NOT_A_VALID_ENTRY, FLAG_NOT_A_WORD, FLAG_POSSIBLY_OFFENSIVE, FLAG_REPRESENTS_BEGINNING_OF_SENTENCE (+24 more)
 
 ### Community 132 - "string"
-Cohesion: 0.12
-Nodes (3): Builder, PopupKeysKeyboard, PopupKeysKeyboardParams
+Cohesion: 0.11
+Nodes (4): Builder, PopupKeysKeyboard, PopupKeysKeyboardParams, TypefaceUtils
 
 ### Community 133 - "ggml_backend_graph_copy"
-Cohesion: 0.10
-Nodes (12): HangulEventDecoder, LocaleUtils, LanguageOnSpacebarUtils, getEnabledPopupKeys(), getHasLocalizedNumberRow(), getMoreKeys(), getPopupKeyHintOrder(), getPopupKeyOrder() (+4 more)
-
-### Community 134 - "ggml_map_custom3_impl_f32"
-Cohesion: 0.10
-Nodes (9): PunctuationSuggestions, DeviceProtectedUtils, protectedPrefs(), ReentrantLock, Configuration, Context, Drawable, File (+1 more)
+Cohesion: 0.12
+Nodes (12): LocaleUtils, getUsedLocales(), LanguageOnSpacebarUtils, getEnabledPopupKeys(), getHasLocalizedNumberRow(), getMoreKeys(), getPopupKeyHintOrder(), getPopupKeyOrder() (+4 more)
 
 ### Community 135 - "PersonalDictionaryTest"
 Cohesion: 0.06
 Nodes (30): 1. Overview & Goals, 2.1 Module Structure, 2.2 Public API Surface, 2.3 File Migration Map, 2.4 JNI Renames, 2.5 Build Configuration, 2.6 Vela Voice App Migration, 2. Phase 1: vela-transcription-sdk (+22 more)
 
 ### Community 136 - "whisper_global"
-Cohesion: 0.14
-Nodes (4): KeyboardState, Alphabet, ShiftMode, of()
+Cohesion: 0.21
+Nodes (3): KeyboardState, Alphabet, ShiftMode
 
 ### Community 137 - "ggml_add_rel_pos_impl"
-Cohesion: 0.04
-Nodes (27): DicNodeStateScoring, mCompletionCount, mContainedErrorTypes, mDigraphIndex, mDoubleLetterLevel, mEditCorrectionCount, mLanguageDistance, mNormalizedCompoundDistance (+19 more)
+Cohesion: 0.07
+Nodes (12): DicNodeStateScoring, mCompletionCount, mContainedErrorTypes, mDigraphIndex, mDoubleLetterLevel, mEditCorrectionCount, mLanguageDistance, mNormalizedCompoundDistance (+4 more)
 
 ### Community 138 - "ggml_cont_4d"
 Cohesion: 0.07
 Nodes (14): Ver4DictBuffers, flushHeaderAndDictBuffers, mBigramDictContent, mDictBuffer, mExpandableHeaderBuffer, mExpandableTrieBuffer, mHeaderBuffer, mHeaderPolicy (+6 more)
 
 ### Community 139 - "ggml_backend_cpu_supports_op"
-Cohesion: 0.11
-Nodes (9): AtomicInteger, ContactsContentObserver, AffinityComparator, ContactsChangedListener, ContactsManager, RankedContact, ContactsBinaryDictionary, PermissionsUtil (+1 more)
+Cohesion: 0.12
+Nodes (21): dft(), fft(), hann_window(), log_mel_spectrogram(), log_mel_spectrogram_worker_thread(), whisper_allocr_size(), whisper_filters, n_fft (+13 more)
 
 ### Community 140 - "build.gradle.kts"
+Cohesion: 0.05
+Nodes (42): WordProperty, mNgrams, mUnigramProperty, addNgramEntry, getProperty, needsToRunGC, Ver4PatriciaTriePolicy, addNgramEntry (+34 more)
+
+### Community 141 - "ggml_compute_forward_flash_attn_back_f32"
+Cohesion: 0.08
+Nodes (25): whisper_layer_decoder, attn_k_w, attn_ln_0_b, attn_ln_0_w, attn_ln_1_b, attn_ln_1_w, attn_q_b, attn_q_w (+17 more)
+
+### Community 142 - "PopupKeysKeyboardView"
 Cohesion: 0.11
 Nodes (9): Ver4ShortcutListPolicy, mShortcutDictContent, Ver4ShortcutListPolicy, mShortcutDictContent, BinaryDictionaryShortcutIterator, mHasNextShortcutTarget, mPos, mShortcutStructurePolicy (+1 more)
 
-### Community 141 - "ggml_compute_forward_flash_attn_back_f32"
-Cohesion: 0.09
-Nodes (4): BogusMoveEventDetector, Element, PointerTrackerQueue, JsonUtils
-
 ### Community 143 - "PtNodeParams"
-Cohesion: 0.06
-Nodes (28): CharUtilsTest, isUsed(), ProximityInfoState::getProximityTypeG(), TouchPositionCorrectionUtils, DicNode, DicNode_InputStateG, MultiBigramMap, TypingWeighting (+20 more)
+Cohesion: 0.13
+Nodes (7): TouchPositionCorrectionUtils, DicNode, DicNode_InputStateG, MultiBigramMap, TypingWeighting, getErrorType, sInstance
 
 ### Community 144 - "build.gradle.kts"
 Cohesion: 0.07
@@ -2828,83 +2848,91 @@ Nodes (28): dependencies, expo, expo-constants, expo-file-system, expo-sqlite, e
 
 ### Community 145 - "quantize_row_q4_1_reference"
 Cohesion: 0.13
-Nodes (21): updatePtNodeProbabilityAndGetNeedsToKeepPtNodeAfterGC, ForgettingCurveUtils, backoff, clampToValidCountRange, clampToValidLevelRange, clampToValidTimeStepCountRange, clampToVisibleEntryLevelRange, createHistoricalInfoToSave (+13 more)
+Nodes (23): createUpdatedEntryFrom, updatePtNodeProbabilityAndGetNeedsToKeepPtNodeAfterGC, ForgettingCurveUtils, backoff, clampToValidCountRange, clampToValidLevelRange, clampToValidTimeStepCountRange, clampToVisibleEntryLevelRange (+15 more)
 
 ### Community 146 - "TranscriptionResult"
-Cohesion: 0.11
-Nodes (19): DynamicPtReadingHelper, followForwardLink, getCodePointsAndReturnCodePointCount, getTerminalPtNodePositionOfWord, MAX_CHILD_COUNT_TO_AVOID_INFINITE_LOOP, MAX_PT_NODE_ARRAY_COUNT_TO_AVOID_INFINITE_LOOP, MAX_READING_STATE_STACK_SIZE, mIsError (+11 more)
+Cohesion: 0.10
+Nodes (21): DictionaryShortcutsStructurePolicy, DynamicPtReadingHelper, followForwardLink, getCodePointsAndReturnCodePointCount, getTerminalPtNodePositionOfWord, MAX_CHILD_COUNT_TO_AVOID_INFINITE_LOOP, MAX_PT_NODE_ARRAY_COUNT_TO_AVOID_INFINITE_LOOP, MAX_READING_STATE_STACK_SIZE (+13 more)
 
 ### Community 147 - "withVoiceIme.js"
-Cohesion: 0.07
-Nodes (58): ggml_backend_cpu_buffer_type_supports_backend(), ggml_backend_cpu_set_n_threads(), ggml_backend_is_cpu(), ggml_add(), ggml_build_forward_expand(), ggml_cpy(), ggml_critical_section_end(), ggml_element_size() (+50 more)
+Cohesion: 0.23
+Nodes (12): atomic_int, atomic_fetch_add(), atomic_fetch_sub(), atomic_load(), atomic_store(), ggml_critical_section_start(), ggml_graph_compute_perf_stats_node(), ggml_graph_compute_thread() (+4 more)
 
 ### Community 148 - "WaveformView"
-Cohesion: 0.07
-Nodes (6): AbstractDrawingPreview, GestureFloatingTextDrawingPreview, GesturePreviewTextParams, GestureTrailsDrawingPreview, NonDistinctMultitouchHelper, SlidingKeyInputDrawingPreview
+Cohesion: 0.05
+Nodes (5): EmojiLayoutParams, EmojiPalettesView, KeyboardActionListener, TouchpadHandler, OnClickListener
 
 ### Community 149 - "Domain Docs"
-Cohesion: 0.11
-Nodes (7): LayoutParser, encodeBase36(), LayoutType, LayoutUtilsCustom, Defaults, Context, SharedPreferences
+Cohesion: 0.09
+Nodes (6): LayoutParser, decodeBase36(), encodeBase36(), LayoutType, LayoutUtils, LayoutUtilsCustom
 
 ### Community 150 - "RichInputMethodSubtype"
-Cohesion: 0.08
-Nodes (23): DictionaryBigramsStructurePolicy, DictionaryShortcutsStructurePolicy, PatriciaTrieReadingUtils, FLAG_CHILDREN_POSITION_TYPE_NOPOSITION, FLAG_CHILDREN_POSITION_TYPE_THREEBYTES, FLAG_CHILDREN_POSITION_TYPE_TWOBYTES, FLAG_HAS_BIGRAMS, FLAG_HAS_MULTIPLE_CHARS (+15 more)
+Cohesion: 0.07
+Nodes (9): Comparator, ConcurrentLinkedQueue, AndroidSpellCheckerService, prefs(), SubtypeUtilsAdditional, SuggestedWordInfoComparator, SuggestionResults, OnSharedPreferenceChangeListener (+1 more)
 
 ### Community 151 - "quantize_row_q5_0_reference"
-Cohesion: 0.11
-Nodes (20): Theme(), ListPickerDialog(), PreviewListPickerDialog(), MultiListPickerDialog(), Preview(), Preview(), ReorderDialog(), PreviewSliderDialog() (+12 more)
+Cohesion: 0.12
+Nodes (24): AppUpgrade, getResourceSubtypes(), clearCustomToolbarKeyCodes(), createToolbarKey(), getCodeForToolbarKey(), getCodeForToolbarKeyLongClick(), getCustomKeyCode(), getCustomLongpressKeyCode() (+16 more)
 
 ### Community 153 - "DicNodeStateOutput"
 Cohesion: 0.05
 Nodes (19): DicNodeState, DicNodeState, mDicNodeStateInput, mDicNodeStateOutput, mDicNodeStateScoring, DicNodeStateInput, mInputIndex, mPrevCodePoint (+11 more)
 
+### Community 154 - "DictionaryFacilitator"
+Cohesion: 0.10
+Nodes (3): GestureDataGatheringSettings, BackgroundGatheringSettings(), ExcludedWordsDialog()
+
 ### Community 155 - "SubtypeScreen"
-Cohesion: 0.18
-Nodes (17): CloseIcon(), DefaultButton(), DeleteButton(), ExpandButton(), NextScreenIcon(), Preview(), LayoutEditDialog(), Preview() (+9 more)
+Cohesion: 0.15
+Nodes (13): BigramListReadWriteUtils, FLAG_ATTRIBUTE_ADDRESS_TYPE_ONEBYTE, FLAG_ATTRIBUTE_ADDRESS_TYPE_THREEBYTES, FLAG_ATTRIBUTE_ADDRESS_TYPE_TWOBYTES, FLAG_ATTRIBUTE_HAS_NEXT, FLAG_ATTRIBUTE_OFFSET_NEGATIVE, getBigramAddressAndAdvancePosition, getBigramEntryPropertiesAndAdvancePosition (+5 more)
 
 ### Community 156 - "0001-separate-transcription-ime.md"
 Cohesion: 0.14
-Nodes (17): BufferWithExtendableBuffer, checkAndPrepareWriting, copy, DEFAULT_MAX_ADDITIONAL_BUFFER_SIZE, extend, EXTEND_ADDITIONAL_BUFFER_SIZE_STEP, extendBuffer, mAdditionalBuffer (+9 more)
+Nodes (16): BufferWithExtendableBuffer, checkAndPrepareWriting, copy, DEFAULT_MAX_ADDITIONAL_BUFFER_SIZE, extend, EXTEND_ADDITIONAL_BUFFER_SIZE_STEP, extendBuffer, mAdditionalBuffer (+8 more)
 
 ### Community 157 - "0002-model-storage-and-access-architecture.md"
-Cohesion: 0.17
-Nodes (5): ComponentActivity, BackButton(), getActivity(), SettingsActivity, SettingsActivity2
+Cohesion: 0.13
+Nodes (10): cleanUnusedMainDicts(), createDictionaryTextAnnotated(), getDictionaryLocales(), getKnownDictionariesForLocale(), hasAnythingOtherThanExtractedMainDictionary(), MissingDictionaryDialog(), BackButton(), SettingsActivity (+2 more)
 
 ### Community 159 - "0003-hybrid-cleaner-architecture.md"
-Cohesion: 0.03
-Nodes (60): whisper_hparams, eps, ftype, n_audio_ctx, n_audio_head, n_audio_layer, n_audio_state, n_mels (+52 more)
+Cohesion: 0.09
+Nodes (22): whisper_model, buffer, ctx, d_ln_b, d_ln_w, d_pe, d_te, e_conv_1_b (+14 more)
 
 ### Community 160 - "0004-voice-typing-pane-layout.md"
-Cohesion: 0.19
-Nodes (5): Builder, Divider, MoreSuggestionKey, MoreSuggestions, MoreSuggestionsParam
+Cohesion: 0.13
+Nodes (7): Spacer, PopupKeyDivider, Builder, Divider, MoreSuggestionKey, MoreSuggestions, MoreSuggestionsParam
 
 ### Community 162 - "DictionaryEntry"
-Cohesion: 0.07
-Nodes (78): autospace(), `autospace after selecting a suggestion`(), `autospace in json editor`(), `autospace propagates over "`(), `autospace still happens after "`(), `autospace still happens after " if nex word is in " and after comma`(), `autospace still happens after " if next word is in quotes`(), `autospace works in URL field when input isn't URL`() (+70 more)
+Cohesion: 0.10
+Nodes (32): `autospace in json editor`(), `autospace still happens after "`(), `autospace still happens after " if nex word is in " and after comma`(), `autospace still happens after " if next word is in quotes`(), chainInput(), combineHangul(), `don't accidentally detect some other text fields as URI`(), `don't add partial URL to history`() (+24 more)
 
 ### Community 166 - "InputAttributes"
 Cohesion: 0.12
 Nodes (19): FileUtils, existsDir, getBasename, getDirPath, getFilePath, getFilePathBufSize, getFilePathWithoutSuffix, getFilePathWithSuffix (+11 more)
 
 ### Community 171 - "index.js"
-Cohesion: 0.23
-Nodes (4): DictionaryKeywords, PersonalDictionary, Builder, apply()
+Cohesion: 0.14
+Nodes (3): Callback, InputLogicHandler, Suggest
+
+### Community 174 - "triage-labels.md"
+Cohesion: 0.04
+Nodes (13): CorrectionInfo, getTextWithAutoCorrectionIndicatorUnderline(), getTextWithSuggestionSpan(), UnicodeSurrogate, IntentUtils, SpannableStringUtils, StatsUtils, TextRange (+5 more)
 
 ### Community 175 - "KeyboardAccessibilityDelegate"
 Cohesion: 0.15
 Nodes (6): canSwitchLanguage(), getInstance(), init(), InputMethodInfoCache, RichInputMethodManager, Shortcut
 
 ### Community 176 - "LocaleKeyboardInfos"
-Cohesion: 0.10
-Nodes (15): addFixedColumnOrder(), addLocaleKeyTextsToParams(), adjustAutoColumnOrder(), createLocaleKeyTexts(), genericCurrencyKey(), getCurrency(), getCurrencyKey(), getOrCreate() (+7 more)
+Cohesion: 0.13
+Nodes (12): addFixedColumnOrder(), addLocaleKeyTextsToParams(), adjustAutoColumnOrder(), createLocaleKeyTexts(), genericCurrencyKey(), getCurrency(), getCurrencyKey(), getOrCreate() (+4 more)
 
 ### Community 177 - "MutableEntryCounters"
-Cohesion: 0.05
-Nodes (37): latinime_BinaryDictionary_addNgramEntry(), latinime_BinaryDictionary_addUnigramEntry(), latinime_BinaryDictionary_getHeaderInfo(), latinime_BinaryDictionary_getMaxProbabilityOfExactMatches(), latinime_BinaryDictionary_getNextWord(), latinime_BinaryDictionary_getNgramProbability(), latinime_BinaryDictionary_getProbability(), latinime_BinaryDictionary_getSuggestions() (+29 more)
+Cohesion: 0.04
+Nodes (39): register_ProximityInfo(), latinime_BinaryDictionary_addNgramEntry(), latinime_BinaryDictionary_addUnigramEntry(), latinime_BinaryDictionary_createOnMemory(), latinime_BinaryDictionary_getHeaderInfo(), latinime_BinaryDictionary_getMaxProbabilityOfExactMatches(), latinime_BinaryDictionary_getNextWord(), latinime_BinaryDictionary_getNgramProbability() (+31 more)
 
 ### Community 178 - "KeyboardActionListenerImpl"
-Cohesion: 0.21
-Nodes (11): Color, ColorPickerDialog(), WidePreview(), isWideScreen(), ColorsScreen(), getColorPrefsToHideInitially(), getColorString(), Preview() (+3 more)
+Cohesion: 0.09
+Nodes (23): Alignment, Color, ColorPickerDialog(), WidePreview(), CustomizeIconsDialog(), Preview(), ActionRow(), GetIconOrEmpty() (+15 more)
 
 ### Community 179 - "CONTRIBUTING.md"
 Cohesion: 0.09
@@ -2918,37 +2946,41 @@ Nodes (10): ShortcutListReadingUtils, FLAG_ATTRIBUTE_HAS_NEXT, getFlagsAndForwar
 Cohesion: 0.12
 Nodes (11): MAX_SKIP_PROBABILITY, DoubleLetterLevel getDoubleLetterLevel(), existsAdjacentProximityChars(), existsCodePointInProximityAt(), getBeelineSpeedPercentile(), getInputX(), getInputY(), getPrimaryCodePointAt() (+3 more)
 
-### Community 182 - "DicNodesCache"
-Cohesion: 0.11
-Nodes (23): ggml_add1(), ggml_add1_impl(), ggml_add1_inplace(), ggml_add1_or_set(), ggml_add_impl(), ggml_add_inplace(), ggml_add_or_set(), ggml_build_backward_expand() (+15 more)
+### Community 183 - "ByteArray"
+Cohesion: 0.20
+Nodes (19): autospace(), autospaceButWithTextAfter(), checkConnectionConsistency(), delete(), deleteCombinedText(), deleteHangulInDebugMode(), deleteInsideWord(), deleteMultiCodepointText() (+11 more)
 
 ### Community 184 - "SettingsValuesForSuggestion"
-Cohesion: 0.09
-Nodes (10): ConcurrentLinkedQueue, getDescriptionForActionKey(), getDescriptionForShiftKey(), getDescriptionForSwitchAlphaSymbol(), KeyCodeDescriptionMapper, Keyboard, AndroidSpellCheckerService, prefs() (+2 more)
+Cohesion: 0.06
+Nodes (23): getDescriptionForActionKey(), getDescriptionForShiftKey(), getDescriptionForSwitchAlphaSymbol(), KeyCodeDescriptionMapper, Keyboard, ProductionFlags, PrivateCommandPerformer, SettingsValuesForSuggestion (+15 more)
 
 ### Community 185 - "LatinIME.java"
-Cohesion: 0.12
-Nodes (3): DrawingPreviewPlacerView, CoordinateUtils, RelativeLayout
+Cohesion: 0.20
+Nodes (19): `autospace after selecting a suggestion`(), `autospace propagates over "`(), `autospace works in URL field when input isn't URL`(), `autospace works in URL field when input isn't URL, also for multiple suggestions`(), `autospace works in URL field when starting with quotes`(), `emoji is added to dictionary`(), `emoji text input and delete`(), `emoji uses phantom space`() (+11 more)
 
-### Community 187 - "pt_node_params.h"
-Cohesion: 0.13
-Nodes (3): hasExtraValueOf(), SubtypeSettings, getResourceSubtypes()
+### Community 186 - "RichInputMethodManager"
+Cohesion: 0.40
+Nodes (3): getPlatformDialogThemeContext(), createInputMethodPickerDialog(), IBinder
 
 ### Community 188 - "ColorsScreen"
-Cohesion: 0.13
-Nodes (6): getTextWithAutoCorrectionIndicatorUnderline(), getTextWithSuggestionSpan(), SpannableStringUtils, TextRange, Spanned, SuggestionSpan
+Cohesion: 0.20
+Nodes (5): AtomicInteger, AffinityComparator, ContactsManager, RankedContact, Comparator
 
 ### Community 189 - "TimerHandler"
-Cohesion: 0.13
+Cohesion: 0.18
 Nodes (3): GestureStrokeDrawingParams, GestureStrokeDrawingPoints, HermiteInterpolator
 
+### Community 190 - "StringUtils"
+Cohesion: 0.05
+Nodes (7): splitOnWhitespace(), DictionaryStats, DictionaryInitializationListener, UnlearnEvent, SingleDictionaryFacilitator, SpacedTokens, Iterable
+
 ### Community 191 - "InputView.java"
-Cohesion: 0.24
-Nodes (12): addDebugInfo(), capitalize(), capitalizeAndAddTrailingSingleQuotes(), getCapsModeForGesture(), getCapsModeForTyping(), getSuggestionsInfoListWithDebugInfo(), isAllowedByAutoCorrectionWithSpaceFilter(), makeFirstTwoSuggestionsNonEmoji() (+4 more)
+Cohesion: 0.26
+Nodes (18): get_allocr_backend(), get_buffer_backend(), ggml_backend_name(), ggml_backend_sched_get_buffer(), ggml_backend_sched_get_tallocr(), ggml_backend_sched_graph_compute(), ggml_backend_sched_init_measure(), ggml_backend_sched_set_node_backend() (+10 more)
 
 ### Community 192 - "gguf_get_n_kv"
-Cohesion: 0.06
-Nodes (20): DictContent, isValid, SingleDictContent, mExpandableContentBuffer, mIsValid, mMmappedBuffer, SparseTableDictContent, BufferWithExtendableBuffer (+12 more)
+Cohesion: 0.10
+Nodes (14): SparseTableDictContent, BufferWithExtendableBuffer, flush, mAddressLookupTable, mAddressTableBuffer, mContentBuffer, mExpandableAddressTableBuffer, mExpandableContentBuffer (+6 more)
 
 ### Community 193 - "WordAttributes"
 Cohesion: 0.10
@@ -2959,44 +2991,44 @@ Cohesion: 0.15
 Nodes (8): SuggestOptions, ADDITIONAL_FEATURES_OPTIONS, BLOCK_OFFENSIVE_WORDS, IS_GESTURE, mLength, SPACE_AWARE_GESTURE_ENABLED, USE_FULL_EDIT_DISTANCE, WEIGHT_FOR_LOCALE_IN_THOUSANDS
 
 ### Community 195 - "proximity_info_state_utils.cpp"
-Cohesion: 0.16
-Nodes (31): GeometryUtils, ProximityInfoState::initInputParams(), ProximityInfoStateUtils, calculateBeelineSpeedRate, calculateNormalizedSquaredDistance, calculateSquaredDistanceFromSweetSpotCenter, checkAndReturnIsContinuousSuggestionPossible, dump (+23 more)
+Cohesion: 0.17
+Nodes (29): ProximityInfoState::initInputParams(), ProximityInfoStateUtils, calculateBeelineSpeedRate, calculateNormalizedSquaredDistance, calculateSquaredDistanceFromSweetSpotCenter, checkAndReturnIsContinuousSuggestionPossible, dump, getMostProbableString (+21 more)
 
 ### Community 196 - "ForgettingCurveUtils"
-Cohesion: 0.15
-Nodes (20): Ver4BigramListPolicy, addNewEntry, createUpdatedBigramEntryFrom, getBigramEntryConut, getEntryPosToUpdate, getNextBigram, mBigramDictContent, mHeaderPolicy (+12 more)
+Cohesion: 0.19
+Nodes (15): addNewEntry, createUpdatedBigramEntryFrom, getBigramEntryConut, getEntryPosToUpdate, getNextBigram, removeEntry, updateAllBigramEntriesAndDeleteUselessEntries, updateHasNextFlag (+7 more)
+
+### Community 197 - "TextCleaner"
+Cohesion: 0.09
+Nodes (3): BatchInputArbiter, BatchInputArbiterListener, GestureStrokeRecognitionPoints
 
 ### Community 198 - "trie_map.cpp"
 Cohesion: 0.07
 Nodes (44): TrieMap, addNewEntryByExpandingTable, addNewEntryByResolvingConflict, allocateTable, dump, EMPTY_BITMAP_ENTRY, ENTRY_SIZE, FIELD0_SIZE (+36 more)
+
+### Community 200 - "ClipboardDao"
+Cohesion: 0.16
+Nodes (4): ClipboardDao, getInstance(), getMimeTypes(), Listener
 
 ### Community 203 - "EditDistancePolicy"
 Cohesion: 0.12
 Nodes (8): DicNodeProperties, mChildrenPtNodeArrayPos, mDepth, mDicNodeCodePoint, mLeavingDepth, mPrevWordCount, mPrevWordIds, mWordId
 
 ### Community 204 - "ByteArrayUtils"
-Cohesion: 0.10
-Nodes (16): ByteArrayUtilsTest, PtReadingUtils::getCodePointAndAdvancePosition(), PtReadingUtils::getFlagsAndAdvancePosition(), PtReadingUtils::getPtNodeArraySizeAndAdvancePosition(), PtReadingUtils::readChildrenPositionAndAdvancePosition(), PtReadingUtils::readProbabilityAndAdvancePosition(), ByteArrayUtils, CHARACTER_ARRAY_TERMINATOR (+8 more)
+Cohesion: 0.08
+Nodes (21): ByteArrayUtilsTest, getFlags, getCodePointAndAdvancePosition, PtReadingUtils::getCharsAndAdvancePosition(), PtReadingUtils::getCodePointAndAdvancePosition(), PtReadingUtils::getFlagsAndAdvancePosition(), PtReadingUtils::getPtNodeArraySizeAndAdvancePosition(), PtReadingUtils::readChildrenPositionAndAdvancePosition() (+13 more)
 
 ### Community 205 - "SubtypeSettings"
-Cohesion: 0.14
-Nodes (4): WhisperConfig, WhisperEngine, WhisperConfigTest, WhisperEngineTest
-
-### Community 206 - "Ver4DictBuffers"
-Cohesion: 0.03
-Nodes (70): ggml_compute_forward(), ggml_compute_forward_acc(), ggml_compute_forward_add_rel_pos(), ggml_compute_forward_add_rel_pos_f32(), ggml_compute_forward_argsort(), ggml_compute_forward_argsort_f32(), ggml_compute_forward_clamp(), ggml_compute_forward_clamp_f32() (+62 more)
-
-### Community 207 - "AudioRecord"
-Cohesion: 0.12
-Nodes (6): KeyboardBuilder, actionName(), equivalentEditorInfoForKeyboard(), KeyboardElement, KeyboardMode, KP
+Cohesion: 0.25
+Nodes (3): WhisperConfig, WhisperConfigTest, WhisperEngineTest
 
 ### Community 208 - ".get"
 Cohesion: 0.16
 Nodes (3): AppsChangedListener, AppsManager, AppsBinaryDictionary
 
 ### Community 209 - "PersonalizationHelper.java"
-Cohesion: 0.10
-Nodes (8): CountDownLatch, FileUtils, DictFilter, PersonalizationHelper, UserHistoryDictionary, AsyncResultHolder, FilenameFilter, SoftReference
+Cohesion: 0.06
+Nodes (13): CountDownLatch, FileUtils, DictionaryHeader, DictionaryOptions, FormatSpec, DictFilter, PersonalizationHelper, UserHistoryDictionary (+5 more)
 
 ### Community 210 - "SuggestionResults"
 Cohesion: 0.12
@@ -3010,135 +3042,123 @@ Nodes (16): filterExcludedSuggestions(), GestureDataDao, getInstance(), DictInfo
 Cohesion: 0.13
 Nodes (4): ProbabilityEntry, mFlags, mHistoricalInfo, mProbability
 
+### Community 213 - "LayoutType"
+Cohesion: 0.05
+Nodes (6): ComposedData, createForWord(), Dictionary, PhonyDictionary, KoreanDictionary, ReadOnlyBinaryDictionary
+
 ### Community 214 - "BufferWithExtendableBuffer"
 Cohesion: 0.11
 Nodes (17): CR-01: Privacy Vulnerability & Battery Drain: Microphone Left Recording in Background, CR-02: Severe Memory Leak: Static Context Leak of LatinIME, CR-03: Main Thread Block / UI Freeze (ANR Risk) during Whisper Model Load, Critical Issues, IN-01: Inconsistent Prefs Default Values, IN-02: Hardcoded Whisper Settings, IN-03: Fully-Qualified Inline References in LatinIME, IN-04: Lack of Layout Content View in PermissionsActivity (+9 more)
 
 ### Community 215 - "DynamicPtUpdatingHelper"
-Cohesion: 0.10
-Nodes (31): DynamicPtGcEventListeners, DynamicPtGcEventListeners::TraversePolicyToPlaceAndWriteValidPtNodesToBuffer
+Cohesion: 0.09
+Nodes (31): DictionaryStructureWithBufferPolicyFactory::newPolicyForOnMemoryV4Dict(), DynamicPtGcEventListeners, DynamicPtGcEventListeners::TraversePolicyToPlaceAndWriteValidPtNodesToBuffer
         ::onDescend(), DynamicPtGcEventListeners::TraversePolicyToPlaceAndWriteValidPtNodesToBuffer
-        ::onReadingPtNodeArrayTail(), PtNodeParams, BufferWithExtendableBuffer, DynamicPtReadingHelper, DynamicPtUpdatingHelper, addNgramEntry (+23 more)
+        ::onReadingPtNodeArrayTail(), PtNodeParams, BufferWithExtendableBuffer, DynamicPtReadingHelper, DynamicPtUpdatingHelper (+23 more)
 
 ### Community 216 - "ShareGestureData"
-Cohesion: 0.22
-Nodes (7): CancellationSignal, ClipboardContentProvider, getInstance(), getMimeTypes(), GestureFileProvider, FileProvider, ParcelFileDescriptor
+Cohesion: 0.20
+Nodes (10): PopupSet, SimplePopups, addCollections(), createPopupKeysArray(), findPopupHintLabelOrIcon(), getHintIcon(), getHintLabel(), getHintText() (+2 more)
 
 ### Community 217 - "GestureDataScreen"
-Cohesion: 0.16
-Nodes (17): BackgroundGatheringSettings(), ExcludedWordsDialog(), addWords(), AssetsDictWithInfo, BottomBar(), ButtonWithText(), CacheDictWithInfo, calculateWordWeight() (+9 more)
+Cohesion: 0.13
+Nodes (25): addWords(), AssetsDictWithInfo, BottomBar(), ButtonWithText(), CacheDictWithInfo, calculateWordWeight(), DictWithInfo, GestureDataScreen() (+17 more)
 
 ### Community 218 - ".getOwnerInstance"
 Cohesion: 0.14
 Nodes (4): TranscriptionResult, VelaRecordingCallback, TranscriptionResultTest, VelaRecordingCallbackTest
 
 ### Community 219 - "EmojiPalettesView"
-Cohesion: 0.07
-Nodes (6): EmojiCategoryPageIndicatorView, EmojiLayoutParams, EmojiPalettesView, getKeyboardTheme(), KeyboardTheme, OnClickListener
-
-### Community 220 - "LayoutEditDialog"
-Cohesion: 0.11
-Nodes (3): GestureEnabler, KeyDetector, PopupKeysDetector
-
-### Community 222 - "AppsManager"
-Cohesion: 0.17
-Nodes (5): getInstance(), TranscribingDotsView, YapsUiManager, YapsWaveformView, LinearLayout
-
-### Community 223 - "StringUtils.kt"
-Cohesion: 0.08
-Nodes (7): DecoderSpecificConstants, DictionaryHeader, DictionaryOptions, FormatSpec, NgramContext, NgramContextUtils, Pattern
-
-### Community 225 - "VoiceInputMethodService"
-Cohesion: 0.09
-Nodes (4): UnicodeSurrogate, RichInputConnection, DebugLogUtils, InputMethodService
-
-### Community 226 - "AndroidWordLevelSpellCheckerSession"
-Cohesion: 0.04
-Nodes (36): DictionaryStructureWithBufferPolicy, getPrevWordIds(), NgramContext, clear, getNthPrevWordCodePoints, getWordId, isNthPrevWordBeginningOfSentence, isValid (+28 more)
-
-### Community 227 - "KeySpecParser"
-Cohesion: 0.14
-Nodes (3): ScribeInput, VelaTranscriber, VelaTranscriberTest
-
-### Community 228 - "FILE"
-Cohesion: 0.27
-Nodes (10): ggml_graph_export(), ggml_graph_export_leaf(), ggml_graph_export_node(), ggml_n_dims(), ggml_nbytes_pad(), ggml_op_desc(), ggml_op_name(), ggml_type_name() (+2 more)
-
-### Community 229 - "StatsUtils"
 Cohesion: 0.23
 Nodes (16): gguf_get_or_add_key(), gguf_set_arr_data(), gguf_set_arr_str(), gguf_set_kv(), gguf_set_val_bool(), gguf_set_val_f32(), gguf_set_val_f64(), gguf_set_val_i16() (+8 more)
 
-### Community 230 - "dependencies"
-Cohesion: 0.06
-Nodes (37): ggml_backend_free(), ggml_ftype_to_ggml_type(), read_safe(), tokenize(), whisper_backend_init(), whisper_context, backend, itype (+29 more)
-
-### Community 231 - "apply"
+### Community 220 - "LayoutEditDialog"
 Cohesion: 0.12
 Nodes (16): whisper_layer_encoder, attn_k_w, attn_ln_0_b, attn_ln_0_w, attn_ln_1_b, attn_ln_1_w, attn_q_b, attn_q_w (+8 more)
 
+### Community 222 - "AppsManager"
+Cohesion: 0.17
+Nodes (4): getInstance(), TranscribingDotsView, YapsUiManager, YapsWaveformView
+
+### Community 223 - "StringUtils.kt"
+Cohesion: 0.09
+Nodes (10): DecoderSpecificConstants, NgramContext, WordInfo, NgramContextUtils, NgramProperty, mHistoricalInfo, mNgramContext, mProbability (+2 more)
+
+### Community 226 - "AndroidWordLevelSpellCheckerSession"
+Cohesion: 0.04
+Nodes (47): DicNode, DicNodeVector, DictionaryHeaderStructurePolicy, MultiBigramMap, NgramContext, NgramListener, UnigramProperty, DictionaryStructureWithBufferPolicy (+39 more)
+
+### Community 228 - "FILE"
+Cohesion: 0.21
+Nodes (3): TextKeyData, toTextKey(), KeyboardParser
+
+### Community 229 - "StatsUtils"
+Cohesion: 0.12
+Nodes (11): SparseTableDictContent, ADDRESS_TABLE_BUFFER_INDEX, CONTENT_BUFFER_INDEX, LOOKUP_TABLE_BUFFER_INDEX, mAddressLookupTable, mExpandableAddressTableBuffer, mExpandableContentBuffer, mExpandableLookupTableBuffer (+3 more)
+
+### Community 230 - "dependencies"
+Cohesion: 0.12
+Nodes (17): tokenize(), id, whisper_is_multilingual(), whisper_tokenize(), whisper_vocab, id_to_token, n_vocab, token_beg (+9 more)
+
+### Community 231 - "apply"
+Cohesion: 0.19
+Nodes (6): ByteArray, ScribeInput, VelaTranscriber, StreamingTranscriber, TranscriptionResult, VelaRecordingCallback
+
 ### Community 234 - "InputPointers"
-Cohesion: 0.13
-Nodes (5): get(), RichInputMethodSubtype, getExtraValueOf(), SettingsSubtype, toSettingsSubtype()
+Cohesion: 0.11
+Nodes (7): get(), RichInputMethodSubtype, getExtraValueOf(), hasExtraValueOf(), SettingsSubtype, toSettingsSubtype(), replaceFirst()
 
 ### Community 235 - "PtNodeWriter"
-Cohesion: 0.12
+Cohesion: 0.13
 Nodes (7): RoundedLine, Path, fs, path, fs, path, { withAndroidManifest, withDangerousMod }
 
 ### Community 237 - "Ver2PtNodeArrayReader"
-Cohesion: 0.09
-Nodes (19): Ver4PtNodeArrayReader, mBuffer, readForwardLinkAndReturnIfValid, readPtNodeArrayInfoAndReturnIfValid, getForwardLinkPosition, getPtNodeArraySizeAndAdvancePosition, PtNodeArrayReader, readForwardLinkAndReturnIfValid (+11 more)
+Cohesion: 0.14
+Nodes (11): PtNodeArrayReader, readForwardLinkAndReturnIfValid, readPtNodeArrayInfoAndReturnIfValid, Ver2PtNodeArrayReader, mBuffer, readForwardLinkAndReturnIfValid, readPtNodeArrayInfoAndReturnIfValid, BufferWithExtendableBuffer (+3 more)
 
 ### Community 238 - ".restartSuggestions"
-Cohesion: 0.18
-Nodes (7): DynamicLanguageModelProbabilityUtils, ASSUMED_MIN_COUNTS, DURATION_TO_DISCARD_ENTRY_IN_SECONDS, ENCODED_BACKOFF_WEIGHTS, getWordAttributes, addNgramEntry, removeNgramEntry
+Cohesion: 0.23
+Nodes (12): ShortcutDictContent, copyShortcutList, copyShortcutListFromDictContent, createAndGetShortcutFlags, createNewShortcutList, findShortcutEntryAndGetPos, flushToFile, getShortcutEntryAndAdvancePosition (+4 more)
 
 ### Community 240 - "NgramContext"
 Cohesion: 0.21
-Nodes (11): getBigramConditionalProbability, getProbabilityOfWord, iterateNgramEntries, getProbabilityOfWord, iterateNgramEntries, BinaryDictionaryBigramsIterator, mBigramPos, mBigramsStructurePolicy (+3 more)
+Nodes (11): ReadWriteByteArrayView, ShortcutDictContent, copyShortcutList, copyShortcutListFromDictContent, createAndGetShortcutFlags, createNewShortcutList, getShortcutEntryAndAdvancePosition, getShortcutListHeadPos (+3 more)
 
 ### Community 241 - "DynamicPtReadingUtils"
-Cohesion: 0.05
-Nodes (62): fetchPtNodeInfoFromBufferAndProcessMovedPtNode, markPtNodeAsDeleted, markPtNodeAsMoved, markPtNodeAsWillBecomeNonTerminal, updatePtNodeFlags, writePtNodeAndGetTerminalIdAndAdvancePosition, DynamicPtReadingUtils, DICT_OFFSET_INVALID (+54 more)
+Cohesion: 0.04
+Nodes (80): BufferWithExtendableBuffer, HeaderPolicy, Ver4BigramListPolicy, Ver4DictBuffers, Ver4PatriciaTrieNodeReader, Ver4PatriciaTrieNodeWriter, addNgramEntry, addShortcutTarget (+72 more)
 
 ### Community 242 - "Ver4PatriciaTrieNodeWriter"
-Cohesion: 0.17
-Nodes (5): OMISSION_COST, DicNode, DicTraverseSession, TypingScoring, sInstance
-
-### Community 243 - "VoiceAccessibilityService"
-Cohesion: 0.06
-Nodes (16): ViewHolder, InsetsOutlineProvider, setInsetsOutlineProvider(), KeyboardWrapperView, FloatingKeyboardUtils, onClickToolbarKey(), onLongClickToolbarKey(), repeatToolbarKey() (+8 more)
+Cohesion: 0.07
+Nodes (16): Scoring, SuggestPolicy, getScoring, getTraversal, getWeighting, Traversal, Weighting, SuggestPolicy (+8 more)
 
 ### Community 244 - "SparseTable"
-Cohesion: 0.18
-Nodes (16): getShortcutListHeadPos, SparseTable, contains, get, getIndexFromContentTablePos, getPosInContentTable, getPosInIndexTable, INDEX_SIZE (+8 more)
+Cohesion: 0.19
+Nodes (15): SparseTable, contains, get, getIndexFromContentTablePos, getPosInContentTable, getPosInIndexTable, INDEX_SIZE, mBlockSize (+7 more)
 
 ### Community 245 - "latinime_BinaryDictionaryUtils_createEmptyDictFile"
-Cohesion: 0.10
-Nodes (12): register_ProximityInfo(), register_BinaryDictionary(), register_BinaryDictionaryUtils(), Dictionary, latinime_releaseDicTraverseSession(), latinime_setDicTraverseSession(), register_DicTraverseSession(), JNI_OnLoad() (+4 more)
+Cohesion: 0.17
+Nodes (5): OMISSION_COST, DicNode, DicTraverseSession, TypingScoring, sInstance
 
 ### Community 246 - ".processEvent"
 Cohesion: 0.14
 Nodes (13): Bottom Sheets, Brand & Style, Buttons, Cards & Lists, Chips, Colors, Components, Elevation & Depth (+5 more)
 
 ### Community 247 - "KeyDetector"
-Cohesion: 0.15
-Nodes (17): atomic_int, atomic_fetch_add(), atomic_fetch_sub(), atomic_load(), atomic_store(), clear_numa_thread_affinity(), ggml_critical_section_start(), ggml_graph_compute_perf_stats_node() (+9 more)
+Cohesion: 0.27
+Nodes (15): add_allocated_tensor(), allocate_node(), free_node(), ggml_are_same_layout(), ggml_gallocr_alloc_graph_n(), ggml_is_view(), ggml_op_can_inplace(), ggml_tallocr_alloc() (+7 more)
 
 ### Community 248 - "TrieMap"
-Cohesion: 0.18
-Nodes (8): HistoricalInfo, mCount, mLevel, mTimestamp, HeaderPolicy, createUpdatedEntryFrom, updateAllProbabilityEntriesForGCInner, updateEntriesForWordWithNgramContext
+Cohesion: 0.19
+Nodes (4): SystemBroadcastReceiver, UncachedInputMethodManagerUtils, ShadowInputMethodManager2, ShadowInputMethodManager
 
 ### Community 249 - "SettingsValues.java"
 Cohesion: 0.02
-Nodes (116): ggml_abs(), ggml_abs_inplace(), ggml_compute_forward_argmax(), ggml_compute_forward_argmax_f32(), ggml_compute_forward_sum(), ggml_compute_forward_sum_f16(), ggml_compute_forward_sum_f32(), ggml_cpu_has_arm_fma() (+108 more)
+Nodes (148): clear_numa_thread_affinity(), ggml_abs(), ggml_abs_inplace(), ggml_compute_forward_argmax(), ggml_compute_forward_argmax_f32(), ggml_compute_forward_concat(), ggml_compute_forward_concat_f32(), ggml_compute_forward_diag() (+140 more)
 
 ### Community 250 - "LanguageModelDictContentGlobalCounters"
 Cohesion: 0.12
 Nodes (12): LanguageModelDictContentGlobalCounters, COUNTER_SIZE_IN_BYTES, COUNTER_VALUE_NEAR_LIMIT_THRESHOLD, MAX_VALUE_OF_COUNTERS_INDEX, mBuffer, mMaxValueOfCounters, mTotalCount, TOTAL_COUNT_VALUE_NEAR_LIMIT_THRESHOLD (+4 more)
-
-### Community 251 - "getKnownDictionariesForLocale"
-Cohesion: 0.11
-Nodes (19): cleanUnusedMainDicts(), createDictionaryTextAnnotated(), getDictionaryLocales(), getKnownDictionariesForLocale(), hasAnythingOtherThanExtractedMainDictionary(), MissingDictionaryDialog(), DictionaryDetails(), DictionaryDialog() (+11 more)
 
 ### Community 252 - "whisper_layer_decoder"
 Cohesion: 0.22
@@ -3153,64 +3173,76 @@ Cohesion: 0.15
 Nodes (12): Building & publishing, Consuming from VelaBoard, License, Model format, Modules, On-device LLM dependencies, One-time local setup (required before building), vela-cleaner (+4 more)
 
 ### Community 255 - "KeyboardParams"
-Cohesion: 0.10
-Nodes (4): GestureStrokeRecognitionParams, KeyDrawParams, KeyVisualAttributes, ResourceUtils
+Cohesion: 0.11
+Nodes (3): GestureStrokeRecognitionParams, KeyDrawParams, ResourceUtils
 
 ### Community 256 - "TranscriptionStorage"
-Cohesion: 0.16
-Nodes (5): AccessibilityService, CrashReportExceptionHandler, DebugFlags, VoiceAccessibilityService, Thread
+Cohesion: 0.22
+Nodes (4): AudioRecorder, CrashReportExceptionHandler, DebugFlags, Thread
 
 ### Community 257 - "detectFormatVersion"
-Cohesion: 0.11
-Nodes (12): SparseTableDictContent, ADDRESS_TABLE_BUFFER_INDEX, CONTENT_BUFFER_INDEX, flush, LOOKUP_TABLE_BUFFER_INDEX, mAddressLookupTable, mExpandableAddressTableBuffer, mExpandableContentBuffer (+4 more)
+Cohesion: 0.05
+Nodes (45): BufferWithExtendableBuffer, setIntAttribute, DictionaryHeaderStructurePolicy, getAttributeMap, getFormatVersionNumber, getLocale, getMultiWordCostMultiplier, getSize (+37 more)
 
 ### Community 258 - "writeBufferToFileTail"
-Cohesion: 0.12
-Nodes (4): SettingsValues, runInLocale(), EnumSet, Locale
+Cohesion: 0.18
+Nodes (5): CloudStreamingTranscriber, StreamConfig, StreamingTranscriptionCallback, WebSocket, WebSocketListener
 
 ### Community 259 - "DynamicPtWritingUtils"
-Cohesion: 0.20
-Nodes (5): Category, CategoryProperties, EmojiCategory, getCategoryKeyboardMapKey(), sortKeysGrouped()
+Cohesion: 0.12
+Nodes (8): Category, CategoryProperties, EmojiCategory, getCategoryKeyboardMapKey(), sortKeysGrouped(), EmojiPalettesAdapter, ViewHolder, ViewHolder
+
+### Community 260 - "TypingTraversal"
+Cohesion: 0.12
+Nodes (15): NgramProperty, PtNodeWriter, addNgramEntry, addShortcutTarget, markPtNodeAsDeleted, markPtNodeAsMoved, markPtNodeAsWillBecomeNonTerminal, removeNgramEntry (+7 more)
 
 ### Community 261 - "TranscriptionStorage"
-Cohesion: 0.27
-Nodes (3): EmojiAltPhysicalKeyDetector, EmojiHotKeys, HotKeySet
+Cohesion: 0.12
+Nodes (6): EmojiAltPhysicalKeyDetector, EmojiHotKeys, HotKeySet, Log, LogLine, InlineSuggestionsResponse
 
 ### Community 262 - "ResourceUtils.java"
-Cohesion: 0.21
-Nodes (11): ReadWriteByteArrayView, ShortcutDictContent, copyShortcutList, copyShortcutListFromDictContent, createAndGetShortcutFlags, createNewShortcutList, getShortcutEntryAndAdvancePosition, getShortcutListHeadPos (+3 more)
+Cohesion: 0.20
+Nodes (9): HistoricalInfo, mCount, mLevel, mTimestamp, writeEntry, HeaderPolicy, createUpdatedEntryFrom, updateAllProbabilityEntriesForGCInner (+1 more)
+
+### Community 263 - "AudioAndHapticFeedbackManager"
+Cohesion: 0.05
+Nodes (16): HapticEvent, ViewHolder, EmojiCategoryPageIndicatorView, AudioAndHapticFeedbackManager, KeyboardWrapperView, InlineAutofillUtils, InlineContentClipView, onClickToolbarKey() (+8 more)
+
+### Community 264 - "EmojiCategory"
+Cohesion: 0.24
+Nodes (4): Locale, Override, String, SuppressLint
 
 ### Community 265 - "SettingsSubtype"
 Cohesion: 0.15
 Nodes (7): ReadOnlyByteArrayView, mPtr, mSize, ReadWriteByteArrayView, mPtr, mSize, ReadOnlyByteArrayView
 
 ### Community 266 - "GestureDataDao"
-Cohesion: 0.09
-Nodes (8): SystemBroadcastReceiver, UncachedInputMethodManagerUtils, ShadowBinaryDictionaryUtils, ShadowDictionaryFacilitatorImpl, ShadowInputMethodManager2, ShadowInputMethodService, ShadowLocaleManagerCompat, ShadowInputMethodManager
+Cohesion: 0.25
+Nodes (3): ShadowDictionaryFacilitatorImpl, ShadowInputMethodService, ShadowLocaleManagerCompat
 
 ### Community 267 - "DictionaryInfoUtils"
-Cohesion: 0.17
-Nodes (12): Alignment, CustomizeIconsDialog(), Preview(), ActionRow(), GetIconOrEmpty(), IconOrImage(), painterResourceCompat(), Preference() (+4 more)
+Cohesion: 0.27
+Nodes (8): UnsupportedFormatException, Exception, AudioCaptureFailed, InvalidAudio, ModelNotFound, VelaError, VelaException, WhisperError
 
 ### Community 268 - "getUserAndInternalDictionaries"
 Cohesion: 0.17
 Nodes (11): 1. Source constraint, 2. What config must the fork give the SDK, 3. Where config lives: Vela app (models.db) vs HeliBoard-style (SharedPreferences), 4. PersonalDictionary interface → mirroring/extending for shortcut expansions, 5. Licensing / boundary — config ownership, 6. Concrete recommendation, 7. Assumptions, inferences & open questions, Can Vela-app `models.db` shortcuts be reached from the fork? (+3 more)
 
 ### Community 269 - "DictionaryStructureWithBufferPolicy"
-Cohesion: 0.14
-Nodes (15): ggml_can_repeat(), ggml_compute_forward_div(), ggml_compute_forward_div_f32(), ggml_compute_forward_repeat(), ggml_compute_forward_repeat_back(), ggml_compute_forward_repeat_back_f32(), ggml_compute_forward_repeat_f16(), ggml_compute_forward_repeat_f32() (+7 more)
+Cohesion: 0.07
+Nodes (39): CloseIcon(), DefaultButton(), DeleteButton(), EditButton(), ExpandButton(), NextScreenIcon(), Preview(), AddColorRow() (+31 more)
+
+### Community 270 - "outputWordProperty"
+Cohesion: 0.15
+Nodes (13): whisper_hparams, eps, ftype, n_audio_ctx, n_audio_head, n_audio_layer, n_audio_state, n_mels (+5 more)
 
 ### Community 271 - "AccessibilityUtils"
-Cohesion: 0.22
-Nodes (4): AccessibilityManager, AccessibilityUtils, init(), obtainEvent()
-
-### Community 272 - "EmojiViewCallback"
-Cohesion: 0.24
-Nodes (11): ShortcutDictContent, copyShortcutList, copyShortcutListFromDictContent, createAndGetShortcutFlags, createNewShortcutList, findShortcutEntryAndGetPos, flushToFile, getShortcutEntryAndAdvancePosition (+3 more)
+Cohesion: 0.40
+Nodes (9): adjustLuminosityAndKeepAlpha(), brighten(), brightenOrDarken(), colorDistanceSquared(), darken(), getBrightnessSquared(), isBrightColor(), isDarkColor() (+1 more)
 
 ### Community 273 - "VoiceRecordingPane"
-Cohesion: 0.17
-Nodes (8): DicNode_InputStateG, mDoubleLetterLevel, mInputIndex, mNeedsToUpdateInputStateG, mPointerId, mPrevCodePoint, mRawLength, mTerminalDiffCost
+Cohesion: 0.22
+Nodes (5): actionName(), equivalentEditorInfoForKeyboard(), KeyboardElement, KeyboardId, KeyboardMode
 
 ### Community 274 - "GestureStrokeRecognitionPoints"
 Cohesion: 0.17
@@ -3229,8 +3261,8 @@ Cohesion: 0.24
 Nodes (4): ProbabilityEntry, mFlags, mHistoricalInfo, mProbability
 
 ### Community 279 - "ErrorTypeUtils"
-Cohesion: 0.15
-Nodes (12): getIndexFromNgramType(), fillInHeader, readMaxNgramCounts, readMultipleWordCostMultiplier, readNgramCounts, readRequiresGermanUmlautProcessing, readBoolAttributeValue, readIntAttributeValue (+4 more)
+Cohesion: 0.05
+Nodes (37): BigramMap, MultiBigramMap, addBigramsForWord, MultiBigramMap::BigramMap::getBigramProbability(), MultiBigramMap::BigramMap::init(), getBigramProbability, MAX_CACHED_PREV_WORDS_IN_BIGRAM_MAP, mBigramMaps (+29 more)
 
 ### Community 280 - "VoiceSettingsScreen"
 Cohesion: 0.20
@@ -3241,88 +3273,80 @@ Cohesion: 0.35
 Nodes (10): check_changelog(), check_default_values_diff(), check_git(), main(), read_dicts_readme(), update_dict_hashes(), update_dict_list(), update_khipro_mappings() (+2 more)
 
 ### Community 282 - "NormalDistribution2D"
-Cohesion: 0.09
+Cohesion: 0.10
 Nodes (15): NormalDistribution2D, mCosTheta, mSinTheta, mUX, mUY, mXDistribution, mYDistribution, NormalDistribution (+7 more)
 
 ### Community 284 - "WaveformView"
-Cohesion: 0.40
-Nodes (9): adjustLuminosityAndKeepAlpha(), brighten(), brightenOrDarken(), colorDistanceSquared(), darken(), getBrightnessSquared(), isBrightColor(), isDarkColor() (+1 more)
+Cohesion: 0.09
+Nodes (25): ColorSetting, determineAutoColor(), determineUserColor(), getAvailableDefaultColors(), getColorsForCurrentTheme(), getExistingThemeNames(), getThemeColors(), getUnusedThemeName() (+17 more)
 
 ### Community 285 - "KeyPreviewChoreographer"
 Cohesion: 0.38
 Nodes (9): ContentResolver, createCursor(), deleteWord(), EditWordDialog(), getAll(), getLocaleDisplayNameForUserDictSettings(), getSpecificallySortedLocales(), PersonalDictionaryScreen() (+1 more)
 
 ### Community 286 - "SentenceLevelAdapter.java"
-Cohesion: 0.22
-Nodes (8): latinime_BinaryDictionaryUtils_setCurrentTimeForTest(), TimeKeeper, sSetForTesting, startTestModeWithForceCurrentTime, stopTestMode, TEST(), TestTestMode, TimeKeeperTest
+Cohesion: 0.12
+Nodes (13): latinime_BinaryDictionaryUtils_setCurrentTimeForTest(), DynamicLanguageModelProbabilityUtils, ASSUMED_MIN_COUNTS, DURATION_TO_DISCARD_ENTRY_IN_SECONDS, ENCODED_BACKOFF_WEIGHTS, getWordAttributes, TimeKeeper, sSetForTesting (+5 more)
 
 ### Community 287 - "build.gradle"
-Cohesion: 0.06
-Nodes (27): BufferWithExtendableBuffer, DictionaryHeaderStructurePolicy, getAttributeMap, getFormatVersionNumber, getLocale, getMultiWordCostMultiplier, getSize, readHeaderValueOrQuestionMark (+19 more)
+Cohesion: 0.21
+Nodes (7): Boolean, DictionaryKeywords, IntRange, List, PersonalDictionary, Builder, String
+
+### Community 288 - "DicNodeProperties"
+Cohesion: 0.17
+Nodes (8): DicNode_InputStateG, mDoubleLetterLevel, mInputIndex, mNeedsToUpdateInputStateG, mPointerId, mPrevCodePoint, mRawLength, mTerminalDiffCost
 
 ### Community 289 - "SettingsActivity"
-Cohesion: 0.12
-Nodes (23): ColorSetting, determineAutoColor(), determineUserColor(), getAvailableDefaultColors(), getColorsForCurrentTheme(), getExistingThemeNames(), getThemeColors(), getUnusedThemeName() (+15 more)
+Cohesion: 0.22
+Nodes (11): ggml_backend_alloc_ctx_tensors(), ggml_backend_alloc_ctx_tensors_from_buft(), ggml_backend_buffer_get_alignment(), ggml_backend_buft_get_alignment(), ggml_backend_get_alignment(), ggml_backend_get_default_buffer_type(), ggml_backend_view_init(), ggml_get_first_tensor() (+3 more)
 
 ### Community 290 - ".contains"
-Cohesion: 0.08
-Nodes (9): LettersOnBaseLayout, PopupKeySpec, KeyBackgroundState, KeyParams, OptionalAttributes, Spacer, PopupKeyDivider, CollectionUtils (+1 more)
-
-### Community 291 - "header_read_write_utils.cpp"
-Cohesion: 0.09
-Nodes (36): createAttributeMapAndReadAllAttributes, fillInAndWriteHeaderToBuffer, readHeaderValueOrQuestionMark, readLocale, HeaderReadWriteUtils, CODE_POINT_TABLE_KEY, createAndGetDictionaryFlagsUsingAttributeMap, fetchAllHeaderAttributes (+28 more)
+Cohesion: 0.29
+Nodes (5): LeakGuardHandlerWrapper, Handler, HandlerThread, Looper, WeakReference
 
 ### Community 292 - "InlineAutofillUtils.java"
-Cohesion: 0.19
-Nodes (6): InlineAutofillUtils, InlineContentClipView, HorizontalScrollView, InlineSuggestion, InlineSuggestionsResponse, OnDrawListener
-
-### Community 294 - "ggml_graph_dump_dot"
-Cohesion: 0.20
-Nodes (9): package, expo, android, name, plugins, slug, splash, version (+1 more)
+Cohesion: 0.18
+Nodes (7): KeyType, KeyTypeSerializer, AutoTextKeyData, Decoder, Encoder, KSerializer, SerialDescriptor
 
 ### Community 295 - "ShortcutDictContent"
-Cohesion: 0.33
-Nodes (9): gguf_buf_free(), gguf_buf_grow(), gguf_buf_init(), gguf_bwrite_el(), gguf_bwrite_str(), gguf_get_meta_data(), gguf_get_meta_size(), gguf_write_to_buf() (+1 more)
-
-### Community 297 - "UIHandler"
-Cohesion: 0.08
-Nodes (8): VoiceRecordingPane, VoiceRecordingPaneTest, LeakGuardHandlerWrapper, VoiceInputMethodService, Handler, HandlerThread, Looper, WeakReference
-
-### Community 298 - "GestureDataGathering.kt"
-Cohesion: 0.15
-Nodes (7): DictionaryDumpBroadcastReceiver, DictionaryPackInstallBroadcastReceiver, getPlatformDialogThemeContext(), createInputMethodPickerDialog(), FrameLayout, IBinder, SpannableStringBuilder
+Cohesion: 0.13
+Nodes (10): JniUtils, package, expo, android, name, plugins, slug, splash (+2 more)
 
 ### Community 299 - "SparseTableDictContent"
-Cohesion: 0.20
-Nodes (3): KeyCode, Spec, KeyboardCodesSet
+Cohesion: 0.53
+Nodes (6): ggml_compute_forward_map_unary(), ggml_compute_forward_map_unary_f32(), ggml_map_unary_f32(), ggml_map_unary_impl_f32(), ggml_map_unary_inplace_f32(), ggml_unary_op_f32_t
+
+### Community 300 - "proximity_info_state.h"
+Cohesion: 0.29
+Nodes (8): BigramDictContent, HeaderPolicy, NgramProperty, TerminalPositionLookupTable, Ver4BigramListPolicy, mBigramDictContent, mHeaderPolicy, mTerminalPositionLookupTable
+
+### Community 301 - "FileUtils.java"
+Cohesion: 0.36
+Nodes (5): clearKeyboardCache(), getFakeKeyboardId(), onKeyboardThemeChanged(), onSystemLocaleChanged(), Params
 
 ### Community 302 - "DicNodePriorityQueue"
-Cohesion: 0.38
-Nodes (11): createSendIntentChooser(), createZipFile(), deobfuscateEmail(), fileGetDelegate(), filterIntentToOnlyIncludeEmailApps(), getData(), getGestureDataFileName(), getGestureZipFile() (+3 more)
+Cohesion: 0.10
+Nodes (20): ListPickerDialog(), PreviewListPickerDialog(), MultiListPickerDialog(), Preview(), Preview(), ReorderDialog(), PreviewSliderDialog(), SliderDialog() (+12 more)
 
 ### Community 303 - "ExecutorUtils.java"
 Cohesion: 0.22
-Nodes (6): ExecutorFactory, ExecutorUtils, RunnableChain, Runnable, ScheduledExecutorService, ThreadFactory
+Nodes (5): ExecutorFactory, ExecutorUtils, RunnableChain, ScheduledExecutorService, ThreadFactory
 
 ### Community 304 - "restoreLauncher"
-Cohesion: 0.10
-Nodes (26): EditButton(), AddColorRow(), ColorItemRow(), ColorThemePickerDialog(), Preview(), ConfirmationDialog(), PreviewConfirmDialog(), InfoDialog() (+18 more)
-
-### Community 305 - "TypingSuggestPolicy"
-Cohesion: 0.07
-Nodes (16): Scoring, SuggestPolicy, getScoring, getTraversal, getWeighting, Traversal, Weighting, SuggestPolicy (+8 more)
+Cohesion: 0.22
+Nodes (4): BroadcastReceiver, DictionaryDumpBroadcastReceiver, DictionaryPackInstallBroadcastReceiver, RestartAfterDeviceUnlockReceiver
 
 ### Community 306 - "ClipboardHistoryView"
 Cohesion: 0.25
 Nodes (7): Combined Issues: Offline Transcription IME, Issue 01: Setup Project Scaffolding & Native Android IME Service, Issue 02: Model Downloader and Scoped Storage Manager, Issue 03: Native IME Voice Typing Pane and Waveform UI, Issue 04: On-device Transcriber Engine (Whisper) Integration, Issue 05: Hybrid Cleaner Pipeline (Regex + LLM), Issue 06: IME Commit Integration & Final End-to-End Testing
 
-### Community 308 - "KoreanDictionary"
-Cohesion: 0.36
-Nodes (8): ggml_compute_forward_rope(), ggml_compute_forward_rope_back(), ggml_compute_forward_rope_f16(), ggml_compute_forward_rope_f32(), ggml_rope_yarn_corr_dim(), ggml_rope_yarn_corr_dims(), rope_yarn(), rope_yarn_ramp()
+### Community 307 - "PopupKeysKeyboardParams"
+Cohesion: 0.20
+Nodes (10): ggml_tallocr_free(), ggml_are_same_layout(), ggml_backend_buffer_free(), ggml_backend_compare_graph_backend(), ggml_backend_graph_copy_free(), ggml_backend_sched_free(), ggml_graph_view(), kv_cache_free() (+2 more)
 
-### Community 310 - "BigramListReadWriteUtils"
-Cohesion: 0.15
-Nodes (13): BigramListReadWriteUtils, FLAG_ATTRIBUTE_ADDRESS_TYPE_ONEBYTE, FLAG_ATTRIBUTE_ADDRESS_TYPE_THREEBYTES, FLAG_ATTRIBUTE_ADDRESS_TYPE_TWOBYTES, FLAG_ATTRIBUTE_HAS_NEXT, FLAG_ATTRIBUTE_OFFSET_NEGATIVE, getBigramAddressAndAdvancePosition, getBigramEntryPropertiesAndAdvancePosition (+5 more)
+### Community 308 - "KoreanDictionary"
+Cohesion: 0.22
+Nodes (5): InsetsOutlineProvider, setInsetsOutlineProvider(), InputMethodService, Outline, ViewOutlineProvider
 
 ### Community 311 - "ProbabilityEntry"
 Cohesion: 0.29
@@ -3341,8 +3365,8 @@ Cohesion: 0.27
 Nodes (4): fp32_from_bits(), fp32_to_bits(), ggml_compute_fp16_to_fp32(), ggml_compute_fp32_to_fp16()
 
 ### Community 315 - "getTimestamp"
-Cohesion: 0.18
-Nodes (3): appendLink(), replaceFirst(), updateSoftInputWindowLayoutParameters()
+Cohesion: 0.28
+Nodes (3): ClipboardManager, ClipData, ClipboardManagerCompat
 
 ### Community 316 - "KeyboardActionListener"
 Cohesion: 0.33
@@ -3352,24 +3376,20 @@ Nodes (5): Agent skills, Domain docs, graphify, Issue tracker, Triage labels
 Cohesion: 0.33
 Nodes (5): Before exploring, read these, Domain Docs, File structure, Flag ADR conflicts, Use the glossary's vocabulary
 
-### Community 319 - "ReadOnlyBinaryDictionary"
-Cohesion: 0.33
-Nodes (3): isSpaceOrEnter(), Mode, SavedKeyboardState
+### Community 321 - "GoogleDriveSync"
+Cohesion: 0.21
+Nodes (4): File, Promise, TranscriptionPair, GoogleDriveSyncModule
 
 ### Community 323 - "BigramDictContent"
 Cohesion: 0.60
 Nodes (5): check_diacritics(), find_word_lists(), main(), make_all_diacritics(), read_diacritics()
 
-### Community 325 - ".calculateProximities"
-Cohesion: 0.20
-Nodes (5): NgramProperty, mHistoricalInfo, mNgramContext, mProbability, mTargetCodePoints
-
-### Community 326 - "EmojiData"
-Cohesion: 0.24
-Nodes (8): HeaderPolicy, Ver4DictBuffers, Ver4PatriciaTrieNodeReader, Ver4PatriciaTrieNodeWriter, Ver4PatriciaTrieWritingHelper, mBuffers, writeToDictFile, writeToDictFileWithGC
+### Community 326 - "typing_suggest_policy.h"
+Cohesion: 0.32
+Nodes (5): KeySpecParserError, buildEmojiClipBottomRow(), KeyboardLayoutSet, KeyboardLayoutSetException, RuntimeException
 
 ### Community 328 - "DicNodePool"
-Cohesion: 0.14
+Cohesion: 0.13
 Nodes (9): DicNodePool, mDicNodes, mPooledDicNodes, TEST(), deque, DicNodePoolTest, TestGet, TestPlaceBack (+1 more)
 
 ### Community 329 - "UnigramProperty"
@@ -3380,73 +3400,73 @@ Nodes (8): UnigramProperty, mHistoricalInfo, mIsBlacklisted, mIsNotAWord, mIsPos
 Cohesion: 1.00
 Nodes (3): export_corrections(), main(), pull_adb_db()
 
+### Community 334 - "Warnings"
+Cohesion: 0.25
+Nodes (5): getTransitionAnimationScale(), isFloatingKeyboardEnabled(), readFloatingHeight(), readFloatingWidth(), setFloatingSize()
+
 ### Community 335 - "BloomFilter"
 Cohesion: 0.22
 Nodes (7): bitset, BloomFilterTest, BloomFilter, BIGRAM_FILTER_MODULO, mFilter, TEST(), TestFilter
 
-### Community 336 - "DictionaryCollection"
-Cohesion: 0.29
-Nodes (6): BufferWithExtendablebufferTest, TEST(), TestCopy, TestExtend, TestSizeLimit, TestWriteAndRead
+### Community 337 - "ErrorTypeUtils"
+Cohesion: 0.46
+Nodes (8): getCursorPosition(), getTextFromConnection(), getWordAtCursor(), inputCode(), insertLetterIntoOneOfSeveralWords(), insertLetterIntoWord(), insertLetterIntoWordHangulFails(), insertLetterIntoWordWithWeirdEditor()
 
-### Community 337 - "TypingScoring"
-Cohesion: 0.10
-Nodes (23): WordAttributes, mIsBlacklisted, mIsNotAWord, mIsPossiblyOffensive, mProbability, getProbabilityOfWord, getWordProperty, getBigramNodeImprobability (+15 more)
+### Community 338 - "TEST"
+Cohesion: 0.36
+Nodes (8): ggml_compute_forward_rope(), ggml_compute_forward_rope_back(), ggml_compute_forward_rope_f16(), ggml_compute_forward_rope_f32(), ggml_rope_yarn_corr_dim(), ggml_rope_yarn_corr_dims(), rope_yarn(), rope_yarn_ramp()
+
+### Community 339 - "ColorUtil.kt"
+Cohesion: 0.33
+Nodes (5): CancellationSignal, ClipboardContentProvider, GestureFileProvider, FileProvider, ParcelFileDescriptor
+
+### Community 340 - "ScriptUtils.kt"
+Cohesion: 0.14
+Nodes (7): ReentrantLock, Configuration, Context, Drawable, File, Nullable, Resources
 
 ### Community 344 - "MmappedBuffer"
 Cohesion: 0.50
 Nodes (3): compilerOptions, strict, extends
 
 ### Community 346 - "TEST"
-Cohesion: 0.22
-Nodes (8): AssertionResult, ExpectAngleDiffEq(), TEST(), GeometryUtilsTest, testGetAngle, testGetAngleDiff, testGetDistanceInt, testSquareFloat
+Cohesion: 0.11
+Nodes (12): AssertionResult, GeometryUtils, ProximityInfoState::getDirection(), ProximityInfoState::getPointToKeyByIdLength(), getDirection, ExpectAngleDiffEq(), TEST(), GeometryUtilsTest (+4 more)
 
 ### Community 357 - "PackageManager"
 Cohesion: 0.04
-Nodes (23): BroadcastReceiver, CorrectionInfo, DictionaryPackConstants, HapticEvent, ExtraValue, ImeOption, Separators, Subtype (+15 more)
+Nodes (19): AccessibilityManager, AccessibilityUtils, init(), obtainEvent(), DictionaryPackConstants, GestureEnabler, KeyboardCodesSet, KeyVisualAttributes (+11 more)
 
 ### Community 360 - "TerminalPositionLookupTable"
 Cohesion: 0.09
 Nodes (22): ProbabilityDictContent, flushToFile, getEntryPos, getEntrySize, getProbabilityEntry, mHasHistoricalInfo, mSize, runGC (+14 more)
 
 ### Community 361 - "GestureTrailDrawingPoints"
-Cohesion: 0.60
-Nodes (5): createVariantsAndKeys(), DimensionCheckbox(), KeyboardScaleDialog(), KeyboardScalePreference(), Preview()
-
-### Community 365 - "KeyboardTypeface"
-Cohesion: 0.10
-Nodes (6): CharacterStyle, KeyboardTypeface, SuggestionStripLayoutHelper, FontFamily, TextView, TypedValue
+Cohesion: 0.38
+Nodes (4): Float, GradientDrawable, Int, Typeface
 
 ### Community 366 - "TEST"
-Cohesion: 0.33
-Nodes (3): DictionaryBigramsStructurePolicy, getNextBigram, skipAllBigrams
+Cohesion: 0.29
+Nodes (5): VoiceImePackage, NativeModule, ReactApplicationContext, ReactPackage, ViewManager
+
+### Community 371 - "ver4_dict_buffers.cpp"
+Cohesion: 0.09
+Nodes (31): ggml_backend_cpu_buffer_cpy_tensor_from(), ggml_backend_cpu_buffer_cpy_tensor_to(), ggml_backend_tensor_copy(), ggml_backend_tensor_get(), ggml_backend_tensor_set(), ggml_compute_forward_add_rel_pos(), ggml_compute_forward_add_rel_pos_f32(), ggml_compute_forward_conv_transpose_1d() (+23 more)
 
 ### Community 372 - "JarUtils"
 Cohesion: 0.27
 Nodes (3): Class, JarUtils, JarFile
 
-### Community 374 - "Settings.kt"
+### Community 374 - "gguf_write_to_buf"
 Cohesion: 0.47
-Nodes (4): BigramDictContent, HeaderPolicy, NgramProperty, TerminalPositionLookupTable
+Nodes (5): A, B, whisper_pair, first, second
 
 ### Community 379 - "Profiler"
 Cohesion: 0.25
 Nodes (7): clockid_t, Profiler, mClockId, mCounters, mStartTime, mStartTimes, mTimes
 
-### Community 381 - "ggml-impl.h"
-Cohesion: 0.40
-Nodes (3): TEST(), ProbabilityUtilsTest, TestEncodeRawProbability
-
 ### Community 384 - ".splitAndSuggest"
-Cohesion: 0.10
-Nodes (4): AppWorkarounds, containsValueWhenSplit(), InputAttributes, InputTypeUtils
-
-### Community 385 - "PopupKeysUtils.kt"
-Cohesion: 0.40
-Nodes (5): block_q4_0, ggml_quantize_q4_0(), dequantize_row_q4_0(), quantize_row_q4_0(), quantize_row_q4_0_reference()
-
-### Community 393 - "ProbabilityUtils"
-Cohesion: 0.33
-Nodes (4): getProbability, getProbability, ProbabilityUtils, PROBABILITY_ENCODING_SCALER
+Cohesion: 0.09
+Nodes (6): AppWorkarounds, containsValueWhenSplit(), SettingsValues, InputTypeUtils, EnumSet, InputType
 
 ### Community 394 - "Database"
 Cohesion: 0.48
@@ -3461,28 +3481,20 @@ Cohesion: 0.22
 Nodes (10): getKeyCenterXOfKeyIdG, getKeyCenterYOfKeyIdG, getKeyKeyDistanceG, getNormalizedSquaredDistanceFromCenterFloatG, getOriginalCodePointOf, initializeG, ProximityInfo::ProximityInfo(), safeGetOrFillZeroFloatArrayRegion() (+2 more)
 
 ### Community 411 - "ver4_patricia_trie_node_writer.h"
-Cohesion: 0.11
+Cohesion: 0.13
 Nodes (5): Activity, PermissionsActivity, SpellCheckerSettingsActivity, MoreSuggestionsView, GestureDetector
 
 ### Community 418 - "ReorderDialog"
 Cohesion: 0.40
 Nodes (5): block_q5_1, ggml_quantize_q5_1(), dequantize_row_q5_1(), quantize_row_q5_1(), quantize_row_q5_1_reference()
 
-### Community 424 - "SaveGestureDataTest"
-Cohesion: 0.40
-Nodes (3): DictionaryShortcutsStructurePolicy, getStartPos, skipAllShortcuts
-
 ### Community 427 - "ClipboardHistoryRecyclerView"
-Cohesion: 0.05
-Nodes (13): Adapter, AdapterDataObserver, ClipboardAdapter, ClipboardHistoryRecyclerView, ClipboardHistoryView, ClipboardLayoutParams, OnKeyEventListener, EmojiPalettesAdapter (+5 more)
+Cohesion: 0.06
+Nodes (11): Adapter, AdapterDataObserver, PersonalDictionary, ClipboardAdapter, ClipboardHistoryRecyclerView, ClipboardHistoryView, ClipboardLayoutParams, OnKeyEventListener (+3 more)
 
 ### Community 428 - "KeyTypeSerializer"
-Cohesion: 0.40
-Nodes (3): BufferWithExtendableBuffer, Ver4PatriciaTrieReadingUtils, getTerminalIdAndAdvancePosition
-
-### Community 433 - "TEST"
-Cohesion: 0.07
-Nodes (32): latinime_BinaryDictionary_createOnMemory(), latinime_BinaryDictionary_open(), DictionaryStructureWithBufferPolicyFactory, getHeaderFilePathInDictDir, newPolicyForDirectoryDict, newPolicyForExistingDictFile, newPolicyForFileDict, newPolicyForOnMemoryDict (+24 more)
+Cohesion: 0.33
+Nodes (3): isSpaceOrEnter(), Mode, SavedKeyboardState
 
 ### Community 456 - "loadEnv"
 Cohesion: 0.50
@@ -3497,48 +3509,56 @@ Cohesion: 0.05
 Nodes (30): AutocorrectionThresholdUtilsTest, latinime_BinaryDictionaryUtils_calcNormalizedScore(), DamerauLevenshteinEditDistancePolicy, mString0, mString0Length, mString1, mString1Length, EditDistance (+22 more)
 
 ### Community 520 - "ggml_map_unary_impl_f32"
-Cohesion: 0.24
-Nodes (12): ggml_compute_forward_map_binary(), ggml_compute_forward_map_binary_f32(), ggml_compute_forward_map_unary(), ggml_compute_forward_map_unary_f32(), ggml_map_binary_f32(), ggml_map_binary_impl_f32(), ggml_map_binary_inplace_f32(), ggml_map_unary_f32() (+4 more)
+Cohesion: 0.53
+Nodes (6): ggml_compute_forward_map_binary(), ggml_compute_forward_map_binary_f32(), ggml_map_binary_f32(), ggml_map_binary_impl_f32(), ggml_map_binary_inplace_f32(), ggml_binary_op_f32_t
 
 ### Community 521 - "TEST"
-Cohesion: 0.04
-Nodes (37): dumpWord(), dumpWordInfo(), intArrayToCharArray(), vector, mDictFormatVersion, getNextShortcut, getShortcutIterator, ProbabilityEntry (+29 more)
-
-### Community 2414 - "getEntryInfo"
-Cohesion: 0.50
-Nodes (3): LanguageModelDictContent::EntryInfoToTurncate::Comparator::operator()(), getEntryInfo, EntryInfoToTurncate
-
-### Community 2415 - "TEST"
-Cohesion: 0.50
-Nodes (3): TEST(), DefinesTest, NELEMSForFixedLengthArray
+Cohesion: 0.03
+Nodes (41): dumpWord(), dumpWordInfo(), intArrayToCharArray(), vector, DictionaryBigramsStructurePolicy, getNextBigram, skipAllBigrams, DictionaryShortcutsStructurePolicy (+33 more)
 
 ### Community 2416 - "TEST"
-Cohesion: 0.50
-Nodes (4): TEST(), ProbabilityEntryTest, TestEncodeDecode, TestEncodeDecodeWithHistoricalInfo
+Cohesion: 0.13
+Nodes (6): DictionaryKeywords, LayoutDirective, Utility, Defaults, Context, SharedPreferences
 
 ### Community 2417 - "TEST"
-Cohesion: 0.50
-Nodes (4): TEST(), TerminalPositionLookupTableTest, TestGC, TestGetFromEmptyTable
+Cohesion: 0.33
+Nodes (3): Recording, RecordingCard, styles
+
+### Community 2418 - "dic_traverse_session.cpp"
+Cohesion: 0.67
+Nodes (3): ggml_backend_cpu_supports_op(), ggml_internal_get_type_traits(), ggml_type_traits_t
+
+### Community 2419 - "ggml_map_custom1_impl_f32"
+Cohesion: 0.40
+Nodes (5): block_q4_0, ggml_quantize_q4_0(), dequantize_row_q4_0(), quantize_row_q4_0(), quantize_row_q4_0_reference()
+
+### Community 2422 - ".addCost"
+Cohesion: 0.13
+Nodes (3): of(), RecapitalizeMode, rotate()
+
+### Community 2433 - "TEST"
+Cohesion: 0.04
+Nodes (53): BufferWithExtendablebufferTest, mDictFormatVersion, getShortcutIterator, DicNode, DicNodeVector, BufferWithExtendableBuffer, Ver4PatriciaTrieReadingUtils, getTerminalIdAndAdvancePosition (+45 more)
 
 ## Knowledge Gaps
-- **1357 isolated node(s):** `$schema`, `plugin`, `@opencode-ai/plugin`, `n_len`, `n_len_org` (+1352 more)
+- **1360 isolated node(s):** `Recording`, `RecordingCard`, `styles`, `$schema`, `plugin` (+1355 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **2126 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **2136 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `intArrayToCharArray()` connect `TEST` to `ggml_can_repeat`, `ggml_nbytes`, `ggml_graph_import`, `CalcEditDistance`, `ProbabilityUtils`, `ggml_add_rel_pos_impl`, `SettingsSubtype`, `PtNodeParams`, `GestureStrokeRecognitionPoints`, `RichInputMethodSubtype`, `ProximityInfo::ProximityInfo`, `DicNodeStateOutput`, `NormalDistribution2D`, `SentenceLevelAdapter.java`, `build.gradle`, `header_read_write_utils.cpp`, `InputAttributes`, `SaveGestureDataTest`, `KeyTypeSerializer`, `MutableEntryCounters`, `TEST`, `TypingSuggestPolicy`, `AudioRecord`, `gguf_get_n_kv`, `WordAttributes`, `Ver4DictConstants`, `ggml_compute_forward_unary`, `proximity_info_state_utils.cpp`, `ggml_compute_backward`, `EmojiData`, `whisper_model`, `DicNodePool`, `com_android_inputmethod_latin_DicTraverseSession.cpp`, `Ver4DictConstants`, `ByteArrayUtils`, `BloomFilter`, `TypingScoring`, `DynamicPtUpdatingHelper`, `whisper_global`, `ggml_compute_forward_sum`, `AndroidWordLevelSpellCheckerSession`, `EditWordDialog`, `quantize_row_q5_0_reference`, `.convertPcmToFloat`, `ggml_map_custom1_impl`, `Ver2PtNodeArrayReader`, `TEST`, `TEST`, `DynamicPtReadingUtils`, `Ver4PatriciaTrieNodeWriter`, `latinime_BinaryDictionaryUtils_createEmptyDictFile`, `Settings.kt`, `CMakeCCompilerId.c`, `TrieMap`, `build.gradle.kts`, `ggml-impl.h`, `ggml_map_custom2_impl_f32`?**
-  _High betweenness centrality (0.142) - this node is a cross-community bridge._
-- **Why does `VoiceAccessibilityService` connect `TranscriptionStorage` to `byteswap_tensor_data`, `GestureDataGathering.kt`, `KeyboardTypeface`, `VoiceAccessibilityService`, `AppsManager`?**
-  _High betweenness centrality (0.056) - this node is a cross-community bridge._
-- **Why does `WordInfo` connect `settings.gradle.kts` to `GGML Inference Engine`, `TypingTraversal`, `Core Domain Pipeline`, `DictionaryEntry`, `MutableEntryCounters`, `vector`, `StringUtils`, `InputView.java`, `ggml_dup_tensor`, `ForgettingCurveUtils`, `.calculateProximities`, `whisper_bench_ggml_mul_mat_str`, `PersonalizationHelper.java`, `gguf_get_or_add_key`, `whisper_hparams`, `ggml_set_op_params`, `AudioConverterTest`, `StringUtils.kt`, `ggml_compute_forward_sum`, `VoiceInputMethodService`, `ggml_map_unary_impl_f32`, `AndroidWordLevelSpellCheckerSession`, `quantize_row_q5_0_reference`, `ggml_set_f32`, `.convertPcmToFloat`, `.restartSuggestions`, `CMakeCCompilerId.c`, `TrieMap`?**
-  _High betweenness centrality (0.039) - this node is a cross-community bridge._
-- **What connects `$schema`, `plugin`, `@opencode-ai/plugin` to the rest of the system?**
-  _1358 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Why does `intArrayToCharArray()` connect `TEST` to `ggml_can_repeat`, `detectFormatVersion`, `ggml_nbytes`, `TEST`, `TypingTraversal`, `ggml_graph_import`, `ResourceUtils.java`, `CalcEditDistance`, `SettingsSubtype`, `build.gradle.kts`, `PtNodeParams`, `TranscriptionResult`, `GestureStrokeRecognitionPoints`, `ProximityInfo::ProximityInfo`, `ErrorTypeUtils`, `DicNodeStateOutput`, `NormalDistribution2D`, `SentenceLevelAdapter.java`, `InputAttributes`, `proximity_info_state.h`, `MutableEntryCounters`, `AudioRecord`, `build.gradle.kts`, `WordAttributes`, `Ver4DictConstants`, `proximity_info_state_utils.cpp`, `com_android_inputmethod_latin_DicTraverseSession.cpp`, `ggml_compute_backward`, `DicNodePool`, `WhisperEngine`, `Ver4DictConstants`, `ByteArrayUtils`, `BloomFilter`, `whisper_hparams`, `DynamicPtUpdatingHelper`, `TEST`, `whisper_global`, `AndroidWordLevelSpellCheckerSession`, `quantize_row_q5_0_reference`, `.convertPcmToFloat`, `ggml_map_custom1_impl`, `Ver2PtNodeArrayReader`, `DynamicPtReadingUtils`, `CMakeCCompilerId.c`, `Ver4PatriciaTrieNodeWriter`, `latinime_BinaryDictionaryUtils_createEmptyDictFile`, `CMakeCCompilerId.c`, `ggml_compute_forward_sum`, `ggml_compute_forward_out_prod_f32`, `ggml_allocr_free`, `build.gradle.kts`?**
+  _High betweenness centrality (0.174) - this node is a cross-community bridge._
+- **Why does `VoiceAccessibilityService` connect `Ver4PatriciaTrieNodeWriter` to `TranscriptionStorage`, `ggml_compute_forward_unary`, `AudioAndHapticFeedbackManager`, `ggml_build_forward_expand`, `CMakeCCompilerId.c`?**
+  _High betweenness centrality (0.040) - this node is a cross-community bridge._
+- **Why does `Keyboard` connect `SettingsValuesForSuggestion` to `Native Build Toolchain`, `DynamicPtWritingUtils`, `string`, `JavaScript Dependencies`, `VoiceRecordingPane`, `RichInputMethodSubtype`, `ver4_patricia_trie_node_writer.h`, `0004-voice-typing-pane-layout.md`, `ClipboardHistoryRecyclerView`, `triage-labels.md`, `ggml_compute_forward`, `whisper_full_with_state`, `StringUtils`, `data`, `whisper_layer_decoder`, `typing_suggest_policy.h`, `whisper_bench_ggml_mul_mat_str`, `AudioRecord`, `PackageManager`, `ggml_map_custom2_impl`, `CMakeCXXCompilerId.cpp`, `CMakeCXXCompilerId.cpp`, `CMakeCCompilerId.c`, `ggml_rope_impl`?**
+  _High betweenness centrality (0.037) - this node is a cross-community bridge._
+- **What connects `Recording`, `RecordingCard`, `styles` to the rest of the system?**
+  _1361 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Model Verification Module` be split into smaller, more focused modules?**
-  _Cohesion score 0.06376811594202898 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.125 - nodes in this community are weakly interconnected._
 - **Should `Native Build Toolchain` be split into smaller, more focused modules?**
-  _Cohesion score 0.06812291743798593 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.060917343526039176 - nodes in this community are weakly interconnected._
 - **Should `GGML Inference Engine` be split into smaller, more focused modules?**
-  _Cohesion score 0.0815018315018315 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08435643564356436 - nodes in this community are weakly interconnected._

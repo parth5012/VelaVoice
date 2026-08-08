@@ -240,8 +240,8 @@
     "semantic_hash": ""
   },
   "sdk/vela-core/build.gradle.kts": {
-    "mtime": 1785115756.920009,
-    "ast_hash": "c3eaa4c44bf4e87b612174b054e0f894",
+    "mtime": 1786209313.6104047,
+    "ast_hash": "c2bcefc918739cc65f68de77ea4a796c",
     "semantic_hash": ""
   },
   "sdk/vela-core/src/main/kotlin/com/velavoice/sdk/AudioRecorder.kt": {
@@ -255,8 +255,8 @@
     "semantic_hash": ""
   },
   "sdk/vela-core/src/main/kotlin/com/velavoice/sdk/VelaException.kt": {
-    "mtime": 1785085969.3881774,
-    "ast_hash": "53c858588f780750696733b0dc972c6a",
+    "mtime": 1786210514.2644002,
+    "ast_hash": "339909808505a0d1c1cdb2cd5e41125b",
     "semantic_hash": ""
   },
   "sdk/vela-core/src/main/kotlin/com/velavoice/sdk/VelaRecordingCallback.kt": {
@@ -265,8 +265,8 @@
     "semantic_hash": ""
   },
   "sdk/vela-core/src/main/kotlin/com/velavoice/sdk/VelaTranscriber.kt": {
-    "mtime": 1785673562.8215983,
-    "ast_hash": "dae353c201e571f8c2c06e875c2c56fc",
+    "mtime": 1786210388.6409345,
+    "ast_hash": "774ff5c020257158a908254680bc824d",
     "semantic_hash": ""
   },
   "sdk/vela-core/src/test/kotlin/com/velavoice/sdk/TranscriptionResultTest.kt": {
@@ -1635,13 +1635,13 @@
     "semantic_hash": ""
   },
   "velaboard/app/src/main/java/helium314/keyboard/latin/settings/Defaults.kt": {
-    "mtime": 1786080093.52531,
-    "ast_hash": "4d38ca98ae3e28451a9551c0235d8067",
+    "mtime": 1786204029.1913047,
+    "ast_hash": "0136569661f11a6c2f5cbc65d45126e8",
     "semantic_hash": ""
   },
   "velaboard/app/src/main/java/helium314/keyboard/latin/settings/Settings.java": {
-    "mtime": 1786080083.280085,
-    "ast_hash": "1d0f8b2e011a313d0a33b560fd573f45",
+    "mtime": 1786204019.6346803,
+    "ast_hash": "ef576071a5b8a228c113fd2a7b88b34d",
     "semantic_hash": ""
   },
   "velaboard/app/src/main/java/helium314/keyboard/latin/settings/Settings.kt": {
@@ -2275,8 +2275,8 @@
     "semantic_hash": ""
   },
   "velaboard/app/src/main/java/helium314/keyboard/settings/screens/VoiceSettingsScreen.kt": {
-    "mtime": 1786082438.993227,
-    "ast_hash": "d7af3c92a54e1a1a6f44241376553219",
+    "mtime": 1786204100.5648792,
+    "ast_hash": "f2a9911baee3b2bf7a10bc2e86db5b73",
     "semantic_hash": ""
   },
   "velaboard/app/src/main/java/helium314/keyboard/settings/screens/gesturedata/BackgroundGatheringSettings.kt": {
@@ -3715,8 +3715,8 @@
     "semantic_hash": ""
   },
   "velavoice app/App.tsx": {
-    "mtime": 1786081612.8738627,
-    "ast_hash": "169a44481c3af9f579653489965ffe6f",
+    "mtime": 1786204143.9456825,
+    "ast_hash": "46ef8677cffdd989eb59633eadda57e3",
     "semantic_hash": ""
   },
   "velavoice app/app.config.js": {
@@ -3760,8 +3760,8 @@
     "semantic_hash": ""
   },
   "velavoice app/src/native/ModelVerifierModule.kt": {
-    "mtime": 1785154679.5698295,
-    "ast_hash": "3d5668cf701c34614edee903b5b32a52",
+    "mtime": 1786204112.607062,
+    "ast_hash": "634c0c8a664ab7b9f51b88b058a88031",
     "semantic_hash": ""
   },
   "velavoice app/src/native/TranscriptionStorage.kt": {
@@ -3770,8 +3770,8 @@
     "semantic_hash": ""
   },
   "velavoice app/src/native/VoiceAccessibilityService.kt": {
-    "mtime": 1785306374.5192049,
-    "ast_hash": "f14684a1efdd00e5efb77bba17502dca",
+    "mtime": 1786210410.26549,
+    "ast_hash": "ba64cc2dccefb978cabdb27f069b40f2",
     "semantic_hash": ""
   },
   "velavoice app/src/native/VoiceImePackage.kt": {
@@ -3780,8 +3780,8 @@
     "semantic_hash": ""
   },
   "velavoice app/src/native/VoiceInputMethodService.kt": {
-    "mtime": 1785306289.274419,
-    "ast_hash": "112a21b29ea5f7b6bb00d242886c5844",
+    "mtime": 1786210428.1424394,
+    "ast_hash": "eb4223b5e48e079d6f444185e1fb552f",
     "semantic_hash": ""
   },
   "velavoice app/src/services/ModelManager.ts": {
@@ -5142,6 +5142,26 @@
   "velaboard/build_log_subst_original.txt": {
     "mtime": 1785762827.5677357,
     "ast_hash": "cc0835b6179d89b242b7db724338cef4",
+    "semantic_hash": ""
+  },
+  "sdk/vela-core/src/main/kotlin/com/velavoice/sdk/CloudStreamingTranscriber.kt": {
+    "mtime": 1786210534.343479,
+    "ast_hash": "e81859f7fa2c052c31231910eac4f817",
+    "semantic_hash": ""
+  },
+  "sdk/vela-core/src/main/kotlin/com/velavoice/sdk/LocalStreamingTranscriber.kt": {
+    "mtime": 1786210534.3344772,
+    "ast_hash": "b86a74a064ae6a949c1006dff7e19a29",
+    "semantic_hash": ""
+  },
+  "sdk/vela-core/src/main/kotlin/com/velavoice/sdk/StreamingPipeline.kt": {
+    "mtime": 1786210627.7886684,
+    "ast_hash": "051c7f696c96a986a573c942c889e6fc",
+    "semantic_hash": ""
+  },
+  "sdk/vela-core/src/main/kotlin/com/velavoice/sdk/StreamingTranscriber.kt": {
+    "mtime": 1786208731.261798,
+    "ast_hash": "daadaa3f8ccd6234c682418b9152e38c",
     "semantic_hash": ""
   }
 }
