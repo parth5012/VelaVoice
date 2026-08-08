@@ -5,3 +5,4 @@ class ModelNotFound(modelPath: String) : VelaException("Model not found: $modelP
 class WhisperError(msg: String) : VelaException(msg)
 class AudioCaptureFailed(msg: String) : VelaException(msg)
 class InvalidAudio(msg: String) : VelaException(msg)
+class VelaError(msg: String) : VelaException(msg)
