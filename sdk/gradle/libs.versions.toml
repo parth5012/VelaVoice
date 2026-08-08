@@ -10,6 +10,7 @@ robolectric = "4.12.2"
 mockito = "5.8.0"
 onnxruntimeAndroid = "1.22.0"
 onnxruntimeGenai = "0.15.0"
+okhttp = "4.12.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidxCore" }
@@ -21,6 +22,7 @@ robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "
 mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
 onnxruntime-android = { group = "com.microsoft.onnxruntime", name = "onnxruntime-android", version.ref = "onnxruntimeAndroid" }
 onnxruntime-genai-android = { group = "com.microsoft.onnxruntime", name = "onnxruntime-genai-android", version.ref = "onnxruntimeGenai" }
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "agp" }

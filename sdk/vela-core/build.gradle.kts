@@ -42,6 +42,7 @@ dependencies {
     api(project(":vela-whisper"))
     api(project(":vela-cleaner"))
     implementation(libs.androidx.core.ktx)
+    implementation(libs.okhttp)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
     testImplementation(libs.mockito.core)
