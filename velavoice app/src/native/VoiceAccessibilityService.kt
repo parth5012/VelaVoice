@@ -38,6 +38,11 @@ import com.velavoice.sdk.cleaner.CleanerConfig
 import com.velavoice.sdk.cleaner.DictionaryKeywords
 import com.velavoice.sdk.cleaner.PersonalDictionary
 import com.velavoice.sdk.ui.WaveformView
+import com.velavoice.sdk.StreamingTranscriptionCallback
+import com.velavoice.sdk.RevisionMarker
+import com.velavoice.sdk.StreamConfig
+import com.velavoice.sdk.VelaException
+import com.velavoice.sdk.LocalStreamingTranscriber
 
 class VoiceAccessibilityService : AccessibilityService() {
     private var windowManager: WindowManager? = null
@@ -58,6 +63,20 @@ class VoiceAccessibilityService : AccessibilityService() {
     private val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
     private val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
     private val BUFFER_SIZE = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT)
+
+    // Streaming state
+    private var isStreaming = false
+    private var streamingMode = "instant"
+    private var transcriptionMode = "local"
+    private var streamingTranscriber: LocalStreamingTranscriber? = null
+    private var streamingAudioThread: Thread? = null
+    private var streamingAudioRecord: AudioRecord? = null
+    @Volatile
+    private var streamingAudioActive = false
+    private val streamingBuffer = StringBuilder()
+    private var streamingCommittedLength = 0
+    private var lastVadActivity = 0L
+    private var lastCommitTime = 0L
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         val eventType = event.eventType
@@ -253,10 +272,19 @@ class VoiceAccessibilityService : AccessibilityService() {
     }
 
     private fun toggleRecording() {
-        if (!isRecording) {
-            startRecording()
+        loadStreamingPreferences()
+        if (streamingMode == "streamed") {
+            if (isStreaming) {
+                stopStreamingTranscription()
+            } else {
+                startStreamingTranscription()
+            }
         } else {
-            stopRecording(runCleaner = true)
+            if (!isRecording) {
+                startRecording()
+            } else {
+                stopRecording(runCleaner = true)
+            }
         }
     }
 
@@ -707,10 +735,237 @@ class VoiceAccessibilityService : AccessibilityService() {
         }
     }
 
+    // ──────────────────────────────────────────────
+    // Streaming Transcription
+    // ──────────────────────────────────────────────
+
+    private fun loadStreamingPreferences() {
+        val prefs = getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
+        streamingMode = prefs.getString("streamingMode", "instant") ?: "instant"
+        transcriptionMode = prefs.getString("transcriptionMode", "local") ?: "local"
+    }
+
+    private fun startStreamingTranscription() {
+        if (isStreaming) return
+        loadStreamingPreferences()
+
+        if (streamingMode == "instant") {
+            // Fall back to batch mode
+            startRecording()
+            return
+        }
+
+        isStreaming = true
+        streamingBuffer.setLength(0)
+        streamingCommittedLength = 0
+        lastVadActivity = System.currentTimeMillis()
+        lastCommitTime = System.currentTimeMillis()
+
+        val whisperPath = getWhisperModelPath(this@VoiceAccessibilityService)
+        if (whisperPath == null) {
+            statusText.text = "Model not found"
+            isStreaming = false
+            return
+        }
+
+        val config = WhisperConfig(whisperPath)
+        streamingTranscriber = LocalStreamingTranscriber(config)
+        streamingTranscriber?.setCallback(createStreamingCallback())
+
+        val streamConfig = StreamConfig(
+            modelPath = whisperPath,
+            chunkDurationMs = 3000,
+            windowDurationMs = 15000,
+            overlapMs = 1500,
+            resetIntervalMs = 30000,
+            useVad = true,
+            vadThreshold = 0.02f
+        )
+        streamingTranscriber?.start(streamConfig)
+
+        startStreamingAudio()
+
+        controlPane.visibility = View.VISIBLE
+        statusText.text = "Streaming..."
+    }
+
+    private fun stopStreamingTranscription() {
+        if (!isStreaming) return
+        isStreaming = false
+        stopStreamingAudio()
+
+        // Commit remaining text
+        if (streamingBuffer.length > streamingCommittedLength) {
+            val remaining = streamingBuffer.substring(streamingCommittedLength)
+            if (remaining.isNotBlank()) {
+                insertStreamingText(remaining.trim(), true)
+            }
+        }
+
+        streamingTranscriber?.stop()
+        streamingTranscriber?.release()
+        streamingTranscriber = null
+
+        // Auto-save final transcription
+        val finalText = streamingBuffer.toString().trim()
+        if (finalText.isNotEmpty()) {
+            TranscriptionStorage.save(
+                this@VoiceAccessibilityService,
+                raw = finalText,
+                cleaned = finalText,
+                durationMs = 0
+            )
+        }
+
+        Handler(Looper.getMainLooper()).post {
+            statusText.text = "Ready"
+            controlPane.visibility = View.GONE
+            val density = resources.displayMetrics.density
+            val micColor = Color.parseColor("#a6e3a1")
+            micButton.background = createCapsuleDrawable(micColor, 100f * density)
+        }
+    }
+
+    private fun startStreamingAudio() {
+        streamingAudioActive = true
+        streamingAudioThread = Thread({
+            try {
+                streamingAudioRecord = AudioRecord(
+                    MediaRecorder.AudioSource.MIC,
+                    SAMPLE_RATE,
+                    CHANNEL_CONFIG,
+                    AUDIO_FORMAT,
+                    BUFFER_SIZE
+                )
+
+                if (streamingAudioRecord?.state == AudioRecord.STATE_INITIALIZED) {
+                    streamingAudioRecord?.startRecording()
+                    val buffer = ShortArray(BUFFER_SIZE / 2)
+                    val byteBuffer = ByteArray(BUFFER_SIZE)
+
+                    while (streamingAudioActive) {
+                        val read = streamingAudioRecord?.read(buffer, 0, buffer.size) ?: 0
+                        if (read > 0) {
+                            var sumSquares = 0.0
+                            for (i in 0 until read) {
+                                val sv = buffer[i]
+                                sumSquares += sv * sv
+                                byteBuffer[i * 2] = (sv.toInt() and 0xff).toByte()
+                                byteBuffer[i * 2 + 1] = ((sv.toInt() shr 8) and 0xff).toByte()
+                            }
+
+                            val audioBytes = byteBuffer.copyOfRange(0, read * 2)
+                            streamingTranscriber?.emit(audioBytes)
+
+                            // Amplitude for waveform
+                            val rms = sqrt(sumSquares / read)
+                            val normalized = (rms / 32768.0f).toFloat()
+                            waveformView.post { waveformView.addAmplitude(normalized) }
+
+                            // VAD tracking
+                            if (normalized > 0.02f) {
+                                lastVadActivity = System.currentTimeMillis()
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("VoiceAccessibility", "Streaming audio error", e)
+            }
+        }, "VoiceAccessibilityStreamingAudio")
+        streamingAudioThread?.start()
+    }
+
+    private fun stopStreamingAudio() {
+        streamingAudioActive = false
+        try {
+            streamingAudioRecord?.stop()
+            streamingAudioRecord?.release()
+            streamingAudioRecord = null
+            streamingAudioThread?.join(2000)
+            streamingAudioThread = null
+        } catch (e: Exception) {
+            Log.e("VoiceAccessibility", "Error stopping streaming audio", e)
+        }
+    }
+
+    private fun createStreamingCallback(): StreamingTranscriptionCallback {
+        return object : StreamingTranscriptionCallback {
+            override fun onRevisionMarker(marker: RevisionMarker) {
+                Handler(Looper.getMainLooper()).post {
+                    when (marker.type) {
+                        "partial" -> {
+                            // Update buffer with partial text
+                            updateStreamingBuffer(marker.text, marker.range)
+                            statusText.text = marker.text
+                        }
+                        "commit" -> {
+                            // Commit text to input field
+                            insertStreamingText(marker.text, false)
+                            streamingCommittedLength = marker.range.last
+                        }
+                    }
+                }
+            }
+
+            override fun onFinal(text: String) {
+                Handler(Looper.getMainLooper()).post {
+                    if (text.isNotBlank()) {
+                        insertStreamingText(text, true)
+                    }
+                }
+            }
+
+            override fun onError(error: VelaException) {
+                Handler(Looper.getMainLooper()).post {
+                    statusText.text = "Error: ${error.message}"
+                }
+            }
+
+            override fun onAmplitude(normalized: Float) {
+                // Handled by audio thread
+            }
+        }
+    }
+
+    private fun updateStreamingBuffer(text: String, range: IntRange) {
+        // Ensure buffer is large enough
+        if (streamingBuffer.length < range.last) {
+            streamingBuffer.setLength(range.last)
+        }
+        streamingBuffer.replace(range.first, range.last, text)
+    }
+
+    private fun insertStreamingText(text: String, isFinal: Boolean) {
+        val focusNode = findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+        val targetNode = focusNode ?: rootInActiveWindow?.let { findEditableNode(it) }
+
+        if (targetNode != null) {
+            if (isFinal) {
+                // Final text: paste via clipboard
+                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                val clip = ClipData.newPlainText("streaming", text)
+                clipboard.setPrimaryClip(clip)
+                targetNode.performAction(AccessibilityNodeInfo.ACTION_PASTE)
+            } else {
+                // Partial text: use ACTION_SET_TEXT for composing
+                val arguments = Bundle()
+                arguments.putCharSequence(
+                    AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+                    streamingBuffer.toString()
+                )
+                targetNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
+            }
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         isRecording = false
+        isStreaming = false
         audioRecord?.release()
+        streamingAudioRecord?.release()
+        streamingTranscriber?.release()
         floatingLayout?.let {
             windowManager?.removeView(it)
         }
