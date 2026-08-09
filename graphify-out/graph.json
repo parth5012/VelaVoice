@@ -4087,7 +4087,7 @@
       "source_location": "L280",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_quants_vaddvq_s16",
-      "community": 135,
+      "community": 72,
       "norm_label": "vaddvq_s16()"
     },
     {
@@ -4097,7 +4097,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "int16x8_t",
-      "community": 135,
+      "community": 72,
       "norm_label": "int16x8_t"
     },
     {
@@ -4107,7 +4107,7 @@
       "source_location": "L288",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_quants_vpaddq_s16",
-      "community": 135,
+      "community": 72,
       "norm_label": "vpaddq_s16()"
     },
     {
@@ -4217,7 +4217,7 @@
       "source_location": "L356",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_quants_ggml_vld1q_u8_x4",
-      "community": 179,
+      "community": 60,
       "norm_label": "ggml_vld1q_u8_x4()"
     },
     {
@@ -4227,7 +4227,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "ggml_uint8x16x4_t",
-      "community": 179,
+      "community": 60,
       "norm_label": "ggml_uint8x16x4_t"
     },
     {
@@ -4297,7 +4297,7 @@
       "source_location": "L444",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_quants_quantize_row_q4_0_reference",
-      "community": 151,
+      "community": 112,
       "norm_label": "quantize_row_q4_0_reference()"
     },
     {
@@ -4307,7 +4307,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "block_q4_0",
-      "community": 151,
+      "community": 112,
       "norm_label": "block_q4_0"
     },
     {
@@ -4317,7 +4317,7 @@
       "source_location": "L481",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_quants_quantize_row_q4_0",
-      "community": 151,
+      "community": 112,
       "norm_label": "quantize_row_q4_0()"
     },
     {
@@ -4417,7 +4417,7 @@
       "source_location": "L623",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_quants_quantize_row_q8_0_reference",
-      "community": 85,
+      "community": 112,
       "norm_label": "quantize_row_q8_0_reference()"
     },
     {
@@ -4427,7 +4427,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "block_q8_0",
-      "community": 85,
+      "community": 112,
       "norm_label": "block_q8_0"
     },
     {
@@ -4477,7 +4477,7 @@
       "source_location": "L1090",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_quants_dequantize_row_q4_0",
-      "community": 151,
+      "community": 112,
       "norm_label": "dequantize_row_q4_0()"
     },
     {
@@ -4517,7 +4517,7 @@
       "source_location": "L1184",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_quants_dequantize_row_q8_0",
-      "community": 85,
+      "community": 112,
       "norm_label": "dequantize_row_q8_0()"
     },
     {
@@ -4817,7 +4817,7 @@
       "source_location": "L2332",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_quants_ggml_quantize_q6_k",
-      "community": 60,
+      "community": 112,
       "norm_label": "ggml_quantize_q6_k()"
     },
     {
@@ -5487,7 +5487,7 @@
       "source_location": "L1141",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_vec_neg_f32",
-      "community": 145,
+      "community": 144,
       "norm_label": "ggml_vec_neg_f32()"
     },
     {
@@ -5587,7 +5587,7 @@
       "source_location": "L1389",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_vec_sqr_f32",
-      "community": 146,
+      "community": 145,
       "norm_label": "ggml_vec_sqr_f32()"
     },
     {
@@ -5607,7 +5607,7 @@
       "source_location": "L1391",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_vec_log_f32",
-      "community": 144,
+      "community": 142,
       "norm_label": "ggml_vec_log_f32()"
     },
     {
@@ -5647,7 +5647,7 @@
       "source_location": "L1395",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_vec_tanh_f32",
-      "community": 152,
+      "community": 146,
       "norm_label": "ggml_vec_tanh_f32()"
     },
     {
@@ -5877,7 +5877,7 @@
       "source_location": "L1876",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_numa_init",
-      "community": 123,
+      "community": 56,
       "norm_label": "ggml_numa_init()"
     },
     {
@@ -5887,7 +5887,7 @@
       "source_location": "L1941",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_is_numa",
-      "community": 123,
+      "community": 56,
       "norm_label": "ggml_is_numa()"
     },
     {
@@ -6007,7 +6007,7 @@
       "source_location": "L2021",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_is_quantized",
-      "community": 117,
+      "community": 124,
       "norm_label": "ggml_is_quantized()"
     },
     {
@@ -6087,7 +6087,7 @@
       "source_location": "L2063",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_is_matrix",
-      "community": 101,
+      "community": 88,
       "norm_label": "ggml_is_matrix()"
     },
     {
@@ -6197,7 +6197,7 @@
       "source_location": "L2156",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_is_padded_1d",
-      "community": 1,
+      "community": 117,
       "norm_label": "ggml_is_padded_1d()"
     },
     {
@@ -6227,7 +6227,7 @@
       "source_location": "L2186",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_can_repeat_rows",
-      "community": 117,
+      "community": 124,
       "norm_label": "ggml_can_repeat_rows()"
     },
     {
@@ -6397,7 +6397,7 @@
       "source_location": "L2563",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_new_tensor_1d",
-      "community": 101,
+      "community": 95,
       "norm_label": "ggml_new_tensor_1d()"
     },
     {
@@ -6717,7 +6717,7 @@
       "source_location": "L3140",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_dup_impl",
-      "community": 56,
+      "community": 151,
       "norm_label": "ggml_dup_impl()"
     },
     {
@@ -6727,7 +6727,7 @@
       "source_location": "L3159",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_dup",
-      "community": 56,
+      "community": 151,
       "norm_label": "ggml_dup()"
     },
     {
@@ -6737,7 +6737,7 @@
       "source_location": "L3165",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_dup_inplace",
-      "community": 56,
+      "community": 151,
       "norm_label": "ggml_dup_inplace()"
     },
     {
@@ -6777,7 +6777,7 @@
       "source_location": "L3214",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_add_cast_impl",
-      "community": 117,
+      "community": 124,
       "norm_label": "ggml_add_cast_impl()"
     },
     {
@@ -6787,7 +6787,7 @@
       "source_location": "L3242",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_add_cast",
-      "community": 117,
+      "community": 124,
       "norm_label": "ggml_add_cast()"
     },
     {
@@ -6797,7 +6797,7 @@
       "source_location": "L3252",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_add1_impl",
-      "community": 1,
+      "community": 117,
       "norm_label": "ggml_add1_impl()"
     },
     {
@@ -6807,7 +6807,7 @@
       "source_location": "L3276",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_add1",
-      "community": 1,
+      "community": 117,
       "norm_label": "ggml_add1()"
     },
     {
@@ -6817,7 +6817,7 @@
       "source_location": "L3283",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_add1_inplace",
-      "community": 1,
+      "community": 117,
       "norm_label": "ggml_add1_inplace()"
     },
     {
@@ -6857,7 +6857,7 @@
       "source_location": "L3349",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_sub_impl",
-      "community": 166,
+      "community": 1,
       "norm_label": "ggml_sub_impl()"
     },
     {
@@ -6867,7 +6867,7 @@
       "source_location": "L3372",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_sub",
-      "community": 166,
+      "community": 1,
       "norm_label": "ggml_sub()"
     },
     {
@@ -6877,7 +6877,7 @@
       "source_location": "L3379",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_sub_inplace",
-      "community": 166,
+      "community": 1,
       "norm_label": "ggml_sub_inplace()"
     },
     {
@@ -6947,7 +6947,7 @@
       "source_location": "L3476",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_sqr_impl",
-      "community": 56,
+      "community": 152,
       "norm_label": "ggml_sqr_impl()"
     },
     {
@@ -6957,7 +6957,7 @@
       "source_location": "L3495",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_sqr",
-      "community": 56,
+      "community": 152,
       "norm_label": "ggml_sqr()"
     },
     {
@@ -6967,7 +6967,7 @@
       "source_location": "L3501",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_sqr_inplace",
-      "community": 56,
+      "community": 152,
       "norm_label": "ggml_sqr_inplace()"
     },
     {
@@ -6977,7 +6977,7 @@
       "source_location": "L3509",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_sqrt_impl",
-      "community": 162,
+      "community": 56,
       "norm_label": "ggml_sqrt_impl()"
     },
     {
@@ -6987,7 +6987,7 @@
       "source_location": "L3528",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_sqrt",
-      "community": 162,
+      "community": 56,
       "norm_label": "ggml_sqrt()"
     },
     {
@@ -6997,7 +6997,7 @@
       "source_location": "L3534",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_sqrt_inplace",
-      "community": 162,
+      "community": 56,
       "norm_label": "ggml_sqrt_inplace()"
     },
     {
@@ -7007,7 +7007,7 @@
       "source_location": "L3542",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_log_impl",
-      "community": 155,
+      "community": 56,
       "norm_label": "ggml_log_impl()"
     },
     {
@@ -7017,7 +7017,7 @@
       "source_location": "L3561",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_log",
-      "community": 155,
+      "community": 56,
       "norm_label": "ggml_log()"
     },
     {
@@ -7027,7 +7027,7 @@
       "source_location": "L3567",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_log_inplace",
-      "community": 155,
+      "community": 56,
       "norm_label": "ggml_log_inplace()"
     },
     {
@@ -7037,7 +7037,7 @@
       "source_location": "L3575",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_sum",
-      "community": 101,
+      "community": 95,
       "norm_label": "ggml_sum()"
     },
     {
@@ -7067,7 +7067,7 @@
       "source_location": "L3642",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_argmax",
-      "community": 101,
+      "community": 88,
       "norm_label": "ggml_argmax()"
     },
     {
@@ -7467,7 +7467,7 @@
       "source_location": "L4170",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_scale_impl",
-      "community": 1,
+      "community": 117,
       "norm_label": "ggml_scale_impl()"
     },
     {
@@ -7487,7 +7487,7 @@
       "source_location": "L4201",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_scale_inplace",
-      "community": 1,
+      "community": 117,
       "norm_label": "ggml_scale_inplace()"
     },
     {
@@ -7497,7 +7497,7 @@
       "source_location": "L4210",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_set_impl",
-      "community": 56,
+      "community": 101,
       "norm_label": "ggml_set_impl()"
     },
     {
@@ -7507,7 +7507,7 @@
       "source_location": "L4241",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_set",
-      "community": 56,
+      "community": 101,
       "norm_label": "ggml_set()"
     },
     {
@@ -7517,7 +7517,7 @@
       "source_location": "L4252",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_set_inplace",
-      "community": 56,
+      "community": 101,
       "norm_label": "ggml_set_inplace()"
     },
     {
@@ -7527,7 +7527,7 @@
       "source_location": "L4263",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_set_1d",
-      "community": 56,
+      "community": 101,
       "norm_label": "ggml_set_1d()"
     },
     {
@@ -7537,7 +7537,7 @@
       "source_location": "L4271",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_set_1d_inplace",
-      "community": 56,
+      "community": 101,
       "norm_label": "ggml_set_1d_inplace()"
     },
     {
@@ -7547,7 +7547,7 @@
       "source_location": "L4279",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_set_2d",
-      "community": 56,
+      "community": 101,
       "norm_label": "ggml_set_2d()"
     },
     {
@@ -7557,7 +7557,7 @@
       "source_location": "L4288",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_set_2d_inplace",
-      "community": 56,
+      "community": 101,
       "norm_label": "ggml_set_2d_inplace()"
     },
     {
@@ -7597,7 +7597,7 @@
       "source_location": "L4344",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_cont_impl",
-      "community": 153,
+      "community": 1,
       "norm_label": "ggml_cont_impl()"
     },
     {
@@ -7607,7 +7607,7 @@
       "source_location": "L4364",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_cont",
-      "community": 153,
+      "community": 1,
       "norm_label": "ggml_cont()"
     },
     {
@@ -7617,7 +7617,7 @@
       "source_location": "L4370",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_cont_inplace",
-      "community": 153,
+      "community": 1,
       "norm_label": "ggml_cont_inplace()"
     },
     {
@@ -7767,7 +7767,7 @@
       "source_location": "L4639",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_view_4d",
-      "community": 1,
+      "community": 103,
       "norm_label": "ggml_view_4d()"
     },
     {
@@ -7807,7 +7807,7 @@
       "source_location": "L4785",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_get_rows_back",
-      "community": 101,
+      "community": 88,
       "norm_label": "ggml_get_rows_back()"
     },
     {
@@ -8077,7 +8077,7 @@
       "source_location": "L5274",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_calc_conv_transpose_1d_output_size",
-      "community": 101,
+      "community": 88,
       "norm_label": "ggml_calc_conv_transpose_1d_output_size()"
     },
     {
@@ -8087,7 +8087,7 @@
       "source_location": "L5278",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_conv_transpose_1d",
-      "community": 101,
+      "community": 88,
       "norm_label": "ggml_conv_transpose_1d()"
     },
     {
@@ -8137,7 +8137,7 @@
       "source_location": "L5412",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_calc_conv_transpose_output_size",
-      "community": 103,
+      "community": 3,
       "norm_label": "ggml_calc_conv_transpose_output_size()"
     },
     {
@@ -8147,7 +8147,7 @@
       "source_location": "L5416",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_conv_transpose_2d_p0",
-      "community": 103,
+      "community": 3,
       "norm_label": "ggml_conv_transpose_2d_p0()"
     },
     {
@@ -8217,7 +8217,7 @@
       "source_location": "L5583",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_argsort",
-      "community": 3,
+      "community": 103,
       "norm_label": "ggml_argsort()"
     },
     {
@@ -8227,7 +8227,7 @@
       "source_location": "L5602",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_top_k",
-      "community": 1,
+      "community": 103,
       "norm_label": "ggml_top_k()"
     },
     {
@@ -8257,7 +8257,7 @@
       "source_location": "L5684",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_flash_attn_back",
-      "community": 101,
+      "community": 3,
       "norm_label": "ggml_flash_attn_back()"
     },
     {
@@ -8597,7 +8597,7 @@
       "source_location": "L6216",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_map_custom2_impl",
-      "community": 127,
+      "community": 123,
       "norm_label": "ggml_map_custom2_impl()"
     },
     {
@@ -8607,7 +8607,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "ggml_custom2_op_t",
-      "community": 127,
+      "community": 123,
       "norm_label": "ggml_custom2_op_t"
     },
     {
@@ -8617,7 +8617,7 @@
       "source_location": "L6249",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_map_custom2",
-      "community": 127,
+      "community": 123,
       "norm_label": "ggml_map_custom2()"
     },
     {
@@ -8627,7 +8627,7 @@
       "source_location": "L6259",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_map_custom2_inplace",
-      "community": 127,
+      "community": 123,
       "norm_label": "ggml_map_custom2_inplace()"
     },
     {
@@ -8677,7 +8677,7 @@
       "source_location": "L6336",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_cross_entropy_loss",
-      "community": 101,
+      "community": 95,
       "norm_label": "ggml_cross_entropy_loss()"
     },
     {
@@ -8747,7 +8747,7 @@
       "source_location": "L7094",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_dup",
-      "community": 142,
+      "community": 2,
       "norm_label": "ggml_compute_forward_dup()"
     },
     {
@@ -8897,7 +8897,7 @@
       "source_location": "L7905",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_mul_f32",
-      "community": 117,
+      "community": 124,
       "norm_label": "ggml_compute_forward_mul_f32()"
     },
     {
@@ -8937,7 +8937,7 @@
       "source_location": "L8101",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_sqr_f32",
-      "community": 146,
+      "community": 145,
       "norm_label": "ggml_compute_forward_sqr_f32()"
     },
     {
@@ -8947,7 +8947,7 @@
       "source_location": "L8125",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_sqr",
-      "community": 146,
+      "community": 145,
       "norm_label": "ggml_compute_forward_sqr()"
     },
     {
@@ -8977,7 +8977,7 @@
       "source_location": "L8185",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_log_f32",
-      "community": 144,
+      "community": 142,
       "norm_label": "ggml_compute_forward_log_f32()"
     },
     {
@@ -8987,7 +8987,7 @@
       "source_location": "L8209",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_log",
-      "community": 144,
+      "community": 142,
       "norm_label": "ggml_compute_forward_log()"
     },
     {
@@ -9137,7 +9137,7 @@
       "source_location": "L8654",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_concat_f32",
-      "community": 184,
+      "community": 56,
       "norm_label": "ggml_compute_forward_concat_f32()"
     },
     {
@@ -9147,7 +9147,7 @@
       "source_location": "L8702",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_concat",
-      "community": 184,
+      "community": 56,
       "norm_label": "ggml_compute_forward_concat()"
     },
     {
@@ -9197,7 +9197,7 @@
       "source_location": "L8806",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_neg_f32",
-      "community": 145,
+      "community": 144,
       "norm_label": "ggml_compute_forward_neg_f32()"
     },
     {
@@ -9207,7 +9207,7 @@
       "source_location": "L8830",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_neg",
-      "community": 145,
+      "community": 144,
       "norm_label": "ggml_compute_forward_neg()"
     },
     {
@@ -9237,7 +9237,7 @@
       "source_location": "L8890",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_tanh_f32",
-      "community": 152,
+      "community": 146,
       "norm_label": "ggml_compute_forward_tanh_f32()"
     },
     {
@@ -9247,7 +9247,7 @@
       "source_location": "L8914",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_tanh",
-      "community": 152,
+      "community": 146,
       "norm_label": "ggml_compute_forward_tanh()"
     },
     {
@@ -9577,7 +9577,7 @@
       "source_location": "L10641",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_cpy",
-      "community": 142,
+      "community": 2,
       "norm_label": "ggml_compute_forward_cpy()"
     },
     {
@@ -9587,7 +9587,7 @@
       "source_location": "L10650",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_cont",
-      "community": 142,
+      "community": 2,
       "norm_label": "ggml_compute_forward_cont()"
     },
     {
@@ -10167,7 +10167,7 @@
       "source_location": "L13749",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_win_unpart_f32",
-      "community": 195,
+      "community": 56,
       "norm_label": "ggml_compute_forward_win_unpart_f32()"
     },
     {
@@ -10177,7 +10177,7 @@
       "source_location": "L13791",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_win_unpart",
-      "community": 195,
+      "community": 56,
       "norm_label": "ggml_compute_forward_win_unpart()"
     },
     {
@@ -10697,7 +10697,7 @@
       "source_location": "L16149",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_set_numa_thread_affinity",
-      "community": 123,
+      "community": 56,
       "norm_label": "set_numa_thread_affinity()"
     },
     {
@@ -10707,7 +10707,7 @@
       "source_location": "L16174",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_clear_numa_thread_affinity",
-      "community": 123,
+      "community": 56,
       "norm_label": "clear_numa_thread_affinity()"
     },
     {
@@ -11037,7 +11037,7 @@
       "source_location": "L18474",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_quantize_q4_0",
-      "community": 151,
+      "community": 112,
       "norm_label": "ggml_quantize_q4_0()"
     },
     {
@@ -11077,7 +11077,7 @@
       "source_location": "L18580",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_quantize_q8_0",
-      "community": 85,
+      "community": 112,
       "norm_label": "ggml_quantize_q8_0()"
     },
     {
@@ -11087,7 +11087,7 @@
       "source_location": "L18601",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_quantize_chunk",
-      "community": 60,
+      "community": 112,
       "norm_label": "ggml_quantize_chunk()"
     },
     {
@@ -16537,7 +16537,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "velavoice_app_app_js_velavoice_app_app",
-      "community": 124,
+      "community": 135,
       "norm_label": "app.js"
     },
     {
@@ -16547,7 +16547,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "velavoice_app_app_js_velavoice_app_app_recordingcard",
-      "community": 124,
+      "community": 135,
       "norm_label": "recordingcard"
     },
     {
@@ -16557,7 +16557,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "velavoice_app_app_js_velavoice_app_app_app",
-      "community": 124,
+      "community": 135,
       "norm_label": "app()"
     },
     {
@@ -16567,7 +16567,7 @@
       "source_location": "L1232",
       "_origin": "ast",
       "id": "velavoice_app_app_js_velavoice_app_app_styles",
-      "community": 124,
+      "community": 135,
       "norm_label": "styles"
     },
     {
@@ -71729,5 +71729,5 @@
       "source_file": "vela-whisper/src/main/cpp/CMakeLists.txt"
     }
   ],
-  "built_at_commit": "21cec531a092c0d8e8af93a4d35c46433f35a06a"
+  "built_at_commit": "e3bd57148012186732837ce70f9d2b0b661ccfe0"
 }
