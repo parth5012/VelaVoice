@@ -4087,7 +4087,7 @@
       "source_location": "L280",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_quants_vaddvq_s16",
-      "community": 72,
+      "community": 130,
       "norm_label": "vaddvq_s16()"
     },
     {
@@ -4097,7 +4097,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "int16x8_t",
-      "community": 72,
+      "community": 130,
       "norm_label": "int16x8_t"
     },
     {
@@ -4107,7 +4107,7 @@
       "source_location": "L288",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_quants_vpaddq_s16",
-      "community": 72,
+      "community": 130,
       "norm_label": "vpaddq_s16()"
     },
     {
@@ -4217,7 +4217,7 @@
       "source_location": "L356",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_quants_ggml_vld1q_u8_x4",
-      "community": 60,
+      "community": 175,
       "norm_label": "ggml_vld1q_u8_x4()"
     },
     {
@@ -4227,7 +4227,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "ggml_uint8x16x4_t",
-      "community": 60,
+      "community": 175,
       "norm_label": "ggml_uint8x16x4_t"
     },
     {
@@ -4327,7 +4327,7 @@
       "source_location": "L485",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_quants_quantize_row_q4_1_reference",
-      "community": 112,
+      "community": 124,
       "norm_label": "quantize_row_q4_1_reference()"
     },
     {
@@ -4337,7 +4337,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "block_q4_1",
-      "community": 112,
+      "community": 124,
       "norm_label": "block_q4_1"
     },
     {
@@ -4347,7 +4347,7 @@
       "source_location": "L522",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_quants_quantize_row_q4_1",
-      "community": 112,
+      "community": 124,
       "norm_label": "quantize_row_q4_1()"
     },
     {
@@ -4417,7 +4417,7 @@
       "source_location": "L623",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_quants_quantize_row_q8_0_reference",
-      "community": 112,
+      "community": 85,
       "norm_label": "quantize_row_q8_0_reference()"
     },
     {
@@ -4427,7 +4427,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "block_q8_0",
-      "community": 112,
+      "community": 85,
       "norm_label": "block_q8_0"
     },
     {
@@ -4487,7 +4487,7 @@
       "source_location": "L1110",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_quants_dequantize_row_q4_1",
-      "community": 112,
+      "community": 124,
       "norm_label": "dequantize_row_q4_1()"
     },
     {
@@ -4517,7 +4517,7 @@
       "source_location": "L1184",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_quants_dequantize_row_q8_0",
-      "community": 112,
+      "community": 85,
       "norm_label": "dequantize_row_q8_0()"
     },
     {
@@ -4817,7 +4817,7 @@
       "source_location": "L2332",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_quants_ggml_quantize_q6_k",
-      "community": 112,
+      "community": 60,
       "norm_label": "ggml_quantize_q6_k()"
     },
     {
@@ -5427,7 +5427,7 @@
       "source_location": "L1135",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_vec_add1_f32",
-      "community": 99,
+      "community": 120,
       "norm_label": "ggml_vec_add1_f32()"
     },
     {
@@ -5457,7 +5457,7 @@
       "source_location": "L1138",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_vec_sub_f32",
-      "community": 99,
+      "community": 120,
       "norm_label": "ggml_vec_sub_f32()"
     },
     {
@@ -5617,7 +5617,7 @@
       "source_location": "L1392",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_vec_abs_f32",
-      "community": 139,
+      "community": 155,
       "norm_label": "ggml_vec_abs_f32()"
     },
     {
@@ -6007,7 +6007,7 @@
       "source_location": "L2021",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_is_quantized",
-      "community": 124,
+      "community": 117,
       "norm_label": "ggml_is_quantized()"
     },
     {
@@ -6197,7 +6197,7 @@
       "source_location": "L2156",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_is_padded_1d",
-      "community": 117,
+      "community": 101,
       "norm_label": "ggml_is_padded_1d()"
     },
     {
@@ -6227,7 +6227,7 @@
       "source_location": "L2186",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_can_repeat_rows",
-      "community": 124,
+      "community": 117,
       "norm_label": "ggml_can_repeat_rows()"
     },
     {
@@ -6777,7 +6777,7 @@
       "source_location": "L3214",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_add_cast_impl",
-      "community": 124,
+      "community": 117,
       "norm_label": "ggml_add_cast_impl()"
     },
     {
@@ -6787,7 +6787,7 @@
       "source_location": "L3242",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_add_cast",
-      "community": 124,
+      "community": 117,
       "norm_label": "ggml_add_cast()"
     },
     {
@@ -6797,7 +6797,7 @@
       "source_location": "L3252",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_add1_impl",
-      "community": 117,
+      "community": 101,
       "norm_label": "ggml_add1_impl()"
     },
     {
@@ -6807,7 +6807,7 @@
       "source_location": "L3276",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_add1",
-      "community": 117,
+      "community": 101,
       "norm_label": "ggml_add1()"
     },
     {
@@ -6817,7 +6817,7 @@
       "source_location": "L3283",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_add1_inplace",
-      "community": 117,
+      "community": 101,
       "norm_label": "ggml_add1_inplace()"
     },
     {
@@ -7467,7 +7467,7 @@
       "source_location": "L4170",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_scale_impl",
-      "community": 117,
+      "community": 101,
       "norm_label": "ggml_scale_impl()"
     },
     {
@@ -7487,7 +7487,7 @@
       "source_location": "L4201",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_scale_inplace",
-      "community": 117,
+      "community": 101,
       "norm_label": "ggml_scale_inplace()"
     },
     {
@@ -7497,7 +7497,7 @@
       "source_location": "L4210",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_set_impl",
-      "community": 101,
+      "community": 99,
       "norm_label": "ggml_set_impl()"
     },
     {
@@ -7507,7 +7507,7 @@
       "source_location": "L4241",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_set",
-      "community": 101,
+      "community": 99,
       "norm_label": "ggml_set()"
     },
     {
@@ -7517,7 +7517,7 @@
       "source_location": "L4252",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_set_inplace",
-      "community": 101,
+      "community": 99,
       "norm_label": "ggml_set_inplace()"
     },
     {
@@ -7527,7 +7527,7 @@
       "source_location": "L4263",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_set_1d",
-      "community": 101,
+      "community": 99,
       "norm_label": "ggml_set_1d()"
     },
     {
@@ -7537,7 +7537,7 @@
       "source_location": "L4271",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_set_1d_inplace",
-      "community": 101,
+      "community": 99,
       "norm_label": "ggml_set_1d_inplace()"
     },
     {
@@ -7547,7 +7547,7 @@
       "source_location": "L4279",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_set_2d",
-      "community": 101,
+      "community": 99,
       "norm_label": "ggml_set_2d()"
     },
     {
@@ -7557,7 +7557,7 @@
       "source_location": "L4288",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_set_2d_inplace",
-      "community": 101,
+      "community": 99,
       "norm_label": "ggml_set_2d_inplace()"
     },
     {
@@ -8877,7 +8877,7 @@
       "source_location": "L7826",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_sub_f32",
-      "community": 99,
+      "community": 120,
       "norm_label": "ggml_compute_forward_sub_f32()"
     },
     {
@@ -8887,7 +8887,7 @@
       "source_location": "L7886",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_sub",
-      "community": 99,
+      "community": 120,
       "norm_label": "ggml_compute_forward_sub()"
     },
     {
@@ -8897,7 +8897,7 @@
       "source_location": "L7905",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_mul_f32",
-      "community": 124,
+      "community": 117,
       "norm_label": "ggml_compute_forward_mul_f32()"
     },
     {
@@ -9027,7 +9027,7 @@
       "source_location": "L8314",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_sum_rows_f32",
-      "community": 191,
+      "community": 179,
       "norm_label": "ggml_compute_forward_sum_rows_f32()"
     },
     {
@@ -9037,7 +9037,7 @@
       "source_location": "L8347",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_sum_rows",
-      "community": 191,
+      "community": 179,
       "norm_label": "ggml_compute_forward_sum_rows()"
     },
     {
@@ -9047,7 +9047,7 @@
       "source_location": "L8365",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_mean_f32",
-      "community": 188,
+      "community": 177,
       "norm_label": "ggml_compute_forward_mean_f32()"
     },
     {
@@ -9057,7 +9057,7 @@
       "source_location": "L8402",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_mean",
-      "community": 188,
+      "community": 177,
       "norm_label": "ggml_compute_forward_mean()"
     },
     {
@@ -9157,7 +9157,7 @@
       "source_location": "L8722",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_abs_f32",
-      "community": 139,
+      "community": 155,
       "norm_label": "ggml_compute_forward_abs_f32()"
     },
     {
@@ -9167,7 +9167,7 @@
       "source_location": "L8746",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_abs",
-      "community": 139,
+      "community": 155,
       "norm_label": "ggml_compute_forward_abs()"
     },
     {
@@ -10357,7 +10357,7 @@
       "source_location": "L14310",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_compute_forward_cross_entropy_loss_back_f32",
-      "community": 99,
+      "community": 120,
       "norm_label": "ggml_compute_forward_cross_entropy_loss_back_f32()"
     },
     {
@@ -11047,7 +11047,7 @@
       "source_location": "L18497",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_quantize_q4_1",
-      "community": 112,
+      "community": 124,
       "norm_label": "ggml_quantize_q4_1()"
     },
     {
@@ -11077,7 +11077,7 @@
       "source_location": "L18580",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_quantize_q8_0",
-      "community": 112,
+      "community": 85,
       "norm_label": "ggml_quantize_q8_0()"
     },
     {
@@ -11087,7 +11087,7 @@
       "source_location": "L18601",
       "_origin": "ast",
       "id": "sdk_vela_whisper_src_main_cpp_ggml_ggml_quantize_chunk",
-      "community": 112,
+      "community": 60,
       "norm_label": "ggml_quantize_chunk()"
     },
     {
@@ -17117,7 +17117,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "velavoice_app_src_components_overlaylogo_js_velavoice_app_src_components_overlaylogo",
-      "community": 171,
+      "community": 162,
       "norm_label": "overlaylogo.js"
     },
     {
@@ -17127,7 +17127,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "velavoice_app_src_components_overlaylogo_js_velavoice_app_src_components_overlaylogo_overlaylogo",
-      "community": 171,
+      "community": 162,
       "norm_label": "overlaylogo()"
     },
     {
@@ -17137,7 +17137,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "velavoice_app_src_components_overlaylogo_js_velavoice_app_src_components_overlaylogo_styles",
-      "community": 171,
+      "community": 162,
       "norm_label": "styles"
     },
     {
@@ -17187,7 +17187,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "velavoice_app_src_components_transcriptioneditor_js_velavoice_app_src_components_transcriptioneditor",
-      "community": 175,
+      "community": 166,
       "norm_label": "transcriptioneditor.js"
     },
     {
@@ -17197,7 +17197,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "velavoice_app_src_components_transcriptioneditor_js_velavoice_app_src_components_transcriptioneditor_transcriptioneditor",
-      "community": 175,
+      "community": 166,
       "norm_label": "transcriptioneditor()"
     },
     {
@@ -17207,7 +17207,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "velavoice_app_src_components_transcriptioneditor_js_velavoice_app_src_components_transcriptioneditor_styles",
-      "community": 175,
+      "community": 166,
       "norm_label": "styles"
     },
     {
@@ -18887,7 +18887,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "velavoice_app_src_services_api_js_velavoice_app_src_services_api",
-      "community": 130,
+      "community": 153,
       "norm_label": "api.js"
     },
     {
@@ -18897,7 +18897,7 @@
       "source_location": "L2",
       "_origin": "ast",
       "id": "velavoice_app_src_services_api_js_velavoice_app_src_services_api_correctionapi",
-      "community": 130,
+      "community": 153,
       "norm_label": "correctionapi"
     },
     {
@@ -18907,7 +18907,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "velavoice_app_src_services_api_js_velavoice_app_src_services_api_correctionapi_savecorrection",
-      "community": 130,
+      "community": 153,
       "norm_label": ".savecorrection()"
     },
     {
@@ -18917,7 +18917,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "velavoice_app_src_services_api_js_velavoice_app_src_services_api_correctionapi_mockfetch",
-      "community": 130,
+      "community": 153,
       "norm_label": ".mockfetch()"
     },
     {
@@ -18927,7 +18927,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "velavoice_app_src_services_api_test_js_velavoice_app_src_services_api_test",
-      "community": 120,
+      "community": 139,
       "norm_label": "api.test.js"
     },
     {
@@ -18937,7 +18937,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "velavoice_app_src_services_api_test_js_velavoice_app_src_services_api_test_mockmodule",
-      "community": 120,
+      "community": 139,
       "norm_label": "mockmodule()"
     },
     {
@@ -18947,7 +18947,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "velavoice_app_src_services_api_test_js_velavoice_app_src_services_api_test_savedargs",
-      "community": 120,
+      "community": 139,
       "norm_label": "savedargs"
     },
     {
@@ -18957,7 +18957,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "velavoice_app_src_services_api_test_js_velavoice_app_src_services_api_test_assert",
-      "community": 120,
+      "community": 139,
       "norm_label": "assert()"
     },
     {
@@ -18967,7 +18967,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "velavoice_app_src_services_api_test_js_velavoice_app_src_services_api_test_runtests",
-      "community": 120,
+      "community": 139,
       "norm_label": "runtests()"
     },
     {
@@ -19197,7 +19197,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "velavoice_app_src_utils_editcalculator_js_velavoice_app_src_utils_editcalculator",
-      "community": 176,
+      "community": 171,
       "norm_label": "editcalculator.js"
     },
     {
@@ -19207,7 +19207,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "velavoice_app_src_utils_editcalculator_js_velavoice_app_src_utils_editcalculator_calculateeditdistance",
-      "community": 176,
+      "community": 171,
       "norm_label": "calculateeditdistance()"
     },
     {
@@ -19217,7 +19217,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "velavoice_app_src_utils_editcalculator_js_velavoice_app_src_utils_editcalculator_getedits",
-      "community": 176,
+      "community": 171,
       "norm_label": "getedits()"
     },
     {
@@ -19227,7 +19227,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "velavoice_app_src_utils_editcalculator_test_js_velavoice_app_src_utils_editcalculator_test",
-      "community": 177,
+      "community": 176,
       "norm_label": "editcalculator.test.js"
     },
     {
@@ -19237,7 +19237,7 @@
       "source_location": "L2",
       "_origin": "ast",
       "id": "velavoice_app_src_utils_editcalculator_test_js_velavoice_app_src_utils_editcalculator_test_assert",
-      "community": 177,
+      "community": 176,
       "norm_label": "assert()"
     },
     {
@@ -19247,7 +19247,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "velavoice_app_src_utils_editcalculator_test_js_velavoice_app_src_utils_editcalculator_test_runtests",
-      "community": 177,
+      "community": 176,
       "norm_label": "runtests()"
     },
     {
@@ -71729,5 +71729,5 @@
       "source_file": "vela-whisper/src/main/cpp/CMakeLists.txt"
     }
   ],
-  "built_at_commit": "e3bd57148012186732837ce70f9d2b0b661ccfe0"
+  "built_at_commit": "0e47dec8658b053a984f6d315d5b43700d138a48"
 }

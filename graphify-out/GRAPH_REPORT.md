@@ -5,12 +5,12 @@
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2135 nodes · 4701 edges · 216 communities (131 shown, 85 thin omitted)
+- 2135 nodes · 4701 edges · 219 communities (133 shown, 86 thin omitted)
 - Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 382 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e3bd5714`
+- Built from commit: `0e47dec8`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -167,23 +167,28 @@
 - [[_COMMUNITY_ggml_compute_forward_sqrt_f32|ggml_compute_forward_sqrt_f32]]
 - [[_COMMUNITY_quantize_row_q5_0_reference|quantize_row_q5_0_reference]]
 - [[_COMMUNITY_ggml_sqr_impl|ggml_sqr_impl]]
+- [[_COMMUNITY_ggml_div_impl|ggml_div_impl]]
 - [[_COMMUNITY_ggml_group_norm_impl|ggml_group_norm_impl]]
+- [[_COMMUNITY_ggml_log_impl|ggml_log_impl]]
 - [[_COMMUNITY_Model Storage and Access Architecture|Model Storage and Access Architecture]]
 - [[_COMMUNITY_vela-cleaner|vela-cleaner]]
+- [[_COMMUNITY_ggml_soft_max_back_impl|ggml_soft_max_back_impl]]
 - [[_COMMUNITY_vela-core|vela-core]]
 - [[_COMMUNITY_VelaTranscriber|VelaTranscriber]]
 - [[_COMMUNITY_vela-transcription-sdk|vela-transcription-sdk]]
+- [[_COMMUNITY_ggml_sub_impl|ggml_sub_impl]]
 - [[_COMMUNITY_vela-voice-ui|vela-voice-ui]]
 - [[_COMMUNITY_vela-whisper|vela-whisper]]
 - [[_COMMUNITY_Implementation Issues|Implementation Issues]]
 - [[_COMMUNITY_Offline Transcription IME Spec|Offline Transcription IME Spec]]
-- [[_COMMUNITY_OverlayLogo.js|OverlayLogo.js]]
 - [[_COMMUNITY_Ethereal Precision|Ethereal Precision]]
 - [[_COMMUNITY_VelaVoice PRD|VelaVoice PRD]]
 - [[_COMMUNITY_triage-labels|triage-labels.md]]
 - [[_COMMUNITY_TranscriptionEditor.js|TranscriptionEditor.js]]
+- [[_COMMUNITY_editCalculator.js|editCalculator.js]]
 - [[_COMMUNITY_editCalculator.test.js|editCalculator.test.js]]
 - [[_COMMUNITY_editCalculator.test.ts|editCalculator.test.ts]]
+- [[_COMMUNITY_ggml_compute_forward_sum_rows|ggml_compute_forward_sum_rows]]
 - [[_COMMUNITY_vaddvq_f32|vaddvq_f32]]
 - [[_COMMUNITY_ggml_compute_forward_add_rel_pos|ggml_compute_forward_add_rel_pos]]
 - [[_COMMUNITY_ggml_compute_forward_argsort_f32|ggml_compute_forward_argsort_f32]]
@@ -191,10 +196,8 @@
 - [[_COMMUNITY_ggml_compute_forward_diag|ggml_compute_forward_diag]]
 - [[_COMMUNITY_ggml_compute_forward_get_rel_pos|ggml_compute_forward_get_rel_pos]]
 - [[_COMMUNITY_ggml_compute_forward_im2col|ggml_compute_forward_im2col]]
-- [[_COMMUNITY_ggml_compute_forward_mean|ggml_compute_forward_mean]]
 - [[_COMMUNITY_ggml_compute_forward_pad|ggml_compute_forward_pad]]
 - [[_COMMUNITY_ggml_compute_forward_pool_1d|ggml_compute_forward_pool_1d]]
-- [[_COMMUNITY_ggml_compute_forward_sum_rows|ggml_compute_forward_sum_rows]]
 - [[_COMMUNITY_gguf_get_n_kv|gguf_get_n_kv]]
 - [[_COMMUNITY_ggml_compute_forward_upscale|ggml_compute_forward_upscale]]
 - [[_COMMUNITY_ggml_compute_forward_win_part|ggml_compute_forward_win_part]]
@@ -253,7 +256,7 @@
 - **whisper native library built for 4 Android ABIs** — arm64_v8a_abi, armeabi_v7a_abi, x86_abi, x86_64_abi, whisper_cmake_project [EXTRACTED 1.00]
 - **All source files compiled into the whisper shared library** — whisper_cpp_source, whisper_jni_cpp_source, ggml_c_source, ggml_alloc_c_source, ggml_backend_c_source, ggml_quants_c_source, whisper_shared_library [EXTRACTED 1.00]
 
-## Communities (216 total, 85 thin omitted)
+## Communities (219 total, 86 thin omitted)
 
 ### Community 0 - "Model Verification Module"
 Cohesion: 0.07
@@ -333,7 +336,7 @@ Nodes (14): ggml_backend_buffer_t, ggml_backend_buffer_type_t, ggml_backend_t, g
 
 ### Community 60 - "ggml-quants.c"
 Cohesion: 0.11
-Nodes (35): block_q2_K, block_q3_K, block_q4_K, block_q5_K, block_q6_K, block_q8_K, ggml_uint8x16x4_t, dequantize_row_q2_K() (+27 more)
+Nodes (35): block_q2_K, block_q3_K, block_q4_K, block_q5_K, block_q6_K, block_q8_K, ggml_quantize_chunk(), dequantize_row_q2_K() (+27 more)
 
 ### Community 61 - "whisper_full_with_state"
 Cohesion: 0.07
@@ -380,8 +383,8 @@ Cohesion: 0.09
 Nodes (22): e_model, whisper_model, buffer, ctx, d_ln_b, d_ln_w, d_pe, d_te (+14 more)
 
 ### Community 72 - "ggml_vec_dot_q2_K_q8_K"
-Cohesion: 0.14
-Nodes (31): ggml_int16x8x2_t, ggml_int8x16x2_t, ggml_int8x16x4_t, ggml_uint8x16x2_t, int16x8_t, int32x4_t, int8x16_t, bytes_from_bits_32() (+23 more)
+Cohesion: 0.16
+Nodes (28): ggml_int16x8x2_t, ggml_int8x16x2_t, ggml_int8x16x4_t, ggml_uint8x16x2_t, int32x4_t, int8x16_t, bytes_from_bits_32(), bytes_from_nibbles_32() (+20 more)
 
 ### Community 73 - "WhisperEngine"
 Cohesion: 0.15
@@ -432,8 +435,8 @@ Cohesion: 0.07
 Nodes (33): ggml_type, map, ggml_ftype_to_ggml_type(), ggml_new_tensor_3d(), whisper_backend_init(), whisper_context, backend, itype (+25 more)
 
 ### Community 85 - "quantize_row_q8_1"
-Cohesion: 0.28
-Nodes (9): block_q8_1, float32x4_t, hsum_i32_4(), hsum_i32_8(), quantize_row_q8_0(), quantize_row_q8_1(), quantize_row_q8_1_reference(), vcvtnq_s32_f32() (+1 more)
+Cohesion: 0.18
+Nodes (13): block_q8_0, block_q8_1, ggml_quantize_q8_0(), float32x4_t, dequantize_row_q8_0(), hsum_i32_4(), hsum_i32_8(), quantize_row_q8_0() (+5 more)
 
 ### Community 86 - "whisper_hparams"
 Cohesion: 0.24
@@ -484,12 +487,12 @@ Cohesion: 0.53
 Nodes (6): ggml_unary_op_f32_t, ggml_compute_forward_map_unary(), ggml_compute_forward_map_unary_f32(), ggml_map_unary_f32(), ggml_map_unary_impl_f32(), ggml_map_unary_inplace_f32()
 
 ### Community 99 - "quantize_row_q5_0_reference"
-Cohesion: 0.40
-Nodes (5): ggml_compute_forward_cross_entropy_loss_back_f32(), ggml_compute_forward_sub(), ggml_compute_forward_sub_f32(), ggml_vec_add1_f32(), ggml_vec_sub_f32()
-
-### Community 101 - "ggml_new_tensor_1d"
 Cohesion: 0.29
 Nodes (7): ggml_set(), ggml_set_1d(), ggml_set_1d_inplace(), ggml_set_2d(), ggml_set_2d_inplace(), ggml_set_impl(), ggml_set_inplace()
+
+### Community 101 - "ggml_new_tensor_1d"
+Cohesion: 0.33
+Nodes (6): ggml_add1(), ggml_add1_impl(), ggml_add1_inplace(), ggml_is_padded_1d(), ggml_scale_impl(), ggml_scale_inplace()
 
 ### Community 102 - "ggml_map_custom2_impl_f32"
 Cohesion: 0.08
@@ -532,8 +535,8 @@ Cohesion: 0.18
 Nodes (10): 1. Project Overview, 2. Target Audience, 3. Product Features & Scope, 4. Design System (Lumina Sonic), 5. Technical Requirements, 6. Success Metrics, Core Value Proposition, Phase 1: Core Experience (Current) (+2 more)
 
 ### Community 112 - "quantize_row_q4_1_reference"
-Cohesion: 0.12
-Nodes (16): block_q4_0, block_q4_1, block_q8_0, ggml_quantize_chunk(), ggml_quantize_q4_0(), ggml_quantize_q4_1(), ggml_quantize_q8_0(), dequantize_row_q4_0() (+8 more)
+Cohesion: 0.40
+Nodes (5): block_q4_0, ggml_quantize_q4_0(), dequantize_row_q4_0(), quantize_row_q4_0(), quantize_row_q4_0_reference()
 
 ### Community 114 - "CMakeCCompilerId.c"
 Cohesion: 0.25
@@ -548,8 +551,8 @@ Cohesion: 0.29
 Nodes (6): Core Domain Vocabulary, Core Features, Overview, Spec: Offline Transcription IME, Target Platform, UI/UX Design (Voice Typing Pane)
 
 ### Community 117 - "ggml_compute_forward_mul_f32"
-Cohesion: 0.33
-Nodes (6): ggml_add1(), ggml_add1_impl(), ggml_add1_inplace(), ggml_is_padded_1d(), ggml_scale_impl(), ggml_scale_inplace()
+Cohesion: 0.40
+Nodes (5): ggml_add_cast(), ggml_add_cast_impl(), ggml_can_repeat_rows(), ggml_compute_forward_mul_f32(), ggml_is_quantized()
 
 ### Community 118 - "gguf_find_tensor"
 Cohesion: 0.40
@@ -560,8 +563,8 @@ Cohesion: 0.14
 Nodes (9): Recording, RecordingCard, styles, DictionaryEntry, DictionaryKeyword, ModelInfo, DEFAULT_MODELS, getDb() (+1 more)
 
 ### Community 120 - "api.test.js"
-Cohesion: 0.50
-Nodes (3): assert(), runTests(), savedArgs
+Cohesion: 0.40
+Nodes (5): ggml_compute_forward_cross_entropy_loss_back_f32(), ggml_compute_forward_sub(), ggml_compute_forward_sub_f32(), ggml_vec_add1_f32(), ggml_vec_sub_f32()
 
 ### Community 121 - "ggml_map_custom1_impl"
 Cohesion: 0.83
@@ -577,7 +580,7 @@ Nodes (4): ggml_custom2_op_t, ggml_map_custom2(), ggml_map_custom2_impl(), ggml_
 
 ### Community 124 - "App.js"
 Cohesion: 0.40
-Nodes (5): ggml_add_cast(), ggml_add_cast_impl(), ggml_can_repeat_rows(), ggml_compute_forward_mul_f32(), ggml_is_quantized()
+Nodes (5): block_q4_1, ggml_quantize_q4_1(), dequantize_row_q4_1(), quantize_row_q4_1(), quantize_row_q4_1_reference()
 
 ### Community 127 - "ggml_map_custom2_impl_f32"
 Cohesion: 0.13
@@ -586,6 +589,10 @@ Nodes (21): ggml_alibi(), ggml_clamp(), ggml_diag_mask_inf(), ggml_diag_mask_inf
 ### Community 129 - "ggml_nbytes"
 Cohesion: 0.29
 Nodes (6): Conventions, Issue tracker: GitHub, Pull requests as a triage surface, Wayfinding operations, When a skill says "fetch the relevant ticket", When a skill says "publish to the issue tracker"
+
+### Community 130 - "CorrectionAPI"
+Cohesion: 0.67
+Nodes (3): int16x8_t, vaddvq_s16(), vpaddq_s16()
 
 ### Community 131 - "byteswap_tensor_data"
 Cohesion: 0.17
@@ -604,8 +611,8 @@ Cohesion: 0.33
 Nodes (5): Agent skills, Domain docs, graphify, Issue tracker, Triage labels
 
 ### Community 139 - "ggml_compute_forward_abs_f32"
-Cohesion: 0.67
-Nodes (3): ggml_compute_forward_abs(), ggml_compute_forward_abs_f32(), ggml_vec_abs_f32()
+Cohesion: 0.50
+Nodes (3): assert(), runTests(), savedArgs
 
 ### Community 140 - "ggml_compute_forward_argmax"
 Cohesion: 0.67
@@ -658,6 +665,10 @@ Nodes (3): ggml_sqr(), ggml_sqr_impl(), ggml_sqr_inplace()
 ### Community 154 - "ggml_group_norm_impl"
 Cohesion: 0.67
 Nodes (3): ggml_group_norm(), ggml_group_norm_impl(), ggml_group_norm_inplace()
+
+### Community 155 - "ggml_log_impl"
+Cohesion: 0.67
+Nodes (3): ggml_compute_forward_abs(), ggml_compute_forward_abs_f32(), ggml_vec_abs_f32()
 
 ### Community 192 - "gguf_get_n_kv"
 Cohesion: 0.11
@@ -730,7 +741,7 @@ Nodes (3): compilerOptions, strict, extends
 ## Knowledge Gaps
 - **398 isolated node(s):** `$schema`, `plugin`, `@opencode-ai/plugin`, `n_len`, `n_len_org` (+393 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **85 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **86 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
