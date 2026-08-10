@@ -6,7 +6,6 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.util.Log
 import com.velavoice.sdk.whisper.WhisperConfig
-import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.sqrt
 
@@ -24,29 +23,45 @@ import kotlin.math.sqrt
  */
 class StreamingPipeline private constructor(
     private val localTranscriber: LocalStreamingTranscriber?,
-    private val cloudTranscriber: CloudStreamingTranscriber?
+    private val cloudTranscriber: CloudStreamingTranscriber?,
+    private val defaultStreamConfig: StreamConfig
 ) {
-    private var streamConfig: StreamConfig = StreamConfig()
+    private var streamConfig: StreamConfig = defaultStreamConfig
     private var callback: StreamingTranscriptionCallback? = null
     private var audioRecord: AudioRecord? = null
     private var recordingThread: Thread? = null
     private val isRecording = AtomicBoolean(false)
-    private val audioBuffer = ConcurrentLinkedQueue<Byte>()
-    private val bufferLock = Any()
+    private val stateLock = Any()
 
     // Commit boundary tracking
-    private var lastActivityTime = 0L
-    private var lastCommitTime = 0L
-    private var currentSegmentStart = 0
-    private var committedText = ""
+    @Volatile
+    internal var lastActivityTime = 0L
+    @Volatile
+    internal var lastCommitTime = 0L
+    @Volatile
+    internal var currentSegmentStart = 0
+    @Volatile
+    internal var committedText = ""
     private var isSessionLocal = true
+
+    /** The configuration derived from [Builder]; used by [start] when no explicit config is given. */
+    fun config(): StreamConfig = defaultStreamConfig
 
     // Audio constants
     companion object {
         const val SAMPLE_RATE = 16000
         const val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
         const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
-        val BUFFER_SIZE = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT)
+        val BUFFER_SIZE = resolveBufferSize()
+
+        private fun resolveBufferSize(): Int {
+            val min = try {
+                AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT)
+            } catch (e: Throwable) {
+                0
+            }
+            return if (min <= 0) SAMPLE_RATE else min
+        }
 
         // Commit boundary defaults
         const val VAD_PAUSE_MS = 500L
@@ -65,6 +80,8 @@ class StreamingPipeline private constructor(
         private var windowDurationMs: Int = 15000
         private var overlapMs: Int = 1500
         private var resetIntervalMs: Long = 30000
+        private var useVad: Boolean = true
+        private var vadThreshold: Float = 0.02f
 
         fun whisperModelPath(path: String) = apply { this.whisperModelPath = path }
         fun apiKey(key: String) = apply { this.apiKey = key }
@@ -77,7 +94,25 @@ class StreamingPipeline private constructor(
         fun overlapMs(ms: Int) = apply { this.overlapMs = ms }
         fun resetIntervalMs(ms: Long) = apply { this.resetIntervalMs = ms }
 
+        fun useVad(enabled: Boolean) = apply { this.useVad = enabled }
+        fun vadThreshold(threshold: Float) = apply { this.vadThreshold = threshold }
+
         fun build(): StreamingPipeline {
+            val streamConfig = StreamConfig(
+                modelPath = whisperModelPath,
+                language = language,
+                numThreads = numThreads,
+                apiKey = apiKey,
+                endpoint = endpoint.ifBlank { StreamConfig().endpoint },
+                model = model,
+                chunkDurationMs = chunkDurationMs,
+                windowDurationMs = windowDurationMs,
+                overlapMs = overlapMs,
+                resetIntervalMs = resetIntervalMs,
+                useVad = useVad,
+                vadThreshold = vadThreshold
+            )
+
             val localTranscriber = if (whisperModelPath.isNotBlank()) {
                 LocalStreamingTranscriber(WhisperConfig(whisperModelPath, language, numThreads))
             } else null
@@ -86,7 +121,7 @@ class StreamingPipeline private constructor(
                 CloudStreamingTranscriber()
             } else null
 
-            return StreamingPipeline(localTranscriber, cloudTranscriber)
+            return StreamingPipeline(localTranscriber, cloudTranscriber, streamConfig)
         }
     }
 
@@ -95,13 +130,23 @@ class StreamingPipeline private constructor(
     }
 
     /**
+     * Start streaming transcription using the configuration accumulated by [Builder].
+     * @param mode "local" for whisper.cpp, "cloud" for OpenAI WebSocket
+     */
+    fun start(mode: String) {
+        start(mode, defaultStreamConfig)
+    }
+
+    /**
      * Start streaming transcription.
      * @param mode "local" for whisper.cpp, "cloud" for OpenAI WebSocket
-     * @param config stream configuration
+     * @param config stream configuration; blank credential/model fields fall back to the
+     *   values supplied to [Builder]
      */
-    fun start(mode: String, config: StreamConfig = StreamConfig()) {
+    fun start(mode: String, config: StreamConfig) {
         if (isRecording.get()) return
-        this.streamConfig = config
+        val resolved = reconcile(config)
+        this.streamConfig = resolved
         this.isSessionLocal = mode == "local"
         this.committedText = ""
         this.currentSegmentStart = 0
@@ -116,13 +161,29 @@ class StreamingPipeline private constructor(
         }
 
         transcriber.setCallback(createTranscriberCallback())
-        transcriber.start(config)
+        transcriber.start(resolved)
 
         // Start audio capture
-        startAudioCapture(transcriber)
         isRecording.set(true)
+        if (!startAudioCapture(transcriber)) {
+            isRecording.set(false)
+            transcriber.stop()
+            return
+        }
 
         Log.d("StreamingPipeline", "Started in $mode mode")
+    }
+
+    internal fun reconcile(config: StreamConfig): StreamConfig {
+        val d = defaultStreamConfig
+        return config.copy(
+            modelPath = config.modelPath.ifBlank { d.modelPath },
+            language = config.language.ifBlank { d.language },
+            numThreads = if (config.numThreads > 0) config.numThreads else d.numThreads,
+            apiKey = config.apiKey.ifBlank { d.apiKey },
+            endpoint = config.endpoint.ifBlank { d.endpoint },
+            model = config.model.ifBlank { d.model }
+        )
     }
 
     fun stop() {
@@ -148,7 +209,7 @@ class StreamingPipeline private constructor(
         cloudTranscriber?.release()
     }
 
-    private fun startAudioCapture(transcriber: StreamingTranscriber) {
+    private fun startAudioCapture(transcriber: StreamingTranscriber): Boolean {
         try {
             audioRecord = AudioRecord(
                 MediaRecorder.AudioSource.MIC,
@@ -160,10 +221,14 @@ class StreamingPipeline private constructor(
 
             if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
                 callback?.onError(VelaError("Microphone initialization failed"))
-                return
+                audioRecord?.release()
+                audioRecord = null
+                return false
             }
 
             audioRecord?.startRecording()
+
+            val record = audioRecord ?: return false
 
             recordingThread = Thread({
                 val buffer = ShortArray(BUFFER_SIZE / 2)
@@ -171,7 +236,7 @@ class StreamingPipeline private constructor(
                 var lastVadCheck = System.currentTimeMillis()
 
                 while (isRecording.get()) {
-                    val readResult = audioRecord?.read(buffer, 0, buffer.size) ?: 0
+                    val readResult = record.read(buffer, 0, buffer.size)
                     if (readResult > 0) {
                         var sumSquares = 0.0
                         for (i in 0 until readResult) {
@@ -182,13 +247,6 @@ class StreamingPipeline private constructor(
                         }
 
                         val audioBytes = byteBuffer.copyOfRange(0, readResult * 2)
-
-                        // Buffer for final pass
-                        synchronized(bufferLock) {
-                            for (b in audioBytes) {
-                                audioBuffer.add(b)
-                            }
-                        }
 
                         // Emit to transcriber
                         transcriber.emit(audioBytes)
@@ -213,27 +271,35 @@ class StreamingPipeline private constructor(
                 }
             }, "StreamingAudioCapture")
             recordingThread?.start()
+            return true
 
         } catch (e: SecurityException) {
             callback?.onError(VelaError("Mic permission denied"))
         } catch (e: Exception) {
             callback?.onError(VelaError("Audio capture error: ${e.message}"))
         }
+        try {
+            audioRecord?.release()
+        } catch (e: Exception) {
+            Log.e("StreamingPipeline", "Error releasing AudioRecord", e)
+        }
+        audioRecord = null
+        return false
     }
 
     private fun stopAudioCapture() {
         try {
+            recordingThread?.join(2000)
+            recordingThread = null
             audioRecord?.stop()
             audioRecord?.release()
             audioRecord = null
-            recordingThread?.join(2000)
-            recordingThread = null
         } catch (e: Exception) {
             Log.e("StreamingPipeline", "Error stopping audio", e)
         }
     }
 
-    private fun checkCommitBoundary(amplitude: Float, now: Long) {
+    internal fun checkCommitBoundary(amplitude: Float, now: Long) {
         val timeSinceLastCommit = now - lastCommitTime
         val timeSinceLastActivity = now - lastActivityTime
 
@@ -241,45 +307,55 @@ class StreamingPipeline private constructor(
         val shouldCommit = (timeSinceLastActivity > VAD_PAUSE_MS && amplitude < streamConfig.vadThreshold) ||
                 timeSinceLastCommit > MAX_SEGMENT_MS
 
-        if (shouldCommit && currentSegmentStart < committedText.length) {
-            // Commit the current segment
-            val segmentText = committedText.substring(currentSegmentStart)
-            if (segmentText.isNotBlank()) {
-                callback?.onRevisionMarker(
-                    RevisionMarker(
-                        type = "commit",
-                        text = segmentText.trim(),
-                        range = currentSegmentStart until committedText.length
-                    )
-                )
-                currentSegmentStart = committedText.length
-            }
+        if (!shouldCommit) return
+
+        val snapshot = committedText
+        val start = currentSegmentStart
+        if (start >= snapshot.length) {
             lastCommitTime = now
+            return
         }
+
+        val segmentText = snapshot.substring(start)
+        if (segmentText.isNotBlank()) {
+            callback?.onRevisionMarker(
+                RevisionMarker(
+                    type = "commit",
+                    text = segmentText.trim(),
+                    range = start until snapshot.length
+                )
+            )
+        }
+        currentSegmentStart = snapshot.length
+        lastCommitTime = now
     }
 
     private fun commitRemaining() {
-        if (committedText.isNotBlank() && currentSegmentStart < committedText.length) {
-            val remaining = committedText.substring(currentSegmentStart).trim()
-            if (remaining.isNotEmpty()) {
-                callback?.onRevisionMarker(
-                    RevisionMarker(
-                        type = "commit",
-                        text = remaining,
-                        range = currentSegmentStart until committedText.length
-                    )
+        val snapshot = committedText
+        val start = currentSegmentStart
+        if (start >= snapshot.length) return
+        val remaining = snapshot.substring(start).trim()
+        if (remaining.isNotEmpty()) {
+            callback?.onRevisionMarker(
+                RevisionMarker(
+                    type = "commit",
+                    text = remaining,
+                    range = start until snapshot.length
                 )
-            }
+            )
         }
+        currentSegmentStart = snapshot.length
     }
 
-    private fun createTranscriberCallback(): StreamingTranscriptionCallback {
+    internal fun createTranscriberCallback(): StreamingTranscriptionCallback {
         return object : StreamingTranscriptionCallback {
             override fun onRevisionMarker(marker: RevisionMarker) {
                 when (marker.type) {
                     "partial" -> {
                         // Append to committed text buffer
-                        committedText += marker.text + " "
+                        synchronized(stateLock) {
+                            committedText += marker.text + " "
+                        }
                         callback?.onRevisionMarker(marker)
                     }
                     "commit" -> {
