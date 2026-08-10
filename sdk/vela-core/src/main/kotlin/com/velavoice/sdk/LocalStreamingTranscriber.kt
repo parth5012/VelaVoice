@@ -1,10 +1,9 @@
 package com.velavoice.sdk
 
 import android.util.Log
-import com.velavoice.sdk.whisper.AudioConverter
 import com.velavoice.sdk.whisper.WhisperConfig
+import com.velavoice.sdk.whisper.WhisperEngine
 import java.io.File
-import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.sqrt
@@ -18,16 +17,20 @@ import kotlin.math.sqrt
  * - RMS VAD pre-filter to skip silent chunks
  * - Timestamp-based deduplication for overlap regions
  * - Single-threaded sequential processing
+ *
+ * The native whisper context is owned by [WhisperEngine] from the vela-whisper
+ * module; this class holds no JNI bindings of its own.
  */
 class LocalStreamingTranscriber(private val config: WhisperConfig) : StreamingTranscriber {
-    private var contextPtr: Long = 0
-    private var isLibLoaded = false
-    private var isRunning = false
+    private var engine: WhisperEngine? = null
+    private var engineConfig: WhisperConfig = config
+    internal var isRunning = false
     private var callback: StreamingTranscriptionCallback? = null
     private var streamConfig: StreamConfig? = null
 
-    // Sliding window buffer
-    private val audioBuffer = ConcurrentLinkedQueue<Byte>()
+    // Sliding window buffer (bounded to the configured window size)
+    private val pendingChunks = ArrayDeque<ByteArray>()
+    internal var bufferedBytes = 0
     private val bufferLock = Any()
 
     // Processing thread
@@ -39,43 +42,39 @@ class LocalStreamingTranscriber(private val config: WhisperConfig) : StreamingTr
     private val lastResetTime = AtomicLong(0)
     private var lastCommittedText = ""
     private var partialText = ""
-    private var committedLength = 0
+    internal var committedLength = 0
 
     // Chunk timing
-    private var chunkSamples = 0
-    private var stepSamples = 0
-    private var windowSamples = 0
-    private var overlapSamples = 0
-
-    init {
-        try {
-            System.loadLibrary("whisper")
-            isLibLoaded = true
-            Log.d("LocalStreamingTranscriber", "whisper JNI library loaded")
-        } catch (e: UnsatisfiedLinkError) {
-            Log.e("LocalStreamingTranscriber", "Failed to load whisper JNI", e)
-        }
-    }
+    internal var chunkSamples = 0
+    internal var stepSamples = 0
+    internal var windowSamples = 0
+    internal var overlapSamples = 0
 
     override fun start(config: StreamConfig) {
         if (isRunning) return
         this.streamConfig = config
 
-        val modelFile = File(config.modelPath)
-        if (!modelFile.exists()) {
-            callback?.onError(VelaError("Model file not found: ${config.modelPath}"))
-            return
-        }
-        if (!isLibLoaded) {
-            callback?.onError(VelaError("JNI library not loaded"))
+        // Single source of truth: the StreamConfig wins, the constructor
+        // WhisperConfig is the fallback when the caller left fields blank.
+        val modelPath = config.modelPath.ifBlank { this.config.modelPath }
+        engineConfig = WhisperConfig(
+            modelPath = modelPath,
+            language = config.language.ifBlank { this.config.language },
+            numThreads = if (config.numThreads > 0) config.numThreads else this.config.numThreads
+        )
+
+        if (modelPath.isBlank() || !File(modelPath).exists()) {
+            callback?.onError(VelaError("Model file not found: $modelPath"))
             return
         }
 
-        contextPtr = nativeInit(config.modelPath)
-        if (contextPtr == 0L) {
-            callback?.onError(VelaError("Failed to initialize whisper context"))
-            return
+        engine = try {
+            WhisperEngine(engineConfig)
+        } catch (e: Throwable) {
+            callback?.onError(VelaError("Failed to initialize whisper context: ${e.message}"))
+            null
         }
+        if (engine == null) return
 
         // Calculate sample counts from durations
         val sampleRate = 16000
@@ -100,7 +99,8 @@ class LocalStreamingTranscriber(private val config: WhisperConfig) : StreamingTr
 
         // Clear buffer
         synchronized(bufferLock) {
-            audioBuffer.clear()
+            pendingChunks.clear()
+            bufferedBytes = 0
         }
 
         startProcessingThread()
@@ -108,11 +108,11 @@ class LocalStreamingTranscriber(private val config: WhisperConfig) : StreamingTr
     }
 
     override fun emit(audioChunk: ByteArray) {
-        if (!isRunning) return
+        if (!isRunning || audioChunk.isEmpty()) return
         synchronized(bufferLock) {
-            for (b in audioChunk) {
-                audioBuffer.add(b)
-            }
+            pendingChunks.addLast(audioChunk.copyOf())
+            bufferedBytes += audioChunk.size
+            trimBufferLocked()
         }
         totalSamples.addAndGet(audioChunk.size / 2L)
     }
@@ -120,6 +120,7 @@ class LocalStreamingTranscriber(private val config: WhisperConfig) : StreamingTr
     override fun stop() {
         if (!isRunning) return
         shouldStop.set(true)
+        processingThread?.interrupt()
         processingThread?.join(5000)
         processingThread = null
 
@@ -128,9 +129,12 @@ class LocalStreamingTranscriber(private val config: WhisperConfig) : StreamingTr
 
         isRunning = false
 
-        if (contextPtr != 0L) {
-            nativeFree(contextPtr)
-            contextPtr = 0L
+        engine?.free()
+        engine = null
+
+        synchronized(bufferLock) {
+            pendingChunks.clear()
+            bufferedBytes = 0
         }
 
         Log.d("LocalStreamingTranscriber", "Streaming stopped")
@@ -184,8 +188,7 @@ class LocalStreamingTranscriber(private val config: WhisperConfig) : StreamingTr
 
         // Transcribe the window
         try {
-            val floatAudio = AudioConverter.convertPcmToFloat(windowData)
-            val result = nativeTranscribe(contextPtr, floatAudio)
+            val result = engine?.transcribe(windowData)
             if (result != null) {
                 handleTranscriptionResult(result)
             }
@@ -194,21 +197,37 @@ class LocalStreamingTranscriber(private val config: WhisperConfig) : StreamingTr
         }
     }
 
-    private fun extractWindow(): ByteArray {
-        synchronized(bufferLock) {
-            val totalBytes = audioBuffer.size
-            val windowBytes = windowSamples * 2  // 2 bytes per sample
-
-            if (totalBytes < windowBytes) {
-                // Not enough data yet, return what we have
-                if (totalBytes < chunkSamples * 2) return ByteArray(0)
-                return audioBuffer.toByteArray().copyOfRange(0, totalBytes)
-            }
-
-            // Extract the last windowBytes from buffer
-            val allData = audioBuffer.toByteArray()
-            return allData.copyOfRange(allData.size - windowBytes, allData.size)
+    private fun trimBufferLocked() {
+        val maxBytes = if (windowSamples > 0) windowSamples * 2 else DEFAULT_WINDOW_BYTES
+        while (pendingChunks.size > 1 && bufferedBytes - pendingChunks.first().size >= maxBytes) {
+            bufferedBytes -= pendingChunks.removeFirst().size
         }
+    }
+
+    internal fun extractWindow(): ByteArray {
+        synchronized(bufferLock) {
+            if (bufferedBytes < chunkSamples * 2) return ByteArray(0)
+            return copyBufferLocked()
+        }
+    }
+
+    private fun extractAll(): ByteArray {
+        synchronized(bufferLock) {
+            if (bufferedBytes <= 0) return ByteArray(0)
+            return copyBufferLocked()
+        }
+    }
+
+    private fun copyBufferLocked(): ByteArray {
+        val all = ByteArray(bufferedBytes)
+        var offset = 0
+        for (chunk in pendingChunks) {
+            System.arraycopy(chunk, 0, all, offset, chunk.size)
+            offset += chunk.size
+        }
+        val windowBytes = windowSamples * 2
+        if (windowBytes <= 0 || all.size <= windowBytes) return all
+        return all.copyOfRange(all.size - windowBytes, all.size)
     }
 
     private fun handleTranscriptionResult(newText: String) {
@@ -261,7 +280,7 @@ class LocalStreamingTranscriber(private val config: WhisperConfig) : StreamingTr
      * Find the length of overlapping text between the previous result and new result.
      * Uses suffix-prefix matching for deduplication.
      */
-    private fun findOverlapLength(previous: String, current: String): Int {
+    internal fun findOverlapLength(previous: String, current: String): Int {
         if (previous.isEmpty() || current.isEmpty()) return 0
         if (current == previous) return current.length
 
@@ -285,81 +304,63 @@ class LocalStreamingTranscriber(private val config: WhisperConfig) : StreamingTr
     }
 
     private fun flushRemaining() {
-        val remaining = extractWindow()
-        if (remaining.isNotEmpty()) {
+        val remaining = extractAll()
+        val result = if (remaining.isNotEmpty()) {
             try {
-                val floatAudio = AudioConverter.convertPcmToFloat(remaining)
-                val result = nativeTranscribe(contextPtr, floatAudio)
-                if (result != null && result.isNotBlank()) {
-                    val finalText = result.trim()
-                    // Commit remaining partials
-                    if (partialText.isNotEmpty()) {
-                        callback?.onRevisionMarker(
-                            RevisionMarker(
-                                type = "commit",
-                                text = partialText,
-                                range = (committedLength - partialText.length) until committedLength
-                            )
-                        )
-                    }
-                    callback?.onFinal(finalText)
-                } else {
-                    // Commit whatever partials we have
-                    if (partialText.isNotEmpty()) {
-                        callback?.onRevisionMarker(
-                            RevisionMarker(
-                                type = "commit",
-                                text = partialText,
-                                range = (committedLength - partialText.length) until committedLength
-                            )
-                        )
-                    }
-                    callback?.onFinal(lastCommittedText)
-                }
+                engine?.transcribe(remaining)
             } catch (e: Exception) {
                 Log.e("LocalStreamingTranscriber", "Final pass failed", e)
-                callback?.onFinal(lastCommittedText)
+                null
             }
-        } else {
-            // Commit partials
-            if (partialText.isNotEmpty()) {
-                callback?.onRevisionMarker(
-                    RevisionMarker(
-                        type = "commit",
-                        text = partialText,
-                        range = (committedLength - partialText.length) until committedLength
-                    )
+        } else null
+
+        if (partialText.isNotEmpty()) {
+            callback?.onRevisionMarker(
+                RevisionMarker(
+                    type = "commit",
+                    text = partialText,
+                    range = (committedLength - partialText.length).coerceAtLeast(0) until committedLength
                 )
-            }
+            )
+        }
+
+        if (result != null && result.isNotBlank()) {
+            callback?.onFinal(result.trim())
+        } else {
             callback?.onFinal(lastCommittedText)
         }
     }
 
     private fun resetContext() {
-        if (contextPtr != 0L) {
-            nativeFree(contextPtr)
+        try {
+            engine?.free()
+            engine = WhisperEngine(engineConfig)
+            lastCommittedText = ""
+            Log.d("LocalStreamingTranscriber", "Context reset after ${streamConfig?.resetIntervalMs}ms")
+        } catch (e: Throwable) {
+            engine = null
+            Log.e("LocalStreamingTranscriber", "Context reset failed", e)
+            callback?.onError(VelaError("Context reset failed: ${e.message}"))
         }
-        contextPtr = nativeInit(config.modelPath)
-        lastCommittedText = ""
-        Log.d("LocalStreamingTranscriber", "Context reset after ${streamConfig?.resetIntervalMs}ms")
     }
 
-    private fun isSilent(audioData: ByteArray, threshold: Float): Boolean {
+    internal fun isSilent(audioData: ByteArray, threshold: Float): Boolean {
         if (audioData.isEmpty()) return true
         val samples = audioData.size / 2
+        if (samples == 0) return true
         var sumSquares = 0.0
         for (i in 0 until samples) {
             val low = audioData[i * 2].toInt() and 0xff
             val high = audioData[i * 2 + 1].toInt()
             val sample = (high shl 8) or low
-            sumSquares += sample * sample
+            sumSquares += sample.toDouble() * sample.toDouble()
         }
         val rms = sqrt(sumSquares / samples)
         val normalized = rms / 32768.0
         return normalized < threshold
     }
 
-    private external fun nativeInit(modelPath: String): Long
-    private external fun nativeTranscribe(contextPtr: Long, audioData: FloatArray): String?
-    private external fun nativeFree(contextPtr: Long)
+    private companion object {
+        const val DEFAULT_WINDOW_BYTES = 16000 * 2 * 15
+    }
 }
