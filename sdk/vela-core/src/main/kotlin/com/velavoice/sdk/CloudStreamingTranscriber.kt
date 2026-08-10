@@ -30,8 +30,8 @@ class CloudStreamingTranscriber : StreamingTranscriber {
     private var streamConfig: StreamConfig? = null
     private var webSocket: WebSocket? = null
     private val isRunning = AtomicBoolean(false)
-    private var committedLength = 0
-    private var partialText = ""
+    internal var committedLength = 0
+    internal var partialText = ""
     private var lastCommittedText = ""
 
     private val client = OkHttpClient.Builder()
@@ -112,6 +112,12 @@ class CloudStreamingTranscriber : StreamingTranscriber {
         isRunning.set(false)
         webSocket?.close(1000, "Released")
         webSocket = null
+        try {
+            client.dispatcher.executorService.shutdown()
+            client.connectionPool.evictAll()
+        } catch (e: Exception) {
+            Log.e("CloudStreamingTranscriber", "Error releasing client", e)
+        }
     }
 
     private fun buildEndpoint(config: StreamConfig): String {
@@ -174,7 +180,7 @@ class CloudStreamingTranscriber : StreamingTranscriber {
         webSocket?.send(sessionConfig.toString())
     }
 
-    private fun handleServerMessage(text: String) {
+    internal fun handleServerMessage(text: String) {
         try {
             val json = JSONObject(text)
             val type = json.optString("type", "")
@@ -213,8 +219,8 @@ class CloudStreamingTranscriber : StreamingTranscriber {
         }
     }
 
-    private fun handleDelta(delta: String) {
-        val startIdx = committedLength
+    internal fun handleDelta(delta: String) {
+        val startIdx = committedLength + partialText.length
         val endIdx = startIdx + delta.length
 
         val marker = RevisionMarker(
@@ -222,22 +228,24 @@ class CloudStreamingTranscriber : StreamingTranscriber {
             text = delta,
             range = startIdx until endIdx
         )
-        partialText = delta
+        partialText += delta
         callback?.onRevisionMarker(marker)
     }
 
-    private fun handleCompleted(transcript: String) {
-        // Commit the current partial
-        if (partialText.isNotEmpty()) {
+    internal fun handleCompleted(transcript: String) {
+        // Commit the accumulated segment, preferring the authoritative transcript
+        val segment = transcript.ifBlank { partialText }
+        if (segment.isNotEmpty()) {
             val commitMarker = RevisionMarker(
                 type = "commit",
-                text = partialText,
-                range = committedLength until (committedLength + partialText.length)
+                text = segment,
+                range = committedLength until (committedLength + segment.length)
             )
             callback?.onRevisionMarker(commitMarker)
-            committedLength += partialText.length
-            lastCommittedText = transcript
+            committedLength += segment.length
+            lastCommittedText = segment
         }
+        partialText = ""
 
         // Emit final
         callback?.onFinal(transcript)
