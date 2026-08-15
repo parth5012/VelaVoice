@@ -30,7 +30,8 @@ data class ScribeInput(
 class VelaTranscriber private constructor(
     private val whisperEngine: WhisperEngine,
     private val textCleaner: TextCleaner?,
-    private val audioRecorder: AudioRecorder
+    private val audioRecorder: AudioRecorder,
+    private val dictionaryKeywords: DictionaryKeywords? = null
 ) {
     class Builder(private val context: Context) {
         private var whisperModelPath: String? = null
@@ -84,7 +85,7 @@ class VelaTranscriber private constructor(
                 null
             }
             val recorder = AudioRecorder()
-            return VelaTranscriber(engine, cleaner, recorder)
+            return VelaTranscriber(engine, cleaner, recorder, dictionaryKeywords)
         }
     }
 
@@ -96,7 +97,7 @@ class VelaTranscriber private constructor(
      * in the cleaner config, [ScribeInput] fields are injected into the rewrite prompt.
      */
     fun transcribe(audioBytes: ByteArray, scribeInput: ScribeInput): TranscriptionResult {
-        val raw = whisperEngine.transcribe(audioBytes)
+        val raw = whisperEngine.transcribe(audioBytes, buildInitialPrompt())
         val cleaned = textCleaner?.clean(
             raw,
             contextBefore = scribeInput.contextBefore,
@@ -110,14 +111,17 @@ class VelaTranscriber private constructor(
         return TranscriptionResult(raw, cleaned, durationMs)
     }
 
+        private fun buildInitialPrompt(): String? =
+        dictionaryKeywords?.getKeywords()?.takeIf { it.isNotEmpty() }?.joinToString(", ")
+
     /** Start recording and transcribe live */
     fun startRecording(callback: VelaRecordingCallback) {
-        audioRecorder.start(whisperEngine, textCleaner, callback, ScribeInput())
+        audioRecorder.start(whisperEngine, textCleaner, callback, ScribeInput(), buildInitialPrompt())
     }
 
     /** Start recording with Scribe context (surrounding text / app metadata from the IME) */
     fun startRecording(callback: VelaRecordingCallback, scribeInput: ScribeInput) {
-        audioRecorder.start(whisperEngine, textCleaner, callback, scribeInput)
+        audioRecorder.start(whisperEngine, textCleaner, callback, scribeInput, buildInitialPrompt())
     }
 
     /** Stop recording and commit transcription */

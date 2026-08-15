@@ -32,13 +32,13 @@ class WhisperEngine(private val config: WhisperConfig) {
         }
     }
 
-    fun transcribe(audioBytes: ByteArray): String {
+    fun transcribe(audioBytes: ByteArray, initialPrompt: String? = null): String {
         if (audioBytes.isEmpty()) return ""
         if (contextPtr == 0L) {
             throw IllegalStateException("Whisper context is not initialized")
         }
         val floatAudio = AudioConverter.convertPcmToFloat(audioBytes)
-        return nativeTranscribe(contextPtr, floatAudio) ?: throw RuntimeException("Error during native transcription")
+        return nativeTranscribe(contextPtr, floatAudio, config.language, config.numThreads, initialPrompt) ?: throw RuntimeException("Error during native transcription")
     }
 
     fun free() {
@@ -49,6 +49,6 @@ class WhisperEngine(private val config: WhisperConfig) {
     }
 
     private external fun nativeInit(modelPath: String): Long
-    private external fun nativeTranscribe(contextPtr: Long, audioData: FloatArray): String?
+    private external fun nativeTranscribe(contextPtr: Long, audioData: FloatArray, language: String, threads: Int, initialPrompt: String?): String?
     private external fun nativeFree(contextPtr: Long)
 }

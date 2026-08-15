@@ -21,7 +21,7 @@ Java_com_velavoice_sdk_whisper_WhisperEngine_nativeFree(JNIEnv *env, jobject thi
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_velavoice_sdk_whisper_WhisperEngine_nativeTranscribe(JNIEnv *env, jobject thiz, jlong context_ptr, jfloatArray audio_data) {
+Java_com_velavoice_sdk_whisper_WhisperEngine_nativeTranscribe(JNIEnv *env, jobject thiz, jlong context_ptr, jfloatArray audio_data, jstring language, jint threads, jstring initial_prompt) {
     if (context_ptr == 0) {
         return env->NewStringUTF("");
     }
@@ -31,16 +31,27 @@ Java_com_velavoice_sdk_whisper_WhisperEngine_nativeTranscribe(JNIEnv *env, jobje
     jfloat *audio = env->GetFloatArrayElements(audio_data, nullptr);
     jsize len = env->GetArrayLength(audio_data);
 
+    const char *lang = language != nullptr ? env->GetStringUTFChars(language, nullptr) : nullptr;
+    const char *prompt = initial_prompt != nullptr ? env->GetStringUTFChars(initial_prompt, nullptr) : nullptr;
+
     whisper_full_params params = whisper_full_default_params(WHISPER_SAMPLING_GREEDY);
     params.print_realtime = false;
     params.print_progress = false;
     params.print_timestamps = false;
     params.print_special = false;
     params.translate = false;
-    params.language = "en";
-    params.n_threads = 4;
+    params.language = lang != nullptr ? lang : "en";
+    params.n_threads = threads > 0 ? threads : 4;
+    params.initial_prompt = prompt;
 
-    if (whisper_full(ctx, params, audio, len) != 0) {
+    const int full_result = whisper_full(ctx, params, audio, len);
+    if (lang != nullptr) {
+        env->ReleaseStringUTFChars(language, lang);
+    }
+    if (prompt != nullptr) {
+        env->ReleaseStringUTFChars(initial_prompt, prompt);
+    }
+    if (full_result != 0) {
         env->ReleaseFloatArrayElements(audio_data, audio, JNI_ABORT);
         return env->NewStringUTF("");
     }
