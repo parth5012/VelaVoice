@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <EditTextPreference
+        android:key="vela_model_path"
+        android:title="Model Path"
+        android:summary="Absolute path to GGML Whisper model file"
+        android:defaultValue="/sdcard/Models/ggml-tiny.en.bin" />
+    <SwitchPreferenceCompat
+        android:key="vela_llm_toggle"
+        android:title="LLM Clean-up"
+        android:summary="Clean up transcription using LLM"
+        android:defaultValue="true" />
+</PreferenceScreen>
