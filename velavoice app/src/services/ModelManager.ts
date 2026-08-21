@@ -10,26 +10,29 @@ export interface ModelInfo {
   url: string;
   filename: string;
   expectedHash: string;
+  minRamMb?: number;
   path: string | null;
   status: 'pending' | 'downloading' | 'completed' | 'failed' | 'checksum_failed';
   progress: number;
 }
 
-const DEFAULT_MODELS: Omit<ModelInfo, 'progress' | 'path' | 'status'>[] = [
+const DEFAULT_MODELS: (Omit<ModelInfo, 'progress' | 'path' | 'status'> & { minRamMb: number })[] = [
   {
     id: 'whisper-tiny-en',
-    name: 'Whisper Tiny (English)',
+    name: 'WhisperTiny (English)',
     url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin',
     filename: 'ggml-tiny.en.bin',
     expectedHash: '921e4cf8686fdd993dcd081a5da5b6c365bfde1162e72b08d75ac75289920b1f',
+    minRamMb: 512,
   },
   {
     id: 'cleaner-llama-3b',
-    name: 'Llama 3.2 1B Cleaner ONNX',
+    name: 'Llama3.2 1B Cleaner ONNX',
     url: 'https://huggingface.co/onnx-community/Llama-3.2-1B-Instruct-ONNX/resolve/main/onnx/model.onnx',
     filename: 'llama-cleaner.onnx',
     expectedHash: '3002ec321434a9ac3e6e9b5e05b1e9e6eb751a2b560ecb898538f9cf7c1ae203',
-  }
+    minRamMb: 2048,
+  },
 ];
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
@@ -205,6 +208,17 @@ export class ModelManager {
       );
       throw error;
     }
+  }
+
+  static preflightCheckModel(model: ModelInfo, availableRamMb: number = 4096): { compatible: boolean; warning?: string } {
+    const required = model.minRamMb || 512;
+    if (availableRamMb < required) {
+      return {
+        compatible: false,
+        warning: `Device available memory (${availableRamMb}MB) is below required ${required}MB for ${model.name}. Loading disabled to prevent OOM/thermal crashes.`,
+      };
+    }
+    return { compatible: true };
   }
 
   static async deleteModel(id: string): Promise<void> {
