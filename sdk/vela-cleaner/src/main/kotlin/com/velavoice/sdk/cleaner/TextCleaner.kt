@@ -177,6 +177,27 @@ class TextCleaner(private val config: CleanerConfig) {
     // Scribe prompt formatting (Ticket 002 template)
     // ──────────────────────────────────────────────
 
+    internal fun compileCustomPrompt(
+        promptTemplate: String,
+        contextBefore: String?,
+        contextAfter: String?,
+        appName: String?,
+        inputType: String?
+    ): String {
+        val app = if (!appName.isNullOrBlank()) appName else "general"
+        val field = if (!inputType.isNullOrBlank()) inputType else "text"
+        val rawContext = ((contextBefore ?: "") + " " + (contextAfter ?: "")).trim()
+        val surrounding = if (rawContext.length > 1000) rawContext.takeLast(1000) else rawContext
+
+        return promptTemplate
+            .replace("{{app_name}}", app)
+            .replace("{app_name}", app)
+            .replace("{{target_field_type}}", field)
+            .replace("{target_field_type}", field)
+            .replace("{{surrounding_text}}", surrounding)
+            .replace("{surrounding_text}", surrounding)
+    }
+
     internal fun formatScribePrompt(
         rawInput: String,
         style: String,
@@ -185,12 +206,13 @@ class TextCleaner(private val config: CleanerConfig) {
         appName: String?,
         inputType: String?
     ): String {
-        val systemPrompt = config.customSystemPrompt ?: """
+        val basePrompt = config.customSystemPrompt ?: """
             You are Scribe, an on-device keyboard writing assistant.
-            Task: Rewrite the user's raw voice input based on the requested style, surrounding context, and app context.
+            Task: Rewrite user's raw voice input based on the requested style, surrounding context, and app context.
             Only output the rewritten text. Do not include introductory phrases, conversational fillers, or explanations. Keep the original language.
         """.trimIndent()
 
+        val compiledSystemPrompt = compileCustomPrompt(basePrompt, contextBefore, contextAfter, appName, inputType)
         val styleInstruction = styleInstruction(style)
 
         val contextBeforeSafe = contextBefore?.take(256) ?: ""
@@ -200,7 +222,7 @@ class TextCleaner(private val config: CleanerConfig) {
 
         return buildString {
             append("<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n")
-            append(systemPrompt).append('\n')
+            append(compiledSystemPrompt).append('\n')
             append("Style: ").append(styleInstruction).append('\n')
             append("App Name/ID: ").append(appSafe).append('\n')
             append("Input Type: ").append(inputSafe).append('\n')
@@ -208,6 +230,13 @@ class TextCleaner(private val config: CleanerConfig) {
                 append("Preceding Context: ").append(contextBeforeSafe).append('\n')
                 append("Following Context: ").append(contextAfterSafe).append('\n')
             }
+            append("<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n")
+            append("Raw input: ").append(rawInput).append('\n')
+            append("<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n")
+        }
+    }
+        }
+    }
             append("<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n")
             append("Raw input: ").append(rawInput).append('\n')
             append("<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n")

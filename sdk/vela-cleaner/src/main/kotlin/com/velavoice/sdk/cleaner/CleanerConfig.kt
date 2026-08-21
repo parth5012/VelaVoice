@@ -13,8 +13,9 @@ data class CleanerConfig(
     val personalDictionary: PersonalDictionary? = null,
     val customFillers: List<String>? = null,
     val dictionaryKeywords: DictionaryKeywords? = null,
-    // Scribe configuration addition (Ticket 003)
+    // Scribe configuration addition (Ticket 003 & 005)
     val scribeEnabled: Boolean = false,
     val defaultScribeStyle: String = "Professional",
-    val customSystemPrompt: String? = null
+    val customSystemPrompt: String? = null,
+    val scribeTemperature: Double? = null
 )
