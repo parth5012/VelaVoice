@@ -39,9 +39,9 @@ def pull_adb_db(destination):
         print(f"Failed to execute ADB command: {e}")
         return False
 
-def export_corrections(db_path, output_path):
+def export_corrections(db_path, output_path, format_type="default"):
     if not os.path.exists(db_path):
-        # If default local file doesn't exist, try pulling from ADB first
+        # If default local file doesn't exist, try pulling via ADB first
         if db_path == "models.db":
             pulled = pull_adb_db(db_path)
             if not pulled:
@@ -54,33 +54,64 @@ def export_corrections(db_path, output_path):
     print(f"Opening database: {db_path}")
     try:
         conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        
-        # Check if table exists
+
+        # Check table exists
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='corrections'")
         if not cursor.fetchone():
             print("Error: The 'corrections' table does not exist in the database yet.")
             conn.close()
             sys.exit(1)
 
-        cursor.execute("SELECT audio_id, original_transcription, corrected_transcription FROM corrections")
+        cursor.execute("SELECT * FROM corrections")
         rows = cursor.fetchall()
-        
+
         if not rows:
             print("No corrections found in the database.")
             conn.close()
             return
 
-        print(f"Exporting {len(rows)} corrections to {output_path}...")
+        print(f"Exporting {len(rows)} corrections to {output_path} (format: {format_type})...")
         with open(output_path, 'w', encoding='utf-8') as f:
             for row in rows:
-                item = {
-                    "audio_id": row[0],
-                    "original": row[1],
-                    "corrected": row[2]
-                }
+                keys = row.keys()
+                audio_id = row["audio_id"] if "audio_id" in keys else ""
+                orig = row["original_transcription"] if "original_transcription" in keys else ""
+                corr = row["corrected_transcription"] if "corrected_transcription" in keys else ""
+                raw_w = row["raw_whisper_transcript"] if ("raw_whisper_transcript" in keys and row["raw_whisper_transcript"]) else orig
+                clean_l = row["cleaned_llm_transcript"] if ("cleaned_llm_transcript" in keys and row["cleaned_llm_transcript"]) else corr
+                user_f = row["user_final_text"] if ("user_final_text" in keys and row["user_final_text"]) else corr
+                scribe_s = row["scribe_style"] if ("scribe_style" in keys and row["scribe_style"]) else "default"
+
+                if format_type == "whisper_lora":
+                    item = {
+                        "audio_pcm_path": audio_id,
+                        "user_final_text": user_f
+                    }
+                elif format_type == "cleaner_distill":
+                    item = {
+                        "prompt": raw_w,
+                        "completion": user_f
+                    }
+                elif format_type == "scribe_align":
+                    item = {
+                        "style": scribe_s,
+                        "input": raw_w,
+                        "output": user_f
+                    }
+                else:
+                    item = {
+                        "audio_id": audio_id,
+                        "original": orig,
+                        "corrected": corr,
+                        "raw_whisper_transcript": raw_w,
+                        "cleaned_llm_transcript": clean_l,
+                        "user_final_text": user_f,
+                        "scribe_style": scribe_s
+                    }
                 f.write(json.dumps(item) + '\n')
-                
+
         print("SUCCESS: Export completed successfully!")
         conn.close()
     except Exception as e:
@@ -89,16 +120,17 @@ def export_corrections(db_path, output_path):
 
 def main():
     parser = argparse.ArgumentParser(description="Export transcription corrections from models.db SQLite database for model fine-tuning.")
-    parser.add_argument("--db", default="models.db", help="Path to models.db file (default: models.db - will try adb pull if local file doesn't exist)")
-    parser.add_argument("--out", default="fine_tune_dataset.jsonl", help="Path to output JSONL file (default: fine_tune_dataset.jsonl)")
+    parser.add_argument("--db", default="models.db", help="Path to models.db file")
+    parser.add_argument("--out", default="fine_tune_dataset.jsonl", help="Path to output JSONL file")
+    parser.add_argument("--format", choices=["default", "whisper_lora", "cleaner_distill", "scribe_align"], default="default", help="Output dataset format structure")
     parser.add_argument("--pull", action="store_true", help="Force pull database from device using ADB before exporting")
-    
+
     args = parser.parse_args()
-    
+
     if args.pull:
         pull_adb_db(args.db)
-        
-    export_corrections(args.db, args.out)
+
+    export_corrections(args.db, args.out, args.format)
 
 if __name__ == "__main__":
     main()

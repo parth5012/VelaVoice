@@ -54,10 +54,27 @@ async function getDb() {
           edit_distance INTEGER NOT NULL,
           timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
           user_id TEXT,
-          confidence_score REAL
+          confidence_score REAL,
+          raw_whisper_transcript TEXT,
+          cleaned_llm_transcript TEXT,
+          user_final_text TEXT,
+          scribe_style TEXT,
+          wer_score REAL
         );
       `);
-            return database;
+      // Run migrations for existing databases missing tri-state columns
+      try {
+        await database.execAsync(`
+          ALTER TABLE corrections ADD COLUMN raw_whisper_transcript TEXT;
+          ALTER TABLE corrections ADD COLUMN cleaned_llm_transcript TEXT;
+          ALTER TABLE corrections ADD COLUMN user_final_text TEXT;
+          ALTER TABLE corrections ADD COLUMN scribe_style TEXT;
+          ALTER TABLE corrections ADD COLUMN wer_score REAL;
+        `);
+      } catch (e) {
+        // Columns already exist or migration not needed
+      }
+      return database;
         });
     }
     return dbPromise;
@@ -189,21 +206,27 @@ export class ModelManager {
         const db = await getDb();
         await db.runAsync('DELETE FROM dictionary_keywords WHERE id = ?', [id]);
     }
-    static async saveCorrection(audioId, original, corrected, edits, editDistance, userId, confidenceScore) {
-        const db = await getDb();
-        await db.runAsync(`INSERT INTO corrections (
+  static async saveCorrection(audioId, original, corrected, edits, editDistance, userId, confidenceScore, rawWhisper, cleanedLlm, userFinal, scribeStyle, werScore) {
+    const db = await getDb();
+    await db.runAsync(`INSERT INTO corrections (
       audio_id, original_transcription, corrected_transcription,
-      edits, edit_distance, user_id, confidence_score
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)`, [
-            audioId,
-            original,
-            corrected,
-            edits,
-            editDistance,
-            userId || null,
-            confidenceScore !== undefined && confidenceScore !== null ? confidenceScore : null
-        ]);
-    }
+      edits, edit_distance, user_id, confidence_score,
+      raw_whisper_transcript, cleaned_llm_transcript, user_final_text, scribe_style, wer_score
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+      audioId,
+      original,
+      corrected,
+      edits,
+      editDistance,
+      userId !== undefined && userId !== null ? userId : null,
+      confidenceScore !== undefined && confidenceScore !== null ? confidenceScore : null,
+      rawWhisper || original,
+      cleanedLlm || corrected,
+      userFinal || corrected,
+      scribeStyle || 'default',
+      werScore !== undefined && werScore !== null ? werScore : (editDistance / Math.max(1, original.length))
+    ]);
+  }
     static async getCorrections() {
         const db = await getDb();
         return await db.getAllAsync('SELECT * FROM corrections ORDER BY timestamp DESC');

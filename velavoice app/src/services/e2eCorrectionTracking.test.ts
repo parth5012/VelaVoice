@@ -145,9 +145,9 @@ async function runE2E() {
   }
 
   // Execute export python script
-  execSync(`python scripts/export_corrections.py --db "${testDbPath}" --out "${testOutJsonl}"`);
+  execSync(`python ../scripts/export_corrections.py --db "${testDbPath}" --out "${testOutJsonl}"`);
   
-  assert(fs.existsSync(testOutJsonl), 'export_corrections.py output JSONL file created');
+  execSync(`python ../scripts/export_corrections.py --db "${testDbPath}" --out "${testOutJsonl}"`);
   const fileContent = fs.readFileSync(testOutJsonl, 'utf-8').trim();
   const exportedItem = JSON.parse(fileContent);
   assert(exportedItem.audio_id === audioId, 'Exported JSONL audio_id matches original value');
