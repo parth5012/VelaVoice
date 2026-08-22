@@ -67,7 +67,7 @@ class WaveformViewTest {
     }
 
     @Test
-    fun `default sensitivity is 1.5`() {
+    fun `default sensitivity is 1_5`() {
         val context = RuntimeEnvironment.getApplication()
         val view = WaveformView(context)
         assertEquals(1.5f, view.sensitivity, 0.01f)
