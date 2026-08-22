@@ -411,6 +411,12 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
                 // https://stackoverflow.com/q/41474623 https://github.com/AnySoftKeyboard/AnySoftKeyboard/issues/490
                 // apparently some devices don't have a dictionary? or it's just sporadic hiccups?
                 runCatching { UserDictionary.Words.addWord(userDict.mContext, word, 250, null, dictionaryGroup.locale) }
+                // Cross-sync: also add as a voice keyword so Whisper recognizes the graduated word
+                runCatching {
+                    helium314.keyboard.settings.DictionaryCrossSync.addToVoiceKeywords(
+                        userDict.mContext.prefs(), word
+                    )
+                }
             }
         }
     }

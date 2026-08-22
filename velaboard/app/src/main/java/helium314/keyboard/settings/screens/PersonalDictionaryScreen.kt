@@ -37,6 +37,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import helium314.keyboard.latin.R
 import helium314.keyboard.latin.common.LocaleUtils.localizedDisplayName
+import helium314.keyboard.latin.utils.prefs
+import helium314.keyboard.settings.DictionaryCrossSync
 import helium314.keyboard.settings.DropDownField
 import helium314.keyboard.settings.SearchScreen
 import helium314.keyboard.settings.dialogs.ThreeButtonAlertDialog
@@ -108,6 +110,12 @@ private fun EditWordDialog(word: Word, locale: Locale?, onDismissRequest: () -> 
             deleteWord(word, locale, ctx.contentResolver)
             val saveWeight = newWord.weight ?: WEIGHT_FOR_USER_DICTIONARY_ADDS
             UserDictionary.Words.addWord(ctx, newWord.word, saveWeight, newWord.shortcut, newLocale)
+            // Cross-sync: also add as a voice keyword so Whisper recognizes it
+            val prefs = ctx.prefs()
+            if (word.word.isNotBlank() && word.word != newWord.word) {
+                DictionaryCrossSync.removeFromVoiceKeywords(prefs, word.word)
+            }
+            DictionaryCrossSync.addToVoiceKeywords(prefs, newWord.word)
         }
     }
     ThreeButtonAlertDialog(
@@ -118,6 +126,7 @@ private fun EditWordDialog(word: Word, locale: Locale?, onDismissRequest: () -> 
         neutralButtonText = stringResource(R.string.delete),
         onNeutral = {
             deleteWord(word, locale, ctx.contentResolver) // delete the originally selected word
+            DictionaryCrossSync.removeFromVoiceKeywords(ctx.prefs(), word.word)
             onDismissRequest()
         },
         title = {
