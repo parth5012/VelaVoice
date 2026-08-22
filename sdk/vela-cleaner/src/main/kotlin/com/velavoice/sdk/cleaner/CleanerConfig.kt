@@ -7,7 +7,7 @@ package com.velavoice.sdk.cleaner
  * the intent-based rewrite subsystem (Ticket 003). Scribe routes raw voice input through the
  * LLM with a style-specific prompt instead of plain grammar cleanup.
  */
-data class CleanerConfig(
+data class CleanerConfig @JvmOverloads constructor(
     val useLlm: Boolean = false,
     val llmModelPath: String? = null,
     val personalDictionary: PersonalDictionary? = null,

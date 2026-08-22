@@ -235,13 +235,6 @@ class TextCleaner(private val config: CleanerConfig) {
             append("<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n")
         }
     }
-        }
-    }
-            append("<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n")
-            append("Raw input: ").append(rawInput).append('\n')
-            append("<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n")
-        }
-    }
 
     private fun formatStandardCleanupPrompt(text: String): String {
         val systemPrompt = config.customSystemPrompt ?: """
