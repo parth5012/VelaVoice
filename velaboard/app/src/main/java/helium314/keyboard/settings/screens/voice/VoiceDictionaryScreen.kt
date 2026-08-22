@@ -32,13 +32,15 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.utils.prefs
+import helium314.keyboard.settings.DictionaryCrossSync
 import helium314.keyboard.settings.SearchSettingsScreen
 import org.json.JSONArray
 import org.json.JSONObject
 
 @Composable
 fun VoiceDictionaryScreen(onClickBack: () -> Unit) {
-    val prefs = LocalContext.current.prefs()
+    val context = LocalContext.current
+    val prefs = context.prefs()
 
     var dictEntries by remember { mutableStateOf(loadDictionary(prefs)) }
     var originalWord by remember { mutableStateOf("") }
@@ -105,7 +107,9 @@ fun VoiceDictionaryScreen(onClickBack: () -> Unit) {
                         onKeywordChange = { keywordInput = it },
                         onAdd = {
                             if (keywordInput.isNotBlank()) {
-                                addKeyword(prefs, keywordInput.trim())
+                                val trimmed = keywordInput.trim()
+                                addKeyword(prefs, trimmed)
+                                DictionaryCrossSync.addToKeyboardDictionary(context, trimmed)
                                 keywordInput = ""
                                 keywordEntries = loadKeywords(prefs)
                             }
@@ -117,6 +121,7 @@ fun VoiceDictionaryScreen(onClickBack: () -> Unit) {
                             keyword = kw,
                             onDelete = {
                                 removeKeyword(prefs, idx)
+                                DictionaryCrossSync.removeFromKeyboardDictionary(context, kw)
                                 keywordEntries = loadKeywords(prefs)
                             }
                         )
