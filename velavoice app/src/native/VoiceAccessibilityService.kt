@@ -435,7 +435,7 @@ class VoiceAccessibilityService : AccessibilityService() {
                     try {
                         db = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
                         val cursor = db.rawQuery(
-                            "SELECT original_word, replacement FROM personal_dictionary ORDER BY priority DESC, name ASC",
+                            "SELECT original_word, replacement FROM personal_dictionary ORDER BY priority DESC, original_word ASC",
                             null
                         )
                         if (cursor.moveToFirst()) {
