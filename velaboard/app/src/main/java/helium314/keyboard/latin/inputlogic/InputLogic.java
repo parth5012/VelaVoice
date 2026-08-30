@@ -594,7 +594,8 @@ public final class InputLogic {
             // old CapsMode was 0 (off), 1, 3, 5, 7
             // meaning both were incompatible, and the check was just returning whether both were 0
             // todo: maybe adjust this?
-            boolean autoShiftHasBeenOverridden = keyboardSwitcher.getKeyboardCapsMode() == CapsMode.OFF && getCurrentAutoCapsState(settingsValues) != 0;
+            boolean autoShiftHasBeenOverridden =
+                (keyboardSwitcher.getKeyboardCapsMode() == CapsMode.OFF) != (getCurrentAutoCapsState(settingsValues) == 0);
             if (settingsValues.mAutospaceBeforeGestureTyping)
                 mSpaceState = SpaceState.PHANTOM; // influences autoCapsState
             if (!autoShiftHasBeenOverridden) {
