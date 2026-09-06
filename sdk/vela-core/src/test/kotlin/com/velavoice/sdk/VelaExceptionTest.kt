@@ -31,10 +31,17 @@ class VelaExceptionTest {
     }
 
     @Test
+    fun `Network has correct message`() {
+        val ex = VelaException.Network("network timeout")
+        assertEquals("network timeout", ex.message)
+    }
+
+    @Test
     fun `all exception types are VelaException`() {
         assertTrue(ModelNotFound("") is VelaException)
         assertTrue(WhisperError("") is VelaException)
         assertTrue(AudioCaptureFailed("") is VelaException)
         assertTrue(InvalidAudio("") is VelaException)
+        assertTrue(VelaException.Network("") is VelaException)
     }
 }

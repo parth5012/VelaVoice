@@ -23,7 +23,7 @@ import kotlin.math.sqrt
  */
 class StreamingPipeline private constructor(
     private val localTranscriber: LocalStreamingTranscriber?,
-    private val cloudTranscriber: CloudStreamingTranscriber?,
+    private val cloudTranscriber: StreamingTranscriber?,
     private val defaultStreamConfig: StreamConfig
 ) {
     private var streamConfig: StreamConfig = defaultStreamConfig
@@ -117,9 +117,30 @@ class StreamingPipeline private constructor(
                 LocalStreamingTranscriber(WhisperConfig(whisperModelPath, language, numThreads))
             } else null
 
-            val cloudTranscriber = if (apiKey.isNotBlank()) {
+        val cloudTranscriber: StreamingTranscriber? = if (apiKey.isNotBlank()) {
+            if (model.contains("gemini") || endpoint.contains("googleapis.com")) {
+                val liveModel = if (model.isBlank() || model == "gpt-live-transcribe" || model.contains("gemini-3.5")) {
+                    GeminiTranscriptionProvider.MODEL_TRANSCRIBE_LIVE
+                } else {
+                    model
+                }
+                GeminiTranscriptionProvider(rawModel = liveModel)
+            } else if (endpoint.startsWith("ws://") || endpoint.startsWith("wss://")) {
                 CloudStreamingTranscriber()
-            } else null
+            } else {
+                val resolvedEndpoint = endpoint.takeIf { it.isNotBlank() && !it.startsWith("ws") } ?: when {
+                    model.contains("whisper-large") || apiKey.startsWith("gsk_") ->
+                        "https://api.groq.com/openai/v1/audio/transcriptions"
+                    else ->
+                        "https://api.openai.com/v1/audio/transcriptions"
+                }
+                WhisperRestTranscriptionProvider(
+                    apiKey = apiKey,
+                    model = model.ifBlank { "whisper-1" },
+                    endpoint = resolvedEndpoint
+                )
+            }
+        } else null
 
             return StreamingPipeline(localTranscriber, cloudTranscriber, streamConfig)
         }
