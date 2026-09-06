@@ -64,6 +64,8 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_VELA_CUSTOM_FILLERS = "vela_custom_fillers";
     public static final String PREF_VELA_TRANSCRIPTION_MODE = "vela_transcription_mode";
     public static final String PREF_VELA_STREAMING_MODE = "vela_streaming_mode";
+    public static final String PREF_VELA_GEMINI_API_KEY = "vela_gemini_api_key";
+    public static final String PREF_VELA_GEMINI_MODEL = "vela_gemini_model";
     public static final String PREF_VELA_GROQ_API_KEY = "vela_groq_api_key";
     public static final String PREF_VELA_GROQ_MODEL = "vela_groq_model";
     public static final String PREF_VELA_OPENAI_API_KEY = "vela_openai_api_key";

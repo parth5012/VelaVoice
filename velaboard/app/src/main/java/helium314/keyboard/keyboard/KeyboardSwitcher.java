@@ -377,7 +377,10 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
 
         final String streamingMode = prefs.getString(Settings.PREF_VELA_STREAMING_MODE,
             helium314.keyboard.latin.settings.Defaults.PREF_VELA_STREAMING_MODE);
-        if ("streamed".equals(streamingMode)
+        final String transcriptionMode = prefs.getString(Settings.PREF_VELA_TRANSCRIPTION_MODE,
+                helium314.keyboard.latin.settings.Defaults.PREF_VELA_TRANSCRIPTION_MODE);
+        final boolean wantsCloud = !"local".equals(transcriptionMode);
+        if (("streamed".equals(streamingMode) || wantsCloud)
                 && startVelaStreaming(latinIME, prefs, modelPath, language, threads, isYaps)) {
             return;
         }
@@ -388,7 +391,13 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             // just overlaying toolbar/overlay on the existing keyboard. This prevents
             // showMainKeyboard from calling setInputView() unnecessarily later, which
             // would trigger a re-layout and destabilize onComputeInsets.
-            YapsUiManager.getInstance().startActiveRecording("Loading...");
+            final String providerTitle = "gemini".equals(transcriptionMode) ? ("streamed".equals(streamingMode) ? "Gemini 3.5 Live" : "Gemini 3.5")
+                : "groq".equals(transcriptionMode) ? "Groq"
+                : "openai".equals(transcriptionMode) ? "OpenAI"
+                : "custom".equals(transcriptionMode) ? "Custom"
+                : "Local";
+        final String yapsLabel = providerTitle + "...";
+            YapsUiManager.getInstance().startActiveRecording(yapsLabel);
             startVelaTranscriberForYaps(latinIME, prefs, modelPath, useLlm, llmModelPath,
                 language, threads, customFillers);
             return;
@@ -413,7 +422,15 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
 
         voicePane.getStopCleanButton().setEnabled(false);
         voicePane.getStopRawButton().setEnabled(false);
-        voicePane.getStatusText().setText("Loading voice model...");
+        final String providerTitle = "gemini".equals(transcriptionMode) ? ("streamed".equals(streamingMode) ? "Gemini 3.5 Live" : "Gemini 3.5")
+                : "groq".equals(transcriptionMode) ? "Groq"
+                : "openai".equals(transcriptionMode) ? "OpenAI"
+                : "custom".equals(transcriptionMode) ? "Custom Provider"
+                : "Voice";
+        final String loadingLabel = "local".equals(transcriptionMode)
+                ? "Loading voice model..."
+                : "Connecting to " + providerTitle + "...";
+        voicePane.getStatusText().setText(loadingLabel);
 
         // --- Wire up callbacks ---
         voicePane.setOnStopCleanListener(() -> {
@@ -451,7 +468,8 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         if (canReuseTranscriber) {
             voicePane.getStopCleanButton().setEnabled(true);
             voicePane.getStopRawButton().setEnabled(true);
-            voicePane.getStatusText().setText("Recording...");
+            final String recLabel = "gemini".equals(transcriptionMode) ? "Listening (Gemini 3.6)..." : "Recording...";
+                    voicePane.getStatusText().setText(recLabel);
             voicePane.resetDisplay();
             startTimer(voicePane);
 
@@ -574,7 +592,9 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         final boolean modelAvailable = modelPath != null && !modelPath.isEmpty()
             && new java.io.File(modelPath).exists();
         final String transcriptionMode = prefs.getString(Settings.PREF_VELA_TRANSCRIPTION_MODE,
-            helium314.keyboard.latin.settings.Defaults.PREF_VELA_TRANSCRIPTION_MODE);
+                helium314.keyboard.latin.settings.Defaults.PREF_VELA_TRANSCRIPTION_MODE);
+        final String streamingMode = prefs.getString(Settings.PREF_VELA_STREAMING_MODE,
+                helium314.keyboard.latin.settings.Defaults.PREF_VELA_STREAMING_MODE);
         final boolean privacySensitive = isPrivacySensitiveEditor(latinIME.getCurrentInputEditorInfo());
 
         boolean wantsCloud = !"local".equals(transcriptionMode);
@@ -586,10 +606,123 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             wantsCloud = false;
         }
 
-        final String apiKey = prefs.getString(Settings.PREF_VELA_OPENAI_API_KEY,
-            helium314.keyboard.latin.settings.Defaults.PREF_VELA_OPENAI_API_KEY);
-        if (wantsCloud && (apiKey == null || apiKey.isEmpty())) {
-            showToast(latinIME.getString(R.string.voice_streaming_missing_api_key), false);
+        String resolvedApiKey = null;
+        String resolvedModel = null;
+        String resolvedEndpoint = null;
+
+        SharedPreferences companionPrefs = null;
+        try {
+            final android.content.Context companionContext = latinIME.createPackageContext(
+                    "com.velavoice.app", android.content.Context.CONTEXT_IGNORE_SECURITY);
+            companionPrefs = companionContext.getSharedPreferences(
+                    "com.velavoice.app_preferences", android.content.Context.MODE_PRIVATE);
+        } catch (final Exception ignored) {
+        }
+
+        if ("gemini".equals(transcriptionMode)) {
+            final boolean isStreamed = "streamed".equals(streamingMode);
+            final String defaultGeminiModel = isStreamed
+                    ? helium314.keyboard.latin.settings.Defaults.PREF_VELA_GEMINI_LIVE_MODEL
+                    : helium314.keyboard.latin.settings.Defaults.PREF_VELA_GEMINI_MODEL;
+
+            resolvedApiKey = prefs.getString(Settings.PREF_VELA_GEMINI_API_KEY,
+                    helium314.keyboard.latin.settings.Defaults.PREF_VELA_GEMINI_API_KEY);
+            resolvedModel = prefs.getString(Settings.PREF_VELA_GEMINI_MODEL, defaultGeminiModel);
+            if (resolvedModel == null || resolvedModel.trim().isEmpty() || "gemini-3.5".equals(resolvedModel.trim()) || "3.5".equals(resolvedModel.trim()) || resolvedModel.contains("3.6")) {
+                resolvedModel = defaultGeminiModel;
+                prefs.edit().putString(Settings.PREF_VELA_GEMINI_MODEL, resolvedModel).apply();
+            }
+            resolvedEndpoint = "https://generativelanguage.googleapis.com";
+
+            if ((resolvedApiKey == null || resolvedApiKey.trim().isEmpty()) && companionPrefs != null) {
+                final String compKey = companionPrefs.getString("geminiApiKey", "");
+                if (compKey != null && !compKey.trim().isEmpty()) {
+                    resolvedApiKey = compKey.trim();
+                    prefs.edit().putString(Settings.PREF_VELA_GEMINI_API_KEY, resolvedApiKey).apply();
+                }
+                final String compModel = companionPrefs.getString("geminiModel", "");
+                if (compModel != null && !compModel.trim().isEmpty()) {
+                    resolvedModel = compModel.trim();
+                    prefs.edit().putString(Settings.PREF_VELA_GEMINI_MODEL, resolvedModel).apply();
+                }
+            }
+        } else if ("groq".equals(transcriptionMode)) {
+            resolvedApiKey = prefs.getString(Settings.PREF_VELA_GROQ_API_KEY,
+                    helium314.keyboard.latin.settings.Defaults.PREF_VELA_GROQ_API_KEY);
+            resolvedModel = prefs.getString(Settings.PREF_VELA_GROQ_MODEL,
+                    helium314.keyboard.latin.settings.Defaults.PREF_VELA_GROQ_MODEL);
+            resolvedEndpoint = "https://api.groq.com/openai/v1/audio/transcriptions";
+
+            if ((resolvedApiKey == null || resolvedApiKey.trim().isEmpty()) && companionPrefs != null) {
+                final String compKey = companionPrefs.getString("groqApiKey", "");
+                if (compKey != null && !compKey.trim().isEmpty()) {
+                    resolvedApiKey = compKey.trim();
+                    prefs.edit().putString(Settings.PREF_VELA_GROQ_API_KEY, resolvedApiKey).apply();
+                }
+                final String compModel = companionPrefs.getString("groqModel", "");
+                if (compModel != null && !compModel.trim().isEmpty()) {
+                    resolvedModel = compModel.trim();
+                    prefs.edit().putString(Settings.PREF_VELA_GROQ_MODEL, resolvedModel).apply();
+                }
+            }
+        } else if ("custom".equals(transcriptionMode)) {
+            resolvedApiKey = prefs.getString(Settings.PREF_VELA_CUSTOM_API_KEY,
+                    helium314.keyboard.latin.settings.Defaults.PREF_VELA_CUSTOM_API_KEY);
+            resolvedModel = prefs.getString(Settings.PREF_VELA_CUSTOM_MODEL,
+                    helium314.keyboard.latin.settings.Defaults.PREF_VELA_CUSTOM_MODEL);
+            resolvedEndpoint = prefs.getString(Settings.PREF_VELA_CUSTOM_ENDPOINT,
+                    helium314.keyboard.latin.settings.Defaults.PREF_VELA_CUSTOM_ENDPOINT);
+
+            if ((resolvedApiKey == null || resolvedApiKey.trim().isEmpty()) && companionPrefs != null) {
+                final String compKey = companionPrefs.getString("customApiKey", "");
+                if (compKey != null && !compKey.trim().isEmpty()) {
+                    resolvedApiKey = compKey.trim();
+                    prefs.edit().putString(Settings.PREF_VELA_CUSTOM_API_KEY, resolvedApiKey).apply();
+                }
+                final String compModel = companionPrefs.getString("customModel", "");
+                if (compModel != null && !compModel.trim().isEmpty()) {
+                    resolvedModel = compModel.trim();
+                    prefs.edit().putString(Settings.PREF_VELA_CUSTOM_MODEL, resolvedModel).apply();
+                }
+                final String compEndpoint = companionPrefs.getString("customEndpoint", "");
+                if (compEndpoint != null && !compEndpoint.trim().isEmpty()) {
+                    resolvedEndpoint = compEndpoint.trim();
+                    prefs.edit().putString(Settings.PREF_VELA_CUSTOM_ENDPOINT, resolvedEndpoint).apply();
+                }
+            }
+        } else {
+            resolvedApiKey = prefs.getString(Settings.PREF_VELA_OPENAI_API_KEY,
+                    helium314.keyboard.latin.settings.Defaults.PREF_VELA_OPENAI_API_KEY);
+            resolvedModel = prefs.getString(Settings.PREF_VELA_OPENAI_MODEL,
+                    helium314.keyboard.latin.settings.Defaults.PREF_VELA_OPENAI_MODEL);
+            resolvedEndpoint = prefs.getString(Settings.PREF_VELA_OPENAI_ENDPOINT,
+                    helium314.keyboard.latin.settings.Defaults.PREF_VELA_OPENAI_ENDPOINT);
+
+            if ((resolvedApiKey == null || resolvedApiKey.trim().isEmpty()) && companionPrefs != null) {
+                final String compKey = companionPrefs.getString("openaiApiKey", "");
+                if (compKey != null && !compKey.trim().isEmpty()) {
+                    resolvedApiKey = compKey.trim();
+                    prefs.edit().putString(Settings.PREF_VELA_OPENAI_API_KEY, resolvedApiKey).apply();
+                }
+                final String compModel = companionPrefs.getString("openaiModel", "");
+                if (compModel != null && !compModel.trim().isEmpty()) {
+                    resolvedModel = compModel.trim();
+                    prefs.edit().putString(Settings.PREF_VELA_OPENAI_MODEL, resolvedModel).apply();
+                }
+                final String compEndpoint = companionPrefs.getString("openaiEndpoint", "");
+                if (compEndpoint != null && !compEndpoint.trim().isEmpty()) {
+                    resolvedEndpoint = compEndpoint.trim();
+                    prefs.edit().putString(Settings.PREF_VELA_OPENAI_ENDPOINT, resolvedEndpoint).apply();
+                }
+            }
+        }
+
+        final String apiKey = resolvedApiKey;
+        final String model = resolvedModel;
+        final String endpoint = resolvedEndpoint;
+
+        if (wantsCloud && (apiKey == null || apiKey.trim().isEmpty())) {
+            showToast("No API key configured for " + transcriptionMode + ". Please enter key in Voice Settings.", false);
             return false;
         }
         if (!wantsCloud && !modelAvailable) {
@@ -610,28 +743,21 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         }
         if (useCloud) {
             builder.apiKey(apiKey);
-            final String endpoint = prefs.getString(Settings.PREF_VELA_OPENAI_ENDPOINT,
-                helium314.keyboard.latin.settings.Defaults.PREF_VELA_OPENAI_ENDPOINT);
-            // the streaming backend speaks the OpenAI realtime websocket protocol, so a plain
-            // https REST base url (the default) must not be forwarded — let the SDK default win
-            if (endpoint != null && (endpoint.startsWith("ws://") || endpoint.startsWith("wss://"))) {
+            if (endpoint != null && (endpoint.startsWith("ws://") || endpoint.startsWith("wss://") || endpoint.startsWith("https://"))) {
                 builder.endpoint(endpoint);
             }
-            final String model = prefs.getString(Settings.PREF_VELA_OPENAI_MODEL,
-                helium314.keyboard.latin.settings.Defaults.PREF_VELA_OPENAI_MODEL);
-            if (model != null && !model.isEmpty()
-                    && !model.equals(helium314.keyboard.latin.settings.Defaults.PREF_VELA_OPENAI_MODEL)) {
+            if (model != null && !model.isEmpty()) {
                 builder.model(model);
             }
         }
-
         final VelaStreamingSession.CleanupSpec cleanupSpec =
             buildCleanupSpec(latinIME, prefs, privacySensitive);
 
         if (isYaps) {
-            YapsUiManager.getInstance().startActiveRecording("Loading...");
-            startStreamingSession(latinIME, builder, pipelineMode, privacySensitive, cleanupSpec,
-                null, isYaps);
+            final String yapsLabel = "gemini".equals(transcriptionMode) ? "Gemini 3.6..." : "Loading...";
+            YapsUiManager.getInstance().startActiveRecording(yapsLabel);
+            startStreamingSession(latinIME, builder, pipelineMode, transcriptionMode, privacySensitive, cleanupSpec,
+                    null, isYaps);
             return true;
         }
 
@@ -684,8 +810,8 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             return kotlin.Unit.INSTANCE;
         });
 
-        startStreamingSession(latinIME, builder, pipelineMode, privacySensitive, cleanupSpec,
-            voicePane, isYaps);
+        startStreamingSession(latinIME, builder, pipelineMode, transcriptionMode, privacySensitive, cleanupSpec,
+                voicePane, isYaps);
         return true;
     }
 
@@ -722,6 +848,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
 
     private void startStreamingSession(final LatinIME latinIME,
             final StreamingPipeline.Builder builder, final String pipelineMode,
+            final String transcriptionMode,
             final boolean privacySensitive,
             @Nullable final VelaStreamingSession.CleanupSpec cleanupSpec,
             @Nullable final VoiceRecordingPane voicePane,

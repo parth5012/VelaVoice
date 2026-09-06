@@ -370,6 +370,10 @@
     <string name="voice_streaming_mode_streamed">Streamed</string>
     <string name="voice_streaming_missing_api_key">No OpenAI API key set for cloud streaming, using instant mode</string>
     <string name="voice_streaming_privacy_no_local">Cloud streaming is disabled in this field and no local model is available</string>
+    <string name="voice_gemini_api_key_title">Gemini API Key</string>
+    <string name="voice_gemini_api_key_summary">Free tier API key from Google AI Studio</string>
+    <string name="voice_gemini_model_title">Gemini Model</string>
+    <string name="voice_gemini_model_summary">Model name (default: gemini-3.5-transcribe / gemini-3.5-transcribe-live)</string>
     <string name="voice_groq_api_key_title">Groq API Key</string>
     <string name="voice_groq_api_key_summary">API key for Groq cloud transcription</string>
     <string name="voice_groq_model_title">Groq Model</string>

@@ -14,6 +14,7 @@ import android.view.inputmethod.InputMethodSubtype
 import helium314.keyboard.compat.locale
 import helium314.keyboard.latin.common.Constants
 import helium314.keyboard.latin.common.LocaleUtils.getBestMatch
+import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.utils.LanguageOnSpacebarUtils
 import helium314.keyboard.latin.utils.Log
@@ -58,6 +59,34 @@ class RichInputMethodManager private constructor() {
         get() {
             if (!this::context.isInitialized) return false
             val prefs = context.prefs()
+            val mode = prefs.getString(Settings.PREF_VELA_TRANSCRIPTION_MODE, Defaults.PREF_VELA_TRANSCRIPTION_MODE) ?: "local"
+            if (mode != "local") {
+                val apiKey = when (mode) {
+                    "gemini" -> prefs.getString(Settings.PREF_VELA_GEMINI_API_KEY, Defaults.PREF_VELA_GEMINI_API_KEY)
+                    "groq" -> prefs.getString(Settings.PREF_VELA_GROQ_API_KEY, Defaults.PREF_VELA_GROQ_API_KEY)
+                    "custom" -> prefs.getString(Settings.PREF_VELA_CUSTOM_API_KEY, Defaults.PREF_VELA_CUSTOM_API_KEY)
+                    else -> prefs.getString(Settings.PREF_VELA_OPENAI_API_KEY, Defaults.PREF_VELA_OPENAI_API_KEY)
+                }
+                if (!apiKey.isNullOrBlank()) {
+                    return true
+                }
+                try {
+                    val companionContext = context.createPackageContext("com.velavoice.app", Context.CONTEXT_IGNORE_SECURITY)
+                    val companionPrefs = companionContext.getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
+                    val compKey = if (mode == "gemini") {
+                        companionPrefs.getString("geminiApiKey", null)
+                    } else if (mode == "groq") {
+                        companionPrefs.getString("groqApiKey", null)
+                    } else {
+                        companionPrefs.getString("openaiApiKey", null)
+                    }
+                    if (!compKey.isNullOrBlank()) {
+                        return true
+                    }
+                } catch (e: Exception) {
+                    // Ignore
+                }
+            }
             var modelPath = prefs.getString(Settings.PREF_VELA_MODEL_PATH, "/sdcard/Models/ggml-tiny.en.bin") ?: ""
             if (modelPath.isEmpty() || !java.io.File(modelPath).exists()) {
                 val sharedPath = helium314.keyboard.settings.ModelDownloadHelper.getSharedModelPath(context, "whisper")

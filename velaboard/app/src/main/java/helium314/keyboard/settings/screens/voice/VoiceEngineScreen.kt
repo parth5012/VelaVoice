@@ -73,11 +73,19 @@ fun VoiceEngineScreen(onClickBack: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 16.dp, end = 16.dp)
                     )
+        StreamingModeSelector(prefs)
 
-                    StreamingModeSelector(prefs)
-
-                    val mode = prefs.getString(Settings.PREF_VELA_TRANSCRIPTION_MODE, Defaults.PREF_VELA_TRANSCRIPTION_MODE) ?: Defaults.PREF_VELA_TRANSCRIPTION_MODE
-                    if (mode == "groq") {
+        val mode = prefs.getString(Settings.PREF_VELA_TRANSCRIPTION_MODE, Defaults.PREF_VELA_TRANSCRIPTION_MODE)
+            ?: Defaults.PREF_VELA_TRANSCRIPTION_MODE
+        if (mode == "gemini") {
+            Setting(context, Settings.PREF_VELA_GEMINI_API_KEY, R.string.voice_gemini_api_key_title, R.string.voice_gemini_api_key_summary) {
+                TextInputPreference(setting = it, default = Defaults.PREF_VELA_GEMINI_API_KEY)
+            }.Preference()
+            Setting(context, Settings.PREF_VELA_GEMINI_MODEL, R.string.voice_gemini_model_title, R.string.voice_gemini_model_summary) {
+                TextInputPreference(setting = it, default = Defaults.PREF_VELA_GEMINI_MODEL)
+            }.Preference()
+        }
+        if (mode == "groq") {
                         Setting(context, Settings.PREF_VELA_GROQ_API_KEY, R.string.voice_groq_api_key_title, R.string.voice_groq_api_key_summary) {
                             TextInputPreference(setting = it, default = Defaults.PREF_VELA_GROQ_API_KEY)
                         }.Preference()
@@ -120,7 +128,13 @@ private fun TranscriptionModeSelector(prefs: android.content.SharedPreferences) 
     var currentMode by remember { mutableStateOf(
         prefs.getString(Settings.PREF_VELA_TRANSCRIPTION_MODE, Defaults.PREF_VELA_TRANSCRIPTION_MODE) ?: "local"
     ) }
-    val modes = listOf("local" to "On-Device (Offline)", "groq" to "Groq API", "openai" to "OpenAI API", "custom" to "Custom Provider")
+    val modes = listOf(
+        "local" to "On-Device (Offline)",
+        "gemini" to "Google Gemini 3.5",
+        "groq" to "Groq API",
+        "openai" to "OpenAI API",
+        "custom" to "Custom Provider"
+    )
 
     Row(
         modifier = Modifier
