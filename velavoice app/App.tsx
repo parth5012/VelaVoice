@@ -24,6 +24,8 @@ import { ModelManager, ModelInfo, DictionaryEntry, DictionaryKeyword } from './s
 import OverlayLogo from './src/components/OverlayLogo';
 import { TranscriptionEditor } from './src/components/TranscriptionEditor';
 import { CorrectionAPI } from './src/services/api';
+import GeminiSettings from './src/components/GeminiSettings';
+import { getGeminiApiKey } from './src/services/GeminiService';
 
 interface Recording {
   id: string;
@@ -88,6 +90,7 @@ export default function App() {
   const [openaiApiKey, setOpenaiApiKey] = useState<string>('');
   const [openaiModel, setOpenaiModel] = useState<string>('whisper-1');
   const [openaiEndpoint, setOpenaiEndpoint] = useState<string>('https://api.openai.com/v1');
+  const [geminiApiKey, setGeminiApiKey] = useState<string>('');
 
   const updatePreference = async (key: string, value: string, setter: (val: string) => void) => {
     setter(value);
@@ -95,7 +98,7 @@ export default function App() {
       try {
         await NativeModules.ModelVerifier.setStringPreference(key, value);
       } catch (e) {
-        console.error(`Failed to save preference ${key}`, e);
+        console.error(`Failed to save preference ${key}`, );
       }
     }
   };
@@ -358,6 +361,8 @@ export default function App() {
           setOpenaiApiKey(prefsJson.openaiApiKey || '');
           setOpenaiModel(prefsJson.openaiModel || 'whisper-1');
           setOpenaiEndpoint(prefsJson.openaiEndpoint || 'https://api.openai.com/v1');
+      if (prefsJson.geminiApiKey) setGeminiApiKey(prefsJson.geminiApiKey);
+      getGeminiApiKey().then((k) => { if (k) setGeminiApiKey(k); });
         }
     } catch (e) {
       console.error('Failed to load preferences', e);
@@ -1188,6 +1193,14 @@ export default function App() {
               OpenAI API
             </Text>
           </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.modeButton, transcriptionMode === 'gemini' && styles.modeButtonActive]}
+          onPress={() => updatePreference('transcriptionMode', 'gemini', setTranscriptionMode)}
+        >
+                <Text style={[styles.modeButtonText, transcriptionMode === 'gemini' && styles.modeButtonTextActive]}>
+                  Google Gemini 3.6
+                </Text>
+        </TouchableOpacity>
         </View>
 
         <Text style={styles.fieldLabel}>Streaming Mode</Text>
@@ -1264,6 +1277,16 @@ export default function App() {
             />
           </View>
         )}
+      {transcriptionMode === 'gemini' && (
+        <GeminiSettings
+          currentMode={transcriptionMode}
+          onSelectProvider={(mode) => updatePreference('transcriptionMode', mode, setTranscriptionMode)}
+          onApiKeyChange={(key) => {
+            setGeminiApiKey(key);
+            updatePreference('geminiApiKey', key, setGeminiApiKey);
+          }}
+        />
+      )}
       </View>
 
       {/* Google Drive Sync */}

@@ -372,27 +372,117 @@ class VoiceAccessibilityService : AccessibilityService() {
 
     Thread({
         val prefs = this@VoiceAccessibilityService.getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
-        val mode = prefs.getString("transcriptionMode", "local") ?: "local"
+        val configuredMode = prefs.getString("transcriptionMode", null)
+            ?: prefs.getString("vela_transcription_mode", "local") ?: "local"
         var rawTranscript = ""
-        var errorMessage: String? = null
+        var errorMessage: String? null
 
-        if (mode == "groq" || mode == "openai") {
-            val apiKey = if (mode == "groq") {
-                prefs.getString("groqApiKey", "") ?: ""
-            } else {
-                prefs.getString("openaiApiKey", "") ?: ""
+        // Resolve Gemini API key across app preferences and keyboard preferences
+        var geminiKey = prefs.getString("geminiApiKey", "") ?: ""
+        if (geminiKey.isBlank()) {
+            geminiKey = prefs.getString("vela_gemini_api_key", "") ?: ""
+        }
+        if (geminiKey.isBlank()) {
+            try {
+                val keyboardContext = this@VoiceAccessibilityService.createPackageContext(
+                    "helium314.keyboard",
+                    Context.CONTEXT_IGNORE_SECURITY
+                )
+                val keyboardPrefs = keyboardContext.getSharedPreferences(
+                    "helium314.keyboard_preferences",
+                    Context.MODE_PRIVATE
+                )
+                geminiKey = keyboardPrefs.getString("vela_gemini_api_key", "") ?: ""
+            } catch (ignored: Exception) {
             }
-            
-            val model = if (mode == "groq") {
+        }
+
+        // Auto-switch to Gemini if user provided a Gemini key and hasn't explicitly downloaded a local model
+        val mode = if (configuredMode == "local" && geminiKey.isNotBlank() && getWhisperModelPath(this@VoiceAccessibilityService) == null) {
+            "gemini"
+        } else {
+            configuredMode
+        }
+
+        if (mode == "gemini") {
+            val apiKey = geminiKey
+            val rawModel = prefs.getString("geminiModel", "")?.takeIf { it.isNotBlank() }
+                ?: prefs.getString("vela_gemini_model", "gemini-3.5-transcribe") ?: "gemini-3.5-transcribe"
+            val model = when (rawModel.trim()) {
+                "gemini-3.5", "3.5", "gemini-3.6", "3.6" -> "gemini-3.5-transcribe"
+                "gemini-2.0", "2.0" -> "gemini-2.0-flash"
+                else -> rawModel.trim()
+            }
+            if (apiKey.isBlank()) {
+                errorMessage = "Error: Gemini API Key is missing. Please set your key in Engine settings."
+            } else {
+                try {
+                    Log.d("VoiceAccessibility", "Transcribing with Google Gemini model: $model")
+                    val provider = com.velavoice.sdk.GeminiTranscriptionProvider(model = model)
+                    rawTranscript = provider.transcribe(audioBytes, apiKey)
+                    Log.d("VoiceAccessibility", "Gemini transcription successful: $rawTranscript")
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    errorMessage = "Gemini Error: ${e.message}"
+                }
+            }
+        } else if (mode == "groq" || mode == "openai" || mode == "custom") {
+            var apiKey = if (mode == "groq") {
+                prefs.getString("groqApiKey", "") ?: prefs.getString("vela_groq_api_key", "") ?: ""
+            } else if (mode == "custom") {
+                prefs.getString("customApiKey", "") ?: prefs.getString("vela_custom_api_key", "") ?: ""
+            } else {
+                prefs.getString("openaiApiKey", "") ?: prefs.getString("vela_openai_api_key", "") ?: ""
+            }
+
+            var model = if (mode == "groq") {
                 prefs.getString("groqModel", "whisper-large-v3") ?: "whisper-large-v3"
+            } else if (mode == "custom") {
+                prefs.getString("customModel", "whisper-1") ?: "whisper-1"
             } else {
                 prefs.getString("openaiModel", "whisper-1") ?: "whisper-1"
             }
-            
-            val endpoint = if (mode == "openai") {
+
+            var endpoint = if (mode == "groq") {
+                "https://api.groq.com/openai/v1"
+            } else if (mode == "custom") {
+                prefs.getString("customEndpoint", "https://api.openai.com/v1") ?: "https://api.openai.com/v1"
+            } else {
                 prefs.getString("openaiEndpoint", "https://api.openai.com/v1") ?: "https://api.openai.com/v1"
-            } else null
-            
+            }
+
+            // Cross-lookup from keyboard preferences if empty
+            if (apiKey.isBlank()) {
+                try {
+                    val keyboardContext = this@VoiceAccessibilityService.createPackageContext(
+                        "helium314.keyboard",
+                        Context.CONTEXT_IGNORE_SECURITY
+                    )
+                    val keyboardPrefs = keyboardContext.getSharedPreferences(
+                        "helium314.keyboard_preferences",
+                        Context.MODE_PRIVATE
+                    )
+                    if (mode == "groq") {
+                        apiKey = keyboardPrefs.getString("vela_groq_api_key", "") ?: ""
+                        val kModel = keyboardPrefs.getString("vela_groq_model", "") ?: ""
+                        if (kModel.isNotBlank()) model = kModel
+                    } else if (mode == "custom") {
+                        apiKey = keyboardPrefs.getString("vela_custom_api_key", "") ?: ""
+                        val kModel = keyboardPrefs.getString("vela_custom_model", "") ?: ""
+                        if (kModel.isNotBlank()) model = kModel
+                        val kEndpoint = keyboardPrefs.getString("vela_custom_endpoint", "") ?: ""
+                        if (kEndpoint.isNotBlank()) endpoint = kEndpoint
+                    } else {
+                        apiKey = keyboardPrefs.getString("vela_openai_api_key", "") ?: ""
+                        val kModel = keyboardPrefs.getString("vela_openai_model", "") ?: ""
+                        if (kModel.isNotBlank()) model = kModel
+                        val kEndpoint = keyboardPrefs.getString("vela_openai_endpoint", "") ?: ""
+                        if (kEndpoint.isNotBlank()) endpoint = kEndpoint
+                    }
+                } catch (ignored: Exception) {
+                }
+            }
+
             if (apiKey.isBlank()) {
                 errorMessage = "Error: API Key is missing for $mode"
             } else {
@@ -676,9 +766,9 @@ class VoiceAccessibilityService : AccessibilityService() {
         val wavBytes = pcmToWav(audioBytes)
         val urlString = when (mode) {
             "groq" -> "https://api.groq.com/openai/v1/audio/transcriptions"
-            "openai" -> {
+            "openai", "custom" -> {
                 val base = if (endpoint.isNullOrBlank()) "https://api.openai.com/v1" else endpoint.trim().removeSuffix("/")
-                "$base/audio/transcriptions"
+                if (base.endsWith("/audio/transcriptions")) base else "$base/audio/transcriptions"
             }
             else -> return ""
         }
