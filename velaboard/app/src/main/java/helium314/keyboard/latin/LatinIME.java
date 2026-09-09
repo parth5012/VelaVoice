@@ -45,6 +45,7 @@ import helium314.keyboard.keyboard.KeyboardActionListenerImpl;
 import helium314.keyboard.keyboard.KeyboardMode;
 import helium314.keyboard.keyboard.emoji.EmojiPalettesView;
 import helium314.keyboard.keyboard.emoji.EmojiSearchActivity;
+import helium314.keyboard.keyboard.emoji.EmojiSearchActivityKt;
 import helium314.keyboard.keyboard.internal.KeyboardIconsSet;
 import helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyCode;
 import helium314.keyboard.latin.common.InsetsOutlineProvider;
@@ -163,6 +164,13 @@ public class LatinIME extends InputMethodService implements
             new DictionaryDumpBroadcastReceiver(this);
 
     FoldableUtils.FoldableObserver foldableObserver;
+
+    private final BroadcastReceiver mEmojiSearchReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            onEmojiSearchDone(intent);
+        }
+    };
 
     final static class RestartAfterDeviceUnlockReceiver extends BroadcastReceiver {
         @Override
@@ -589,6 +597,10 @@ public class LatinIME extends InputMethodService implements
             restartAfterUnlockFilter.addAction(Intent.ACTION_USER_UNLOCKED);
         registerReceiver(mRestartAfterDeviceUnlockReceiver, restartAfterUnlockFilter);
 
+        final IntentFilter emojiSearchFilter = new IntentFilter();
+        emojiSearchFilter.addAction(EmojiSearchActivity.EMOJI_SEARCH_DONE_ACTION);
+        ContextCompat.registerReceiver(this, mEmojiSearchReceiver, emojiSearchFilter, ContextCompat.RECEIVER_NOT_EXPORTED);
+
         StatsUtils.onCreate(mSettings.getCurrent(), mRichImm);
     }
 
@@ -716,6 +728,7 @@ public class LatinIME extends InputMethodService implements
         unregisterReceiver(mDictionaryPackInstallReceiver);
         unregisterReceiver(mDictionaryDumpBroadcastReceiver);
         unregisterReceiver(mRestartAfterDeviceUnlockReceiver);
+        unregisterReceiver(mEmojiSearchReceiver);
         mStatsUtilsManager.onDestroy(this /* context */);
         super.onDestroy();
         mHandler.removeCallbacksAndMessages(null);
@@ -1800,15 +1813,16 @@ public class LatinIME extends InputMethodService implements
     }
 
     public void launchEmojiSearch() {
-        Log.d("emoji-search", "before activity launch");
+        Log.d(EmojiSearchActivityKt.TAG, "before activity launch");
         startActivity(new Intent().setClass(this, EmojiSearchActivity.class)
                           .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_MULTIPLE_TASK));
     }
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
+    private void onEmojiSearchDone(Intent intent) {
+        Log.d(EmojiSearchActivityKt.TAG, "after activity closing. isEmojiSearch: " + isEmojiSearch() + ". Intent: " + intent +
+                (intent != null ? ". imeClosed: " + isImeClosed(intent) + ". selected emoji: " + getSelectedEmoji(intent) : ""));
         if (intent != null && EmojiSearchActivity.EMOJI_SEARCH_DONE_ACTION.equals(intent.getAction()) && ! isEmojiSearch()) {
-            if (intent.getBooleanExtra(EmojiSearchActivity.IME_CLOSED_KEY, false)) {
+            if (isImeClosed(intent)) {
                 requestHideSelf(0);
             } else {
                 mHandler.postDelayed(() -> KeyboardSwitcher.getInstance().setEmojiKeyboard(), 100);
@@ -1816,12 +1830,15 @@ public class LatinIME extends InputMethodService implements
                      onTextInput(intent.getStringExtra(EmojiSearchActivity.EMOJI_KEY));
                 }
             }
-
-            stopSelf(startId); // Allow the service to be destroyed when unbound
-            return START_NOT_STICKY;
         }
+    }
 
-        return super.onStartCommand(intent, flags, startId);
+    private static boolean isImeClosed(Intent intent) {
+        return intent.getBooleanExtra(EmojiSearchActivity.IME_CLOSED_KEY, false);
+    }
+
+    private static String getSelectedEmoji(Intent intent) {
+        return intent.getStringExtra(EmojiSearchActivity.EMOJI_KEY);
     }
 
     public boolean isEmojiSearch() {
