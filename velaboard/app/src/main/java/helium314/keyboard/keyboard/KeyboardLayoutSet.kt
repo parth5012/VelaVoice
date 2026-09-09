@@ -118,6 +118,7 @@ class KeyboardLayoutSet internal constructor(private val mContext: Context, priv
         var numberRowInSymbols = false
         var languageSwitchKeyEnabled = false
         var emojiKeyEnabled = false
+        var dpadKeyEnabled = false
         var oneHandedModeEnabled = false
         var isSpellChecker = false
         var keyboardWidth = 0
@@ -181,6 +182,11 @@ class KeyboardLayoutSet internal constructor(private val mContext: Context, priv
 
         fun setEmojiKeyEnabled(enabled: Boolean): Builder {
             params.emojiKeyEnabled = enabled
+            return this
+        }
+
+        fun setDpadKeyEnabled(enabled: Boolean): Builder {
+            params.dpadKeyEnabled = enabled
             return this
         }
 
