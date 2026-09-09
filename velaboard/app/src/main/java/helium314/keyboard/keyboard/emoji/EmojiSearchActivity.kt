@@ -325,6 +325,8 @@ class EmojiSearchActivity : ComponentActivity() {
                 dictionaryFacilitator?.getWordProperty(getEmojiNeutralVersion(emoji))?.let {
                     if (it.mHasShortcuts) it.mShortcutTargets[0]?.mWord else null
                 } else null
+
+            override fun onRemoveRecentsKey(key: Key?) {}
         })
         KeyboardSwitcher.getInstance().setAlphabetKeyboard(ShiftMode.UNSHIFT)
         Log.d(TAG, "init end")
