@@ -1,6 +1,70 @@
-const { withAndroidManifest, withDangerousMod } = require('@expo/config-plugins');
+let withAndroidManifest;
+let withDangerousMod;
+let withSettingsGradle;
+let withAppBuildGradle;
+try {
+  ({
+    withAndroidManifest,
+    withDangerousMod,
+    withSettingsGradle,
+    withAppBuildGradle,
+  } = require('@expo/config-plugins'));
+} catch (e) {
+  // Allow pure-helper unit tests to run without expo installed (no node_modules
+  // in CI worktrees). Production prebuild always has @expo/config-plugins.
+  const identity = (config) => config;
+  withAndroidManifest = identity;
+  withDangerousMod = identity;
+  withSettingsGradle = identity;
+  withAppBuildGradle = identity;
+}
 const fs = require('fs');
 const path = require('path');
+
+// Composite-build include for the SDK (relative from android/settings.gradle
+// to <repo>/sdk). Valid in both Groovy and Kotlin DSL.
+const SDK_COMPOSITE_INCLUDE = 'includeBuild("../../sdk")';
+// Coordinates published by sdk/ (see sdk/*/build.gradle.kts). vela-core pulls
+// vela-whisper + vela-cleaner transitively; vela-voice-ui covers ui.* imports.
+// The vela-whisper module registers its CMake target itself, so including the
+// composite is what produces libwhisper.so — no app-side CMake needed.
+const SDK_APP_DEPS = [
+  'implementation("com.velavoice.sdk:vela-core:1.0.0")',
+  'implementation("com.velavoice.sdk:vela-voice-ui:1.0.0")',
+];
+
+function ensureIncludeBuild(contents) {
+  const src = String(contents === null || contents === undefined ? '' : contents);
+  if (src.includes(SDK_COMPOSITE_INCLUDE)) return src;
+  const trimmed = src.endsWith('\n') ? src : src + '\n';
+  return (
+    trimmed +
+    '\n// withVoiceIme: composite build for the Vela SDK (provides com.velavoice.sdk.* + libwhisper.so)\n' +
+    SDK_COMPOSITE_INCLUDE +
+    '\n'
+  );
+}
+
+function ensureSdkDeps(contents) {
+  let src = String(contents === null || contents === undefined ? '' : contents);
+  const missing = SDK_APP_DEPS.filter((dep) => {
+    const coord = dep.slice(dep.indexOf('com.velavoice.sdk'));
+    const shortCoord = coord.replace(/^com\.velavoice\.sdk:/, '').split(':')[0];
+    return !src.includes('com.velavoice.sdk:' + shortCoord);
+  });
+  if (missing.length === 0) return src;
+  const block =
+    '\n// withVoiceIme: Vela SDK (composite build in settings.gradle substitutes these)\n' +
+    missing.map((d) => '    ' + d).join('\n') +
+    '\n';
+  const match = src.match(/dependencies\s*\{/);
+  if (match) {
+    const idx = match.index + match[0].length;
+    return src.slice(0, idx) + block + src.slice(idx);
+  }
+  const trimmed = src.endsWith('\n') ? src : src + '\n';
+  return trimmed + '\ndependencies {' + block + '}\n';
+}
 
 function withVoiceIme(config) {
   // 1. Android Manifest modification
@@ -115,7 +179,25 @@ function withVoiceIme(config) {
     return config;
   });
 
-  // 2. Copy files and patch resources
+  // 2. Gradle wiring: composite build + SDK deps (ticket 1.2 / #66).
+  // settings.gradle -> includeBuild("../../sdk") so com.velavoice.sdk:*
+  // resolves from source and :vela-whisper's CMake target builds libwhisper.so.
+  config = withSettingsGradle(config, async (config) => {
+    if (config.modResults && typeof config.modResults.contents === 'string') {
+      config.modResults.contents = ensureIncludeBuild(config.modResults.contents);
+    }
+    return config;
+  });
+
+  // app/build.gradle -> implementation deps substituted by the composite.
+  config = withAppBuildGradle(config, async (config) => {
+    if (config.modResults && typeof config.modResults.contents === 'string') {
+      config.modResults.contents = ensureSdkDeps(config.modResults.contents);
+    }
+    return config;
+  });
+
+  // 3. Copy files and patch resources
   config = withDangerousMod(config, [
     'android',
     async (config) => {
@@ -220,3 +302,7 @@ function withVoiceIme(config) {
 }
 
 module.exports = withVoiceIme;
+module.exports.ensureIncludeBuild = ensureIncludeBuild;
+module.exports.ensureSdkDeps = ensureSdkDeps;
+module.exports.SDK_COMPOSITE_INCLUDE = SDK_COMPOSITE_INCLUDE;
+module.exports.SDK_APP_DEPS = SDK_APP_DEPS;

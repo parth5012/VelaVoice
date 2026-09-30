@@ -154,6 +154,45 @@ The app's `minSdk` must be **24 or higher**.
 
 ---
 
+## Companion app (`velavoice app`) — one-command bootstrap
+
+The Expo companion app resolves `com.velavoice.sdk.*` from source via a Gradle
+**composite build** — no manual Gradle surgery, no `mavenLocal()` for the SDK.
+`velavoice app/plugins/withVoiceIme.js` injects both halves during prebuild
+(ticket 1.2 / #66):
+
+- `android/settings.gradle` → `includeBuild("../../sdk")`
+- `android/app/build.gradle` → `implementation("com.velavoice.sdk:vela-core:1.0.0")`
+  + `implementation("com.velavoice.sdk:vela-voice-ui:1.0.0")`
+  (vela-core pulls vela-whisper + vela-cleaner transitively)
+
+`:vela-whisper` registers its own CMake target (`src/main/cpp/CMakeLists.txt`),
+so the composite is what produces `libwhisper.so` — there is no app-side CMake
+step. Unit coverage for the injection lives in
+`velavoice app/plugins/withVoiceIme.gradle.test.js`
+(`node plugins/withVoiceIme.gradle.test.js`).
+
+```powershell
+# From a clean checkout (Windows / PowerShell):
+cd "velavoice app"; npm install
+npx expo prebuild --clean
+cd android; .\gradlew.bat :app:compileDebugKotlin
+```
+
+```bash
+# macOS / Linux:
+cd "velavoice app" && npm install
+npx expo prebuild --clean
+cd android && ./gradlew :app:compileDebugKotlin
+```
+
+A green `:app:compileDebugKotlin` proves every `com.velavoice.sdk.*` import in
+`VoiceInputMethodService.kt` / `VoiceAccessibilityService.kt` resolves and the
+native `whisper` target is registered (`WhisperEngine` no longer throws
+`UnsatisfiedLinkError` / `"JNI library not loaded"`).
+
+---
+
 ## License
 
 Proprietary. See the Vela Voice project documentation for details.
