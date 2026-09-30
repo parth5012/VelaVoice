@@ -375,7 +375,7 @@ class VoiceAccessibilityService : AccessibilityService() {
         val configuredMode = prefs.getString("transcriptionMode", null)
             ?: prefs.getString("vela_transcription_mode", "local") ?: "local"
         var rawTranscript = ""
-        var errorMessage: String? null
+        var errorMessage: String? = null
 
         // Resolve Gemini API key across app preferences and keyboard preferences
         var geminiKey = prefs.getString("geminiApiKey", "") ?: ""
