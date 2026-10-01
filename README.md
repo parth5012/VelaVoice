@@ -86,7 +86,22 @@ built on appcompat/material.
 ### One-time local setup (required before building)
 
 Because `onnxruntime-genai-android` is not published to a Maven repository, it must be
-published to **mavenLocal** on each machine that builds the SDK or velaboard:
+verified and published to **mavenLocal** on each machine that builds the SDK or velaboard.
+
+To prevent supply chain tampering, its SHA-256 checksum is pinned in
+`sdk/vela-cleaner/libs/onnxruntime-genai-android-0.15.0.aar.sha256`:
+```
+a4aeadcd4d70b877c56a74ece7778324a5ee4686f395ef29e4d2a83908b83a6c
+```
+
+#### Automated bootstrap (macOS / Linux)
+
+Run the bootstrap script to download, verify the checksum, and publish to mavenLocal:
+```bash
+./scripts/bootstrap-onnx-aar.sh
+```
+
+#### Manual / Windows setup
 
 ```powershell
 # 1. Download the release AAR (20.6 MB)
@@ -94,14 +109,18 @@ published to **mavenLocal** on each machine that builds the SDK or velaboard:
 #    Save it as: sdk/vela-cleaner/libs/onnxruntime-genai-android-0.15.0.aar
 #    (the file is gitignored; keep it out of version control)
 
-# 2. Publish it to mavenLocal as a normal Maven coordinate
-#    A standalone Gradle build is provided under
-#    C:\Users\DELL\AppData\Local\Temp\opencode\genai-aar-publish
-#    or re-create it: a minimal project with maven-publish that declares
-#    groupId=com.microsoft.onnxruntime, artifactId=onnxruntime-genai-android,
-#    version=0.15.0 and publishes the AAR file. Then run:
-cd sdk; gradlew.bat --no-daemon -p <path-to-publish-project> publishToMavenLocal
+# 2. Verify its SHA-256 checksum (must match a4aeadcd4d70b877c56a74ece7778324a5ee4686f395ef29e4d2a83908b83a6c)
+Get-FileHash sdk/vela-cleaner/libs/onnxruntime-genai-android-0.15.0.aar -Algorithm SHA256
+
+# 3. Publish to mavenLocal with automated checksum verification:
+cd sdk; .\gradlew.bat --no-daemon -p ..\scripts\publish-genai-aar publishToMavenLocal
 ```
+
+Repository content filters are configured in `sdk/settings.gradle.kts` and
+`velaboard/build.gradle.kts` to restrict `mavenLocal()` exclusively to authorized groups
+(`com.microsoft.onnxruntime` and `com.velavoice.sdk`) and positioned last to prevent
+silent shadowing of remote dependencies. Both Gradle wrappers (`sdk/` and `velaboard/`)
+enforce distribution integrity via `distributionSha256Sum`.
 
 After this step, `:vela-cleaner:publishReleasePublicationToMavenLocal` resolves the
 GenAI dependency from `~/.m2/repository`.
