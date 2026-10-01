@@ -13,6 +13,7 @@ android {
     defaultConfig {
         // onnxruntime-genai-android 0.15.0 requires minSdk 24 (its manifest enforces it)
         minSdk = 24
+        consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
