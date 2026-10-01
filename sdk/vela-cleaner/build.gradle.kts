@@ -52,6 +52,56 @@ dependencies {
     testImplementation(libs.robolectric)
 }
 
+val verifyGenAiAarChecksum by tasks.registering {
+    description = "Verifies SHA-256 checksum of onnxruntime-genai-android dependency"
+    doLast {
+        val expectedSha256 = "a4aeadcd4d70b877c56a74ece7778324a5ee4686f395ef29e4d2a83908b83a6c"
+        val m2Aar = File(System.getProperty("user.home"), ".m2/repository/com/microsoft/onnxruntime/onnxruntime-genai-android/0.15.0/onnxruntime-genai-android-0.15.0.aar")
+        val localAar = file("libs/onnxruntime-genai-android-0.15.0.aar")
+
+        if (!m2Aar.exists()) {
+            throw GradleException(
+                "onnxruntime-genai-android AAR not found in mavenLocal (~/.m2/repository).\n" +
+                "Run ./scripts/bootstrap-onnx-aar.sh to download, verify, and publish it."
+            )
+        }
+
+        val filesToVerify = mutableListOf(m2Aar)
+        if (localAar.exists()) {
+            filesToVerify.add(localAar)
+        }
+
+        fun computeSha256(file: File): String {
+            val digest = java.security.MessageDigest.getInstance("SHA-256")
+            file.inputStream().buffered().use { input ->
+                val buffer = ByteArray(8192)
+                var bytesRead = input.read(buffer)
+                while (bytesRead != -1) {
+                    digest.update(buffer, 0, bytesRead)
+                    bytesRead = input.read(buffer)
+                }
+            }
+            return digest.digest().joinToString("") { "%02x".format(it) }
+        }
+
+        for (file in filesToVerify) {
+            val actualSha256 = computeSha256(file)
+            if (actualSha256 != expectedSha256) {
+                throw GradleException(
+                    "Security violation: SHA-256 mismatch for ${file.absolutePath}!\n" +
+                    "Expected: $expectedSha256\n" +
+                    "Actual:   $actualSha256"
+                )
+            }
+            logger.lifecycle("Verified SHA-256 for ${file.name} (${file.parentFile.name}): $actualSha256")
+        }
+    }
+}
+
+tasks.named("preBuild") {
+    dependsOn(verifyGenAiAarChecksum)
+}
+
 afterEvaluate {
     publishing {
         publications {

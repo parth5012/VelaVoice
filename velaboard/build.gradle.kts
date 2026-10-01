@@ -19,7 +19,12 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        mavenLocal()
         maven { url = uri("https://jitpack.io") }
+        mavenLocal {
+            content {
+                includeGroup("com.velavoice.sdk")
+                includeGroup("com.microsoft.onnxruntime")
+            }
+        }
     }
 }
