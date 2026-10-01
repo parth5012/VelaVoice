@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  push:
+    paths:
+      - 'sdk/**'
+      - 'velaboard/**'
+      - 'velavoice app/**'
+      - 'scripts/**'
+      - '.github/workflows/**'
+  pull_request:
+    paths:
+      - 'sdk/**'
+      - 'velaboard/**'
+      - 'velavoice app/**'
+      - 'scripts/**'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build & Test (SDK & Keyboard)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@d9c87d481d55275bb5441eef3fe0e46805f9ef70 # v3.5.0
+
+      - name: Grant execute permission for scripts and wrappers
+        run: chmod +x sdk/gradlew velaboard/gradlew scripts/bootstrap-onnx-aar.sh
+
+      - name: Run offline verification test suite
+        run: |
+          python3 scripts/test_dependency_integrity.py
+          python3 scripts/test_build_script_hygiene.py
+          python3 scripts/test_proguard_rules.py
+          python3 scripts/test_toolchain_hardening.py
+          python3 scripts/test_export_corrections.py
+          python3 scripts/test_root_ci.py
+
+      - name: Install pinned Android NDK and CMake
+        run: |
+          yes | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --install "ndk;27.1.12297006" "cmake;3.22.1"
+          "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --list_installed | grep -E 'ndk;27\.1\.12297006' || { echo "ERROR: ndk;27.1.12297006 not found in installed packages" >&2; exit 1; }
+          "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --list_installed | grep -E 'cmake;3\.22\.1' || { echo "ERROR: cmake;3.22.1 not found in installed packages" >&2; exit 1; }
+
+      - name: Bootstrap ONNX Runtime GenAI AAR
+        run: ./scripts/bootstrap-onnx-aar.sh
+
+      - name: Build and test SDK
+        working-directory: sdk
+        run: ./gradlew test
+
+      - name: Publish SDK to mavenLocal
+        working-directory: sdk
+        run: ./gradlew publishToMavenLocal
+
+      - name: Build Velaboard debug APK
+        working-directory: velaboard
+        run: ./gradlew assembleDebug
+
+      - name: Run Velaboard unit tests
+        working-directory: velaboard
+        run: ./gradlew testRunTestsUnitTest
+
+      - name: Upload Velaboard debug APK
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: HeliBoard-debug
+          path: velaboard/app/build/outputs/apk/debug/*-debug*.apk
+          if-no-files-found: ignore
+
+      - name: Archive reports for failed job
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: reports
+          path: |
+            sdk/*/build/reports/
+            velaboard/*/build/reports/
+          if-no-files-found: ignore
+        if: ${{ failure() }}
+
+  companion-app:
+    name: Companion App (Expo tsc & tests)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: "velavoice app/package-lock.json"
+
+      - name: Install dependencies
+        working-directory: "velavoice app"
+        run: npm ci
+
+      - name: Run withVoiceIme plugin tests
+        working-directory: "velavoice app"
+        run: node plugins/withVoiceIme.gradle.test.js
+
+      - name: TypeScript typecheck
+        working-directory: "velavoice app"
+        run: npm run ts:check
+
+      - name: Run unit and E2E tests
+        working-directory: "velavoice app"
+        run: npm test
