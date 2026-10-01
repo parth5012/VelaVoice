@@ -20,3 +20,17 @@ graphify-out/
 # onnxruntime-genai-android is NOT on Maven Central; the 20 MB AAR is fetched from
 # GitHub releases and published to mavenLocal during local setup. Keep it out of git.
 sdk/vela-cleaner/libs/*.aar
+
+# Keystores and certificates
+*.keystore
+*.jks
+*.p12
+*.pem
+
+# macOS metadata
+.DS_Store
+
+# Build artifacts
+*.apk
+*.aab
+*.aar
