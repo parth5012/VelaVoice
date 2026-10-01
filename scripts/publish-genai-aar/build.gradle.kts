@@ -1,3 +1,5 @@
+import java.security.MessageDigest
+
 plugins {
     `maven-publish`
 }
@@ -14,7 +16,7 @@ val verifyChecksum by tasks.registering {
                 "Please download it first or run scripts/bootstrap-onnx-aar.sh"
             )
         }
-        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        val digest = MessageDigest.getInstance("SHA-256")
         aarFile.inputStream().buffered().use { input ->
             val buffer = ByteArray(8192)
             var bytesRead = input.read(buffer)

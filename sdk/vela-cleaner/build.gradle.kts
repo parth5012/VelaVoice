@@ -1,3 +1,5 @@
+import java.security.MessageDigest
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
@@ -72,7 +74,7 @@ val verifyGenAiAarChecksum by tasks.registering {
         }
 
         fun computeSha256(file: File): String {
-            val digest = java.security.MessageDigest.getInstance("SHA-256")
+            val digest = MessageDigest.getInstance("SHA-256")
             file.inputStream().buffered().use { input ->
                 val buffer = ByteArray(8192)
                 var bytesRead = input.read(buffer)
