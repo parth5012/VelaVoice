@@ -34,6 +34,8 @@ LOCAL_CFLAGS += -Wall -Wextra -Weffc++ -Wformat=2 -Wcast-qual -Wcast-align \
 # To suppress compiler warnings for unused variables/functions used for debug features etc.
 LOCAL_CFLAGS += -Wno-unused-parameter -Wno-unused-function
 
+LOCAL_CFLAGS += -fstack-protector-strong -D_FORTIFY_SOURCE=2 -fvisibility=hidden
+
 # HACK: -mstackrealign is required for x86 builds running on pre-KitKat devices to avoid crashes
 # with SSE instructions.
 ifeq ($(TARGET_ARCH), x86)
@@ -94,6 +96,8 @@ LOCAL_LDFLAGS += -ldl
 
 # Avoid issues with reproducible builds, see https://gitlab.com/fdroid/rfp/-/issues/2662
 LOCAL_LDFLAGS += -Wl,--build-id=none
+
+LOCAL_LDFLAGS += -Wl,-z,relro -Wl,-z,now
 
 include $(BUILD_SHARED_LIBRARY)
 #################### Clean up the tmp vars

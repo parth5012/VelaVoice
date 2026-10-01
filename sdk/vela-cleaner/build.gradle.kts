@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.velavoice.sdk.cleaner"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         // onnxruntime-genai-android 0.15.0 requires minSdk 24 (its manifest enforces it)

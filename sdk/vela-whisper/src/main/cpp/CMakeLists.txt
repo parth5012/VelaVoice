@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10.2)
+cmake_minimum_required(VERSION 3.13)
 
 project("whisper")
 
@@ -20,6 +20,17 @@ add_library(whisper SHARED
     ggml-quants.h
     ggml-quants.c
     whisper-jni.cpp
+)
+
+target_compile_options(whisper PRIVATE
+    -fstack-protector-strong
+    -D_FORTIFY_SOURCE=2
+    -fvisibility=hidden
+)
+
+target_link_options(whisper PRIVATE
+    -Wl,-z,relro
+    -Wl,-z,now
 )
 
 find_library(log-lib log)

@@ -6,11 +6,11 @@ plugins {
 
 android {
     namespace = "com.velavoice.sdk.whisper"
-    compileSdk = 34
-    ndkVersion = "26.1.10909125"
+    compileSdk = 35
+    ndkVersion = "27.1.12297006"
 
     defaultConfig {
-        minSdk = 23
+        minSdk = 24
         consumerProguardFiles("consumer-rules.pro")
 
         externalNativeBuild {
