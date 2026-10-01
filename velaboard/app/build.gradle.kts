@@ -10,21 +10,33 @@ plugins {
 
 // Read .env file for build-time configuration
 fun loadEnv(): Map<String, String> {
-    val envFile = rootProject.file(".env")
-    if (!envFile.exists()) return emptyMap()
+    val envFile = rootProject.layout.projectDirectory.file(".env")
+    val content = providers.fileContents(envFile).asText.orNull ?: return emptyMap()
     val env = mutableMapOf<String, String>()
-    envFile.readLines().forEach { line ->
+    content.lineSequence().forEach { line ->
         val trimmed = line.trim()
         if (trimmed.isNotEmpty() && !trimmed.startsWith("#")) {
             val eqIdx = trimmed.indexOf('=')
             if (eqIdx > 0) {
                 val key = trimmed.substring(0, eqIdx).trim()
                 val value = trimmed.substring(eqIdx + 1).trim()
+                    .removeSurrounding("\"")
+                    .removeSurrounding("'")
                 env[key] = value
             }
         }
     }
     return env
+}
+
+fun escapeBuildConfig(value: String): String {
+    val unquoted = value.removeSurrounding("\"").removeSurrounding("'")
+    val escaped = unquoted
+        .replace("\\", "\\\\")
+        .replace("\"", "\\\"")
+        .replace("\r", "\\r")
+        .replace("\n", "\\n")
+    return "\"$escaped\""
 }
 
 val envConfig = loadEnv()
@@ -49,9 +61,9 @@ android {
         versionName = "4.0-dev1"
 
         // Inject Google Drive credentials from .env into BuildConfig
-        buildConfigField("String", "GOOGLE_DRIVE_CLIENT_ID", "\"${envConfig["GOOGLE_CLIENT_ID"] ?: ""}\"")
-        buildConfigField("String", "GOOGLE_DRIVE_CLIENT_SECRET", "\"${envConfig["GOOGLE_CLIENT_SECRET"] ?: ""}\"")
-        buildConfigField("String", "GOOGLE_DRIVE_REFRESH_TOKEN", "\"${envConfig["GOOGLE_REFRESH_TOKEN"] ?: ""}\"")
+        buildConfigField("String", "GOOGLE_DRIVE_CLIENT_ID", escapeBuildConfig(envConfig["GOOGLE_CLIENT_ID"] ?: ""))
+        buildConfigField("String", "GOOGLE_DRIVE_CLIENT_SECRET", escapeBuildConfig(envConfig["GOOGLE_CLIENT_SECRET"] ?: ""))
+        buildConfigField("String", "GOOGLE_DRIVE_REFRESH_TOKEN", escapeBuildConfig(envConfig["GOOGLE_REFRESH_TOKEN"] ?: ""))
         ndk {
             abiFilters.clear()
             abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
@@ -167,7 +179,7 @@ android {
 
 dependencies {
     // androidx
-    implementation("androidx.core:core-ktx:1.17.0") // 1.18.0 requires minSdk 23
+    implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.recyclerview:recyclerview:1.4.0")
     implementation("androidx.autofill:autofill:1.3.0")
     implementation("androidx.viewpager2:viewpager2:1.1.0")
@@ -198,11 +210,4 @@ dependencies {
     testImplementation("org.robolectric:robolectric:4.16.1")
     testImplementation("androidx.test:runner:1.7.0")
     testImplementation("androidx.test:core:1.7.0")
-}
-
-configurations.all {
-    resolutionStrategy {
-        force("androidx.core:core:1.15.0")
-        force("androidx.core:core-ktx:1.15.0")
-    }
 }
