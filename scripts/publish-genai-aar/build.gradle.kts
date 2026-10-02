@@ -51,6 +51,12 @@ publishing {
     }
 }
 
+// The publication task must wait for verification: publishToMavenLocal only lists
+// verifyChecksum as a sibling, and Gradle does not guarantee sibling ordering.
+tasks.named("publishGenaiAarPublicationToMavenLocal") {
+    dependsOn(verifyChecksum)
+}
+
 tasks.named("publishToMavenLocal") {
     dependsOn(verifyChecksum)
 }
