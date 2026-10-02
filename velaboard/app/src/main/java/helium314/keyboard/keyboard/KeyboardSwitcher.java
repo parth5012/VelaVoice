@@ -276,6 +276,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             velaStreamingSession = null;
         }
         if (velaTranscriber != null) {
+            velaTranscriber.cancelRecording();
             velaTranscriber.release();
             velaTranscriber = null;
         }
@@ -459,7 +460,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             mIsVelaRecordingCancelled = true;
             stopTimer();
             if (velaTranscriber != null) {
-                velaTranscriber.stopRecording(false);
+                velaTranscriber.cancelRecording();
             }
             showMainKeyboard(latinIME);
             return kotlin.Unit.INSTANCE;
@@ -480,7 +481,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             startTimer(voicePane);
 
             try {
-                velaTranscriber.startRecording(buildVelaCallbacks(latinIME, voicePane, false),
+                velaTranscriber.startRecording(buildVelaCallbacks(latinIME, voicePane, false, privacySensitive),
                     buildScribeInput(latinIME, prefs, forceScribe));
             } catch (Exception e) {
                 showToast("Failed to start voice recording: " + e.getMessage(), false);
@@ -517,7 +518,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                         startTimer(voicePane);
 
                         try {
-                            velaTranscriber.startRecording(buildVelaCallbacks(latinIME, voicePane, false),
+                            velaTranscriber.startRecording(buildVelaCallbacks(latinIME, voicePane, false, privacySensitive),
                                 buildScribeInput(latinIME, prefs, forceScribe));
                         } catch (Exception e) {
                             showToast("Failed to start voice recording: " + e.getMessage(), false);
@@ -550,7 +551,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             YapsUiManager.getInstance().updateLanguageText(language);
             startYapsTimer();
             try {
-                velaTranscriber.startRecording(buildVelaCallbacks(latinIME, null, true),
+                velaTranscriber.startRecording(buildVelaCallbacks(latinIME, null, true, privacySensitive),
                     buildScribeInput(latinIME, prefs, forceScribe));
             } catch (Exception e) {
                 showToast("Failed to start voice recording: " + e.getMessage(), false);
@@ -583,7 +584,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                     YapsUiManager.getInstance().updateLanguageText(language);
                     startYapsTimer();
                     try {
-                        velaTranscriber.startRecording(buildVelaCallbacks(latinIME, null, true),
+                        velaTranscriber.startRecording(buildVelaCallbacks(latinIME, null, true, privacySensitive),
                             buildScribeInput(latinIME, prefs, forceScribe));
                     } catch (Exception e) {
                         showToast("Failed to start voice recording: " + e.getMessage(), false);
@@ -1159,11 +1160,18 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     }
 
     /** Build VelaRecordingCallback — when isYaps=true, use YapsUiManager for UI; when false, use voicePane */
-    private VelaRecordingCallback buildVelaCallbacks(final LatinIME latinIME,
+    VelaRecordingCallback buildVelaCallbacks(final LatinIME latinIME,
             @Nullable final VoiceRecordingPane voicePane, final boolean isYaps) {
+        return buildVelaCallbacks(latinIME, voicePane, isYaps, false);
+    }
+
+    VelaRecordingCallback buildVelaCallbacks(final LatinIME latinIME,
+            @Nullable final VoiceRecordingPane voicePane, final boolean isYaps,
+            final boolean privacySensitive) {
         return new VelaRecordingCallback() {
             @Override
             public void onAmplitude(float normalized) {
+                if (mIsVelaRecordingCancelled) return;
                 latinIME.mHandler.post(() -> {
                     if (isYaps) {
                         YapsUiManager.getInstance().addAmplitude(normalized);
@@ -1176,13 +1184,18 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             @Override
             public void onResult(TranscriptionResult result) {
                 stopTimer();
-                TranscriptionStorage.save(
-                    latinIME,
-                    result.getRawTranscript(),
-                    result.getCleanedTranscript(),
-                    result.getDurationMs(),
-                    result.getAudioBytes()
-                );
+                if (mIsVelaRecordingCancelled) {
+                    return;
+                }
+                if (!privacySensitive) {
+                    TranscriptionStorage.save(
+                        latinIME,
+                        result.getRawTranscript(),
+                        result.getCleanedTranscript(),
+                        result.getDurationMs(),
+                        result.getAudioBytes()
+                    );
+                }
                 latinIME.mHandler.post(() -> {
                     if (!mIsVelaRecordingCancelled) {
                         latinIME.onTextInput(result.getCleanedTranscript());
@@ -1203,6 +1216,9 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             @Override
             public void onError(VelaException e) {
                 stopTimer();
+                if (mIsVelaRecordingCancelled) {
+                    return;
+                }
                 latinIME.mHandler.post(() -> {
                     showToast("Voice input error: " + e.getMessage(), false);
                     if (isYaps) {

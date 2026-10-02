@@ -31,11 +31,18 @@ class KeyboardPrivacyTest {
     fun setUp() {
         ShadowInputMethodService.reset()
         latinIME = Robolectric.setupService(LatinIME::class.java)
+        // KeyboardSwitcher is a process-wide singleton; clear cancel flag leaked by other tests.
+        val field = KeyboardSwitcher::class.java.getDeclaredField("mIsVelaRecordingCancelled")
+        field.isAccessible = true
+        field.setBoolean(KeyboardSwitcher.getInstance(), false)
     }
 
     @AfterTest
     fun tearDown() {
         ShadowInputMethodService.reset()
+        val field = KeyboardSwitcher::class.java.getDeclaredField("mIsVelaRecordingCancelled")
+        field.isAccessible = true
+        field.setBoolean(KeyboardSwitcher.getInstance(), false)
     }
 
     @Test
@@ -94,5 +101,54 @@ class KeyboardPrivacyTest {
         val prefs = Settings.getInstance().prefs
         val scribeInput = KeyboardSwitcher.buildScribeInput(null, prefs)
         assertTrue(scribeInput.privacySensitive, "Null IME must fail closed")
+    }
+
+    @Test
+    fun testOnResult_privacySensitive_doesNotSaveTranscriptionFile() {
+        val storageDir = java.io.File(latinIME.filesDir, "transcriptions")
+        storageDir.deleteRecursively()
+
+        val switcher = KeyboardSwitcher.getInstance()
+        val callback = switcher.buildVelaCallbacks(latinIME, null, false, true)
+        val audioBytes = byteArrayOf(0, 1, 2, 3)
+        val result = com.velavoice.sdk.TranscriptionResult("raw password", "cleaned password", 500, audioBytes)
+
+        callback.onResult(result)
+
+        val files = storageDir.listFiles()?.filter { it.extension == "json" } ?: emptyList()
+        assertTrue(files.isEmpty(), "Expected 0 transcription files saved for privacy sensitive result, but found: ${files.size}")
+    }
+
+    @Test
+    fun testOnResult_notPrivacySensitive_savesTranscriptionFile() {
+        val storageDir = java.io.File(latinIME.filesDir, "transcriptions")
+        storageDir.deleteRecursively()
+
+        val switcher = KeyboardSwitcher.getInstance()
+        val callback = switcher.buildVelaCallbacks(latinIME, null, false, false)
+        val audioBytes = byteArrayOf(0, 1, 2, 3)
+        val result = com.velavoice.sdk.TranscriptionResult("hello world", "Hello world", 500, audioBytes)
+
+        callback.onResult(result)
+
+        val files = storageDir.listFiles()?.filter { it.extension == "json" } ?: emptyList()
+        assertEquals(1, files.size, "Expected exactly 1 transcription file saved for non-sensitive result")
+    }
+
+    @Test
+    fun testOnResult_cancelledRecording_doesNotSaveTranscriptionFile() {
+        val storageDir = java.io.File(latinIME.filesDir, "transcriptions")
+        storageDir.deleteRecursively()
+
+        val switcher = KeyboardSwitcher.getInstance()
+        switcher.releaseVelaTranscriber() // marks mIsVelaRecordingCancelled = true
+        val callback = switcher.buildVelaCallbacks(latinIME, null, false, false)
+        val audioBytes = byteArrayOf(0, 1, 2, 3)
+        val result = com.velavoice.sdk.TranscriptionResult("cancelled audio", "Cancelled audio", 500, audioBytes)
+
+        callback.onResult(result)
+
+        val files = storageDir.listFiles()?.filter { it.extension == "json" } ?: emptyList()
+        assertTrue(files.isEmpty(), "Cancelled recording must not persist transcription files")
     }
 }
