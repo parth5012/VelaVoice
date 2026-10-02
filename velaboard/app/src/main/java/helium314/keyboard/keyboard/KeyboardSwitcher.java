@@ -89,9 +89,9 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     private VelaTranscriber velaTranscriber;
     private VelaStreamingSession velaStreamingSession;
     private boolean mIsVelaRecordingCancelled = false;
-    private boolean mForceScribeForSession;
     private String mCachedVelaModelPath = null;
     private Boolean mCachedVelaLlmToggle = null;
+    private Boolean mCachedVelaScribeToggle = null;
     private KeyboardWrapperView mKeyboardViewWrapper;
     private View mMainKeyboardFrame;
     private MainKeyboardView mKeyboardView;
@@ -281,6 +281,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         }
         mCachedVelaModelPath = null;
         mCachedVelaLlmToggle = null;
+        mCachedVelaScribeToggle = null;
         mSavedInputView = null;
         YapsUiManager.getInstance().stopActiveRecording();
     }
@@ -337,16 +338,14 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
 	 * Long-press voice key intercept: force Scribe mode regardless text selection.
 	 */
 	public void showVelaVoicePane(final LatinIME latinIME, final boolean forceScribe) {
-		final boolean previousForceScribe = mForceScribeForSession;
-		mForceScribeForSession = forceScribe;
-		try {
-			showVelaVoicePane(latinIME);
-		} finally {
-			mForceScribeForSession = previousForceScribe;
-		}
+		showVelaVoicePaneInternal(latinIME, forceScribe);
 	}
 
     public void showVelaVoicePane(final LatinIME latinIME) {
+        showVelaVoicePaneInternal(latinIME, false);
+    }
+
+    private void showVelaVoicePaneInternal(final LatinIME latinIME, final boolean forceScribe) {
         // --- Read preferences with in-memory caching ---
         SharedPreferences prefs = Settings.getInstance().getPrefs();
         
@@ -360,8 +359,13 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         }
         final String modelPath = resolvedModelPath;
 
-        final boolean useLlm = prefs.getBoolean(Settings.PREF_VELA_LLM_TOGGLE,
+        final EditorInfo editorInfo = latinIME != null ? latinIME.getCurrentInputEditorInfo() : null;
+        final boolean privacySensitive = isPrivacySensitiveEditor(editorInfo);
+        final boolean useLlm = !privacySensitive && prefs.getBoolean(Settings.PREF_VELA_LLM_TOGGLE,
             helium314.keyboard.latin.settings.Defaults.PREF_VELA_LLM_TOGGLE);
+        final boolean scribeEnabled = !privacySensitive && prefs.getBoolean(Settings.PREF_VELA_SCRIBE_ENABLED,
+            helium314.keyboard.latin.settings.Defaults.PREF_VELA_SCRIBE_ENABLED);
+        final boolean effectiveScribe = !privacySensitive && (forceScribe || scribeEnabled);
 
         final String llmModelPath = resolveLlmModelPath(latinIME, prefs);
 
@@ -399,7 +403,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         final String yapsLabel = providerTitle + "...";
             YapsUiManager.getInstance().startActiveRecording(yapsLabel);
             startVelaTranscriberForYaps(latinIME, prefs, modelPath, useLlm, llmModelPath,
-                language, threads, customFillers);
+                language, threads, customFillers, forceScribe, privacySensitive);
             return;
         }
 
@@ -463,7 +467,9 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
 
         // --- Check if we can reuse cached transcriber ---
         final boolean canReuseTranscriber = velaTranscriber != null
-            && modelPath.equals(mCachedVelaModelPath);
+            && modelPath.equals(mCachedVelaModelPath)
+            && Boolean.valueOf(useLlm).equals(mCachedVelaLlmToggle)
+            && Boolean.valueOf(effectiveScribe).equals(mCachedVelaScribeToggle);
 
         if (canReuseTranscriber) {
             voicePane.getStopCleanButton().setEnabled(true);
@@ -475,7 +481,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
 
             try {
                 velaTranscriber.startRecording(buildVelaCallbacks(latinIME, voicePane, false),
-                    buildScribeInput(latinIME, prefs));
+                    buildScribeInput(latinIME, prefs, forceScribe));
             } catch (Exception e) {
                 showToast("Failed to start voice recording: " + e.getMessage(), false);
                 showMainKeyboard(latinIME);
@@ -490,7 +496,8 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                         velaTranscriber = null;
                     }
                     VelaTranscriber transcriber = buildVelaTranscriber(latinIME, prefs,
-                        modelPath, useLlm, llmModelPath, language, threads, customFillers);
+                        modelPath, useLlm, llmModelPath, language, threads, customFillers,
+                        forceScribe, privacySensitive);
 
                     voicePane.post(() -> {
                         mIsVelaLoading = false;
@@ -501,6 +508,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                         velaTranscriber = transcriber;
                         mCachedVelaModelPath = modelPath;
                         mCachedVelaLlmToggle = useLlm;
+                        mCachedVelaScribeToggle = effectiveScribe;
 
                         voicePane.getStopCleanButton().setEnabled(true);
                         voicePane.getStopRawButton().setEnabled(true);
@@ -510,7 +518,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
 
                         try {
                             velaTranscriber.startRecording(buildVelaCallbacks(latinIME, voicePane, false),
-                                buildScribeInput(latinIME, prefs));
+                                buildScribeInput(latinIME, prefs, forceScribe));
                         } catch (Exception e) {
                             showToast("Failed to start voice recording: " + e.getMessage(), false);
                             showMainKeyboard(latinIME);
@@ -531,13 +539,19 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     private void startVelaTranscriberForYaps(final LatinIME latinIME,
             final SharedPreferences prefs, final String modelPath, final boolean useLlm,
             final String llmModelPath, final String language, final int threads,
-            final java.util.List<String> customFillers) {
-        if (velaTranscriber != null && modelPath.equals(mCachedVelaModelPath)) {
+            final java.util.List<String> customFillers, final boolean forceScribe,
+            final boolean privacySensitive) {
+        final boolean scribeEnabled = !privacySensitive && prefs.getBoolean(Settings.PREF_VELA_SCRIBE_ENABLED,
+            helium314.keyboard.latin.settings.Defaults.PREF_VELA_SCRIBE_ENABLED);
+        final boolean effectiveScribe = !privacySensitive && (forceScribe || scribeEnabled);
+        if (velaTranscriber != null && modelPath.equals(mCachedVelaModelPath)
+                && Boolean.valueOf(useLlm).equals(mCachedVelaLlmToggle)
+                && Boolean.valueOf(effectiveScribe).equals(mCachedVelaScribeToggle)) {
             YapsUiManager.getInstance().updateLanguageText(language);
             startYapsTimer();
             try {
                 velaTranscriber.startRecording(buildVelaCallbacks(latinIME, null, true),
-                    buildScribeInput(latinIME, prefs));
+                    buildScribeInput(latinIME, prefs, forceScribe));
             } catch (Exception e) {
                 showToast("Failed to start voice recording: " + e.getMessage(), false);
                 YapsUiManager.getInstance().stopActiveRecording();
@@ -553,7 +567,8 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                     velaTranscriber = null;
                 }
                 VelaTranscriber transcriber = buildVelaTranscriber(latinIME, prefs,
-                    modelPath, useLlm, llmModelPath, language, threads, customFillers);
+                    modelPath, useLlm, llmModelPath, language, threads, customFillers,
+                    forceScribe, privacySensitive);
 
                 latinIME.mHandler.post(() -> {
                     mIsVelaLoading = false;
@@ -564,11 +579,12 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                     velaTranscriber = transcriber;
                     mCachedVelaModelPath = modelPath;
                     mCachedVelaLlmToggle = useLlm;
+                    mCachedVelaScribeToggle = effectiveScribe;
                     YapsUiManager.getInstance().updateLanguageText(language);
                     startYapsTimer();
                     try {
                         velaTranscriber.startRecording(buildVelaCallbacks(latinIME, null, true),
-                            buildScribeInput(latinIME, prefs));
+                            buildScribeInput(latinIME, prefs, forceScribe));
                     } catch (Exception e) {
                         showToast("Failed to start voice recording: " + e.getMessage(), false);
                         YapsUiManager.getInstance().stopActiveRecording();
@@ -861,6 +877,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                     velaTranscriber = null;
                     mCachedVelaModelPath = null;
                     mCachedVelaLlmToggle = null;
+                    mCachedVelaScribeToggle = null;
                 }
                 final StreamingPipeline pipeline = builder.build();
                 final VelaStreamingSession session = new VelaStreamingSession(latinIME, pipeline,
@@ -936,18 +953,20 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     private VelaTranscriber buildVelaTranscriber(final LatinIME latinIME,
             final SharedPreferences prefs, final String modelPath, final boolean useLlm,
             final String llmModelPath, final String language, final int threads,
-            final java.util.List<String> customFillers) throws Exception {
+            final java.util.List<String> customFillers, final boolean forceScribe,
+            final boolean privacySensitive) throws Exception {
         VelaTranscriber.Builder builder = new VelaTranscriber.Builder(latinIME)
                 .whisperModel(modelPath)
-                .useLlmCleaner(useLlm, llmModelPath)
+                .useLlmCleaner(useLlm && !privacySensitive, llmModelPath)
                 .language(language)
                 .threads(threads);
 
         // Scribe (AI Rewrite): read enable toggle, default style, per-app override
-        final boolean scribeEnabled = prefs.getBoolean(Settings.PREF_VELA_SCRIBE_ENABLED,
+        final boolean scribeEnabled = !privacySensitive && prefs.getBoolean(Settings.PREF_VELA_SCRIBE_ENABLED,
             helium314.keyboard.latin.settings.Defaults.PREF_VELA_SCRIBE_ENABLED);
-        final String scribeStyle = resolveScribeStyle(latinIME, prefs, scribeEnabled);
-        builder.scribe(mForceScribeForSession || scribeEnabled, scribeStyle, null);
+        final boolean effectiveScribe = !privacySensitive && (forceScribe || scribeEnabled);
+        final String scribeStyle = resolveScribeStyle(latinIME, prefs, effectiveScribe);
+        builder.scribe(effectiveScribe, scribeStyle, null);
         if (customFillers != null) {
             builder.customFillers(customFillers);
         }
@@ -1073,21 +1092,38 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
      * privacySensitive=true so the SDK skips Scribe and LLM cleanup entirely.
      * Ticket 006: the context-fallback toggle gates surrounding-text injection.
      */
-    private ScribeInput buildScribeInput(final LatinIME latinIME, final SharedPreferences prefs) {
-        final boolean scribeEnabled = prefs.getBoolean(Settings.PREF_VELA_SCRIBE_ENABLED,
-            helium314.keyboard.latin.settings.Defaults.PREF_VELA_SCRIBE_ENABLED);
-        if (!scribeEnabled) {
-            return new ScribeInput(null, null, null, null, null, false);
-        }
+    static ScribeInput buildScribeInput(final LatinIME latinIME, final SharedPreferences prefs) {
+        return buildScribeInput(latinIME, prefs, false);
+    }
+
+    static ScribeInput buildScribeInput(final LatinIME latinIME, final SharedPreferences prefs,
+            final boolean forceScribe) {
+        boolean privacySensitive = true;
+        EditorInfo editorInfo = null;
         try {
-            final EditorInfo editorInfo = latinIME.getCurrentInputEditorInfo();
-            final boolean privacySensitive = isPrivacySensitiveEditor(editorInfo);
-            if (privacySensitive) {
+            if (latinIME == null) {
                 return new ScribeInput(null, null, null, null, null, true);
             }
-            final boolean contextFallback = prefs.getBoolean(Settings.PREF_VELA_SCRIBE_CONTEXT_FALLBACK,
+            editorInfo = latinIME.getCurrentInputEditorInfo();
+            privacySensitive = isPrivacySensitiveEditor(editorInfo);
+        } catch (Exception e) {
+            privacySensitive = true;
+        }
+
+        if (privacySensitive) {
+            return new ScribeInput(null, null, null, null, null, true);
+        }
+
+        final boolean scribeEnabled = prefs != null && prefs.getBoolean(Settings.PREF_VELA_SCRIBE_ENABLED,
+            helium314.keyboard.latin.settings.Defaults.PREF_VELA_SCRIBE_ENABLED);
+        if (!scribeEnabled && !forceScribe) {
+            return new ScribeInput(null, null, null, null, null, false);
+        }
+
+        try {
+            final boolean contextFallback = prefs != null && prefs.getBoolean(Settings.PREF_VELA_SCRIBE_CONTEXT_FALLBACK,
                 helium314.keyboard.latin.settings.Defaults.PREF_VELA_SCRIBE_CONTEXT_FALLBACK);
-            final InputConnection ic = latinIME.getCurrentInputConnection();
+            final InputConnection ic = latinIME != null ? latinIME.getCurrentInputConnection() : null;
             final String before = contextFallback && ic != null
                 ? safeText(ic.getTextBeforeCursor(256, 0)) : null;
             final String after = contextFallback && ic != null
@@ -1103,7 +1139,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                 false
             );
         } catch (Exception e) {
-            return new ScribeInput(null, null, null, null, null, false);
+            return new ScribeInput(null, null, null, null, null, true);
         }
     }
 
@@ -1118,7 +1154,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             || variation == android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD;
     }
 
-    private String safeText(final CharSequence cs) {
+    private static String safeText(final CharSequence cs) {
         return cs != null ? cs.toString() : null;
     }
 
