@@ -59,7 +59,6 @@ class GeminiTranscriptionProvider(
                 else -> trimmed
             }
         }
-    }
 
         private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
