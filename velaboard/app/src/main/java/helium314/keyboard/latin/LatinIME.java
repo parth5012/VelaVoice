@@ -863,6 +863,8 @@ public class LatinIME extends InputMethodService implements
             // found a better subtype using hint locales and saved-per-app subtype, that we should switch to.
             mHandler.postSwitchLanguage(subtypeForLocales);
         }
+        // Focus moved: abort a running voice session if the new field is sensitive (ticket #78).
+        mKeyboardSwitcher.recheckSessionPrivacy(editorInfo);
     }
 
     void onStartInputViewInternal(final EditorInfo editorInfo, final boolean restarting) {
@@ -1043,6 +1045,10 @@ public class LatinIME extends InputMethodService implements
         super.onFinishInput();
         Log.i(TAG, "onFinishInput");
 
+        // Input is ending: stop any running voice session (keeps text already shown)
+        // and never keep recording into the next field (map #72, ticket #78).
+        mKeyboardSwitcher.stopVelaRecording();
+
         mDictionaryFacilitator.onFinishInput();
         final MainKeyboardView mainKeyboardView = mKeyboardSwitcher.getMainKeyboardView();
         if (mainKeyboardView != null) {
@@ -1080,6 +1086,10 @@ public class LatinIME extends InputMethodService implements
                     + ", nss=" + newSelStart + ", nse=" + newSelEnd
                     + ", cs=" + composingSpanStart + ", ce=" + composingSpanEnd);
         }
+
+        // Editor attributes can change mid-session without input finishing;
+        // cheap no-op outside an active voice session (ticket #78).
+        mKeyboardSwitcher.recheckSessionPrivacy(getCurrentInputEditorInfo());
 
         // This call happens whether our view is displayed or not, but if it's not then we should
         // not attempt recorrection. This is true even with a hardware keyboard connected: if the

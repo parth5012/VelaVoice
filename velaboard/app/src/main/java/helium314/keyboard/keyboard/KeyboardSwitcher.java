@@ -225,6 +225,8 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     private boolean mIsVelaLoading = false;
     private int mRecordingSeconds = 0;
     private Handler mTimerHandler = null;
+    /** Privacy verdict captured when the current voice session started (map #72, ticket #78). */
+    private boolean mSessionStartedPrivacySensitive = false;
     private Handler mMainHandler = new Handler(Looper.getMainLooper());
 
     public void stopVelaRecording() {
@@ -298,6 +300,25 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         return velaStreamingSession != null && velaStreamingSession.isActive();
     }
 
+    /** True while a Vela voice session may still be recording, loading or streaming (map #72, ticket #78). */
+    public boolean isVelaSessionActive() {
+        return mTimerHandler != null || mIsVelaLoading || isVelaStreaming();
+    }
+
+    /**
+     * Re-evaluate the privacy verdict while a session runs (map #72, ticket #78).
+     * Focus can change without the input finishing; if the verdict flips to
+     * sensitive after a non-sensitive start, abort the session (fail closed).
+     * A session already started sensitive is never touched, and outside an
+     * active session this is a no-op so hot paths stay cheap.
+     */
+    public void recheckSessionPrivacy(final EditorInfo editorInfo) {
+        if (!isVelaSessionActive()) return;
+        if (mSessionStartedPrivacySensitive) return;
+        if (!com.velavoice.sdk.PrivacyGuard.isPrivacySensitiveEditor(editorInfo, true)) return;
+        cancelVelaRecording();
+    }
+
     private void startTimer(final VoiceRecordingPane voicePane) {
         stopTimer();
         mRecordingSeconds = 0;
@@ -362,6 +383,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
 
         final EditorInfo editorInfo = latinIME != null ? latinIME.getCurrentInputEditorInfo() : null;
         final boolean privacySensitive = isPrivacySensitiveEditor(editorInfo);
+        mSessionStartedPrivacySensitive = privacySensitive;
         final boolean useLlm = !privacySensitive && prefs.getBoolean(Settings.PREF_VELA_LLM_TOGGLE,
             helium314.keyboard.latin.settings.Defaults.PREF_VELA_LLM_TOGGLE);
         final boolean scribeEnabled = !privacySensitive && prefs.getBoolean(Settings.PREF_VELA_SCRIBE_ENABLED,

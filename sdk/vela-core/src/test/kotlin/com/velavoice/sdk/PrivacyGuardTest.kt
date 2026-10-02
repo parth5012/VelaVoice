@@ -108,6 +108,44 @@ class PrivacyGuardTest {
     }
 
     @Test
+    fun `password hint text is sensitive`() {
+        assertTrue(
+            "fields hinting a password must be classified sensitive",
+            PrivacyGuard.isPrivacySensitiveEditor(editor().apply { hintText = "Password" })
+        )
+        assertTrue(
+            PrivacyGuard.isPrivacySensitiveEditor(editor().apply { hintText = "Enter your password" })
+        )
+        assertFalse(
+            PrivacyGuard.isPrivacySensitiveEditor(editor().apply { hintText = "Search contacts" })
+        )
+    }
+
+    @Test
+    fun `no-suggestions text flag is sensitive`() {
+        val editor = editor(
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+        )
+        assertTrue(PrivacyGuard.isPrivacySensitiveEditor(editor))
+    }
+
+    @Test
+    fun `unset inputType (TYPE_NULL) fails closed to sensitive`() {
+        assertTrue(PrivacyGuard.isPrivacySensitiveEditor(editor(inputType = InputType.TYPE_NULL)))
+    }
+
+    @Test
+    fun `null editor fails closed only when the caller is in a session re-check`() {
+        assertTrue(
+            PrivacyGuard.isPrivacySensitiveEditor(null, failClosedWhenUnknown = true)
+        )
+        assertFalse(
+            "pre-session classification keeps legacy null => not sensitive semantics",
+            PrivacyGuard.isPrivacySensitiveEditor(null, failClosedWhenUnknown = false)
+        )
+    }
+
+    @Test
     fun `resolveTranscriptionMode falls back to local for sensitive input when local model exists`() {
         assertEqualsLocal(PrivacyGuard.resolveTranscriptionMode("gemini", true, true))
         assertEqualsLocal(PrivacyGuard.resolveTranscriptionMode("groq", true, true))
