@@ -51,6 +51,12 @@ publishing {
     }
 }
 
+// Guard every repository publish path, not only the named task: a future
+// remote-repository target would otherwise copy the artifact unverified.
+tasks.withType<PublishToMavenRepository>().configureEach {
+    dependsOn(verifyChecksum)
+}
+
 // The publication task must wait for verification: publishToMavenLocal only lists
 // verifyChecksum as a sibling, and Gradle does not guarantee sibling ordering.
 tasks.named("publishGenaiAarPublicationToMavenLocal") {
