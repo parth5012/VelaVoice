@@ -110,20 +110,27 @@ class AudioRecorder {
         val audioBytes = recordedAudioData.toByteArray()
         val whisper = currentWhisper
         val callback = currentCallback
+        // Snapshot session state before spawning: a concurrent start() may overwrite
+        // currentScribeInput/currentCleaner/currentInitialPrompt while this transcript
+        // is still being cleaned (TOCTOU — ticket #75), which would apply a later
+        // field's privacy flag to this field's text.
+        val cleaner = currentCleaner
+        val scribeInput = currentScribeInput
+        val initialPrompt = currentInitialPrompt
 
         if (whisper != null && callback != null) {
             Thread({
                 try {
-                    val rawTranscript = whisper.transcribe(audioBytes, currentInitialPrompt)
+                    val rawTranscript = whisper.transcribe(audioBytes, initialPrompt)
                     val cleanedTranscript = if (clean) {
-                        currentCleaner?.clean(
+                        cleaner?.clean(
                             rawTranscript,
-                            contextBefore = currentScribeInput.contextBefore,
-                            contextAfter = currentScribeInput.contextAfter,
-                            appName = currentScribeInput.appName,
-                            inputType = currentScribeInput.inputType,
-                            overrideStyle = currentScribeInput.overrideStyle,
-                            privacySensitive = currentScribeInput.privacySensitive
+                            contextBefore = scribeInput.contextBefore,
+                            contextAfter = scribeInput.contextAfter,
+                            appName = scribeInput.appName,
+                            inputType = scribeInput.inputType,
+                            overrideStyle = scribeInput.overrideStyle,
+                            privacySensitive = scribeInput.privacySensitive
                         ) ?: rawTranscript
                     } else {
                         rawTranscript
