@@ -298,9 +298,10 @@ class GeminiTranscriptionProvider(
                     if (effectiveModel != "gemini-2.0-flash") {
                         return transcribe(pcmAudio, apiKey, "gemini-2.0-flash")
                     }
+                    // Status + body length only: the body must never reach logcat (ticket #79).
                     val bodyString = res.body?.string().orEmpty()
                     throw VelaException.Network(
-                        "Gemini model '$effectiveModel' was not found in Google AI Studio. Details: $bodyString"
+                        "Gemini model '$effectiveModel' was not found in Google AI Studio (${bodyString.length} bytes)"
                     )
                 }
                 429 -> {
@@ -312,11 +313,16 @@ class GeminiTranscriptionProvider(
                     throw VelaException.Network("Invalid Gemini API key or unauthorized access.")
                 }
                 else -> {
+                    // Keep only the short, provider-authored error message; a JSON body
+                    // without one must never be interpolated whole (map #72, ticket #79).
                     val errorMsg = try {
                         val body = res.body?.string().orEmpty()
                         if (body.isNotEmpty()) {
                             val json = JSONObject(body)
-                            json.optJSONObject("error")?.optString("message") ?: body
+                            json.optJSONObject("error")?.optString("message")
+                                ?.takeIf { it.isNotBlank() }
+                                ?.take(200)
+                                ?: "no structured error message (${body.length} bytes)"
                         } else {
                             res.message
                         }

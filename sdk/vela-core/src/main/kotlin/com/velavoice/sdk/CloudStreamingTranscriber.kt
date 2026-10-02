@@ -215,7 +215,14 @@ class CloudStreamingTranscriber : StreamingTranscriber {
                 }
             }
         } catch (e: Exception) {
-            Log.e("CloudStreamingTranscriber", "Failed to parse message: $text", e)
+            // Never log the frame payload - it may contain dictated text
+            // (map #72, ticket #79). Log type/length/exception class only, and
+            // surface the failure instead of silently dropping the segment.
+            Log.e(
+                "CloudStreamingTranscriber",
+                "Failed to parse message (len=${text.length}): ${e.javaClass.simpleName}"
+            )
+            callback?.onError(VelaError("Failed to parse transcription message"))
         }
     }
 
