@@ -66,6 +66,19 @@ def active_block(text, header_pattern):
                 return text[start + 1:index]
     return None
 
+def maven_local_content_blocks(repos_text):
+    """Content-filter body of every active mavenLocal block; None when it has no content{}."""
+    blocks = []
+    for match in re.finditer(r"mavenLocal\b", strip_comments(repos_text)):
+        body = active_block(strip_comments(repos_text)[match.start():], r"mavenLocal\s*\{")
+        blocks.append(None if body is None else active_block(body, r"content\s*\{"))
+    return blocks
+
+def strip_comments(text):
+    """Remove Kotlin/Java comments so commented-out calls are not counted."""
+    text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+    return re.sub(r"//[^\n]*", "", text)
+
 def run_tests():
     global passed, failed
     print("=== Running Dependency Integrity & Supply Chain Verification Tests ===")
@@ -119,10 +132,15 @@ def run_tests():
             "sdk/settings.gradle.kts declares dependencyResolutionManagement { repositories { ... } }",
         )
         if sdk_repos is not None:
-            check(
-                'includeGroup("com.microsoft.onnxruntime")' in sdk_repos,
-                'sdk repositories block restricts mavenLocal with includeGroup("com.microsoft.onnxruntime")',
-            )
+            sdk_filters = maven_local_content_blocks(sdk_repos)
+            check(bool(sdk_filters), "sdk repositories block declares at least one mavenLocal")
+            for filter_index, content in enumerate(sdk_filters):
+                check(
+                    content is not None
+                    and 'includeGroup("com.microsoft.onnxruntime")' in content,
+                    "sdk mavenLocal declaration {} restricts its own content block to "
+                    'includeGroup("com.microsoft.onnxruntime")'.format(filter_index + 1),
+                )
             required = ("google()", "mavenCentral()", "jitpack", "mavenLocal")
             missing = [decl for decl in required if decl not in sdk_repos]
             check(
@@ -152,12 +170,16 @@ def run_tests():
             "velaboard/build.gradle.kts declares allprojects { repositories { ... } }",
         )
         if vb_repos is not None:
-            has_velavoice_group = 'includeGroup("com.velavoice.sdk")' in vb_repos
-            has_onnx_group = 'includeGroup("com.microsoft.onnxruntime")' in vb_repos
-            check(
-                has_velavoice_group and has_onnx_group,
-                "velaboard repositories block restricts mavenLocal to com.velavoice.sdk and com.microsoft.onnxruntime",
-            )
+            vb_filters = maven_local_content_blocks(vb_repos)
+            check(bool(vb_filters), "velaboard repositories block declares at least one mavenLocal")
+            for filter_index, content in enumerate(vb_filters):
+                check(
+                    content is not None
+                    and 'includeGroup("com.velavoice.sdk")' in content
+                    and 'includeGroup("com.microsoft.onnxruntime")' in content,
+                    "velaboard mavenLocal declaration {} restricts its own content block to "
+                    "com.velavoice.sdk and com.microsoft.onnxruntime".format(filter_index + 1),
+                )
             required = ("google()", "mavenCentral()", "jitpack", "mavenLocal")
             missing = [decl for decl in required if decl not in vb_repos]
             check(
@@ -241,8 +263,10 @@ def run_tests():
             r'tasks\.named\("publishGenaiAarPublicationToMavenLocal"\)\s*\{([^}]*)\}',
             p_content,
         )
+        # Strip comments first so `// dependsOn(verifyChecksum)` cannot pass this.
+        wiring_body = strip_comments(wiring.group(1)) if wiring else ""
         check(
-            wiring is not None and "dependsOn(verifyChecksum)" in wiring.group(1),
+            wiring is not None and "dependsOn(verifyChecksum)" in wiring_body,
             "publish-genai-aar gates publishGenaiAarPublicationToMavenLocal on verifyChecksum",
         )
 
