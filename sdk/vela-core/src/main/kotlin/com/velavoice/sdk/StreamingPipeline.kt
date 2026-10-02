@@ -21,8 +21,8 @@ import kotlin.math.sqrt
  *
  * Architecture: single-threaded sequential processing.
  */
-class StreamingPipeline private constructor(
-    private val localTranscriber: LocalStreamingTranscriber?,
+class StreamingPipeline internal constructor(
+    private val localTranscriber: StreamingTranscriber?,
     private val cloudTranscriber: StreamingTranscriber?,
     private val defaultStreamConfig: StreamConfig
 ) {
@@ -32,6 +32,10 @@ class StreamingPipeline private constructor(
     private var recordingThread: Thread? = null
     private val isRecording = AtomicBoolean(false)
     private val stateLock = Any()
+    /** Whether the current session may feed audio to [cloudTranscriber]; fail-closed. */
+    @Volatile
+    private var sessionUploadAllowed = false
+    private val uploadRefusalReported = AtomicBoolean(false)
 
     // Commit boundary tracking
     @Volatile
@@ -82,6 +86,8 @@ class StreamingPipeline private constructor(
         private var resetIntervalMs: Long = 30000
         private var useVad: Boolean = true
         private var vadThreshold: Float = 0.02f
+        private var privacySensitive: Boolean = false
+        private var consentToUpload: Boolean = false
 
         fun whisperModelPath(path: String) = apply { this.whisperModelPath = path }
         fun apiKey(key: String) = apply { this.apiKey = key }
@@ -96,6 +102,8 @@ class StreamingPipeline private constructor(
 
         fun useVad(enabled: Boolean) = apply { this.useVad = enabled }
         fun vadThreshold(threshold: Float) = apply { this.vadThreshold = threshold }
+        fun privacySensitive(sensitive: Boolean) = apply { this.privacySensitive = sensitive }
+        fun consentToUpload(consent: Boolean) = apply { this.consentToUpload = consent }
 
         fun build(): StreamingPipeline {
             val streamConfig = StreamConfig(
@@ -110,7 +118,9 @@ class StreamingPipeline private constructor(
                 overlapMs = overlapMs,
                 resetIntervalMs = resetIntervalMs,
                 useVad = useVad,
-                vadThreshold = vadThreshold
+                vadThreshold = vadThreshold,
+                privacySensitive = privacySensitive,
+                consentToUpload = consentToUpload
             )
 
             val localTranscriber = if (whisperModelPath.isNotBlank()) {
@@ -168,11 +178,28 @@ class StreamingPipeline private constructor(
         if (isRecording.get()) return
         val resolved = reconcile(config)
         this.streamConfig = resolved
-        this.isSessionLocal = mode == "local"
         this.committedText = ""
         this.currentSegmentStart = 0
         this.lastCommitTime = System.currentTimeMillis()
         this.lastActivityTime = System.currentTimeMillis()
+        this.uploadRefusalReported.set(false)
+
+        // Cloud-upload contract (StreamConfig KDoc): explicit consent only, never
+        // for privacy-sensitive sessions. Enforced before any transcriber starts.
+        val uploadAllowed = resolved.allowsCloudUpload()
+        this.sessionUploadAllowed = uploadAllowed
+        var sessionLocal = mode == "local"
+        if (!sessionLocal && !uploadAllowed) {
+            if (localTranscriber == null) {
+                callback?.onError(VelaError(
+                    "Cloud upload blocked: requires consentToUpload=true and privacySensitive=false"
+                ))
+                return
+            }
+            Log.w("StreamingPipeline", "Cloud upload not permitted for this session; forcing local mode")
+            sessionLocal = true
+        }
+        this.isSessionLocal = sessionLocal
 
         // Start the appropriate transcriber
         val transcriber = if (isSessionLocal) localTranscriber else cloudTranscriber
@@ -269,8 +296,8 @@ class StreamingPipeline private constructor(
 
                         val audioBytes = byteBuffer.copyOfRange(0, readResult * 2)
 
-                        // Emit to transcriber
-                        transcriber.emit(audioBytes)
+                        // Emit to transcriber (upload-gated)
+                        dispatchEmit(transcriber, audioBytes)
 
                         // Amplitude callback
                         val rms = sqrt(sumSquares / readResult)
@@ -306,6 +333,23 @@ class StreamingPipeline private constructor(
         }
         audioRecord = null
         return false
+    }
+
+    /**
+     * Sole path from the audio thread to a transcriber. Refuses to feed the
+     * cloud transcriber when the session did not pass the upload contract,
+     * so a future refactor cannot bypass the gate set in [start].
+     */
+    internal fun dispatchEmit(transcriber: StreamingTranscriber, audioChunk: ByteArray) {
+        if (transcriber === cloudTranscriber && !sessionUploadAllowed) {
+            if (uploadRefusalReported.compareAndSet(false, true)) {
+                callback?.onError(VelaError(
+                    "Cloud upload refused: requires consentToUpload=true and privacySensitive=false"
+                ))
+            }
+            return
+        }
+        transcriber.emit(audioChunk)
     }
 
     private fun stopAudioCapture() {

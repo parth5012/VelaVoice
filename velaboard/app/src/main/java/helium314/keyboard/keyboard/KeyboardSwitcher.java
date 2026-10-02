@@ -754,11 +754,16 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                 .threads(threads)
                 .chunkDurationMs(200)
                 .windowDurationMs(2000)
-                .overlapMs(200);
+                .overlapMs(200)
+                .privacySensitive(privacySensitive);
         if (modelAvailable) {
             builder.whisperModelPath(modelPath);
         }
         if (useCloud) {
+            // Cloud upload contract (map #72 #77): the user's explicit cloud
+            // transcription-mode choice is the consent; sensitive fields never
+            // reach this branch (wantsCloud is forced false above).
+            builder.consentToUpload(true);
             builder.apiKey(apiKey);
             if (endpoint != null && (endpoint.startsWith("ws://") || endpoint.startsWith("wss://") || endpoint.startsWith("https://"))) {
                 builder.endpoint(endpoint);
