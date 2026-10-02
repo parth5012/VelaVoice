@@ -267,6 +267,44 @@ class TextCleanerTest {
         assertEquals("hello world", result)
     }
 
+    // ── Privacy Guard contract (map #72, ticket #80) ─────────────────
+    // Forces isLlmInitialized true so the privacySensitive guard is exercised
+    // against a REAL initialized path - the old test passed with a missing model.
+
+    /** Records generate() calls so guard behaviour is directly observable. */
+    private class RecordingTextCleaner(config: CleanerConfig) : TextCleaner(config) {
+        val generateCalls = mutableListOf<String>()
+        override fun generate(prompt: String): String {
+            generateCalls.add(prompt)
+            return "LLM-RESULT"
+        }
+    }
+
+    @Test
+    fun `generate is NEVER invoked when privacySensitive is true even with LLM initialized`() {
+        val cleaner = RecordingTextCleaner(CleanerConfig(useLlm = true))
+        cleaner.forceLlmInitializedForTesting()
+
+        val result = cleaner.clean("um hello world", privacySensitive = true)
+
+        assertEquals("must fall back to rule-based cleanup", "hello world", result)
+        assertTrue(
+            "privacy-sensitive cleaning must never reach the LLM",
+            cleaner.generateCalls.isEmpty()
+        )
+    }
+
+    @Test
+    fun `generate IS invoked when LLM is initialized and field is not privacy-sensitive`() {
+        val cleaner = RecordingTextCleaner(CleanerConfig(useLlm = true))
+        cleaner.forceLlmInitializedForTesting()
+
+        val result = cleaner.clean("um hello world", privacySensitive = false)
+
+        assertEquals("LLM path must run for non-sensitive input", 1, cleaner.generateCalls.size)
+        assertEquals("LLM-RESULT", result)
+    }
+
     // Edge cases
 
     @Test

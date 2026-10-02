@@ -16,7 +16,7 @@ import java.io.File
  * follows Ticket 003's API: the IME service supplies surrounding editor text and app metadata,
  * while this class owns prompt formatting and style routing.
  */
-class TextCleaner(private val config: CleanerConfig) {
+open class TextCleaner(private val config: CleanerConfig) {
     private var isLlmInitialized = false
     private var model: Model? = null
     private var tokenizer: Tokenizer? = null
@@ -264,7 +264,16 @@ class TextCleaner(private val config: CleanerConfig) {
      * generator (each step runs generateNextToken and yields the last token), decoding
      * each token incrementally through a TokenizerStream to preserve multi-byte text.
      */
-    private fun generate(prompt: String): String? {
+    /**
+     * Visible-for-testing harness (map #72, ticket #80): forces [isLlmInitialized] so the
+     * `!privacySensitive` guard is exercised against an initialized LLM path without
+     * needing a real model file.
+     */
+    internal fun forceLlmInitializedForTesting() {
+        isLlmInitialized = true
+    }
+
+    internal open fun generate(prompt: String): String? {
         val m = model ?: return null
         val t = tokenizer ?: return null
         return try {
