@@ -33,6 +33,39 @@ def check(condition, message):
         print(f"[FAIL] {message}")
         failed += 1
 
+def wrapper_active_sha(path):
+    """Active (uncommented) distributionSha256Sum values in a properties file."""
+    values = []
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                stripped = line.strip()
+                if not stripped or stripped.startswith("#") or stripped.startswith("!"):
+                    continue
+                if stripped.startswith("distributionSha256Sum="):
+                    values.append(stripped.split("=", 1)[1].strip())
+    except OSError:
+        return []
+    return values
+
+def active_block(text, header_pattern):
+    """Body of the first `{ ... }` block opened by header_pattern, or None."""
+    match = re.search(header_pattern, text)
+    if not match:
+        return None
+    start = match.end() - 1  # the opening brace of the header
+    if start < 0 or text[start] != "{":
+        return None
+    depth = 0
+    for index in range(start, len(text)):
+        if text[index] == "{":
+            depth += 1
+        elif text[index] == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start + 1:index]
+    return None
+
 def run_tests():
     global passed, failed
     print("=== Running Dependency Integrity & Supply Chain Verification Tests ===")
@@ -41,19 +74,21 @@ def run_tests():
     sdk_wrapper_path = os.path.join(REPO_ROOT, "sdk", "gradle", "wrapper", "gradle-wrapper.properties")
     check(os.path.isfile(sdk_wrapper_path), "sdk/gradle/wrapper/gradle-wrapper.properties exists")
     if os.path.isfile(sdk_wrapper_path):
-        with open(sdk_wrapper_path, "r", encoding="utf-8") as f:
-            content = f.read()
-        has_sha = f"distributionSha256Sum={EXPECTED_GRADLE_8_8_SHA256}" in content
-        check(has_sha, f"sdk gradle wrapper has distributionSha256Sum={EXPECTED_GRADLE_8_8_SHA256}")
+        active_shas = wrapper_active_sha(sdk_wrapper_path)
+        check(
+            active_shas == [EXPECTED_GRADLE_8_8_SHA256],
+            f"sdk gradle wrapper declares exactly one active distributionSha256Sum={EXPECTED_GRADLE_8_8_SHA256}",
+        )
 
     # 2. velaboard gradle-wrapper.properties distributionSha256Sum
     velaboard_wrapper_path = os.path.join(REPO_ROOT, "velaboard", "gradle", "wrapper", "gradle-wrapper.properties")
     check(os.path.isfile(velaboard_wrapper_path), "velaboard/gradle/wrapper/gradle-wrapper.properties exists")
     if os.path.isfile(velaboard_wrapper_path):
-        with open(velaboard_wrapper_path, "r", encoding="utf-8") as f:
-            content = f.read()
-        has_sha = f"distributionSha256Sum={EXPECTED_GRADLE_8_14_SHA256}" in content
-        check(has_sha, f"velaboard gradle wrapper has distributionSha256Sum={EXPECTED_GRADLE_8_14_SHA256}")
+        active_shas = wrapper_active_sha(velaboard_wrapper_path)
+        check(
+            active_shas == [EXPECTED_GRADLE_8_14_SHA256],
+            f"velaboard gradle wrapper declares exactly one active distributionSha256Sum={EXPECTED_GRADLE_8_14_SHA256}",
+        )
 
     # 3. ONNX GenAI AAR checksum file
     aar_checksum_path = os.path.join(REPO_ROOT, "sdk", "vela-cleaner", "libs", "onnxruntime-genai-android-0.15.0.aar.sha256")
@@ -61,46 +96,80 @@ def run_tests():
     if os.path.isfile(aar_checksum_path):
         with open(aar_checksum_path, "r", encoding="utf-8") as f:
             sha_line = f.read().strip()
-        check(EXPECTED_GENAI_AAR_SHA256 in sha_line, f"AAR checksum matches {EXPECTED_GENAI_AAR_SHA256}")
+        checksum_fields = sha_line.split()
+        check(
+            bool(checksum_fields) and checksum_fields[0] == EXPECTED_GENAI_AAR_SHA256,
+            f"AAR checksum matches {EXPECTED_GENAI_AAR_SHA256}",
+        )
 
-    # 4. sdk/settings.gradle.kts mavenLocal restriction & ordering
+    # 4. sdk/settings.gradle.kts mavenLocal restriction & ordering.
+    # Only the active dependencyResolutionManagement repositories block counts:
+    # a declaration in pluginManagement (or a comment) must not satisfy the check.
     sdk_settings_path = os.path.join(REPO_ROOT, "sdk", "settings.gradle.kts")
     check(os.path.isfile(sdk_settings_path), "sdk/settings.gradle.kts exists")
     if os.path.isfile(sdk_settings_path):
         with open(sdk_settings_path, "r", encoding="utf-8") as f:
             sdk_settings = f.read()
-        has_filter = 'includeGroup("com.microsoft.onnxruntime")' in sdk_settings
-        check(has_filter, "sdk/settings.gradle.kts restricts mavenLocal with includeGroup(\"com.microsoft.onnxruntime\")")
-        
-        # Check ordering: mavenLocal must appear AFTER google, mavenCentral, and jitpack
-        pos_google = sdk_settings.find("google()")
-        pos_maven_central = sdk_settings.find("mavenCentral()")
-        pos_jitpack = sdk_settings.find("jitpack")
-        pos_maven_local = sdk_settings.find("mavenLocal")
-        is_ordered = (pos_maven_local > pos_google and 
-                      pos_maven_local > pos_maven_central and 
-                      pos_maven_local > pos_jitpack)
-        check(is_ordered, "sdk/settings.gradle.kts places mavenLocal after google, mavenCentral, and jitpack")
+        sdk_repos = active_block(
+            active_block(sdk_settings, r"dependencyResolutionManagement\s*\{") or "",
+            r"repositories\s*\{",
+        )
+        check(
+            sdk_repos is not None,
+            "sdk/settings.gradle.kts declares dependencyResolutionManagement { repositories { ... } }",
+        )
+        if sdk_repos is not None:
+            check(
+                'includeGroup("com.microsoft.onnxruntime")' in sdk_repos,
+                'sdk repositories block restricts mavenLocal with includeGroup("com.microsoft.onnxruntime")',
+            )
+            required = ("google()", "mavenCentral()", "jitpack", "mavenLocal")
+            missing = [decl for decl in required if decl not in sdk_repos]
+            check(
+                not missing,
+                f"sdk repositories block declares google, mavenCentral, jitpack, mavenLocal (missing: {missing})",
+            )
+            if not missing:
+                declared_before = [sdk_repos.find(decl) for decl in required[:3]]
+                check(
+                    sdk_repos.find("mavenLocal") > max(declared_before),
+                    "sdk repositories block places mavenLocal after google, mavenCentral, and jitpack",
+                )
 
-    # 5. velaboard/build.gradle.kts mavenLocal restriction & ordering
+    # 5. velaboard/build.gradle.kts mavenLocal restriction & ordering.
+    # Only the allprojects repositories block counts, never the buildscript one.
     velaboard_build_path = os.path.join(REPO_ROOT, "velaboard", "build.gradle.kts")
     check(os.path.isfile(velaboard_build_path), "velaboard/build.gradle.kts exists")
     if os.path.isfile(velaboard_build_path):
         with open(velaboard_build_path, "r", encoding="utf-8") as f:
             velaboard_build = f.read()
-        has_velavoice_group = 'includeGroup("com.velavoice.sdk")' in velaboard_build
-        has_onnx_group = 'includeGroup("com.microsoft.onnxruntime")' in velaboard_build
-        check(has_velavoice_group and has_onnx_group, 
-              "velaboard/build.gradle.kts restricts mavenLocal to com.velavoice.sdk and com.microsoft.onnxruntime")
-        
-        pos_vb_google = velaboard_build.find("google()")
-        pos_vb_central = velaboard_build.find("mavenCentral()")
-        pos_vb_jitpack = velaboard_build.find("jitpack")
-        pos_vb_local = velaboard_build.find("mavenLocal")
-        is_vb_ordered = (pos_vb_local > pos_vb_google and 
-                         pos_vb_local > pos_vb_central and 
-                         pos_vb_local > pos_vb_jitpack)
-        check(is_vb_ordered, "velaboard/build.gradle.kts places mavenLocal after google, mavenCentral, and jitpack")
+        vb_repos = active_block(
+            active_block(velaboard_build, r"allprojects\s*\{") or "",
+            r"repositories\s*\{",
+        )
+        check(
+            vb_repos is not None,
+            "velaboard/build.gradle.kts declares allprojects { repositories { ... } }",
+        )
+        if vb_repos is not None:
+            has_velavoice_group = 'includeGroup("com.velavoice.sdk")' in vb_repos
+            has_onnx_group = 'includeGroup("com.microsoft.onnxruntime")' in vb_repos
+            check(
+                has_velavoice_group and has_onnx_group,
+                "velaboard repositories block restricts mavenLocal to com.velavoice.sdk and com.microsoft.onnxruntime",
+            )
+            required = ("google()", "mavenCentral()", "jitpack", "mavenLocal")
+            missing = [decl for decl in required if decl not in vb_repos]
+            check(
+                not missing,
+                f"velaboard repositories block declares google, mavenCentral, jitpack, mavenLocal (missing: {missing})",
+            )
+            if not missing:
+                declared_before = [vb_repos.find(decl) for decl in required[:3]]
+                check(
+                    vb_repos.find("mavenLocal") > max(declared_before),
+                    "velaboard repositories block places mavenLocal after google, mavenCentral, and jitpack",
+                )
 
     # 6. README.md: references checksum and removes stale path
     readme_path = os.path.join(REPO_ROOT, "README.md")
@@ -166,6 +235,16 @@ def run_tests():
             p_content = f.read()
         check(EXPECTED_GENAI_AAR_SHA256 in p_content, "publish-genai-aar enforces pinned SHA-256")
         check("verifyChecksum" in p_content, "publish-genai-aar defines verifyChecksum task")
+        # verifyChecksum must gate the publication task itself: publishToMavenLocal
+        # only lists it as a sibling, and Gradle gives no ordering guarantee there.
+        wiring = re.search(
+            r'tasks\.named\("publishGenaiAarPublicationToMavenLocal"\)\s*\{([^}]*)\}',
+            p_content,
+        )
+        check(
+            wiring is not None and "dependsOn(verifyChecksum)" in wiring.group(1),
+            "publish-genai-aar gates publishGenaiAarPublicationToMavenLocal on verifyChecksum",
+        )
 
     print(f"\nTest Summary: {passed} passed, {failed} failed")
     if failed > 0:
