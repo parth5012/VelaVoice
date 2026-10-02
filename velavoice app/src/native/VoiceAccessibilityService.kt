@@ -43,6 +43,7 @@ import com.velavoice.sdk.RevisionMarker
 import com.velavoice.sdk.StreamConfig
 import com.velavoice.sdk.VelaException
 import com.velavoice.sdk.LocalStreamingTranscriber
+import com.velavoice.sdk.PrivacyGuard
 
 class VoiceAccessibilityService : AccessibilityService() {
     private var windowManager: WindowManager? = null
@@ -263,6 +264,19 @@ class VoiceAccessibilityService : AccessibilityService() {
     }
 
 
+    /**
+     * Privacy classification captured when a session starts (map #72 ticket #76).
+     * Fail-closed: no focused node or unknown focus => treated as sensitive.
+     */
+    @Volatile
+    private var sessionPrivacySensitive = false
+
+    private fun refreshSessionPrivacySensitive() {
+        sessionPrivacySensitive = PrivacyGuard.isSensitiveAccessibilityNode(
+            findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+        )
+    }
+
     private fun createCapsuleDrawable(backgroundColor: Int, cornerRadius: Float): GradientDrawable {
         return GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
@@ -290,6 +304,7 @@ class VoiceAccessibilityService : AccessibilityService() {
 
     private fun startRecording() {
         if (isRecording) return
+        refreshSessionPrivacySensitive()
         isRecording = true
         recordedAudioData.reset()
         waveformView.clear()
@@ -403,8 +418,17 @@ class VoiceAccessibilityService : AccessibilityService() {
         } else {
             configuredMode
         }
+        // Privacy gate (map #72 ticket #76): audio recorded while a sensitive field is
+        // focused must never reach a cloud API. Falls back to local, or aborts.
+        val resolvedMode = PrivacyGuard.resolveTranscriptionMode(
+            mode,
+            sessionPrivacySensitive,
+            getWhisperModelPath(this@VoiceAccessibilityService) != null
+        )
 
-        if (mode == "gemini") {
+        if (resolvedMode == null) {
+            errorMessage = "Sensitive input: cloud transcription blocked and no local model available"
+        } else if (resolvedMode == "gemini") {
             val apiKey = geminiKey
             val rawModel = prefs.getString("geminiModel", "")?.takeIf { it.isNotBlank() }
                 ?: prefs.getString("vela_gemini_model", "gemini-3.5-transcribe") ?: "gemini-3.5-transcribe"
@@ -418,34 +442,33 @@ class VoiceAccessibilityService : AccessibilityService() {
             } else {
                 try {
                     Log.d("VoiceAccessibility", "Transcribing with Google Gemini model: $model")
-                    val provider = com.velavoice.sdk.GeminiTranscriptionProvider(model = model)
+                    val provider = com.velavoice.sdk.GeminiTranscriptionProvider(rawModel = model)
                     rawTranscript = provider.transcribe(audioBytes, apiKey)
-                    Log.d("VoiceAccessibility", "Gemini transcription successful: $rawTranscript")
                 } catch (e: Exception) {
                     e.printStackTrace()
                     errorMessage = "Gemini Error: ${e.message}"
                 }
             }
-        } else if (mode == "groq" || mode == "openai" || mode == "custom") {
-            var apiKey = if (mode == "groq") {
+        } else if (resolvedMode == "groq" || resolvedMode == "openai" || resolvedMode == "custom") {
+            var apiKey = if (resolvedMode == "groq") {
                 prefs.getString("groqApiKey", "") ?: prefs.getString("vela_groq_api_key", "") ?: ""
-            } else if (mode == "custom") {
+            } else if (resolvedMode == "custom") {
                 prefs.getString("customApiKey", "") ?: prefs.getString("vela_custom_api_key", "") ?: ""
             } else {
                 prefs.getString("openaiApiKey", "") ?: prefs.getString("vela_openai_api_key", "") ?: ""
             }
 
-            var model = if (mode == "groq") {
+            var model = if (resolvedMode == "groq") {
                 prefs.getString("groqModel", "whisper-large-v3") ?: "whisper-large-v3"
-            } else if (mode == "custom") {
+            } else if (resolvedMode == "custom") {
                 prefs.getString("customModel", "whisper-1") ?: "whisper-1"
             } else {
                 prefs.getString("openaiModel", "whisper-1") ?: "whisper-1"
             }
 
-            var endpoint = if (mode == "groq") {
+            var endpoint = if (resolvedMode == "groq") {
                 "https://api.groq.com/openai/v1"
-            } else if (mode == "custom") {
+            } else if (resolvedMode == "custom") {
                 prefs.getString("customEndpoint", "https://api.openai.com/v1") ?: "https://api.openai.com/v1"
             } else {
                 prefs.getString("openaiEndpoint", "https://api.openai.com/v1") ?: "https://api.openai.com/v1"
@@ -462,11 +485,11 @@ class VoiceAccessibilityService : AccessibilityService() {
                         "helium314.keyboard_preferences",
                         Context.MODE_PRIVATE
                     )
-                    if (mode == "groq") {
+                    if (resolvedMode == "groq") {
                         apiKey = keyboardPrefs.getString("vela_groq_api_key", "") ?: ""
                         val kModel = keyboardPrefs.getString("vela_groq_model", "") ?: ""
                         if (kModel.isNotBlank()) model = kModel
-                    } else if (mode == "custom") {
+                    } else if (resolvedMode == "custom") {
                         apiKey = keyboardPrefs.getString("vela_custom_api_key", "") ?: ""
                         val kModel = keyboardPrefs.getString("vela_custom_model", "") ?: ""
                         if (kModel.isNotBlank()) model = kModel
@@ -484,10 +507,10 @@ class VoiceAccessibilityService : AccessibilityService() {
             }
 
             if (apiKey.isBlank()) {
-                errorMessage = "Error: API Key is missing for $mode"
+                errorMessage = "Error: API Key is missing for $resolvedMode"
             } else {
                 try {
-                    rawTranscript = transcribeWithApi(audioBytes, mode, apiKey, model, endpoint)
+                    rawTranscript = transcribeWithApi(audioBytes, resolvedMode, apiKey, model, endpoint)
                 } catch (e: Exception) {
                     e.printStackTrace()
                     errorMessage = "API Error: ${e.message}"
@@ -495,13 +518,12 @@ class VoiceAccessibilityService : AccessibilityService() {
             }
         } else {
             val whisperPath = getWhisperModelPath(this@VoiceAccessibilityService)
-                if (whisperPath != null) {
-                    val whisper = WhisperEngine(WhisperConfig(whisperPath))
-                    try {
-                        rawTranscript = whisper.transcribe(audioBytes)
-                    } finally {
-                        whisper.free()
-                    }
+            if (whisperPath != null) {
+                val whisper = WhisperEngine(WhisperConfig(whisperPath))
+                try {
+                    rawTranscript = whisper.transcribe(audioBytes)
+                } finally {
+                    whisper.free()
                 }
             } else {
                 val seconds = (audioBytes.size / 2) / 16000f
@@ -523,21 +545,22 @@ class VoiceAccessibilityService : AccessibilityService() {
                     val entries = mutableListOf<Pair<String, String>>()
                     var db: SQLiteDatabase? = null
                     try {
-                        db = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-                        val cursor = db.rawQuery(
+                        val handle = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
+                        db = handle
+                        handle.rawQuery(
                             "SELECT original_word, replacement FROM personal_dictionary ORDER BY priority DESC, original_word ASC",
                             null
-                        )
-                        if (cursor.moveToFirst()) {
-                            do {
-                                val original = cursor.getString(0)
-                                val replacement = cursor.getString(1)
-                                if (original.isNotEmpty()) {
-                                    entries.add(Pair(original, replacement))
-                                }
-                            } while (cursor.moveToNext())
+                        ).use { cursor ->
+                            if (cursor.moveToFirst()) {
+                                do {
+                                    val original = cursor.getString(0)
+                                    val replacement = cursor.getString(1)
+                                    if (original.isNotEmpty()) {
+                                        entries.add(Pair(original, replacement))
+                                    }
+                                } while (cursor.moveToNext())
+                            }
                         }
-                        cursor.close()
                     } catch (e: Exception) {
                         Log.e("VoiceAccessibility", "Error loading personal dictionary: ${e.message}")
                     } finally {
@@ -552,20 +575,21 @@ class VoiceAccessibilityService : AccessibilityService() {
                     val keywords = mutableListOf<String>()
                     var db: SQLiteDatabase? = null
                     try {
-                        db = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-                        val cursor = db.rawQuery(
+                        val handle = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
+                        db = handle
+                        handle.rawQuery(
                             "SELECT keyword FROM dictionary_keywords ORDER BY keyword ASC",
                             null
-                        )
-                        if (cursor.moveToFirst()) {
-                            do {
-                                val keyword = cursor.getString(0)
-                                if (keyword.isNotEmpty()) {
-                                    keywords.add(keyword)
-                                }
-                            } while (cursor.moveToNext())
+                        ).use { cursor ->
+                            if (cursor.moveToFirst()) {
+                                do {
+                                    val keyword = cursor.getString(0)
+                                    if (keyword.isNotEmpty()) {
+                                        keywords.add(keyword)
+                                    }
+                                } while (cursor.moveToNext())
+                            }
                         }
-                        cursor.close()
                     } catch (e: Exception) {
                         Log.e("VoiceAccessibility", "Error loading dictionary keywords: ${e.message}")
                     } finally {
@@ -581,13 +605,13 @@ class VoiceAccessibilityService : AccessibilityService() {
                 dictionaryKeywords = dictionaryKeywords
             ))
             val finalTranscript = if (rawTranscript.isNotEmpty()) {
-                cleaner.clean(rawTranscript)
+                cleaner.clean(rawTranscript, privacySensitive = sessionPrivacySensitive)
             } else {
                 rawTranscript
             }
 
-        // Auto-save transcription pair + audio to local storage
-        if (rawTranscript.isNotEmpty()) {
+        // Auto-save — never persist transcripts of privacy-sensitive fields
+        if (!sessionPrivacySensitive && rawTranscript.isNotEmpty()) {
             val durationMs = ((audioBytes.size / 2) / 16L)
             TranscriptionStorage.save(
                 this@VoiceAccessibilityService,
@@ -603,7 +627,7 @@ class VoiceAccessibilityService : AccessibilityService() {
                 statusText.text = errorMessage
             } else {
                 if (finalTranscript.isNotEmpty()) {
-                    insertText(finalTranscript)
+                    insertText(finalTranscript, sessionPrivacySensitive)
                 }
                 statusText.text = "Ready"
             }
@@ -616,12 +640,35 @@ class VoiceAccessibilityService : AccessibilityService() {
     }).start()
     }
 
-    private fun insertText(text: String) {
+    private fun insertText(text: String, privacySensitive: Boolean) {
+        val focusNode = findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+        if (privacySensitive) {
+            // Never place dictated text on the clipboard. Dispatch ACTION_SET_TEXT —
+            // assigning .text would only mutate this local node wrapper, not the app.
+            val targetNode = focusNode ?: rootInActiveWindow?.let { findEditableNode(it) }
+            if (targetNode != null) {
+                try {
+                    val existing = targetNode.text?.toString() ?: ""
+                    val arguments = Bundle()
+                    arguments.putCharSequence(
+                        AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+                        existing + text
+                    )
+                    if (!targetNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)) {
+                        Log.w("VoiceAccessibility", "ACTION_SET_TEXT refused by target app")
+                    }
+                } catch (e: Exception) {
+                    // Password fields may refuse accessibility writes; never fall back to
+                    // the clipboard for sensitive text.
+                    Log.e("VoiceAccessibility", "Direct insert refused: ${e.javaClass.simpleName}")
+                }
+            }
+            return
+        }
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText("transcription", text)
         clipboard.setPrimaryClip(clip)
 
-        val focusNode = findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
         if (focusNode != null) {
             focusNode.performAction(AccessibilityNodeInfo.ACTION_PASTE)
         } else {
@@ -838,6 +885,7 @@ class VoiceAccessibilityService : AccessibilityService() {
     private fun startStreamingTranscription() {
         if (isStreaming) return
         loadStreamingPreferences()
+        refreshSessionPrivacySensitive()
 
         if (streamingMode == "instant") {
             // Fall back to batch mode
@@ -896,9 +944,9 @@ class VoiceAccessibilityService : AccessibilityService() {
         streamingTranscriber?.release()
         streamingTranscriber = null
 
-        // Auto-save final transcription
+        // Auto-save final transcription — never persist sensitive-field transcripts
         val finalText = streamingBuffer.toString().trim()
-        if (finalText.isNotEmpty()) {
+        if (!sessionPrivacySensitive && finalText.isNotEmpty()) {
             TranscriptionStorage.save(
                 this@VoiceAccessibilityService,
                 raw = finalText,
@@ -1032,11 +1080,28 @@ class VoiceAccessibilityService : AccessibilityService() {
 
         if (targetNode != null) {
             if (isFinal) {
-                // Final text: paste via clipboard
-                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val clip = ClipData.newPlainText("streaming", text)
-                clipboard.setPrimaryClip(clip)
-                targetNode.performAction(AccessibilityNodeInfo.ACTION_PASTE)
+                if (sessionPrivacySensitive) {
+                    // Sensitive field: never place dictated text on the clipboard.
+                    try {
+                        val existing = targetNode.text?.toString() ?: ""
+                        val arguments = Bundle()
+                        arguments.putCharSequence(
+                            AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+                            existing + text
+                        )
+                        if (!targetNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)) {
+                            Log.w("VoiceAccessibility", "ACTION_SET_TEXT refused by target app")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("VoiceAccessibility", "Direct insert refused: ${e.javaClass.simpleName}")
+                    }
+                } else {
+                    // Final text: paste via clipboard
+                    val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clip = ClipData.newPlainText("streaming", text)
+                    clipboard.setPrimaryClip(clip)
+                    targetNode.performAction(AccessibilityNodeInfo.ACTION_PASTE)
+                }
             } else {
                 // Partial text: use ACTION_SET_TEXT for composing
                 val arguments = Bundle()

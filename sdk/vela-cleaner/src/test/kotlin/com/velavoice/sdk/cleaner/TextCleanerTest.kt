@@ -113,7 +113,7 @@ class TextCleanerTest {
     fun `clean without LLM only runs rule-based`() {
         val cleaner = TextCleaner(CleanerConfig(useLlm = false))
         val input = "hello world"
-        assertEquals("hello world", cleaner.clean(input))
+        assertEquals("hello world", cleaner.clean(input, privacySensitive = false))
     }
 
     @Test
@@ -121,7 +121,7 @@ class TextCleanerTest {
         val cleaner = TextCleaner(CleanerConfig(useLlm = true, llmModelPath = ""))
         // LLM init will fail silently (model not found), so isLlmInitialized = false
         // Falls back to rule-based
-        val result = cleaner.clean("hello world")
+        val result = cleaner.clean("hello world", privacySensitive = false)
         assertEquals("hello world", result)
     }
 
@@ -130,7 +130,7 @@ class TextCleanerTest {
         val cleaner = TextCleaner(CleanerConfig(useLlm = true, llmModelPath = "/nonexistent/model.bin"))
         // Init logs error, isLlmInitialized stays false -> falls back to rule-based
         val input = "um hello world"
-        val result = cleaner.clean(input)
+        val result = cleaner.clean(input, privacySensitive = false)
         assertEquals("hello world", result)
     }
 
@@ -230,7 +230,7 @@ class TextCleanerTest {
     fun `clean with scribe enabled but LLM unavailable falls back to rule-based`() {
         val cleaner = TextCleaner(CleanerConfig(useLlm = true, scribeEnabled = true, llmModelPath = "/nonexistent"))
         val input = "um hello world"
-        val result = cleaner.clean(input)
+        val result = cleaner.clean(input, privacySensitive = false)
         assertEquals("hello world", result)
     }
 
@@ -238,7 +238,7 @@ class TextCleanerTest {
     fun `clean with scribe disabled and LLM unavailable falls back to rule-based`() {
         val cleaner = TextCleaner(CleanerConfig(useLlm = true, llmModelPath = "/nonexistent"))
         val input = "um hello world"
-        val result = cleaner.clean(input)
+        val result = cleaner.clean(input, privacySensitive = false)
         assertEquals("hello world", result)
     }
 
@@ -315,6 +315,6 @@ class TextCleanerTest {
     fun `clean with LLM empty text returns empty`() {
         val cleaner = TextCleaner(CleanerConfig(useLlm = true))
         // LLM init skipped (no model), isLlmInitialized false -> fallback
-        assertEquals("", cleaner.clean(""))
+        assertEquals("", cleaner.clean("", privacySensitive = false))
     }
 }
