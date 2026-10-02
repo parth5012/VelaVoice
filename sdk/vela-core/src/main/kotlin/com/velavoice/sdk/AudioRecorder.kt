@@ -141,8 +141,25 @@ class AudioRecorder {
         }
     }
 
+    /** Cancel recording immediately without transcription or callbacks */
+    fun cancel() {
+        if (!isRecording) return
+        isRecording = false
+
+        try {
+            audioRecord?.stop()
+            audioRecord?.release()
+            audioRecord = null
+            recordingThread?.join()
+            recordingThread = null
+        } catch (e: Exception) {
+            // ignore during cancel
+        }
+        recordedAudioData.reset()
+    }
+
     fun release() {
-        stop(false)
+        cancel()
         currentWhisper = null
         currentCleaner = null
         currentCallback = null

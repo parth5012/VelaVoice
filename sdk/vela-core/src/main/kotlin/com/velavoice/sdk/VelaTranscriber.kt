@@ -129,6 +129,11 @@ class VelaTranscriber private constructor(
         audioRecorder.stop(clean)
     }
 
+    /** Cancel recording and discard audio without transcribing */
+    fun cancelRecording() {
+        audioRecorder.cancel()
+    }
+
     /**
      * Start streaming transcription.
      * @param mode "local" for whisper.cpp, "cloud" for OpenAI WebSocket
