@@ -68,7 +68,7 @@ jobs:
 
       - name: Build Velaboard debug APK
         working-directory: velaboard
-        run: ./gradlew assembleDebug
+        run: ./gradlew --stacktrace assembleDebug
 
       - name: Run Velaboard unit tests
         working-directory: velaboard
