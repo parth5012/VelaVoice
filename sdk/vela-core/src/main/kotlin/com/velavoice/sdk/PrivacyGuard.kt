@@ -34,15 +34,32 @@ object PrivacyGuard {
     }
 
     /**
-     * True when the IME editor opts out of personalized learning or uses a password
-     * inputType. `null` editor follows the legacy IME semantics (not sensitive);
-     * call sites that cannot resolve an editor at all must fail closed themselves.
+     * True when the focused editor must be treated as privacy-sensitive.
+     *
+     * Detected signals (map #72, ticket #78):
+     * - [EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING] opts-out flag
+     * - password inputType variations (class-mask aware)
+     * - [InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS] (private/code fields commonly set it)
+     * - `inputType == 0` ([InputType.TYPE_NULL], no declared type — fail closed)
+     * - a password `hintText` ("Password", "Enter your password", ...) — the only
+     *   hint channel an IME receives; `EditorInfo` has no `autofillHints` field
+     *   (verified against the API 35 SDK), so view autofill hints are invisible here
+     *
+     * [failClosedWhenUnknown] only applies to a `null` editor: session re-checks
+     * (focus lost mid-voice-session) must fail closed, while pre-session
+     * classification keeps the legacy IME semantics (null => not sensitive).
      */
     @JvmStatic
-    fun isPrivacySensitiveEditor(editorInfo: EditorInfo?): Boolean {
-        if (editorInfo == null) return false
+    @JvmOverloads
+    fun isPrivacySensitiveEditor(editorInfo: EditorInfo?, failClosedWhenUnknown: Boolean = false): Boolean {
+        if (editorInfo == null) return failClosedWhenUnknown
         if ((editorInfo.imeOptions and EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING) != 0) return true
-        return isSensitiveInputType(editorInfo.inputType)
+        if (editorInfo.inputType == InputType.TYPE_NULL) return true
+        if ((editorInfo.inputType and InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS) != 0) return true
+        if (isSensitiveInputType(editorInfo.inputType)) return true
+        val hint = editorInfo.hintText
+        if (hint != null && hint.toString().contains("password", ignoreCase = true)) return true
+        return false
     }
 
     /**

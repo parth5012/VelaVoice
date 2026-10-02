@@ -1,6 +1,8 @@
 package helium314.keyboard.keyboard
 
 import android.text.InputType
+import android.os.Handler
+import android.os.Looper
 import android.view.inputmethod.EditorInfo
 import com.velavoice.sdk.ScribeInput
 import helium314.keyboard.ShadowInputMethodService
@@ -150,5 +152,89 @@ class KeyboardPrivacyTest {
 
         val files = storageDir.listFiles()?.filter { it.extension == "json" } ?: emptyList()
         assertTrue(files.isEmpty(), "Cancelled recording must not persist transcription files")
+    }
+
+    private fun setSwitcherField(name: String, value: Any?) {
+        val field = KeyboardSwitcher::class.java.getDeclaredField(name)
+        field.isAccessible = true
+        field.set(KeyboardSwitcher.getInstance(), value)
+    }
+
+    private fun switcherFlag(name: String): Boolean {
+        val field = KeyboardSwitcher::class.java.getDeclaredField(name)
+        field.isAccessible = true
+        return field.getBoolean(KeyboardSwitcher.getInstance())
+    }
+
+    private fun activateInstantSession(startedSensitive: Boolean) {
+        setSwitcherField("mTimerHandler", Handler(Looper.getMainLooper()))
+        setSwitcherField("mIsVelaLoading", false)
+        setSwitcherField("mSessionStartedPrivacySensitive", startedSensitive)
+    }
+
+    private fun deactivateSession() {
+        setSwitcherField("mTimerHandler", null)
+        setSwitcherField("mIsVelaLoading", false)
+        setSwitcherField("mSessionStartedPrivacySensitive", false)
+    }
+
+    private fun passwordEditor(): EditorInfo = EditorInfo().apply {
+        inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+    }
+
+    @Test
+    fun testRecheckSessionPrivacy_activeSessionEditorBecomesSensitive_abortsSession() {
+        val ks = KeyboardSwitcher.getInstance()
+        activateInstantSession(startedSensitive = false)
+        setSwitcherField("mIsVelaRecordingCancelled", false)
+
+        ks.recheckSessionPrivacy(passwordEditor())
+
+        assertTrue(
+            switcherFlag("mIsVelaRecordingCancelled"),
+            "verdict flipping to sensitive mid-session must abort the voice session"
+        )
+    }
+
+    @Test
+    fun testRecheckSessionPrivacy_nullEditor_failsClosed_abortsActiveSession() {
+        val ks = KeyboardSwitcher.getInstance()
+        activateInstantSession(startedSensitive = false)
+        setSwitcherField("mIsVelaRecordingCancelled", false)
+
+        ks.recheckSessionPrivacy(null)
+
+        assertTrue(
+            switcherFlag("mIsVelaRecordingCancelled"),
+            "unknown editor during an active session must fail closed (abort)"
+        )
+    }
+
+    @Test
+    fun testRecheckSessionPrivacy_noActiveSession_neverAborts() {
+        val ks = KeyboardSwitcher.getInstance()
+        deactivateSession()
+        setSwitcherField("mIsVelaRecordingCancelled", false)
+
+        ks.recheckSessionPrivacy(passwordEditor())
+
+        assertFalse(
+            switcherFlag("mIsVelaRecordingCancelled"),
+            "recheck outside an active session must be a no-op"
+        )
+    }
+
+    @Test
+    fun testRecheckSessionPrivacy_sessionAlreadySensitive_staysRestrictedWithoutAbort() {
+        val ks = KeyboardSwitcher.getInstance()
+        activateInstantSession(startedSensitive = true)
+        setSwitcherField("mIsVelaRecordingCancelled", false)
+
+        ks.recheckSessionPrivacy(passwordEditor())
+
+        assertFalse(
+            switcherFlag("mIsVelaRecordingCancelled"),
+            "a session already started sensitive must never be cancelled by recheck"
+        )
     }
 }
