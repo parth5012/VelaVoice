@@ -45,6 +45,14 @@ interface StreamingTranscriber {
 
 /**
  * Configuration for a streaming transcription session.
+ *
+ * **Cloud upload contract (map #72 ticket #77):** raw audio may only leave the
+ * device when [consentToUpload] is `true` AND [privacySensitive] is `false`.
+ * Both [StreamingPipeline] and [VelaTranscriber.startStreaming] enforce this
+ * before any transcriber is started or any chunk is emitted: a cloud request
+ * that fails the check is refused (error) or force-falls-back to the local
+ * model when one is available. Cloud upload therefore requires explicit
+ * opt-in via [consentToUpload]; there is no implicit consent.
  */
 data class StreamConfig(
     val modelPath: String = "",
@@ -58,5 +66,12 @@ data class StreamConfig(
     val overlapMs: Int = 1500,
     val resetIntervalMs: Long = 30000,
     val useVad: Boolean = true,
-    val vadThreshold: Float = 0.02f
-)
+    val vadThreshold: Float = 0.02f,
+    /** True when the current session is dictating into a privacy-sensitive editor. */
+    val privacySensitive: Boolean = false,
+    /** Explicit opt-in required before any audio may be uploaded to a cloud API. */
+    val consentToUpload: Boolean = false
+) {
+    /** Single predicate for the cloud-upload contract documented on [StreamConfig]. */
+    fun allowsCloudUpload(): Boolean = consentToUpload && !privacySensitive
+}

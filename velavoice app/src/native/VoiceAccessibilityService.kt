@@ -917,7 +917,8 @@ class VoiceAccessibilityService : AccessibilityService() {
             overlapMs = 1500,
             resetIntervalMs = 30000,
             useVad = true,
-            vadThreshold = 0.02f
+            vadThreshold = 0.02f,
+            privacySensitive = sessionPrivacySensitive
         )
         streamingTranscriber?.start(streamConfig)
 

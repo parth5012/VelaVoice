@@ -136,6 +136,11 @@ class VelaTranscriber private constructor(
 
     /**
      * Start streaming transcription.
+     *
+     * **Cloud upload requires explicit opt-in** (map #72 ticket #77): `mode =
+     * "cloud"` is refused unless [StreamConfig.consentToUpload] is `true` and
+     * [StreamConfig.privacySensitive] is `false`. See [StreamConfig.allowsCloudUpload].
+     *
      * @param mode "local" for whisper.cpp, "cloud" for OpenAI WebSocket
      * @param callback receives revision markers and final results
      * @param config optional stream configuration overrides
@@ -150,6 +155,13 @@ class VelaTranscriber private constructor(
             language = config.language.ifBlank { "en" },
             numThreads = if (config.numThreads > 0) config.numThreads else 4
         )
+
+        if (mode == "cloud" && !streamConfig.allowsCloudUpload()) {
+            callback.onError(VelaError(
+                "Cloud upload blocked: requires consentToUpload=true and privacySensitive=false"
+            ))
+            return
+        }
 
         if (mode == "cloud") {
             val cloud = CloudStreamingTranscriber()
