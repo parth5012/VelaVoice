@@ -167,6 +167,28 @@ def run_tests():
     has_chmod = "chmod +x" in content and "gradlew" in content
     check(has_chmod, "Workflow grants execute permissions to gradlew and bootstrap scripts")
 
+    # 13. Velaboard Gradle heap is large enough to package the APK.
+    # A clean CI runner OOMs in :app:packageDebug with -Xmx1024m
+    # (java.lang.OutOfMemoryError: Java heap space).
+    gradle_props_path = os.path.join(REPO_ROOT, "velaboard", "gradle.properties")
+    has_gradle_props = os.path.isfile(gradle_props_path)
+    check(has_gradle_props, "velaboard/gradle.properties exists on disk")
+    if has_gradle_props:
+        gradle_props = open(gradle_props_path).read()
+        heap_match = re.search(
+            r"org\.gradle\.jvmargs\s*=\s*.*-Xmx(\d+)([mMgG])", gradle_props
+        )
+        check(heap_match is not None, "velaboard sets org.gradle.jvmargs with -Xmx")
+        if heap_match:
+            heap_value = int(heap_match.group(1))
+            if heap_match.group(2).lower() == "g":
+                heap_value *= 1024
+            check(
+                heap_value >= 4096,
+                f"Velaboard Gradle heap -Xmx{heap_match.group(1)}"
+                f"{heap_match.group(2)} is at least 4096m (packageDebug needs it)",
+            )
+
     print(f"\nTest Summary: {passed} passed, {failed} failed")
     if failed > 0:
         sys.exit(1)
