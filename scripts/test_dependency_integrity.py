@@ -269,6 +269,17 @@ def run_tests():
             wiring is not None and "dependsOn(verifyChecksum)" in wiring_body,
             "publish-genai-aar gates publishGenaiAarPublicationToMavenLocal on verifyChecksum",
         )
+        # OCR medium/security: the named task is not the only publish path.
+        # Every repository-publish task must wait for verification too.
+        with_type = re.search(
+            r"tasks\.withType<PublishToMavenRepository>\(\)\.configureEach\s*\{([^}]*)\}",
+            p_content,
+        )
+        with_type_body = strip_comments(with_type.group(1)) if with_type else ""
+        check(
+            with_type is not None and "dependsOn(verifyChecksum)" in with_type_body,
+            "publish-genai-aar gates every PublishToMavenRepository task on verifyChecksum",
+        )
 
     print(f"\nTest Summary: {passed} passed, {failed} failed")
     if failed > 0:
