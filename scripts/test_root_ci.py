@@ -258,6 +258,28 @@ def run_tests():
                 f"{class_name}.{name.strip('`')} is skipped under the runTests build type",
             )
 
+    # 16. Every job declares timeout-minutes so a hung step cannot burn the runner.
+    with open(CI_WORKFLOW, encoding="utf-8") as f:
+        ci_lines = f.read().splitlines()
+    jobs_index = next((i for i, l in enumerate(ci_lines) if l.rstrip() == "jobs:"), None)
+    check(jobs_index is not None, "ci.yml declares a jobs: section")
+    if jobs_index is not None:
+        job_starts = []
+        for line_index, line in enumerate(ci_lines):
+            if line_index <= jobs_index:
+                continue
+            job_match = re.match(r"^  ([A-Za-z0-9_-]+):\s*$", line)
+            if job_match:
+                job_starts.append((line_index, job_match.group(1)))
+        check(len(job_starts) >= 1, "ci.yml declares at least one job")
+        for offset, (start, name) in enumerate(job_starts):
+            end = job_starts[offset + 1][0] if offset + 1 < len(job_starts) else len(ci_lines)
+            has_timeout = any(
+                re.match(r"^\s+timeout-minutes:\s*\d+\s*$", line)
+                for line in ci_lines[start + 1:end]
+            )
+            check(has_timeout, f"job '{name}' declares timeout-minutes")
+
     print(f"\nTest Summary: {passed} passed, {failed} failed")
     if failed > 0:
         sys.exit(1)
