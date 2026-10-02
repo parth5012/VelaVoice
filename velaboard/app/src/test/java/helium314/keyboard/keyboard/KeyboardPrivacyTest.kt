@@ -2,6 +2,8 @@ package helium314.keyboard.keyboard
 
 import android.text.InputType
 import android.os.Handler
+import com.velavoice.sdk.TranscriptionResult
+import helium314.keyboard.settings.TranscriptionStorage
 import android.os.Looper
 import android.view.inputmethod.EditorInfo
 import com.velavoice.sdk.ScribeInput
@@ -235,6 +237,54 @@ class KeyboardPrivacyTest {
         assertFalse(
             switcherFlag("mIsVelaRecordingCancelled"),
             "a session already started sensitive must never be cancelled by recheck"
+        )
+    }
+
+    @Test
+    fun testBuildScribeInput_nullEditorInfo_duringActiveSession_failsClosedPrivacySensitive() {
+        val ks = KeyboardSwitcher.getInstance()
+        ShadowInputMethodService.returnNullEditorInfo = true
+        try {
+            // An active session: instant-recording timer running (map #72, ticket #80).
+            setSwitcherField("mTimerHandler", Handler(Looper.getMainLooper()))
+            val prefs = Settings.getInstance().prefs
+            prefs.edit().putBoolean(Settings.PREF_VELA_SCRIBE_ENABLED, false).apply()
+
+            val scribeInput = KeyboardSwitcher.buildScribeInput(latinIME, prefs)
+
+            assertTrue(
+                scribeInput.privacySensitive,
+                "null EditorInfo during an active session must fail closed to privacySensitive"
+            )
+        } finally {
+            ShadowInputMethodService.returnNullEditorInfo = false
+            deactivateSession()
+        }
+    }
+
+    @Test
+    fun testVelaCallbacks_privacySensitiveResult_writesNoStorageFile() {
+        val prefs = Settings.getInstance().prefs
+        prefs.edit().putBoolean(Settings.PREF_VELA_SCRIBE_ENABLED, false).apply()
+        val before = TranscriptionStorage.getTranscriptionCount(latinIME)
+        val ks = KeyboardSwitcher.getInstance()
+
+        // Privacy-sensitive result: nothing may be persisted (map #72, ticket #80).
+        ks.buildVelaCallbacks(latinIME, null, false, true)
+            .onResult(TranscriptionResult("raw secret", "clean secret", 1000L, null))
+        assertEquals(
+            before,
+            TranscriptionStorage.getTranscriptionCount(latinIME),
+            "privacy-sensitive result must write no file"
+        )
+
+        // Non-sensitive result: file written - proves the gate works, not a broken writer.
+        ks.buildVelaCallbacks(latinIME, null, false, false)
+            .onResult(TranscriptionResult("raw text", "clean text", 1000L, null))
+        assertEquals(
+            before + 1,
+            TranscriptionStorage.getTranscriptionCount(latinIME),
+            "non-sensitive result must be persisted"
         )
     }
 }

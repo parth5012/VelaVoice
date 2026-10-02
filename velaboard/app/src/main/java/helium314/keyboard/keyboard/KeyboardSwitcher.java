@@ -1133,7 +1133,10 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                 return new ScribeInput(null, null, null, null, null, true);
             }
             editorInfo = latinIME.getCurrentInputEditorInfo();
-            privacySensitive = isPrivacySensitiveEditor(editorInfo);
+            // Null editor during an ACTIVE session fails closed (map #72, ticket #80);
+            // pre-session keeps the legacy null => not sensitive semantics.
+            privacySensitive = com.velavoice.sdk.PrivacyGuard.isPrivacySensitiveEditor(
+                    editorInfo, KeyboardSwitcher.getInstance().isVelaSessionActive());
         } catch (Exception e) {
             privacySensitive = true;
         }

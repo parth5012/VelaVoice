@@ -133,6 +133,8 @@ class ShadowInputMethodService {
         var composingStart = -1
         var composingEnd = -1
         var currentInputType = InputType.TYPE_CLASS_TEXT
+        /** Simulates the framework returning no EditorInfo (map #72, ticket #80). */
+        var returnNullEditorInfo = false
 
         // convenience for access
         val textBeforeCursor get() = text.substring(0, selectionStart)
@@ -152,14 +154,17 @@ class ShadowInputMethodService {
             composingStart = -1
             composingEnd = -1
             currentInputType = InputType.TYPE_CLASS_TEXT
+            returnNullEditorInfo = false
         }
     }
 
     @Implementation
-    fun getCurrentInputEditorInfo() = EditorInfo().apply {
-        inputType = currentInputType
-        // anything else?
-    }
+    fun getCurrentInputEditorInfo(): EditorInfo? =
+        if (returnNullEditorInfo) null
+        else EditorInfo().apply {
+            inputType = currentInputType
+            // anything else?
+        }
     @Implementation
     fun getCurrentInputConnection() = ic
     @Implementation
