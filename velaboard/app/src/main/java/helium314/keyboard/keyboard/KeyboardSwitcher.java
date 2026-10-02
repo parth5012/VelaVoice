@@ -1144,15 +1144,10 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         }
     }
 
-    /** Ticket 004 safeguard: password/PII fields must never reach the LLM. */
+    /** Ticket 004 safeguard: password/PII fields must never reach the LLM.
+     *  Delegates to the shared detector so classification cannot drift between apps. */
     static boolean isPrivacySensitiveEditor(final EditorInfo editorInfo) {
-        if (editorInfo == null) return false;
-        if ((editorInfo.imeOptions & EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING) != 0) return true;
-        final int variation = editorInfo.inputType & android.text.InputType.TYPE_MASK_VARIATION;
-        return variation == android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
-            || variation == android.text.InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-            || variation == android.text.InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD
-            || variation == android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD;
+        return com.velavoice.sdk.PrivacyGuard.isPrivacySensitiveEditor(editorInfo);
     }
 
     private static String safeText(final CharSequence cs) {

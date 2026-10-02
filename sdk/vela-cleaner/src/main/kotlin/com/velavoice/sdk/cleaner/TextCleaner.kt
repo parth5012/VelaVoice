@@ -65,16 +65,6 @@ class TextCleaner(private val config: CleanerConfig) {
         isLlmInitialized = false
     }
 
-    fun clean(text: String): String = clean(
-        text,
-        contextBefore = null,
-        contextAfter = null,
-        appName = null,
-        inputType = null,
-        overrideStyle = null,
-        privacySensitive = false
-    )
-
     /**
      * Clean and optionally Scribe-rewrite [text]. Context and metadata are passed from the IME.
      *
@@ -82,8 +72,10 @@ class TextCleaner(private val config: CleanerConfig) {
      * [overrideStyle] (falling back to [config.defaultScribeStyle]), surrounding editor context,
      * app metadata, and runs it through the LLM. Otherwise standard cleanup is applied.
      *
-     * [privacySensitive] (Ticket 004) force-disables Scribe and LLM cleanup for password/PII
-     * fields: only local rule-based cleanup runs, so sensitive text never leaves the device.
+     * [privacySensitive] (Ticket 004 / map #72) force-disables Scribe and LLM cleanup for
+     * password/PII fields: only local rule-based cleanup runs, so sensitive text never leaves
+     * the device. It is a REQUIRED parameter on purpose — there is no privacy-off default
+     * overload, so every call site must classify the text explicitly (ticket #76).
      */
     fun clean(
         text: String,
@@ -92,7 +84,7 @@ class TextCleaner(private val config: CleanerConfig) {
         appName: String? = null,
         inputType: String? = null,
         overrideStyle: String? = null,
-        privacySensitive: Boolean = false
+        privacySensitive: Boolean
     ): String {
         // Step 1: Rule-based pre-processor (Regex) run first
         val regexCleaned = cleanRuleBased(text)

@@ -26,6 +26,8 @@ import com.velavoice.sdk.StreamingTranscriptionCallback
 import com.velavoice.sdk.RevisionMarker
 import com.velavoice.sdk.StreamConfig
 import com.velavoice.sdk.LocalStreamingTranscriber
+import com.velavoice.sdk.PrivacyGuard
+import com.velavoice.sdk.ScribeInput
 import com.velavoice.sdk.whisper.WhisperConfig
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
@@ -170,9 +172,19 @@ class VoiceInputMethodService : InputMethodService() {
         streamingMode = prefs.getString("streamingMode", "instant") ?: "instant"
     }
 
+    /**
+     * Privacy classification for the current editor (map #72 ticket #76).
+     * Fails closed when no editor can be resolved.
+     */
+    private fun isSessionPrivacySensitive(): Boolean {
+        val editor = currentInputEditorInfo
+        return editor == null || PrivacyGuard.isPrivacySensitiveEditor(editor)
+    }
+
     private fun startStreaming() {
         if (isStreaming.get()) return
         loadStreamingMode()
+        val sessionPrivacySensitive = isSessionPrivacySensitive()
 
         if (streamingMode == "instant") {
             startRecording()
@@ -215,7 +227,7 @@ class VoiceInputMethodService : InputMethodService() {
                                     // Commit text
                                     val ic = currentInputConnection
                                     if (ic != null) {
-                                        ic.finishCommittedText()
+                                        ic.finishComposingText()
                                         streamingCommittedLength = marker.range.last
                                     }
                                 }
@@ -227,18 +239,20 @@ class VoiceInputMethodService : InputMethodService() {
                         mainHandler.post {
                             val ic = currentInputConnection
                             if (ic != null && text.isNotBlank()) {
-                                ic.finishCommittedText()
+                                ic.finishComposingText()
                                 ic.commitText(text + " ", 1)
                             }
                             voiceRecordingPane.statusText.text = "Done"
                             isStreaming.set(false)
-                            // Auto-save
-                            TranscriptionStorage.save(
-                                this@VoiceInputMethodService,
-                                raw = text,
-                                cleaned = text,
-                                durationMs = 0
-                            )
+                            // Auto-save — never persist transcripts of privacy-sensitive fields
+                            if (!sessionPrivacySensitive) {
+                                TranscriptionStorage.save(
+                                    this@VoiceInputMethodService,
+                                    raw = text,
+                                    cleaned = text,
+                                    durationMs = 0
+                                )
+                            }
                             showKeyboardView()
                         }
                     }
@@ -291,7 +305,7 @@ class VoiceInputMethodService : InputMethodService() {
         // Commit remaining text
         val ic = currentInputConnection
         if (ic != null) {
-            ic.finishCommittedText()
+            ic.finishComposingText()
             if (streamingBuffer.length > streamingCommittedLength) {
                 val remaining = streamingBuffer.substring(streamingCommittedLength).trim()
                 if (remaining.isNotEmpty()) {
@@ -402,6 +416,7 @@ class VoiceInputMethodService : InputMethodService() {
     private fun startRecording() {
         voiceRecordingPane.resetDisplay()
         voiceRecordingPane.statusText.text = "Initializing..."
+        val sessionPrivacySensitive = isSessionPrivacySensitive()
 
         bgHandler?.post {
             try {
@@ -461,14 +476,16 @@ class VoiceInputMethodService : InputMethodService() {
                             timerHandler?.removeCallbacksAndMessages(null)
                             voiceRecordingPane.statusText.text = "Done"
                             val finalTranscript = result.cleanedTranscript
-                            // Auto-save transcription pair + audio to local storage
-                            TranscriptionStorage.save(
-                                this@VoiceInputMethodService,
-                                raw = result.rawTranscript,
-                                cleaned = result.cleanedTranscript,
-                                durationMs = result.durationMs,
-                                audioBytes = result.audioBytes
-                            )
+                            // Auto-save — never persist transcripts of privacy-sensitive fields
+                            if (!sessionPrivacySensitive) {
+                                TranscriptionStorage.save(
+                                    this@VoiceInputMethodService,
+                                    raw = result.rawTranscript,
+                                    cleaned = result.cleanedTranscript,
+                                    durationMs = result.durationMs,
+                                    audioBytes = result.audioBytes
+                                )
+                            }
                             voiceRecordingPane.post {
                                 val ic = currentInputConnection
                                 if (ic != null && finalTranscript.isNotEmpty()) {
@@ -485,7 +502,7 @@ class VoiceInputMethodService : InputMethodService() {
                                 voiceRecordingPane.statusText.text = error.message
                             }
                         }
-                    })
+                    }, ScribeInput(privacySensitive = sessionPrivacySensitive))
                 }
             } catch (e: Exception) {
                 android.util.Log.e("VoiceIME", "Start recording failed", e)
