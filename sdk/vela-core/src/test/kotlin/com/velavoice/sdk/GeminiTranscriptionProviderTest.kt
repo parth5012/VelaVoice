@@ -8,6 +8,7 @@ import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -203,6 +204,51 @@ class GeminiTranscriptionProviderTest {
         assertEquals("Testing 1 2 3", result)
         assertTrue(recordedUrl.contains("key=my-secret-key"))
         assertTrue(recordedUrl.contains("gemini-3.5-transcribe:generateContent"))
+    }
+
+    @Test
+    fun `transcribe model-not-found keeps status but never the body content`() {
+        val secret = "SECRET-MODEL-ERROR-BODY"
+        val mockClient = createMockClient(responseCode = 404, responseBody = secret)
+        val provider = GeminiTranscriptionProvider(client = mockClient)
+        try {
+            provider.transcribe(ByteArray(160) { 0 }, "key")
+            fail("Expected VelaException.Network on 404")
+        } catch (e: VelaException.Network) {
+            val msg = e.message ?: ""
+            assertTrue("message must keep context: $msg", msg.contains("not found"))
+            assertFalse("message must not embed the response body", msg.contains(secret))
+        }
+    }
+
+    @Test
+    fun `transcribe server error keeps structured error message but never the raw body`() {
+        // Structured provider error message is kept (short, provider-authored)...
+        val structured = createMockClient(
+            responseCode = 500,
+            responseBody = """{"error": {"message": "Backend terminated abnormally"}}"""
+        )
+        try {
+            GeminiTranscriptionProvider(client = structured).transcribe(ByteArray(160) { 0 }, "key")
+            fail("Expected VelaException.Network on 500")
+        } catch (e: VelaException.Network) {
+            assertTrue(e.message?.contains("Backend terminated abnormally") == true)
+        }
+
+        // ...but a JSON body WITHOUT a structured error.message must never be
+        // interpolated whole (the current code falls back to the raw body).
+        val unstructured = createMockClient(
+            responseCode = 500,
+            responseBody = """{"unexpected": "SECRET-UNSTRUCTURED-BODY"}"""
+        )
+        try {
+            GeminiTranscriptionProvider(client = unstructured).transcribe(ByteArray(160) { 0 }, "key")
+            fail("Expected VelaException.Network on 500")
+        } catch (e: VelaException.Network) {
+            val msg = e.message ?: ""
+            assertTrue("message must keep the HTTP status: $msg", msg.contains("500"))
+            assertFalse("message must not embed the raw body", msg.contains("SECRET-UNSTRUCTURED-BODY"))
+        }
     }
 
     @Test

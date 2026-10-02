@@ -194,9 +194,11 @@ class WhisperRestTranscriptionProvider(
                     "Invalid API key or unauthorized access for transcription provider."
                 )
                 else -> {
+                    // Status + body length only: the body may echo the audio transcript
+                    // (map #72, ticket #79), so it must never reach logcat via the exception.
                     val errBody = res.body?.string().orEmpty()
                     throw VelaException.Network(
-                        "Transcription API returned HTTP ${res.code}: $errBody"
+                        "Transcription API returned HTTP ${res.code} (${errBody.length} bytes)"
                     )
                 }
             }

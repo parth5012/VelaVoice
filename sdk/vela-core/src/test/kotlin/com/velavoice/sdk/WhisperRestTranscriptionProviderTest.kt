@@ -7,6 +7,7 @@ import okhttp3.Protocol
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -92,6 +93,25 @@ class WhisperRestTranscriptionProviderTest {
         assertEquals("Groq transcription result", result)
         assertEquals("Bearer gsk_test_key_123", recordedAuth)
         assertTrue(recordedUrl.contains("api.groq.com/openai/v1/audio/transcriptions"))
+    }
+
+    @Test
+    fun `transcribe on server error keeps status and body length but never the body content`() {
+        val secret = "SECRET-RESPONSE-TRANSCRIPT-ABC123"
+        val mockClient = createMockClient(
+            responseCode = 500,
+            responseBody = """{"error": "$secret"}"""
+        )
+        val provider = WhisperRestTranscriptionProvider(client = mockClient)
+        try {
+            provider.transcribe(ByteArray(160) { 0 }, "key")
+            fail("Expected VelaException.Network on 500")
+        } catch (e: VelaException.Network) {
+            val msg = e.message ?: ""
+            assertTrue("message must keep the HTTP status: $msg", msg.contains("500"))
+            assertTrue("message must keep the body length: $msg", msg.contains("bytes"))
+            assertFalse("message must not embed the response body", msg.contains(secret))
+        }
     }
 
     @Test

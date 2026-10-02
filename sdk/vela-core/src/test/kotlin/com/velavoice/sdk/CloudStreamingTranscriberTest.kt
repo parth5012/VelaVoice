@@ -1,6 +1,7 @@
 package com.velavoice.sdk
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -166,6 +167,26 @@ class CloudStreamingTranscriberTest {
         t.handleServerMessage(json)
 
         assertTrue("Unknown message type should not emit markers", markers.isEmpty())
+    }
+
+    @Test
+    fun `handleServerMessage with malformed payload emits onError and never leaks the payload`() {
+        val t = makeCloudTranscriber()
+        val errors = mutableListOf<String>()
+        t.setCallback(object : StreamingTranscriptionCallback {
+            override fun onRevisionMarker(marker: RevisionMarker) {}
+            override fun onFinal(text: String) {}
+            override fun onError(error: VelaException) { errors.add(error.message ?: "") }
+            override fun onAmplitude(normalized: Float) {}
+        })
+
+        t.handleServerMessage("SECRET-DICTATED-TEXT {malformed")
+
+        assertEquals("parse failure must surface onError instead of being swallowed", 1, errors.size)
+        assertFalse(
+            "error message must not contain the raw frame payload",
+            errors[0].contains("SECRET-DICTATED-TEXT")
+        )
     }
 
     @Test
