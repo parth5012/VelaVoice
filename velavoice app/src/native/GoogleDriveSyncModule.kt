@@ -140,6 +140,13 @@ class GoogleDriveSyncModule(reactContext: ReactApplicationContext) :
 
     // ──────────────────────────────────────────────
     // Sync: upload all unsynced transcriptions to Drive
+    //
+    // Belt-and-braces (map #130 ticket #135): the scanner is scoped to the
+    // shared dir and already filters verdicts, and each file is re-verified
+    // via TranscriptionStorage.isUploadable immediately pre-upload so a file
+    // that raced into a sensitive/unverifiable state between scan and upload
+    // is skipped fail-closed — never uploaded, never marked synced. Skips are
+    // logged as counts only.
     // ──────────────────────────────────────────────
 
     @ReactMethod
@@ -178,9 +185,22 @@ class GoogleDriveSyncModule(reactContext: ReactApplicationContext) :
 
                 var uploaded = 0
                 var failed = 0
+                var skipped = 0
                 val results = JSONArray()
 
                 for (file in unsyncedFiles) {
+                    // Pre-upload re-verify (TOCTOU guard): the verdict is re-read
+                    // at upload time; anything but an explicit non-sensitive
+                    // verdict is skipped fail-closed — never uploaded, never
+                    // marked synced.
+                    if (!TranscriptionStorage.isUploadable(file)) {
+                        skipped++
+                        results.put(JSONObject().apply {
+                            put("fileName", file.name)
+                            put("status", "skipped")
+                        })
+                        continue
+                    }
                     try {
                         val pair = TranscriptionStorage.readTranscriptionFile(file)
                         if (pair != null) {
@@ -213,8 +233,12 @@ class GoogleDriveSyncModule(reactContext: ReactApplicationContext) :
                 val summary = JSONObject().apply {
                     put("uploaded", uploaded)
                     put("failed", failed)
+                    put("skipped", skipped)
                     put("total", unsyncedFiles.size)
                     put("results", results)
+                }
+                if (skipped > 0) {
+                    android.util.Log.w("GoogleDriveSync", "Drive sync skipped $skipped of ${unsyncedFiles.size} files: sensitive or unverifiable verdict")
                 }
 
                 mainHandler.post { promise.resolve(summary.toString()) }

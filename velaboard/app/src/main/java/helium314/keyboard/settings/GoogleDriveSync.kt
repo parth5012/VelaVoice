@@ -64,17 +64,29 @@ object GoogleDriveSync {
 
     /**
      * Sync result data class.
+     *
+     * [skipped] counts files the scanner listed but the pre-upload re-verify
+     * refused (sensitive verdict, or raced into an unverifiable state between
+     * scan and upload — fail closed, counts only, never marked synced).
      */
     data class SyncResult(
         val uploaded: Int,
         val failed: Int,
         val total: Int,
-        val message: String
+        val message: String,
+        val skipped: Int = 0
     )
 
     /**
      * Upload all unsynced transcription files to Google Drive.
      * Must be called from a background thread.
+     *
+     * Belt-and-braces (map #130 ticket #135): the scanner is scoped to the
+     * shared dir and already filters verdicts, and each file is re-verified
+     * via [TranscriptionStorage.isUploadable] immediately pre-upload so a file
+     * that raced into a sensitive/unverifiable state between scan and upload
+     * is skipped fail-closed — never uploaded, never marked synced. Skips are
+     * logged as counts only.
      */
     fun syncToDrive(context: Context, prefs: SharedPreferences): SyncResult {
         val clientId = getClientId(prefs)
@@ -105,9 +117,17 @@ object GoogleDriveSync {
 
         var uploaded = 0
         var failed = 0
+        var skipped = 0
         val errors = mutableListOf<String>()
 
         for (file in unsyncedFiles) {
+            // Pre-upload re-verify (TOCTOU guard): the verdict is re-read at
+            // upload time; anything but an explicit non-sensitive verdict is
+            // skipped fail-closed — never uploaded, never marked synced.
+            if (!TranscriptionStorage.isUploadable(file)) {
+                skipped++
+                continue
+            }
             try {
                 val pair = TranscriptionStorage.readTranscriptionFile(file)
                 if (pair != null) {
@@ -141,9 +161,13 @@ object GoogleDriveSync {
         val message = buildString {
             append("Synced $uploaded of ${unsyncedFiles.size} transcription(s)")
             if (failed > 0) append(", $failed failed")
+            if (skipped > 0) append(", $skipped skipped (sensitive or unverifiable)")
             append(".")
         }
-        return SyncResult(uploaded, failed, unsyncedFiles.size, message)
+        if (skipped > 0) {
+            android.util.Log.w(TAG, "Drive sync skipped $skipped of ${unsyncedFiles.size} files: sensitive or unverifiable verdict")
+        }
+        return SyncResult(uploaded, failed, unsyncedFiles.size, message, skipped)
     }
 
     // ──────────────────────────────────────────────
