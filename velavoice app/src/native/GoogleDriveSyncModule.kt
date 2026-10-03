@@ -113,21 +113,21 @@ class GoogleDriveSyncModule(reactContext: ReactApplicationContext) :
             // (hiding would look like data loss). This read path never affects
             // sync — uploads still go through getUnsyncedFiles only.
             val sharedDir = File(context.filesDir, "transcriptions")
-            if (sharedDir.exists()) {
-                val files = sharedDir.listFiles()?.filter { it.isFile && it.extension == "json" } ?: emptyList()
-                val sortedFiles = files.sortedByDescending { it.name }
-                for (file in sortedFiles) {
-                    if (limit > 0 && jsonArray.length() >= limit) break
-                    putTranscriptionJson(jsonArray, file, isQuarantined = false)
-                }
+            val sharedFiles = if (sharedDir.exists()) {
+                sharedDir.listFiles()?.filter { it.isFile && it.extension == "json" } ?: emptyList()
+            } else {
+                emptyList()
             }
-            if (limit <= 0 || jsonArray.length() < limit) {
-                val quarantined = TranscriptionStorage.getQuarantinedFiles(context)
-                    .sortedByDescending { it.name }
-                for (file in quarantined) {
-                    if (limit > 0 && jsonArray.length() >= limit) break
-                    putTranscriptionJson(jsonArray, file, isQuarantined = true)
-                }
+            // Merge shared + quarantined, sort desc by name/date, take the
+            // limit slice (ticket #136 fix): quarantined sessions stay visible
+            // local-only entries instead of being starved whenever the shared
+            // page alone fills the limit.
+            val merged = (sharedFiles.map { it to false } +
+                    TranscriptionStorage.getQuarantinedFiles(context).map { it to true })
+                .sortedByDescending { (file, _) -> file.name }
+            for ((file, isQuarantined) in merged) {
+                if (limit > 0 && jsonArray.length() >= limit) break
+                putTranscriptionJson(jsonArray, file, isQuarantined = isQuarantined)
             }
             promise.resolve(jsonArray.toString())
         } catch (e: Exception) {

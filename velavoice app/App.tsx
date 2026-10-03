@@ -760,8 +760,10 @@ export default function App() {
     corrected: string,
     edits: any[],
     editDistance: number,
+    scribeStyle?: string,
     quarantined?: boolean
   ) => {
+    void scribeStyle;
     setRecordings(prev =>
       prev.map(r => {
         if (r.id === audioId) {
@@ -774,8 +776,13 @@ export default function App() {
     );
 
     // Quarantine egress block (ticket #136): the local edit stays on-device,
-    // but nothing is POSTed and nothing enters correction training.
-    if (quarantined === true) {
+    // but nothing is POSTed and nothing enters correction training. The flag
+    // arrives in the 7th slot (TranscriptionEditor passes scribeStyle 6th);
+    // the library entry verdict is a defense-in-depth fallback so a stale
+    // caller that drops the flag still cannot egress quarantined content.
+    const isQuarantined =
+      quarantined === true || isQuarantinedEntry(recordings.find(r => r.id === audioId));
+    if (isQuarantined) {
       setIsEditingTranscript(false);
       return;
     }
