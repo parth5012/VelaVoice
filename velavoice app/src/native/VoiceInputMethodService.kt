@@ -239,11 +239,10 @@ class VoiceInputMethodService : InputMethodService() {
 
                     override fun onFinal(text: String) {
                         mainHandler.post {
-                            val ic = currentInputConnection
-                            if (ic != null && text.isNotBlank()) {
-                                ic.finishComposingText()
-                                ic.commitText(text + " ", 1)
-                            }
+                            // Single-commit: stopStreaming() already committed the
+                            // remaining buffer to the InputConnection — onFinal
+                            // must NOT commit again (double commit). Only
+                            // status, privacy-gated save, keyboard restore.
                             voiceRecordingPane.statusText.text = "Done"
                             isStreaming.set(false)
                             // Auto-save — never persist transcripts of privacy-sensitive fields
@@ -292,6 +291,13 @@ class VoiceInputMethodService : InputMethodService() {
                 }
             } catch (e: Exception) {
                 android.util.Log.e("VoiceIME", "Start streaming failed", e)
+                // No leak: start() may throw after the pipeline was assigned —
+                // release and nullify so a failed start owns nothing.
+                try {
+                    streamingPipeline?.release()
+                } catch (ignored: Exception) {
+                }
+                streamingPipeline = null
                 mainHandler.post {
                     voiceRecordingPane.statusText.text = "Streaming init error"
                 }
@@ -513,14 +519,11 @@ class VoiceInputMethodService : InputMethodService() {
     }
 
     private fun queryModelPath(db: SQLiteDatabase, modelType: String): String? {
-        val cursor = db.rawQuery(
+        db.rawQuery(
             "SELECT path FROM models WHERE (id = ? OR name = ?) AND status = 'completed' LIMIT 1",
             arrayOf(modelType, modelType)
-        )
-        return try {
-            if (cursor.moveToFirst()) cursor.getString(0) else null
-        } finally {
-            cursor.close()
+        ).use { cursor ->
+            return if (cursor.moveToFirst()) cursor.getString(0) else null
         }
     }
 
@@ -532,20 +535,20 @@ class VoiceInputMethodService : InputMethodService() {
             var db: SQLiteDatabase? = null
             try {
                 db = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-                val cursor = db.rawQuery(
+                db.rawQuery(
                     "SELECT original_word, replacement FROM personal_dictionary ORDER BY priority DESC, original_word ASC",
                     null
-                )
-                if (cursor.moveToFirst()) {
-                    do {
-                        val original = cursor.getString(0)
-                        val replacement = cursor.getString(1)
-                        if (original.isNotEmpty()) {
-                            entries.add(Pair(original, replacement))
-                        }
-                    } while (cursor.moveToNext())
+                ).use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        do {
+                            val original = cursor.getString(0)
+                            val replacement = cursor.getString(1)
+                            if (original.isNotEmpty()) {
+                                entries.add(Pair(original, replacement))
+                            }
+                        } while (cursor.moveToNext())
+                    }
                 }
-                cursor.close()
             } catch (e: Exception) {
                 android.util.Log.e("VoiceIME", "Error loading personal dictionary: ${e.message}")
             } finally {
@@ -565,19 +568,19 @@ class VoiceInputMethodService : InputMethodService() {
             var db: SQLiteDatabase? = null
             try {
                 db = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-                val cursor = db.rawQuery(
+                db.rawQuery(
                     "SELECT keyword FROM dictionary_keywords ORDER BY keyword ASC",
                     null
-                )
-                if (cursor.moveToFirst()) {
-                    do {
-                        val keyword = cursor.getString(0)
-                        if (keyword.isNotEmpty()) {
-                            keywords.add(keyword)
-                        }
-                    } while (cursor.moveToNext())
+                ).use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        do {
+                            val keyword = cursor.getString(0)
+                            if (keyword.isNotEmpty()) {
+                                keywords.add(keyword)
+                            }
+                        } while (cursor.moveToNext())
+                    }
                 }
-                cursor.close()
             } catch (e: Exception) {
                 android.util.Log.e("VoiceIME", "Error loading dictionary keywords: ${e.message}")
             } finally {

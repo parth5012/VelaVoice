@@ -76,4 +76,33 @@ class StreamingPipelineLocalOnlyTest {
         assertTrue("zero cloud emits", cloud.emitted.isEmpty())
         assertEquals("refusal must be reported exactly once", 1, callback.errors.size)
     }
+
+    @Test
+    fun `cloud upload needs explicit consent and non-sensitive session - single choke point`() {
+        // Locks the #77 contract the services rely on (no duplicated
+        // allowsCloudUpload at emit sites): only consent+non-sensitive allows
+        // cloud. A buggy `||` or consent-only check would green-light uploads
+        // for sensitive sessions.
+        assertEquals(false, StreamConfig(privacySensitive = true, consentToUpload = true).allowsCloudUpload())
+        assertEquals(false, StreamConfig(privacySensitive = false, consentToUpload = false).allowsCloudUpload())
+        assertEquals(false, StreamConfig(privacySensitive = true, consentToUpload = false).allowsCloudUpload())
+        assertEquals(true, StreamConfig(privacySensitive = false, consentToUpload = true).allowsCloudUpload())
+    }
+
+    @Test
+    fun `non-sensitive without consent still refuses cloud - zero cloud emits`() {
+        val local = FakeTranscriber()
+        val cloud = FakeTranscriber()
+        val callback = RecordingCallback()
+        val pipeline = StreamingPipeline(local, cloud, StreamConfig())
+        pipeline.setCallback(callback)
+
+        // Services start local-only with no consent flag: cloud must stay refused.
+        pipeline.start("local", StreamConfig(privacySensitive = false, consentToUpload = false))
+
+        pipeline.dispatchEmit(cloud, ByteArray(64))
+
+        assertTrue("zero cloud emits without explicit consent", cloud.emitted.isEmpty())
+        assertEquals("refusal must be reported exactly once", 1, callback.errors.size)
+    }
 }
