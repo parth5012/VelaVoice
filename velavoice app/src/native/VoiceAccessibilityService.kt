@@ -666,7 +666,8 @@ class VoiceAccessibilityService : AccessibilityService() {
                 raw = rawTranscript,
                 cleaned = finalTranscript,
                 durationMs = durationMs,
-                audioBytes = audioBytes
+                audioBytes = audioBytes,
+                privacySensitive = sessionPrivacySensitive
             )
         }
 
@@ -1062,7 +1063,8 @@ class VoiceAccessibilityService : AccessibilityService() {
                                 this@VoiceAccessibilityService,
                                 raw = text,
                                 cleaned = cleaned,
-                                durationMs = 0
+                                durationMs = 0,
+                                privacySensitive = sessionPrivacySensitive
                             )
                         }
                     }

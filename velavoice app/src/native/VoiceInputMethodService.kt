@@ -432,7 +432,8 @@ class VoiceInputMethodService : InputMethodService() {
                                     this@VoiceInputMethodService,
                                     raw = text,
                                     cleaned = text,
-                                    durationMs = 0
+                                    durationMs = 0,
+                                    privacySensitive = sessionStartedPrivacySensitive
                                 )
                             }
                             showKeyboardView()
@@ -704,7 +705,8 @@ class VoiceInputMethodService : InputMethodService() {
                                     raw = result.rawTranscript,
                                     cleaned = result.cleanedTranscript,
                                     durationMs = result.durationMs,
-                                    audioBytes = result.audioBytes
+                                    audioBytes = result.audioBytes,
+                                    privacySensitive = sessionStartedPrivacySensitive
                                 )
                             }
                             voiceRecordingPane.post {

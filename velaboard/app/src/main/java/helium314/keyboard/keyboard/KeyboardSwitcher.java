@@ -1254,7 +1254,8 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                         result.getRawTranscript(),
                         result.getCleanedTranscript(),
                         result.getDurationMs(),
-                        result.getAudioBytes()
+                        result.getAudioBytes(),
+                        privacySensitive
                     );
                 }
                 latinIME.mHandler.post(() -> {
