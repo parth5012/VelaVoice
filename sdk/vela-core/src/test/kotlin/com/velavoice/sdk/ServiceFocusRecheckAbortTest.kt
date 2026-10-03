@@ -319,4 +319,71 @@ class ServiceFocusRecheckAbortTest {
             onFinish.contains("stopStreaming(") || onFinish.contains("cancelRecording(")
         )
     }
+
+    // ── #133-fix: flip + lifecycle hardening ──
+
+    @Test
+    fun `VIMS trailing saves use volatile flip snapshot, not frozen local`() {
+        val (_, vims) = serviceSources()
+        val code = codeOnly(vims)
+        assertTrue(
+            "VIMS trailing save gates (onFinal/onResult) must read the volatile sessionStartedPrivacySensitive flip so flip-to-sensitive blocks save",
+            code.contains("if (!sessionStartedPrivacySensitive)")
+        )
+        assertNoMatch(
+            Regex("if\\s*\\(\\s*!sessionPrivacySensitive\\s*\\)"),
+            code,
+            "VIMS must not gate trailing saves on the frozen local sessionPrivacySensitive (shadows the volatile flip)"
+        )
+    }
+
+    @Test
+    fun `VAS streaming final post rechecks cancelled before insert`() {
+        val (vas, _) = serviceSources()
+        val code = codeOnly(vas)
+        assertTrue(
+            "VAS streaming onFinal Handler post must recheck !streamingCancelled before insert (cleanup race: cancel may land during background clean)",
+            code.contains("!streamingCancelled && cleaned.isNotBlank()")
+        )
+    }
+
+    @Test
+    fun `VIMS finish-input keeps no-session no-op`() {
+        val (_, vims) = serviceSources()
+        val onFinish = codeOnly(extractFunBody(vims, "onFinishInput"))
+        assertTrue(
+            "VIMS onFinishInput else branch must stay no-op without a session: else if (isRecording.get()) cancelRecording()",
+            onFinish.contains("else if (isRecording.get())") && onFinish.contains("cancelRecording(")
+        )
+        val onFinishView = codeOnly(extractFunBody(vims, "onFinishInputView"))
+        assertTrue(
+            "VIMS onFinishInputView else branch must stay no-op without a session: else if (isRecording.get()) cancelRecording()",
+            onFinishView.contains("else if (isRecording.get())") && onFinishView.contains("cancelRecording(")
+        )
+    }
+
+    @Test
+    fun `VIMS cancelRecording early-returns when idle`() {
+        val (_, vims) = serviceSources()
+        val cancel = codeOnly(extractFunBody(vims, "cancelRecording"))
+        assertTrue(
+            "VIMS cancelRecording must guard with if (!isRecording.get()) return so no-session calls are no-ops",
+            cancel.contains("!isRecording.get()") && cancel.contains("return")
+        )
+    }
+
+    @Test
+    fun `VAS cancelRecording bounds thread join to avoid ANR`() {
+        val (vas, _) = serviceSources()
+        val cancel = codeOnly(extractFunBody(vas, "cancelRecording"))
+        assertTrue(
+            "VAS cancelRecording must bound recordingThread join with a timeout (AudioRecorder.CANCEL_JOIN_TIMEOUT_MS or 2000ms) to avoid ANR",
+            cancel.contains("CANCEL_JOIN_TIMEOUT_MS") || cancel.contains("join(2000")
+        )
+        assertNoMatch(
+            Regex("\\.join\\s*\\(\\s*\\)"),
+            cancel,
+            "VAS cancelRecording must not join unbounded (ANR risk on the calling thread)"
+        )
+    }
 }

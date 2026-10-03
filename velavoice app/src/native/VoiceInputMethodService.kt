@@ -190,7 +190,7 @@ class VoiceInputMethodService : InputMethodService() {
         // onFinishInput* -> stop).
         if (isStreaming.get()) {
             stopStreaming()
-        } else {
+        } else if (isRecording.get()) {
             cancelRecording()
         }
     }
@@ -199,7 +199,7 @@ class VoiceInputMethodService : InputMethodService() {
         super.onFinishInputView(finishingInput)
         if (isStreaming.get()) {
             stopStreaming()
-        } else {
+        } else if (isRecording.get()) {
             cancelRecording()
         }
     }
@@ -322,8 +322,10 @@ class VoiceInputMethodService : InputMethodService() {
                             // status, privacy-gated save, keyboard restore.
                             voiceRecordingPane.statusText.text = "Done"
                             isStreaming.set(false)
-                            // Auto-save — never persist transcripts of privacy-sensitive fields
-                            if (!sessionPrivacySensitive) {
+                            // Auto-save — never persist transcripts of privacy-sensitive fields.
+                            // Read the volatile flip snapshot (not the frozen start local) so a
+                            // mid-session flip-to-sensitive blocks the save (map #130 ticket #133 fix).
+                            if (!sessionStartedPrivacySensitive) {
                                 TranscriptionStorage.save(
                                     this@VoiceInputMethodService,
                                     raw = text,
@@ -525,8 +527,10 @@ class VoiceInputMethodService : InputMethodService() {
                             timerHandler?.removeCallbacksAndMessages(null)
                             voiceRecordingPane.statusText.text = "Done"
                             val finalTranscript = result.cleanedTranscript
-                            // Auto-save — never persist transcripts of privacy-sensitive fields
-                            if (!sessionPrivacySensitive) {
+                            // Auto-save — never persist transcripts of privacy-sensitive fields.
+                            // Read the volatile flip snapshot (not the frozen start local) so a
+                            // mid-session flip-to-sensitive blocks the save (map #130 ticket #133 fix).
+                            if (!sessionStartedPrivacySensitive) {
                                 TranscriptionStorage.save(
                                     this@VoiceInputMethodService,
                                     raw = result.rawTranscript,
@@ -570,6 +574,7 @@ class VoiceInputMethodService : InputMethodService() {
     }
 
     private fun cancelRecording() {
+        if (!isRecording.get()) return
         isRecording.set(false)
         timerHandler?.removeCallbacksAndMessages(null)
         // Cancel semantics (#74): discard audio without transcription, flush
