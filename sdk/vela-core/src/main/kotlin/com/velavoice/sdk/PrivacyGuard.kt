@@ -55,7 +55,12 @@ object PrivacyGuard {
         if (editorInfo == null) return failClosedWhenUnknown
         if ((editorInfo.imeOptions and EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING) != 0) return true
         if (editorInfo.inputType == InputType.TYPE_NULL) return true
-        if ((editorInfo.inputType and InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS) != 0) return true
+        // TYPE_TEXT_FLAG_NO_SUGGESTIONS is a text-class flag (0x80000); the bit can
+        // collide with unrelated meanings on other classes, so mask by class first.
+        val inputClass = editorInfo.inputType and InputType.TYPE_MASK_CLASS
+        if (inputClass == InputType.TYPE_CLASS_TEXT &&
+            (editorInfo.inputType and InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS) != 0
+        ) return true
         if (isSensitiveInputType(editorInfo.inputType)) return true
         val hint = editorInfo.hintText
         if (hint != null && hint.toString().contains("password", ignoreCase = true)) return true

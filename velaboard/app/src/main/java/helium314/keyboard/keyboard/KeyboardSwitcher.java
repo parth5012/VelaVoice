@@ -92,6 +92,10 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     private String mCachedVelaModelPath = null;
     private Boolean mCachedVelaLlmToggle = null;
     private Boolean mCachedVelaScribeToggle = null;
+    private String mCachedVelaLlmModelPath = null;
+    private String mCachedVelaLanguage = null;
+    private int mCachedVelaThreads = -1;
+    private java.util.List<String> mCachedVelaCustomFillers = null;
     private KeyboardWrapperView mKeyboardViewWrapper;
     private View mMainKeyboardFrame;
     private MainKeyboardView mKeyboardView;
@@ -285,6 +289,10 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         mCachedVelaModelPath = null;
         mCachedVelaLlmToggle = null;
         mCachedVelaScribeToggle = null;
+        mCachedVelaLlmModelPath = null;
+        mCachedVelaLanguage = null;
+        mCachedVelaThreads = -1;
+        mCachedVelaCustomFillers = null;
         mSavedInputView = null;
         YapsUiManager.getInstance().stopActiveRecording();
     }
@@ -365,6 +373,24 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
 
     public void showVelaVoicePane(final LatinIME latinIME) {
         showVelaVoicePaneInternal(latinIME, false);
+    }
+
+    /**
+     * True when the cached transcriber was built with exactly this configuration.
+     * Every buildVelaTranscriber() parameter must participate in the key: a change
+     * to language/threads/custom fillers/models between recordings must force a
+     * rebuild instead of silently reusing the stale instance (OCR finding).
+     */
+    boolean cachedTranscriberConfigMatches(final String modelPath, final String llmModelPath,
+            final boolean useLlm, final boolean effectiveScribe, final String language,
+            final int threads, final java.util.List<String> customFillers) {
+        return java.util.Objects.equals(modelPath, mCachedVelaModelPath)
+            && java.util.Objects.equals(llmModelPath, mCachedVelaLlmModelPath)
+            && Boolean.valueOf(useLlm).equals(mCachedVelaLlmToggle)
+            && Boolean.valueOf(effectiveScribe).equals(mCachedVelaScribeToggle)
+            && java.util.Objects.equals(language, mCachedVelaLanguage)
+            && threads == mCachedVelaThreads
+            && java.util.Objects.equals(customFillers, mCachedVelaCustomFillers);
     }
 
     private void showVelaVoicePaneInternal(final LatinIME latinIME, final boolean forceScribe) {
@@ -490,9 +516,8 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
 
         // --- Check if we can reuse cached transcriber ---
         final boolean canReuseTranscriber = velaTranscriber != null
-            && modelPath.equals(mCachedVelaModelPath)
-            && Boolean.valueOf(useLlm).equals(mCachedVelaLlmToggle)
-            && Boolean.valueOf(effectiveScribe).equals(mCachedVelaScribeToggle);
+            && cachedTranscriberConfigMatches(modelPath, llmModelPath, useLlm, effectiveScribe,
+                language, threads, customFillers);
 
         if (canReuseTranscriber) {
             voicePane.getStopCleanButton().setEnabled(true);
@@ -532,6 +557,10 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                         mCachedVelaModelPath = modelPath;
                         mCachedVelaLlmToggle = useLlm;
                         mCachedVelaScribeToggle = effectiveScribe;
+                        mCachedVelaLlmModelPath = llmModelPath;
+                        mCachedVelaLanguage = language;
+                        mCachedVelaThreads = threads;
+                        mCachedVelaCustomFillers = customFillers;
 
                         voicePane.getStopCleanButton().setEnabled(true);
                         voicePane.getStopRawButton().setEnabled(true);
@@ -567,9 +596,8 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         final boolean scribeEnabled = !privacySensitive && prefs.getBoolean(Settings.PREF_VELA_SCRIBE_ENABLED,
             helium314.keyboard.latin.settings.Defaults.PREF_VELA_SCRIBE_ENABLED);
         final boolean effectiveScribe = !privacySensitive && (forceScribe || scribeEnabled);
-        if (velaTranscriber != null && modelPath.equals(mCachedVelaModelPath)
-                && Boolean.valueOf(useLlm).equals(mCachedVelaLlmToggle)
-                && Boolean.valueOf(effectiveScribe).equals(mCachedVelaScribeToggle)) {
+        if (velaTranscriber != null && cachedTranscriberConfigMatches(modelPath, llmModelPath,
+                useLlm, effectiveScribe, language, threads, customFillers)) {
             YapsUiManager.getInstance().updateLanguageText(language);
             startYapsTimer();
             try {
@@ -603,6 +631,10 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                     mCachedVelaModelPath = modelPath;
                     mCachedVelaLlmToggle = useLlm;
                     mCachedVelaScribeToggle = effectiveScribe;
+                    mCachedVelaLlmModelPath = llmModelPath;
+                    mCachedVelaLanguage = language;
+                    mCachedVelaThreads = threads;
+                    mCachedVelaCustomFillers = customFillers;
                     YapsUiManager.getInstance().updateLanguageText(language);
                     startYapsTimer();
                     try {
@@ -906,6 +938,10 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                     mCachedVelaModelPath = null;
                     mCachedVelaLlmToggle = null;
                     mCachedVelaScribeToggle = null;
+                    mCachedVelaLlmModelPath = null;
+                    mCachedVelaLanguage = null;
+                    mCachedVelaThreads = -1;
+                    mCachedVelaCustomFillers = null;
                 }
                 final StreamingPipeline pipeline = builder.build();
                 final VelaStreamingSession session = new VelaStreamingSession(latinIME, pipeline,

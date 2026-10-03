@@ -25,6 +25,9 @@ class AudioRecorder {
         const val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
         const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
         val BUFFER_SIZE = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT)
+
+        /** Max time cancel() waits for the capture thread to exit (ANR budget). */
+        const val CANCEL_JOIN_TIMEOUT_MS = 2000L
     }
 
     fun isRecording(): Boolean = isRecording
@@ -157,7 +160,9 @@ class AudioRecorder {
             audioRecord?.stop()
             audioRecord?.release()
             audioRecord = null
-            recordingThread?.join()
+            // Bounded join: a capture thread parked in a blocking read() must not
+            // wedge the (often main/UI) thread calling cancel() — ANR risk (OCR finding).
+            recordingThread?.join(CANCEL_JOIN_TIMEOUT_MS)
             recordingThread = null
         } catch (e: Exception) {
             // ignore during cancel
@@ -167,6 +172,9 @@ class AudioRecorder {
 
     fun release() {
         cancel()
+        // cancel() early-returns when not recording (e.g. after a completed stop()),
+        // so release() must free the captured audio buffer unconditionally.
+        recordedAudioData.reset()
         currentWhisper = null
         currentCleaner = null
         currentCallback = null

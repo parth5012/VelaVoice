@@ -130,6 +130,31 @@ class PrivacyGuardTest {
     }
 
     @Test
+    fun `no-suggestions flag only counts for text-class inputTypes`() {
+        // TYPE_TEXT_FLAG_NO_SUGGESTIONS (0x80000) belongs to the text class. The same
+        // bit can be set (for unrelated reasons) on other input classes; those must
+        // not be misclassified as sensitive by this signal (OCR finding, PrivacyGuard.kt:57).
+        assertFalse(
+            "datetime class carrying the text NO_SUGGESTIONS bit must not be flagged",
+            PrivacyGuard.isPrivacySensitiveEditor(
+                editor(inputType = InputType.TYPE_CLASS_DATETIME or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS)
+            )
+        )
+        assertFalse(
+            "number class carrying the text NO_SUGGESTIONS bit must not be flagged",
+            PrivacyGuard.isPrivacySensitiveEditor(
+                editor(inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS)
+            )
+        )
+        assertFalse(
+            "phone class carrying the text NO_SUGGESTIONS bit must not be flagged",
+            PrivacyGuard.isPrivacySensitiveEditor(
+                editor(inputType = InputType.TYPE_CLASS_PHONE or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS)
+            )
+        )
+    }
+
+    @Test
     fun `unset inputType (TYPE_NULL) fails closed to sensitive`() {
         assertTrue(PrivacyGuard.isPrivacySensitiveEditor(editor(inputType = InputType.TYPE_NULL)))
     }
