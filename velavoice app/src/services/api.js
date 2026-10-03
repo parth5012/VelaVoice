@@ -1,9 +1,15 @@
 import { ModelManager } from './ModelManager';
+export const isQuarantinedPayload = (payload) => payload?.privacySensitive === true || payload?.quarantined === true;
 export class CorrectionAPI {
     static async saveCorrection(payload) {
         try {
             if (!payload) {
                 return { success: false, error: 'payload is required' };
+            }
+            // Fail-closed quarantine gate: refuse before validation or SQLite so
+            // quarantined content is never trainable. Counts only — never content.
+            if (isQuarantinedPayload(payload)) {
+                return { success: false, error: 'quarantined session is local-only and never saved for training' };
             }
             if (!payload.audio_id) {
                 return { success: false, error: 'audio_id is required' };
@@ -21,7 +27,7 @@ export class CorrectionAPI {
                 return { success: false, error: 'edit_distance is required' };
             }
             const editsStr = JSON.stringify(payload.edits);
-            await ModelManager.saveCorrection(payload.audio_id, payload.original_transcription, payload.corrected_transcription, editsStr, payload.edit_distance, payload.user_id, payload.confidence_score);
+            await ModelManager.saveCorrection(payload.audio_id, payload.original_transcription, payload.corrected_transcription, editsStr, payload.edit_distance, payload.user_id, payload.confidence_score, isQuarantinedPayload(payload));
             return { success: true, message: 'Correction saved successfully' };
         }
         catch (e) {

@@ -72,9 +72,19 @@ async function getDb(): Promise<SQLite.SQLiteDatabase> {
           edit_distance INTEGER NOT NULL,
           timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
           user_id TEXT,
-          confidence_score REAL
+          confidence_score REAL,
+          quarantined INTEGER DEFAULT 0
         );
       `);
+      // Migrate pre-quarantine databases (ticket #136): older installs lack
+      // the flag column; duplicate-column errors mean it already exists.
+      try {
+        await database.execAsync(
+          'ALTER TABLE corrections ADD COLUMN quarantined INTEGER DEFAULT 0;'
+        );
+      } catch {
+        // Column already exists or migration not needed
+      }
       return database;
     });
   }
@@ -292,14 +302,20 @@ static async saveCorrection(
   edits: string,
   editDistance: number,
   userId?: string | null,
-  confidenceScore?: number | null
+  confidenceScore?: number | null,
+  quarantined?: boolean
 ): Promise<void> {
+  // Second fail-closed gate (ticket #136): even bypassing CorrectionAPI, a
+  // quarantined write throws before SQLite — never trainable. Counts only.
+  if (quarantined === true) {
+    throw new Error('quarantined session is local-only and never saved for training');
+  }
   const db = await getDb();
   await db.runAsync(
     `INSERT INTO corrections (
       audio_id, original_transcription, corrected_transcription,
-      edits, edit_distance, user_id, confidence_score
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      edits, edit_distance, user_id, confidence_score, quarantined
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       audioId,
       original,
@@ -307,7 +323,8 @@ static async saveCorrection(
       edits,
       editDistance,
       userId || null,
-      confidenceScore !== undefined && confidenceScore !== null ? confidenceScore : null
+      confidenceScore !== undefined && confidenceScore !== null ? confidenceScore : null,
+      quarantined === true ? 1 : 0
     ]
   );
 }

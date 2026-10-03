@@ -8,6 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { calculateEditDistance, getEdits } from '../utils/editCalculator';
+import { isQuarantinedEntry, quarantineBadgeText } from '../utils/quarantineBadge';
 import { ScribeAI } from '../services/ScribeAI';
 
 export interface TranscriptionEditorProps {
@@ -19,9 +20,13 @@ export interface TranscriptionEditorProps {
     corrected: string,
     edits: any[],
     editDistance: number,
-    scribeStyle?: string
+    scribeStyle?: string,
+    quarantined?: boolean
   ) => void;
   onCancel: () => void;
+  // Quarantined sessions stay editable on-device but show an explicit
+  // local-only badge and never egress (ticket #136).
+  quarantined?: boolean;
 }
 
 const SCRIBE_STYLES = ['Professional', 'Casual', 'Bullet Points', 'Email Draft', 'Proofread', 'Custom'];
@@ -33,6 +38,7 @@ export const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
   originalTranscription,
   onSave,
   onCancel,
+  quarantined,
 }) => {
   const [correctedText, setCorrectedText] = useState(originalTranscription);
   const [selectedStyle, setSelectedStyle] = useState('Professional');
@@ -102,11 +108,18 @@ export const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
   const handleSave = () => {
     const edits = getEdits(originalTranscription, correctedText);
     const editDistance = calculateEditDistance(originalTranscription, correctedText);
-    onSave(audioId, originalTranscription, correctedText, edits, editDistance, selectedStyle);
+    onSave(audioId, originalTranscription, correctedText, edits, editDistance, selectedStyle, quarantined === true);
   };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      {isQuarantinedEntry({ quarantined }) && (
+        <View style={styles.quarantineBanner}>
+          <Text style={styles.quarantineBannerText}>
+            🔒 {quarantineBadgeText()} — edits stay on this device
+          </Text>
+        </View>
+      )}
       <Text style={styles.sectionTitle}>Decrypted PCM Audio Snippet ({audioId})</Text>
       <View style={styles.waveformContainer}>
         <TouchableOpacity style={styles.playButton} onPress={handleTogglePlayback}>
@@ -234,6 +247,8 @@ export const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#111716' },
   scrollContent: { padding: 16 },
+  quarantineBanner: { backgroundColor: '#5c1a1a', borderColor: '#ff6b6b', borderWidth: 1, borderRadius: 6, padding: 10, marginBottom: 4 },
+  quarantineBannerText: { color: '#ffffff', fontSize: 12, fontWeight: 'bold' },
   sectionTitle: { color: '#859491', fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase', marginBottom: 6, letterSpacing: 0.5, marginTop: 12 },
   waveformContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0a0d0d', padding: 10, borderRadius: 6, marginBottom: 12 },
   playButton: { backgroundColor: '#00d6aa', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 4 },
