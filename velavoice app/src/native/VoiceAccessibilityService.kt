@@ -601,7 +601,7 @@ class VoiceAccessibilityService : AccessibilityService() {
                 }
             }
             val cleaner = TextCleaner(CleanerConfig(
-                useLlm = useLlm,
+                useLlm = PrivacyGuard.shouldEnableLlmCleaner(useLlm, sessionPrivacySensitive),
                 llmModelPath = llmPath,
                 personalDictionary = personalDictionary,
                 dictionaryKeywords = dictionaryKeywords
