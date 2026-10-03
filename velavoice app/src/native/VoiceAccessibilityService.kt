@@ -46,6 +46,7 @@ import com.velavoice.sdk.VelaException
 import com.velavoice.sdk.StreamingPipeline
 import com.velavoice.sdk.PrivacyGuard
 import com.velavoice.sdk.StreamingFieldComposer
+import com.velavoice.sdk.AudioRecorder
 
 class VoiceAccessibilityService : AccessibilityService() {
     private var windowManager: WindowManager? = null
@@ -330,7 +331,9 @@ class VoiceAccessibilityService : AccessibilityService() {
             audioRecord?.stop()
             audioRecord?.release()
             audioRecord = null
-            recordingThread?.join()
+            // Bound join (map #130 ticket #133 fix): never block the caller
+            // (often main) unbounded — ANR budget shared with AudioRecorder.cancel().
+            recordingThread?.join(AudioRecorder.CANCEL_JOIN_TIMEOUT_MS)
             recordingThread = null
         } catch (e: Exception) {
             e.printStackTrace()
@@ -1023,11 +1026,14 @@ class VoiceAccessibilityService : AccessibilityService() {
                 streamingCleanupExecutor.execute {
                     val cleaned = cleanStreamingFinalText(text)
                     Handler(Looper.getMainLooper()).post {
-                        if (cleaned.isNotBlank()) {
+                        // Cleanup race (map #130 ticket #133 fix): cancel may land
+                        // during the background clean — recheck cancelled on main
+                        // before insert/save so the aborted tail stays discarded.
+                        if (!streamingCancelled && cleaned.isNotBlank()) {
                             insertStreamingText(cleaned, true)
                         }
                         // Auto-save — never persist sensitive-field transcripts
-                        if (!sessionPrivacySensitive) {
+                        if (!streamingCancelled && !sessionPrivacySensitive) {
                             TranscriptionStorage.save(
                                 this@VoiceAccessibilityService,
                                 raw = text,

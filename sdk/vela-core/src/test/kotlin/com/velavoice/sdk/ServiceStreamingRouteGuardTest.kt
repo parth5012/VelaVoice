@@ -162,8 +162,8 @@ class ServiceStreamingRouteGuardTest {
     fun `VIMS streaming onFinal keeps the privacy-gated save`() {
         val (_, vims) = serviceSources()
         assertTrue(
-            "VIMS must keep gating streaming saves on !sessionPrivacySensitive",
-            vims.contains("if (!sessionPrivacySensitive)")
+            "VIMS must keep gating streaming saves on the volatile flip snapshot !sessionStartedPrivacySensitive (#133-fix: frozen local would miss flip-to-sensitive)",
+            vims.contains("if (!sessionStartedPrivacySensitive)")
         )
     }
 
@@ -228,8 +228,8 @@ class ServiceStreamingRouteGuardTest {
             "VIMS onFinal must not touch the InputConnection — only status, gated save, showKeyboardView"
         )
         assertTrue(
-            "VIMS onFinal must keep the privacy-gated save",
-            onFinal.contains("if (!sessionPrivacySensitive)")
+            "VIMS onFinal must keep the privacy-gated save on the volatile flip snapshot",
+            onFinal.contains("if (!sessionStartedPrivacySensitive)")
         )
         assertTrue(
             "VIMS onFinal must restore the keyboard view",
