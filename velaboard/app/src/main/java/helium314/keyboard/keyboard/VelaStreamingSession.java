@@ -375,7 +375,7 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
         }
         if (!mPrivacySensitive && !raw.trim().isEmpty()) {
             TranscriptionStorage.save(mLatinIME, raw, cleaned,
-                System.currentTimeMillis() - mStartTimeMs, null);
+                System.currentTimeMillis() - mStartTimeMs, null, mPrivacySensitive);
         }
         markFinished(false);
     }

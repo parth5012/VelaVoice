@@ -34,20 +34,40 @@ object TranscriptionStorage {
      * Save a transcription pair to local storage, optionally with audio bytes.
      * Audio is saved as a 16-bit 16 kHz mono WAV file alongside the JSON.
      *
+     * [privacySensitive] is REQUIRED (no default — mirror of the #76
+     * `TextCleaner.clean` overload removal, map #130 ticket #134): on `true`
+     * nothing is written and null is returned (fail closed), so no future caller
+     * can persist a sensitive transcript by forgetting its own check. The
+     * refusal is logged with counts only — never content, names, or paths.
+     *
      * @param context  Android context for file paths.
      * @param raw      Raw transcript text.
      * @param cleaned  Cleaned transcript text.
      * @param durationMs Recording duration in milliseconds.
      * @param audioBytes Raw PCM audio data (16-bit, 16kHz, mono), or null to skip audio.
-     * @return The JSON [File] on success, or null on failure.
+     * @param privacySensitive REQUIRED privacy verdict for this transcript.
+     * @return The JSON [File] on success, or null on failure / sensitive refusal.
      */
     @JvmStatic fun save(
         context: Context,
         raw: String,
         cleaned: String,
         durationMs: Long,
-        audioBytes: ByteArray? = null
+        audioBytes: ByteArray? = null,
+        privacySensitive: Boolean
     ): File? {
+        // Fail-closed privacy gate (map #130 ticket #134): a sensitive verdict must
+        // never reach disk, even when a caller skips its own check. Counts only —
+        // never transcript content, file names, or paths (cf. #79 log stripping).
+        if (privacySensitive) {
+            android.util.Log.w(
+                "TranscriptionStorage",
+                "Refusing to save privacy-sensitive transcription: rawChars=" + raw.length +
+                    " cleanedChars=" + cleaned.length +
+                    " audioBytes=" + (audioBytes?.size ?: 0)
+            )
+            return null
+        }
         return try {
             val dir = getTranscriptionsDir(context)
             if (!dir.exists()) dir.mkdirs()
