@@ -71,6 +71,22 @@ class VoiceInputMethodService : InputMethodService() {
      */
     @Volatile
     private var streamingCancelled = false
+    /**
+     * Monotonic streaming-session generation (map #130 PR #137 fix). Bumped at
+     * queue time by startStreaming() and by invalidatePendingStreamingStart(),
+     * so a worker whose start outlived its session can tell it is stale.
+     */
+    @Volatile
+    private var streamingSessionGeneration = 0
+    /**
+     * True between queueing startStreaming()'s pipeline construction and
+     * isStreaming becoming true (map #130 PR #137 fix). startStreaming() used
+     * to be a no-op for recheck/onFinishInput during that window, letting the
+     * pipeline start later with the stale privacy verdict and record past the
+     * end of input.
+     */
+    @Volatile
+    private var streamingStartPending = false
 
     override fun onCreate() {
         super.onCreate()
@@ -190,6 +206,10 @@ class VoiceInputMethodService : InputMethodService() {
         // onFinishInput* -> stop).
         if (isStreaming.get()) {
             stopStreaming()
+        } else if (streamingStartPending) {
+            // Input ended while the pipeline was still being built: discard the
+            // queued start, never record into the next field (map #130 PR #137 fix).
+            invalidatePendingStreamingStart()
         } else if (isRecording.get()) {
             cancelRecording()
         }
@@ -199,6 +219,9 @@ class VoiceInputMethodService : InputMethodService() {
         super.onFinishInputView(finishingInput)
         if (isStreaming.get()) {
             stopStreaming()
+        } else if (streamingStartPending) {
+            // Same as onFinishInput: a queued start must not outlive the input.
+            invalidatePendingStreamingStart()
         } else if (isRecording.get()) {
             cancelRecording()
         }
@@ -224,7 +247,21 @@ class VoiceInputMethodService : InputMethodService() {
 
     /** True while a voice session may still be recording or streaming (map #130 ticket #133). */
     private fun isSessionActive(): Boolean {
-        return isRecording.get() || isStreaming.get()
+        // A queued-but-unstarted streaming session is still active: the worker
+        // has not reached pipeline.start() yet, so a flip must be able to abort
+        // it (map #130 PR #137 fix).
+        return isRecording.get() || isStreaming.get() || streamingStartPending
+    }
+
+    /**
+     * Invalidate a queued streaming start (map #130 PR #137 fix): bumping the
+     * generation makes the bg worker discard its pipeline instead of starting
+     * it, so no audio is recorded under a stale privacy verdict and nothing is
+     * recorded after the input finished.
+     */
+    private fun invalidatePendingStreamingStart() {
+        streamingSessionGeneration++
+        streamingStartPending = false
     }
 
     /**
@@ -244,17 +281,24 @@ class VoiceInputMethodService : InputMethodService() {
         // Tighten-only: record the flip so trailing callbacks stay gated.
         sessionStartedPrivacySensitive = true
         cancelRecording()
+        // cancelStreaming() also invalidates a still-queued start (map #130
+        // PR #137 fix) — isSessionActive() above counts it as a live session.
         cancelStreaming()
     }
 
     private fun startStreaming() {
-        if (isStreaming.get()) return
+        if (isStreaming.get() || streamingStartPending) return
         loadStreamingMode()
         val sessionPrivacySensitive = isSessionPrivacySensitive()
         sessionStartedPrivacySensitive = sessionPrivacySensitive
         streamingCancelled = false
+        // Claim the session generation at queue time so a flip or onFinishInput
+        // during construction invalidates this start (map #130 PR #137 fix).
+        val generation = ++streamingSessionGeneration
+        streamingStartPending = true
 
         if (streamingMode == "instant") {
+            streamingStartPending = false
             startRecording()
             return
         }
@@ -262,11 +306,20 @@ class VoiceInputMethodService : InputMethodService() {
         voiceRecordingPane.resetDisplay()
         voiceRecordingPane.statusText.text = "Streaming..."
 
-        bgHandler?.post {
+        val handler = bgHandler
+        if (handler == null) {
+            // No worker (service destroyed): release the claim so a later
+            // startStreaming() is not blocked by a phantom pending start.
+            invalidatePendingStreamingStart()
+            return
+        }
+
+        handler.post {
             try {
                 loadModelPaths()
                 val whisperPath = cachedWhisperPath
                 if (whisperPath == null) {
+                    invalidatePendingStreamingStart()
                     mainHandler.post {
                         voiceRecordingPane.statusText.text = "No whisper model found."
                     }
@@ -282,6 +335,20 @@ class VoiceInputMethodService : InputMethodService() {
                     .whisperModelPath(whisperPath)
                     .privacySensitive(sessionPrivacySensitive)
                     .build()
+                // Stale-start guard (map #130 PR #137 fix): a privacy flip or
+                // onFinishInput may have invalidated this start while the
+                // pipeline was being built — discard it (never start, never
+                // record) and release it so it owns nothing.
+                if (generation != streamingSessionGeneration) {
+                    try {
+                        pipeline.release()
+                    } catch (ignored: Exception) {
+                    }
+                    mainHandler.post {
+                        voiceRecordingPane.statusText.text = "Ready"
+                    }
+                    return@post
+                }
                 streamingPipeline = pipeline
 
                 pipeline.setCallback(object : StreamingTranscriptionCallback {
@@ -315,6 +382,13 @@ class VoiceInputMethodService : InputMethodService() {
                     override fun onFinal(text: String) {
                         // Aborted session (privacy flip): discard the tail — no save.
                         if (streamingCancelled) return
+                        // Capture the verdict + generation synchronously, before
+                        // posting (map #130 PR #137 fix): stopStreaming() emits
+                        // this final inline, and startStreaming() resets the flag
+                        // before the posted task runs — so reading the live flag
+                        // inside the task could save a sensitive transcript.
+                        val sensitiveAtFinal = sessionStartedPrivacySensitive
+                        val sessionGeneration = streamingSessionGeneration
                         mainHandler.post {
                             // Single-commit: stopStreaming() already committed the
                             // remaining buffer to the InputConnection — onFinal
@@ -323,9 +397,11 @@ class VoiceInputMethodService : InputMethodService() {
                             voiceRecordingPane.statusText.text = "Done"
                             isStreaming.set(false)
                             // Auto-save — never persist transcripts of privacy-sensitive fields.
-                            // Read the volatile flip snapshot (not the frozen start local) so a
-                            // mid-session flip-to-sensitive blocks the save (map #130 ticket #133 fix).
-                            if (!sessionStartedPrivacySensitive) {
+                            // Gate on the verdict captured at onFinal for this session
+                            // and reject a completion whose session has moved on
+                            // (a newer start already reset the flag) — reading the
+                            // mutable service flag here would save a sensitive final.
+                            if (sessionGeneration == streamingSessionGeneration && !sensitiveAtFinal) {
                                 TranscriptionStorage.save(
                                     this@VoiceInputMethodService,
                                     raw = text,
@@ -365,6 +441,7 @@ class VoiceInputMethodService : InputMethodService() {
 
                 mainHandler.post {
                     isStreaming.set(true)
+                    streamingStartPending = false
                     streamingBuffer.setLength(0)
                     streamingCommittedLength = 0
                 }
@@ -377,6 +454,7 @@ class VoiceInputMethodService : InputMethodService() {
                 } catch (ignored: Exception) {
                 }
                 streamingPipeline = null
+                streamingStartPending = false
                 mainHandler.post {
                     voiceRecordingPane.statusText.text = "Streaming init error"
                 }
@@ -413,9 +491,12 @@ class VoiceInputMethodService : InputMethodService() {
      * aborted tail is never persisted nor committed.
      */
     private fun cancelStreaming() {
-        if (!isStreaming.get()) return
+        if (!isStreaming.get() && !streamingStartPending) return
         isStreaming.set(false)
         streamingCancelled = true
+        // Abort a queued-but-unstarted pipeline too (map #130 PR #137 fix):
+        // isStreaming is still false while startStreaming() builds.
+        invalidatePendingStreamingStart()
         streamingBuffer.setLength(0)
         streamingCommittedLength = 0
         streamingPipeline?.stop()
@@ -436,6 +517,9 @@ class VoiceInputMethodService : InputMethodService() {
         super.onDestroy()
         isRecording.set(false)
         isStreaming.set(false)
+        // A queued start must not survive the service: the worker discards its
+        // pipeline instead of recording after destroy (map #130 PR #137 fix).
+        invalidatePendingStreamingStart()
         timerHandler?.removeCallbacksAndMessages(null)
         transcriber?.release()
         transcriber = null

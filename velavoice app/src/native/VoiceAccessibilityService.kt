@@ -85,6 +85,14 @@ class VoiceAccessibilityService : AccessibilityService() {
      */
     @Volatile
     private var streamingCancelled = false
+    /**
+     * Monotonic streaming-session id, bumped on every start and every abort
+     * (map #130 PR #137 fix). A queued onFinal cleanup captures it and rejects
+     * itself when the id has moved on, so a slow final can never insert or
+     * save its text under a newer session.
+     */
+    @Volatile
+    private var streamingSessionId = 0
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         val eventType = event.eventType
@@ -358,6 +366,7 @@ class VoiceAccessibilityService : AccessibilityService() {
         if (!isStreaming) return
         isStreaming = false
         streamingCancelled = true
+        streamingSessionId++
         streamingBuffer.setLength(0)
         streamingComposer.reset()
         streamingCommittedLength = 0
@@ -926,6 +935,7 @@ class VoiceAccessibilityService : AccessibilityService() {
         loadStreamingPreferences()
         refreshSessionPrivacySensitive()
         streamingCancelled = false
+        streamingSessionId++
 
         if (streamingMode == "instant") {
             // Fall back to batch mode
@@ -1018,22 +1028,36 @@ class VoiceAccessibilityService : AccessibilityService() {
                 // Aborted session (privacy flip): discard the tail — no insert, no save.
                 if (streamingCancelled) return
                 if (text.isBlank()) return
+                // Bind the queued cleanup to THIS session + verdict (map #130 PR
+                // #137 fix): capture before enqueueing, because a newer
+                // non-sensitive session can reset sessionPrivacySensitive and
+                // bump streamingSessionId while the executor and the main-thread
+                // post are still pending. Reading the live flag inside the task
+                // let a sensitive final be cleaned by the on-device ONNX model
+                // and inserted/saved under the new session.
+                val sessionId = streamingSessionId
+                val sensitiveAtFinal = sessionPrivacySensitive
                 // Final TextCleaner pass (map #130 ticket #132): parity with the
                 // batch path and VelaStreamingSession.runCleanup. Cleanup runs
                 // off the main thread (ONNX model load must not block UI);
                 // insertion stays on main so the composer baseline is exact.
                 // Single-thread executor (no per-final Thread churn).
                 streamingCleanupExecutor.execute {
-                    val cleaned = cleanStreamingFinalText(text)
+                    val cleaned = cleanStreamingFinalText(text, sensitiveAtFinal)
                     Handler(Looper.getMainLooper()).post {
+                        // Stale completion (map #130 PR #137 fix): the session id
+                        // moved on, so this final belongs to a dead session —
+                        // never insert it or save it under the new one.
+                        if (sessionId != streamingSessionId) return@post
                         // Cleanup race (map #130 ticket #133 fix): cancel may land
                         // during the background clean — recheck cancelled on main
                         // before insert/save so the aborted tail stays discarded.
                         if (!streamingCancelled && cleaned.isNotBlank()) {
                             insertStreamingText(cleaned, true)
                         }
-                        // Auto-save — never persist sensitive-field transcripts
-                        if (!streamingCancelled && !sessionPrivacySensitive) {
+                        // Auto-save — never persist sensitive-field transcripts.
+                        // Gate on the verdict captured at onFinal, not the live flag.
+                        if (!streamingCancelled && !sensitiveAtFinal) {
                             TranscriptionStorage.save(
                                 this@VoiceAccessibilityService,
                                 raw = text,
@@ -1061,21 +1085,24 @@ class VoiceAccessibilityService : AccessibilityService() {
      * Final TextCleaner pass over streamed text (map #130 ticket #132).
      * Same inputs as the batch path (fillers, personal dictionary, keywords,
      * LLM gated on privacy per #131); falls back to raw text on failure.
+     * [privacySensitive] is the verdict captured by the caller for THIS
+     * session (map #130 PR #137 fix) — never the live service flag, which a
+     * newer session may already have reset.
      */
-    private fun cleanStreamingFinalText(raw: String): String {
+    private fun cleanStreamingFinalText(raw: String, privacySensitive: Boolean): String {
         return try {
-            buildStreamingFinalCleaner().clean(raw, privacySensitive = sessionPrivacySensitive)
+            buildStreamingFinalCleaner(privacySensitive).clean(raw, privacySensitive = privacySensitive)
         } catch (e: Exception) {
             Log.e("VoiceAccessibility", "Streaming final cleanup failed, keeping raw text", e)
             raw
         }
     }
 
-    private fun buildStreamingFinalCleaner(): TextCleaner {
+    private fun buildStreamingFinalCleaner(privacySensitive: Boolean): TextCleaner {
         val prefs = getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
         val useLlm = prefs.getBoolean("useLlmCleaner", false)
         return TextCleaner(CleanerConfig(
-            useLlm = PrivacyGuard.shouldEnableLlmCleaner(useLlm, sessionPrivacySensitive),
+            useLlm = PrivacyGuard.shouldEnableLlmCleaner(useLlm, privacySensitive),
             llmModelPath = getLlmModelPath(this),
             personalDictionary = createPersonalDictionary(),
             dictionaryKeywords = createDictionaryKeywords()
