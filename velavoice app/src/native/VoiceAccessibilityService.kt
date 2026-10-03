@@ -42,7 +42,7 @@ import com.velavoice.sdk.StreamingTranscriptionCallback
 import com.velavoice.sdk.RevisionMarker
 import com.velavoice.sdk.StreamConfig
 import com.velavoice.sdk.VelaException
-import com.velavoice.sdk.LocalStreamingTranscriber
+import com.velavoice.sdk.StreamingPipeline
 import com.velavoice.sdk.PrivacyGuard
 import com.velavoice.sdk.StreamingFieldComposer
 
@@ -70,16 +70,10 @@ class VoiceAccessibilityService : AccessibilityService() {
     private var isStreaming = false
     private var streamingMode = "instant"
     private var transcriptionMode = "local"
-    private var streamingTranscriber: LocalStreamingTranscriber? = null
-    private var streamingAudioThread: Thread? = null
-    private var streamingAudioRecord: AudioRecord? = null
-    @Volatile
-    private var streamingAudioActive = false
+    private var streamingPipeline: StreamingPipeline? = null
     private val streamingBuffer = StringBuilder()
     private val streamingComposer = StreamingFieldComposer()
     private var streamingCommittedLength = 0
-    private var lastVadActivity = 0L
-    private var lastCommitTime = 0L
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         val eventType = event.eventType
@@ -541,65 +535,8 @@ class VoiceAccessibilityService : AccessibilityService() {
 
             val useLlm = prefs.getBoolean("useLlmCleaner", false)
             val llmPath = getLlmModelPath(this@VoiceAccessibilityService)
-            val personalDictionary = object : PersonalDictionary {
-                override fun getEntries(): List<Pair<String, String>> {
-                    val dbFile = findDatabaseFile(this@VoiceAccessibilityService) ?: return emptyList()
-                    val entries = mutableListOf<Pair<String, String>>()
-                    var db: SQLiteDatabase? = null
-                    try {
-                        val handle = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-                        db = handle
-                        handle.rawQuery(
-                            "SELECT original_word, replacement FROM personal_dictionary ORDER BY priority DESC, original_word ASC",
-                            null
-                        ).use { cursor ->
-                            if (cursor.moveToFirst()) {
-                                do {
-                                    val original = cursor.getString(0)
-                                    val replacement = cursor.getString(1)
-                                    if (original.isNotEmpty()) {
-                                        entries.add(Pair(original, replacement))
-                                    }
-                                } while (cursor.moveToNext())
-                            }
-                        }
-                    } catch (e: Exception) {
-                        Log.e("VoiceAccessibility", "Error loading personal dictionary: ${e.message}")
-                    } finally {
-                        db?.close()
-                    }
-                    return entries
-                }
-            }
-            val dictionaryKeywords = object : DictionaryKeywords {
-                override fun getKeywords(): List<String> {
-                    val dbFile = findDatabaseFile(this@VoiceAccessibilityService) ?: return emptyList()
-                    val keywords = mutableListOf<String>()
-                    var db: SQLiteDatabase? = null
-                    try {
-                        val handle = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-                        db = handle
-                        handle.rawQuery(
-                            "SELECT keyword FROM dictionary_keywords ORDER BY keyword ASC",
-                            null
-                        ).use { cursor ->
-                            if (cursor.moveToFirst()) {
-                                do {
-                                    val keyword = cursor.getString(0)
-                                    if (keyword.isNotEmpty()) {
-                                        keywords.add(keyword)
-                                    }
-                                } while (cursor.moveToNext())
-                            }
-                        }
-                    } catch (e: Exception) {
-                        Log.e("VoiceAccessibility", "Error loading dictionary keywords: ${e.message}")
-                    } finally {
-                        db?.close()
-                    }
-                    return keywords
-                }
-            }
+            val personalDictionary = createPersonalDictionary()
+            val dictionaryKeywords = createDictionaryKeywords()
             val cleaner = TextCleaner(CleanerConfig(
                 useLlm = PrivacyGuard.shouldEnableLlmCleaner(useLlm, sessionPrivacySensitive),
                 llmModelPath = llmPath,
@@ -899,8 +836,6 @@ class VoiceAccessibilityService : AccessibilityService() {
         streamingBuffer.setLength(0)
         streamingComposer.reset()
         streamingCommittedLength = 0
-        lastVadActivity = System.currentTimeMillis()
-        lastCommitTime = System.currentTimeMillis()
 
         val whisperPath = getWhisperModelPath(this@VoiceAccessibilityService)
         if (whisperPath == null) {
@@ -909,23 +844,30 @@ class VoiceAccessibilityService : AccessibilityService() {
             return
         }
 
-        val config = WhisperConfig(whisperPath)
-        streamingTranscriber = LocalStreamingTranscriber(config)
-        streamingTranscriber?.setCallback(createStreamingCallback())
-
-        val streamConfig = StreamConfig(
-            modelPath = whisperPath,
-            chunkDurationMs = 3000,
-            windowDurationMs = 15000,
-            overlapMs = 1500,
-            resetIntervalMs = 30000,
-            useVad = true,
-            vadThreshold = 0.02f,
-            privacySensitive = sessionPrivacySensitive
+        // Route streaming through the single gated emit path (map #130 ticket
+        // #132): start() force-selects local for sensitive sessions and
+        // dispatchEmit() refuses cloud uploads, so local-only stays local-only
+        // (no cloud mode introduced). The pipeline owns mic capture, VAD and
+        // waveform amplitude — no raw transcriber.emit here.
+        val pipeline = StreamingPipeline.Builder(this)
+            .whisperModelPath(whisperPath)
+            .privacySensitive(sessionPrivacySensitive)
+            .build()
+        pipeline.setCallback(createStreamingCallback())
+        pipeline.start(
+            "local",
+            StreamConfig(
+                modelPath = whisperPath,
+                chunkDurationMs = 3000,
+                windowDurationMs = 15000,
+                overlapMs = 1500,
+                resetIntervalMs = 30000,
+                useVad = true,
+                vadThreshold = 0.02f,
+                privacySensitive = sessionPrivacySensitive
+            )
         )
-        streamingTranscriber?.start(streamConfig)
-
-        startStreamingAudio()
+        streamingPipeline = pipeline
 
         controlPane.visibility = View.VISIBLE
         statusText.text = "Streaming..."
@@ -934,7 +876,6 @@ class VoiceAccessibilityService : AccessibilityService() {
     private fun stopStreamingTranscription() {
         if (!isStreaming) return
         isStreaming = false
-        stopStreamingAudio()
 
         // Commit remaining text
         if (streamingBuffer.length > streamingCommittedLength) {
@@ -944,20 +885,11 @@ class VoiceAccessibilityService : AccessibilityService() {
             }
         }
 
-        streamingTranscriber?.stop()
-        streamingTranscriber?.release()
-        streamingTranscriber = null
-
-        // Auto-save final transcription — never persist sensitive-field transcripts
-        val finalText = streamingBuffer.toString().trim()
-        if (!sessionPrivacySensitive && finalText.isNotEmpty()) {
-            TranscriptionStorage.save(
-                this@VoiceAccessibilityService,
-                raw = finalText,
-                cleaned = finalText,
-                durationMs = 0
-            )
-        }
+        // Final transcript + gated save happen in the pipeline onFinal callback
+        // (with the final TextCleaner pass); see createStreamingCallback.
+        streamingPipeline?.stop()
+        streamingPipeline?.release()
+        streamingPipeline = null
 
         Handler(Looper.getMainLooper()).post {
             statusText.text = "Ready"
@@ -965,69 +897,6 @@ class VoiceAccessibilityService : AccessibilityService() {
             val density = resources.displayMetrics.density
             val micColor = Color.parseColor("#a6e3a1")
             micButton.background = createCapsuleDrawable(micColor, 100f * density)
-        }
-    }
-
-    private fun startStreamingAudio() {
-        streamingAudioActive = true
-        streamingAudioThread = Thread({
-            try {
-                streamingAudioRecord = AudioRecord(
-                    MediaRecorder.AudioSource.MIC,
-                    SAMPLE_RATE,
-                    CHANNEL_CONFIG,
-                    AUDIO_FORMAT,
-                    BUFFER_SIZE
-                )
-
-                if (streamingAudioRecord?.state == AudioRecord.STATE_INITIALIZED) {
-                    streamingAudioRecord?.startRecording()
-                    val buffer = ShortArray(BUFFER_SIZE / 2)
-                    val byteBuffer = ByteArray(BUFFER_SIZE)
-
-                    while (streamingAudioActive) {
-                        val read = streamingAudioRecord?.read(buffer, 0, buffer.size) ?: 0
-                        if (read > 0) {
-                            var sumSquares = 0.0
-                            for (i in 0 until read) {
-                                val sv = buffer[i]
-                                sumSquares += sv * sv
-                                byteBuffer[i * 2] = (sv.toInt() and 0xff).toByte()
-                                byteBuffer[i * 2 + 1] = ((sv.toInt() shr 8) and 0xff).toByte()
-                            }
-
-                            val audioBytes = byteBuffer.copyOfRange(0, read * 2)
-                            streamingTranscriber?.emit(audioBytes)
-
-                            // Amplitude for waveform
-                            val rms = sqrt(sumSquares / read)
-                            val normalized = (rms / 32768.0f).toFloat()
-                            waveformView.post { waveformView.addAmplitude(normalized) }
-
-                            // VAD tracking
-                            if (normalized > 0.02f) {
-                                lastVadActivity = System.currentTimeMillis()
-                            }
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("VoiceAccessibility", "Streaming audio error", e)
-            }
-        }, "VoiceAccessibilityStreamingAudio")
-        streamingAudioThread?.start()
-    }
-
-    private fun stopStreamingAudio() {
-        streamingAudioActive = false
-        try {
-            streamingAudioRecord?.stop()
-            streamingAudioRecord?.release()
-            streamingAudioRecord = null
-            streamingAudioThread?.join(2000)
-            streamingAudioThread = null
-        } catch (e: Exception) {
-            Log.e("VoiceAccessibility", "Error stopping streaming audio", e)
         }
     }
 
@@ -1051,11 +920,28 @@ class VoiceAccessibilityService : AccessibilityService() {
             }
 
             override fun onFinal(text: String) {
-                Handler(Looper.getMainLooper()).post {
-                    if (text.isNotBlank()) {
-                        insertStreamingText(text, true)
+                if (text.isBlank()) return
+                // Final TextCleaner pass (map #130 ticket #132): parity with the
+                // batch path and VelaStreamingSession.runCleanup. Cleanup runs
+                // off the main thread (ONNX model load must not block UI);
+                // insertion stays on main so the composer baseline is exact.
+                Thread({
+                    val cleaned = cleanStreamingFinalText(text)
+                    Handler(Looper.getMainLooper()).post {
+                        if (cleaned.isNotBlank()) {
+                            insertStreamingText(cleaned, true)
+                        }
+                        // Auto-save — never persist sensitive-field transcripts
+                        if (!sessionPrivacySensitive) {
+                            TranscriptionStorage.save(
+                                this@VoiceAccessibilityService,
+                                raw = text,
+                                cleaned = cleaned,
+                                durationMs = 0
+                            )
+                        }
                     }
-                }
+                }, "VoiceAccessibilityStreamingCleanup").start()
             }
 
             override fun onError(error: VelaException) {
@@ -1065,7 +951,99 @@ class VoiceAccessibilityService : AccessibilityService() {
             }
 
             override fun onAmplitude(normalized: Float) {
-                // Handled by audio thread
+                waveformView.post { waveformView.addAmplitude(normalized) }
+            }
+        }
+    }
+
+    /**
+     * Final TextCleaner pass over streamed text (map #130 ticket #132).
+     * Same inputs as the batch path (fillers, personal dictionary, keywords,
+     * LLM gated on privacy per #131); falls back to raw text on failure.
+     */
+    private fun cleanStreamingFinalText(raw: String): String {
+        return try {
+            buildStreamingFinalCleaner().clean(raw, privacySensitive = sessionPrivacySensitive)
+        } catch (e: Exception) {
+            Log.e("VoiceAccessibility", "Streaming final cleanup failed, keeping raw text", e)
+            raw
+        }
+    }
+
+    private fun buildStreamingFinalCleaner(): TextCleaner {
+        val prefs = getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
+        val useLlm = prefs.getBoolean("useLlmCleaner", false)
+        return TextCleaner(CleanerConfig(
+            useLlm = PrivacyGuard.shouldEnableLlmCleaner(useLlm, sessionPrivacySensitive),
+            llmModelPath = getLlmModelPath(this),
+            personalDictionary = createPersonalDictionary(),
+            dictionaryKeywords = createDictionaryKeywords()
+        ))
+    }
+
+    /** Shared by the batch and streaming-final cleaner constructions. */
+    private fun createPersonalDictionary(): PersonalDictionary {
+        return object : PersonalDictionary {
+            override fun getEntries(): List<Pair<String, String>> {
+                val dbFile = findDatabaseFile(this@VoiceAccessibilityService) ?: return emptyList()
+                val entries = mutableListOf<Pair<String, String>>()
+                var db: SQLiteDatabase? = null
+                try {
+                    val handle = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
+                    db = handle
+                    handle.rawQuery(
+                        "SELECT original_word, replacement FROM personal_dictionary ORDER BY priority DESC, original_word ASC",
+                        null
+                    ).use { cursor ->
+                        if (cursor.moveToFirst()) {
+                            do {
+                                val original = cursor.getString(0)
+                                val replacement = cursor.getString(1)
+                                if (original.isNotEmpty()) {
+                                    entries.add(Pair(original, replacement))
+                                }
+                            } while (cursor.moveToNext())
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("VoiceAccessibility", "Error loading personal dictionary: ${e.message}")
+                } finally {
+                    db?.close()
+                }
+                return entries
+            }
+        }
+    }
+
+    /** Shared by the batch and streaming-final cleaner constructions. */
+    private fun createDictionaryKeywords(): DictionaryKeywords {
+        return object : DictionaryKeywords {
+            override fun getKeywords(): List<String> {
+                val dbFile = findDatabaseFile(this@VoiceAccessibilityService) ?: return emptyList()
+                val keywords = mutableListOf<String>()
+                var db: SQLiteDatabase? = null
+                try {
+                    val handle = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
+                    db = handle
+                    handle.rawQuery(
+                        "SELECT keyword FROM dictionary_keywords ORDER BY keyword ASC",
+                        null
+                    ).use { cursor ->
+                        if (cursor.moveToFirst()) {
+                            do {
+                                val keyword = cursor.getString(0)
+                                if (keyword.isNotEmpty()) {
+                                    keywords.add(keyword)
+                                }
+                            } while (cursor.moveToNext())
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("VoiceAccessibility", "Error loading dictionary keywords: ${e.message}")
+                } finally {
+                    db?.close()
+                }
+                return keywords
             }
         }
     }
@@ -1127,8 +1105,8 @@ class VoiceAccessibilityService : AccessibilityService() {
         isRecording = false
         isStreaming = false
         audioRecord?.release()
-        streamingAudioRecord?.release()
-        streamingTranscriber?.release()
+        streamingPipeline?.release()
+        streamingPipeline = null
         floatingLayout?.let {
             windowManager?.removeView(it)
         }

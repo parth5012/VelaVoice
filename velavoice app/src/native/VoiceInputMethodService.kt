@@ -25,10 +25,9 @@ import com.velavoice.sdk.ui.VoiceRecordingPane
 import com.velavoice.sdk.StreamingTranscriptionCallback
 import com.velavoice.sdk.RevisionMarker
 import com.velavoice.sdk.StreamConfig
-import com.velavoice.sdk.LocalStreamingTranscriber
+import com.velavoice.sdk.StreamingPipeline
 import com.velavoice.sdk.PrivacyGuard
 import com.velavoice.sdk.ScribeInput
-import com.velavoice.sdk.whisper.WhisperConfig
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -56,11 +55,7 @@ class VoiceInputMethodService : InputMethodService() {
     // Streaming state
     private val isStreaming = AtomicBoolean(false)
     private var streamingMode = "instant"
-    private var streamingTranscriber: LocalStreamingTranscriber? = null
-    private var streamingAudioThread: Thread? = null
-    private var streamingAudioRecord: android.media.AudioRecord? = null
-    @Volatile
-    private var streamingAudioActive = false
+    private var streamingPipeline: StreamingPipeline? = null
     private val streamingBuffer = StringBuilder()
     private var streamingCommittedLength = 0
 
@@ -205,11 +200,18 @@ class VoiceInputMethodService : InputMethodService() {
                     return@post
                 }
 
-                val config = WhisperConfig(whisperPath)
-                val transcriber = LocalStreamingTranscriber(config)
-                streamingTranscriber = transcriber
+                // Route streaming through the single gated emit path (map #130
+                // ticket #132): start() force-selects local for sensitive
+                // sessions and dispatchEmit() refuses cloud uploads, so
+                // local-only stays local-only (no cloud mode introduced). The
+                // pipeline owns mic capture and VAD — no raw transcriber.emit.
+                val pipeline = StreamingPipeline.Builder(this@VoiceInputMethodService)
+                    .whisperModelPath(whisperPath)
+                    .privacySensitive(sessionPrivacySensitive)
+                    .build()
+                streamingPipeline = pipeline
 
-                transcriber.setCallback(object : StreamingTranscriptionCallback {
+                pipeline.setCallback(object : StreamingTranscriptionCallback {
                     override fun onRevisionMarker(marker: RevisionMarker) {
                         mainHandler.post {
                             when (marker.type) {
@@ -281,13 +283,12 @@ class VoiceInputMethodService : InputMethodService() {
                     vadThreshold = 0.02f,
                     privacySensitive = sessionPrivacySensitive
                 )
-                transcriber.start(streamConfig)
+                pipeline.start("local", streamConfig)
 
                 mainHandler.post {
                     isStreaming.set(true)
                     streamingBuffer.setLength(0)
                     streamingCommittedLength = 0
-                    startStreamingAudio(transcriber)
                 }
             } catch (e: Exception) {
                 android.util.Log.e("VoiceIME", "Start streaming failed", e)
@@ -301,7 +302,6 @@ class VoiceInputMethodService : InputMethodService() {
     private fun stopStreaming() {
         if (!isStreaming.get()) return
         isStreaming.set(false)
-        stopStreamingAudio()
 
         // Commit remaining text
         val ic = currentInputConnection
@@ -315,64 +315,9 @@ class VoiceInputMethodService : InputMethodService() {
             }
         }
 
-        streamingTranscriber?.stop()
-        streamingTranscriber?.release()
-        streamingTranscriber = null
-    }
-
-    private fun startStreamingAudio(transcriber: LocalStreamingTranscriber) {
-        streamingAudioActive = true
-        streamingAudioThread = Thread({
-            try {
-                val sampleRate = 16000
-                val bufferSize = android.media.AudioRecord.getMinBufferSize(
-                    sampleRate,
-                    android.media.AudioFormat.CHANNEL_IN_MONO,
-                    android.media.AudioFormat.ENCODING_PCM_16BIT
-                )
-                streamingAudioRecord = android.media.AudioRecord(
-                    android.media.MediaRecorder.AudioSource.MIC,
-                    sampleRate,
-                    android.media.AudioFormat.CHANNEL_IN_MONO,
-                    android.media.AudioFormat.ENCODING_PCM_16BIT,
-                    bufferSize
-                )
-
-                if (streamingAudioRecord?.state == android.media.AudioRecord.STATE_INITIALIZED) {
-                    streamingAudioRecord?.startRecording()
-                    val buffer = ShortArray(bufferSize / 2)
-                    val byteBuffer = ByteArray(bufferSize)
-
-                    while (streamingAudioActive) {
-                        val read = streamingAudioRecord?.read(buffer, 0, buffer.size) ?: 0
-                        if (read > 0) {
-                            for (i in 0 until read) {
-                                val sv = buffer[i]
-                                byteBuffer[i * 2] = (sv.toInt() and 0xff).toByte()
-                                byteBuffer[i * 2 + 1] = ((sv.toInt() shr 8) and 0xff).toByte()
-                            }
-                            transcriber.emit(byteBuffer.copyOfRange(0, read * 2))
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("VoiceIME", "Streaming audio error", e)
-            }
-        }, "VoiceIME-StreamingAudio")
-        streamingAudioThread?.start()
-    }
-
-    private fun stopStreamingAudio() {
-        streamingAudioActive = false
-        try {
-            streamingAudioRecord?.stop()
-            streamingAudioRecord?.release()
-            streamingAudioRecord = null
-            streamingAudioThread?.join(2000)
-            streamingAudioThread = null
-        } catch (e: Exception) {
-            android.util.Log.e("VoiceIME", "Error stopping streaming audio", e)
-        }
+        streamingPipeline?.stop()
+        streamingPipeline?.release()
+        streamingPipeline = null
     }
 
     private fun updateStreamingBuffer(text: String, range: IntRange) {
@@ -389,9 +334,8 @@ class VoiceInputMethodService : InputMethodService() {
         timerHandler?.removeCallbacksAndMessages(null)
         transcriber?.release()
         transcriber = null
-        streamingTranscriber?.release()
-        streamingTranscriber = null
-        stopStreamingAudio()
+        streamingPipeline?.release()
+        streamingPipeline = null
         bgHandlerThread?.quitSafely()
         bgHandlerThread = null
     }
