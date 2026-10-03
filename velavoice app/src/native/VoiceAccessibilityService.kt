@@ -30,6 +30,7 @@ import android.os.Looper
 import android.util.Log
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.util.concurrent.Executors
 import kotlin.math.sqrt
 import com.velavoice.sdk.whisper.WhisperEngine
 import com.velavoice.sdk.whisper.WhisperConfig
@@ -74,6 +75,9 @@ class VoiceAccessibilityService : AccessibilityService() {
     private val streamingBuffer = StringBuilder()
     private val streamingComposer = StreamingFieldComposer()
     private var streamingCommittedLength = 0
+    // Single-thread executor for the streaming final TextCleaner pass (no
+    // thread churn: one background thread, no new deps beyond java.util.concurrent).
+    private val streamingCleanupExecutor = Executors.newSingleThreadExecutor()
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         val eventType = event.eventType
@@ -652,11 +656,11 @@ class VoiceAccessibilityService : AccessibilityService() {
         var path: String? = null
         try {
             db = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-            val cursor = db.rawQuery("SELECT path FROM models WHERE (id = 'whisper-tiny-en' OR name = 'whisper-tiny-en') AND status = 'completed' LIMIT 1", null)
-            if (cursor.moveToFirst()) {
-                path = cursor.getString(0)
+            db.rawQuery("SELECT path FROM models WHERE (id = 'whisper-tiny-en' OR name = 'whisper-tiny-en') AND status = 'completed' LIMIT 1", null).use { cursor ->
+                if (cursor.moveToFirst()) {
+                    path = cursor.getString(0)
+                }
             }
-            cursor.close()
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
@@ -671,11 +675,11 @@ class VoiceAccessibilityService : AccessibilityService() {
         var path: String? = null
         try {
             db = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-            val cursor = db.rawQuery("SELECT path FROM models WHERE (id = 'cleaner-llama-3b' OR name = 'cleaner-llama-3b') AND status = 'completed' LIMIT 1", null)
-            if (cursor.moveToFirst()) {
-                path = cursor.getString(0)
+            db.rawQuery("SELECT path FROM models WHERE (id = 'cleaner-llama-3b' OR name = 'cleaner-llama-3b') AND status = 'completed' LIMIT 1", null).use { cursor ->
+                if (cursor.moveToFirst()) {
+                    path = cursor.getString(0)
+                }
             }
-            cursor.close()
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
@@ -877,16 +881,9 @@ class VoiceAccessibilityService : AccessibilityService() {
         if (!isStreaming) return
         isStreaming = false
 
-        // Commit remaining text
-        if (streamingBuffer.length > streamingCommittedLength) {
-            val remaining = streamingBuffer.substring(streamingCommittedLength)
-            if (remaining.isNotBlank()) {
-                insertStreamingText(remaining.trim(), true)
-            }
-        }
-
-        // Final transcript + gated save happen in the pipeline onFinal callback
-        // (with the final TextCleaner pass); see createStreamingCallback.
+        // Single canonical final: pipeline.stop() -> onFinal does the one
+        // clean+write (final TextCleaner pass + composer-baseline insert +
+        // gated save). No premature remaining-text insert here (double-final).
         streamingPipeline?.stop()
         streamingPipeline?.release()
         streamingPipeline = null
@@ -925,7 +922,8 @@ class VoiceAccessibilityService : AccessibilityService() {
                 // batch path and VelaStreamingSession.runCleanup. Cleanup runs
                 // off the main thread (ONNX model load must not block UI);
                 // insertion stays on main so the composer baseline is exact.
-                Thread({
+                // Single-thread executor (no per-final Thread churn).
+                streamingCleanupExecutor.execute {
                     val cleaned = cleanStreamingFinalText(text)
                     Handler(Looper.getMainLooper()).post {
                         if (cleaned.isNotBlank()) {
@@ -941,7 +939,7 @@ class VoiceAccessibilityService : AccessibilityService() {
                             )
                         }
                     }
-                }, "VoiceAccessibilityStreamingCleanup").start()
+                }
             }
 
             override fun onError(error: VelaException) {
@@ -1067,26 +1065,22 @@ class VoiceAccessibilityService : AccessibilityService() {
             val currentText = targetNode.text?.toString() ?: ""
             streamingComposer.observe(currentText)
             if (isFinal) {
-                if (sessionPrivacySensitive) {
-                    // Sensitive field: never place dictated text on the clipboard.
-                    try {
-                        val arguments = Bundle()
-                        arguments.putCharSequence(
-                            AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
-                            streamingComposer.finalWriteText(currentText, text)
-                        )
-                        if (!targetNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)) {
-                            Log.w("VoiceAccessibility", "ACTION_SET_TEXT refused by target app")
-                        }
-                    } catch (e: Exception) {
-                        Log.e("VoiceAccessibility", "Direct insert refused: ${e.javaClass.simpleName}")
+                // Final (sensitive or not): baseline + cleaned final via
+                // ACTION_SET_TEXT uniformly — never current + final, never
+                // clipboard paste on top of streamed partials (which
+                // duplicates everything already streamed). Never touches the
+                // clipboard, so sensitive text stays off it too.
+                try {
+                    val arguments = Bundle()
+                    arguments.putCharSequence(
+                        AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+                        streamingComposer.finalWriteText(currentText, text)
+                    )
+                    if (!targetNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)) {
+                        Log.w("VoiceAccessibility", "ACTION_SET_TEXT refused by target app")
                     }
-                } else {
-                    // Final text: paste via clipboard
-                    val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    val clip = ClipData.newPlainText("streaming", text)
-                    clipboard.setPrimaryClip(clip)
-                    targetNode.performAction(AccessibilityNodeInfo.ACTION_PASTE)
+                } catch (e: Exception) {
+                    Log.e("VoiceAccessibility", "Direct insert refused: ${e.javaClass.simpleName}")
                 }
             } else {
                 // Partial text: use ACTION_SET_TEXT for composing
@@ -1107,6 +1101,7 @@ class VoiceAccessibilityService : AccessibilityService() {
         audioRecord?.release()
         streamingPipeline?.release()
         streamingPipeline = null
+        streamingCleanupExecutor.shutdownNow()
         floatingLayout?.let {
             windowManager?.removeView(it)
         }

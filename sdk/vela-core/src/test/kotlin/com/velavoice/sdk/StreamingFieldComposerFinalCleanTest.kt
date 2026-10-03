@@ -80,4 +80,31 @@ class StreamingFieldComposerFinalCleanTest {
         )
         assertEquals("secret phrase", composer.finalWriteText("", cleaned))
     }
+
+    @Test
+    fun `baseline first-wins even when interim observes carry partials`() {
+        // Locks the OCR-dup baseline semantics VAS relies on: observe() is
+        // called on every streaming write, but only the first (pre-streaming)
+        // value is the baseline. A buggy current+final compose would re-append
+        // partials already in the field.
+        val composer = StreamingFieldComposer()
+        composer.observe("Notes: ")
+        composer.observe("Notes: hello wor")
+        composer.observe("Notes: hello world hello world")
+
+        val write = composer.finalWriteText("Notes: hello world hello world", "hello world")
+
+        assertEquals("Notes: hello world", write)
+    }
+
+    @Test
+    fun `empty baseline plus final never duplicates`() {
+        val composer = StreamingFieldComposer()
+        composer.observe("")
+        val cleaned = TextCleaner(CleanerConfig()).clean("um hello world", privacySensitive = false)
+        val currentWithPartials = "hello wor"
+
+        assertEquals("hello world", composer.finalWriteText(currentWithPartials, cleaned))
+        assertNotEquals(currentWithPartials + cleaned, composer.finalWriteText(currentWithPartials, cleaned))
+    }
 }
