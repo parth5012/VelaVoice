@@ -44,6 +44,7 @@ import com.velavoice.sdk.StreamConfig
 import com.velavoice.sdk.VelaException
 import com.velavoice.sdk.LocalStreamingTranscriber
 import com.velavoice.sdk.PrivacyGuard
+import com.velavoice.sdk.StreamingFieldComposer
 
 class VoiceAccessibilityService : AccessibilityService() {
     private var windowManager: WindowManager? = null
@@ -75,6 +76,7 @@ class VoiceAccessibilityService : AccessibilityService() {
     @Volatile
     private var streamingAudioActive = false
     private val streamingBuffer = StringBuilder()
+    private val streamingComposer = StreamingFieldComposer()
     private var streamingCommittedLength = 0
     private var lastVadActivity = 0L
     private var lastCommitTime = 0L
@@ -895,6 +897,7 @@ class VoiceAccessibilityService : AccessibilityService() {
 
         isStreaming = true
         streamingBuffer.setLength(0)
+        streamingComposer.reset()
         streamingCommittedLength = 0
         lastVadActivity = System.currentTimeMillis()
         lastCommitTime = System.currentTimeMillis()
@@ -1080,15 +1083,19 @@ class VoiceAccessibilityService : AccessibilityService() {
         val targetNode = focusNode ?: rootInActiveWindow?.let { findEditableNode(it) }
 
         if (targetNode != null) {
+            // Capture the pre-streaming baseline on the FIRST write: interim commits
+            // rewrite the field with partials, so a later final insert must not treat
+            // that partial content as pre-existing text (OCR duplication finding).
+            val currentText = targetNode.text?.toString() ?: ""
+            streamingComposer.observe(currentText)
             if (isFinal) {
                 if (sessionPrivacySensitive) {
                     // Sensitive field: never place dictated text on the clipboard.
                     try {
-                        val existing = targetNode.text?.toString() ?: ""
                         val arguments = Bundle()
                         arguments.putCharSequence(
                             AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
-                            existing + text
+                            streamingComposer.finalWriteText(currentText, text)
                         )
                         if (!targetNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)) {
                             Log.w("VoiceAccessibility", "ACTION_SET_TEXT refused by target app")
