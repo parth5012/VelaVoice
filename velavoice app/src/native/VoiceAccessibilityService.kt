@@ -78,9 +78,25 @@ class VoiceAccessibilityService : AccessibilityService() {
     // Single-thread executor for the streaming final TextCleaner pass (no
     // thread churn: one background thread, no new deps beyond java.util.concurrent).
     private val streamingCleanupExecutor = Executors.newSingleThreadExecutor()
+    /**
+     * Set when a privacy recheck aborts streaming: suppresses the trailing
+     * onFinal save/insert so the aborted tail is discarded (map #130 #133).
+     */
+    @Volatile
+    private var streamingCancelled = false
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         val eventType = event.eventType
+        if (eventType == AccessibilityEvent.TYPE_VIEW_FOCUSED ||
+            eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            // Focus moved: abort a running voice session if the new field is
+            // sensitive (map #130 ticket #133, mirrors keyboard #78).
+            // Accessibility events are high-volume — guard with
+            // is-session-active FIRST so the hot path stays a no-op.
+            if (isSessionActive()) {
+                recheckSessionPrivacy()
+            }
+        }
         if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ||
             eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED) {
 
@@ -275,6 +291,83 @@ class VoiceAccessibilityService : AccessibilityService() {
         sessionPrivacySensitive = PrivacyGuard.isSensitiveAccessibilityNode(
             findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
         )
+    }
+
+    /** True while a voice session may still be recording or streaming (map #130 ticket #133). */
+    private fun isSessionActive(): Boolean {
+        return isRecording || isStreaming
+    }
+
+    /**
+     * Re-evaluate the privacy verdict while a session runs (map #130 ticket #133,
+     * mirrors keyboard #78 recheckSessionPrivacy).
+     * Focus can change without the session stopping; if the verdict flips to
+     * sensitive after a non-sensitive start, abort (fail closed) and discard
+     * audio — never transcribe/save/insert the tail.
+     * A session already started sensitive is never touched, and outside an
+     * active session this is a no-op so the high-volume accessibility hot path
+     * stays cheap. Never widens: only false→true, never true→false.
+     */
+    private fun recheckSessionPrivacy() {
+        if (!isSessionActive()) return
+        if (sessionPrivacySensitive) return
+        if (!PrivacyGuard.isSensitiveAccessibilityNode(findFocus(AccessibilityNodeInfo.FOCUS_INPUT))) return
+        // Tighten-only: record the flip so any trailing onFinal stays gated.
+        sessionPrivacySensitive = true
+        cancelRecording()
+        cancelStreamingTranscription()
+    }
+
+    /**
+     * Abort batch capture and discard audio without transcription, save or
+     * insert (map #130 ticket #133, #74 cancel semantics for VAS: no flush,
+     * no save, no UI tail — never plain stopRecording which would transcribe).
+     */
+    private fun cancelRecording() {
+        if (!isRecording) return
+        isRecording = false
+        try {
+            audioRecord?.stop()
+            audioRecord?.release()
+            audioRecord = null
+            recordingThread?.join()
+            recordingThread = null
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        recordedAudioData.reset()
+        Handler(Looper.getMainLooper()).post {
+            statusText.text = "Ready"
+            controlPane.visibility = View.GONE
+            val density = resources.displayMetrics.density
+            val micColor = Color.parseColor("#a6e3a1")
+            micButton.background = createCapsuleDrawable(micColor, 100f * density)
+        }
+    }
+
+    /**
+     * Abort streaming and discard buffered audio without commit, save or
+     * insert (map #130 ticket #133). Distinct from stopStreamingTranscription
+     * which drives the single canonical onFinal clean+write; cancel suppresses
+     * that trailing onFinal via streamingCancelled.
+     */
+    private fun cancelStreamingTranscription() {
+        if (!isStreaming) return
+        isStreaming = false
+        streamingCancelled = true
+        streamingBuffer.setLength(0)
+        streamingComposer.reset()
+        streamingCommittedLength = 0
+        streamingPipeline?.stop()
+        streamingPipeline?.release()
+        streamingPipeline = null
+        Handler(Looper.getMainLooper()).post {
+            statusText.text = "Ready"
+            controlPane.visibility = View.GONE
+            val density = resources.displayMetrics.density
+            val micColor = Color.parseColor("#a6e3a1")
+            micButton.background = createCapsuleDrawable(micColor, 100f * density)
+        }
     }
 
     private fun createCapsuleDrawable(backgroundColor: Int, cornerRadius: Float): GradientDrawable {
@@ -829,6 +922,7 @@ class VoiceAccessibilityService : AccessibilityService() {
         if (isStreaming) return
         loadStreamingPreferences()
         refreshSessionPrivacySensitive()
+        streamingCancelled = false
 
         if (streamingMode == "instant") {
             // Fall back to batch mode
@@ -900,6 +994,7 @@ class VoiceAccessibilityService : AccessibilityService() {
     private fun createStreamingCallback(): StreamingTranscriptionCallback {
         return object : StreamingTranscriptionCallback {
             override fun onRevisionMarker(marker: RevisionMarker) {
+                if (streamingCancelled) return
                 Handler(Looper.getMainLooper()).post {
                     when (marker.type) {
                         "partial" -> {
@@ -917,6 +1012,8 @@ class VoiceAccessibilityService : AccessibilityService() {
             }
 
             override fun onFinal(text: String) {
+                // Aborted session (privacy flip): discard the tail — no insert, no save.
+                if (streamingCancelled) return
                 if (text.isBlank()) return
                 // Final TextCleaner pass (map #130 ticket #132): parity with the
                 // batch path and VelaStreamingSession.runCleanup. Cleanup runs
