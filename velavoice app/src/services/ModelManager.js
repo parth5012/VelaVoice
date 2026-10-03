@@ -63,18 +63,25 @@ async function getDb() {
           quarantined INTEGER DEFAULT 0
         );
       `);
-      // Run migrations for existing databases missing tri-state columns
-      try {
-        await database.execAsync(`
-          ALTER TABLE corrections ADD COLUMN raw_whisper_transcript TEXT;
-          ALTER TABLE corrections ADD COLUMN cleaned_llm_transcript TEXT;
-          ALTER TABLE corrections ADD COLUMN user_final_text TEXT;
-          ALTER TABLE corrections ADD COLUMN scribe_style TEXT;
-          ALTER TABLE corrections ADD COLUMN wer_score REAL;
-          ALTER TABLE corrections ADD COLUMN quarantined INTEGER DEFAULT 0;
-        `);
-      } catch (e) {
-        // Columns already exist or migration not needed
+      // Run migrations for existing databases missing tri-state/quarantine
+      // columns (tickets #135/#136): each ALTER runs in its own try/catch so
+      // a duplicate-column no-op on one column cannot abort the rest — a
+      // pre-quarantine DB that already has the tri-state columns still gains
+      // the quarantined flag column.
+      for (const column of [
+          'raw_whisper_transcript TEXT',
+          'cleaned_llm_transcript TEXT',
+          'user_final_text TEXT',
+          'scribe_style TEXT',
+          'wer_score REAL',
+          'quarantined INTEGER DEFAULT 0',
+      ]) {
+          try {
+              await database.execAsync(`ALTER TABLE corrections ADD COLUMN ${column};`);
+          }
+          catch (e) {
+              // Column already exists or migration not needed
+          }
       }
       return database;
         });
@@ -208,7 +215,7 @@ export class ModelManager {
         const db = await getDb();
         await db.runAsync('DELETE FROM dictionary_keywords WHERE id = ?', [id]);
     }
-  static async saveCorrection(audioId, original, corrected, edits, editDistance, userId, confidenceScore, rawWhisper, cleanedLlm, userFinal, scribeStyle, werScore, quarantined) {
+  static async saveCorrection(audioId, original, corrected, edits, editDistance, userId, confidenceScore, quarantined, rawWhisper, cleanedLlm, userFinal, scribeStyle, werScore) {
     // Second fail-closed gate (ticket #136): even bypassing CorrectionAPI, a
     // quarantined write throws before SQLite — never trainable. Counts only.
     if (quarantined === true) {
