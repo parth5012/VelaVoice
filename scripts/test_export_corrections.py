@@ -82,7 +82,60 @@ def run_tests():
     assert_eq(record2["original"], "whisper engine", "Record 2 original matches")
     assert_eq(record2["corrected"], "whisper cleaner engine", "Record 2 corrected matches")
 
-    # 5. Clean up files
+    # 5. Quarantine exclusion (map #130 ticket #136): rows flagged quarantined
+    # are local-only and must never be exported for training.
+    q_db = "test_quarantine.db"
+    q_out = "test_quarantine_dataset.jsonl"
+    for stale in (q_db, q_out):
+        if os.path.exists(stale):
+            os.remove(stale)
+    q_conn = sqlite3.connect(q_db)
+    q_cur = q_conn.cursor()
+    q_cur.execute("""
+        CREATE TABLE corrections (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            audio_id TEXT NOT NULL,
+            original_transcription TEXT NOT NULL,
+            corrected_transcription TEXT NOT NULL,
+            edits TEXT NOT NULL,
+            edit_distance INTEGER NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            user_id TEXT,
+            confidence_score REAL,
+            quarantined INTEGER DEFAULT 0
+        )
+    """)
+    q_cur.execute("""
+        INSERT INTO corrections (audio_id, original_transcription, corrected_transcription, edits, edit_distance, quarantined)
+        VALUES ('audio_public_1', 'hello world', 'hello big world', '[]', 1, 0)
+    """)
+    q_cur.execute("""
+        INSERT INTO corrections (audio_id, original_transcription, corrected_transcription, edits, edit_distance, quarantined)
+        VALUES ('audio_quarantined_1', 'my password is hunter2', 'my password is hunter2!', '[]', 1, 1)
+    """)
+    q_conn.commit()
+    q_conn.close()
+
+    q_result = subprocess.run(
+        [sys.executable, script_path, "--db", q_db, "--out", q_out],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+    assert_eq(q_result.returncode, 0, "Quarantine export script executed with exit code 0")
+
+    with open(q_out, 'r', encoding='utf-8') as f:
+        q_lines = f.readlines()
+
+    assert_eq(len(q_lines), 1, "Exactly 1 non-quarantined record exported (quarantine excluded)")
+    q_record = json.loads(q_lines[0])
+    assert_eq(q_record["audio_id"], "audio_public_1", "Exported record is the public one")
+    assert "hunter2" not in open(q_out, encoding='utf-8').read(), "Quarantined content absent from export"
+
+    os.remove(q_db)
+    os.remove(q_out)
+
+    # 6. Clean up files
     os.remove(test_db)
     os.remove(test_out)
     print("SUCCESS: All export_corrections python script tests passed successfully!")

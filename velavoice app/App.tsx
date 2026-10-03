@@ -24,6 +24,7 @@ import { ModelManager, ModelInfo, DictionaryEntry, DictionaryKeyword } from './s
 import OverlayLogo from './src/components/OverlayLogo';
 import { TranscriptionEditor } from './src/components/TranscriptionEditor';
 import { CorrectionAPI } from './src/services/api';
+import { isQuarantinedEntry, quarantineBadgeText } from './src/utils/quarantineBadge';
 import GeminiSettings from './src/components/GeminiSettings';
 import { getGeminiApiKey } from './src/services/GeminiService';
 
@@ -35,6 +36,9 @@ interface Recording {
   raw: string;
   cleaned: string;
   wave: number[];
+  // Quarantined sessions stay visible with an explicit local-only badge
+  // (ticket #136) — hiding them would look like data loss.
+  quarantined?: boolean;
 }
 
 // Memoized recording card for FlatList performance
@@ -54,6 +58,11 @@ const RecordingCard = React.memo(({ item, isSelected, onPress }: {
       </View>
       <Text style={styles.recChevron}>➔</Text>
     </View>
+    {isQuarantinedEntry(item) && (
+      <View style={styles.recQuarantineBadge}>
+        <Text style={styles.recQuarantineBadgeText}>🔒 {quarantineBadgeText()}</Text>
+      </View>
+    )}
     <View style={styles.recWaveContainer}>
       {item.wave.map((h, i) => (
         <View
@@ -750,7 +759,8 @@ export default function App() {
     original: string,
     corrected: string,
     edits: any[],
-    editDistance: number
+    editDistance: number,
+    quarantined?: boolean
   ) => {
     setRecordings(prev =>
       prev.map(r => {
@@ -762,6 +772,13 @@ export default function App() {
         return r;
       })
     );
+
+    // Quarantine egress block (ticket #136): the local edit stays on-device,
+    // but nothing is POSTed and nothing enters correction training.
+    if (quarantined === true) {
+      setIsEditingTranscript(false);
+      return;
+    }
 
     try {
       const response = await fetch('https://api.velavoice.com/save_correction', {
@@ -893,6 +910,7 @@ export default function App() {
             originalTranscription={studioSegment === 'cleaned' ? activeRec.cleaned : activeRec.raw}
             onSave={handleSaveCorrection}
             onCancel={() => setIsEditingTranscript(false)}
+            quarantined={activeRec.quarantined}
           />
               ) : (
                 <View>
@@ -1357,6 +1375,16 @@ export default function App() {
                   <Text style={styles.transcriptionDate}>
                     {item.createdAt ? new Date(item.createdAt).toLocaleString() : item.fileName.replace('.json', '').replace(/_/g, ' ')}
                   </Text>
+                  {isQuarantinedEntry(item) ? (
+                    <View style={[
+                      styles.syncBadge,
+                      styles.quarantineBadge
+                    ]}>
+                      <Text style={styles.syncBadgeText}>
+                        🔒 {quarantineBadgeText()}
+                      </Text>
+                    </View>
+                  ) : (
                   <View style={[
                     styles.syncBadge,
                     item.isSynced ? styles.syncBadgeSuccess : styles.syncBadgePending
@@ -1365,6 +1393,7 @@ export default function App() {
                       {item.isSynced ? 'Synced' : 'Local Only'}
                     </Text>
                   </View>
+                  )}
                 </View>
                 
                 <Text style={styles.transcriptLabel}>Raw Text:</Text>
@@ -2321,6 +2350,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#3c1800',
   },
   syncBadgeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  // Quarantined sessions are visible entries that never sync (ticket #136):
+  // deep-red badge, distinct from the pending-sync amber.
+  quarantineBadge: {
+    backgroundColor: '#5c1a1a',
+    borderColor: '#ff6b6b',
+    borderWidth: 1,
+  },
+  recQuarantineBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#5c1a1a',
+    borderColor: '#ff6b6b',
+    borderWidth: 1,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginTop: 6,
+  },
+  recQuarantineBadgeText: {
     fontSize: 10,
     fontWeight: 'bold',
     color: '#ffffff',

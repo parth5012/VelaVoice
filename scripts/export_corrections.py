@@ -72,6 +72,28 @@ def export_corrections(db_path, output_path, format_type="default"):
             conn.close()
             return
 
+        # Quarantine exclusion (map #130 ticket #136): quarantined sessions are
+        # local-only and must never leave the device for training. Older
+        # databases predate the flag column — absence means nothing to exclude.
+        # Skips are counts only, never content.
+        def is_quarantined(row):
+            keys = row.keys()
+            for column in ("quarantined", "privacy_sensitive"):
+                if column in keys and row[column]:
+                    return True
+            return False
+
+        exportable = [row for row in rows if not is_quarantined(row)]
+        skipped = len(rows) - len(exportable)
+        if skipped:
+            print(f"Skipping {skipped} quarantined corrections (local-only, never exported).")
+        rows = exportable
+
+        if not rows:
+            print("No exportable corrections found (all quarantined).")
+            conn.close()
+            return
+
         print(f"Exporting {len(rows)} corrections to {output_path} (format: {format_type})...")
         with open(output_path, 'w', encoding='utf-8') as f:
             for row in rows:

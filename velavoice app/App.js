@@ -6,6 +6,7 @@ import { ModelManager } from './src/services/ModelManager';
 import OverlayLogo from './src/components/OverlayLogo';
 import { TranscriptionEditor } from './src/components/TranscriptionEditor';
 import { CorrectionAPI } from './src/services/api';
+import { isQuarantinedEntry, quarantineBadgeText } from './src/utils/quarantineBadge';
 // Memoized recording card for FlatList performance
 const RecordingCard = React.memo(({ item, isSelected, onPress }) => (<TouchableOpacity style={[styles.recordingCard, isSelected && styles.recordingCardSelected]} onPress={onPress}>
     <View style={styles.recCardHeader}>
@@ -15,6 +16,9 @@ const RecordingCard = React.memo(({ item, isSelected, onPress }) => (<TouchableO
       </View>
       <Text style={styles.recChevron}>➔</Text>
     </View>
+    {isQuarantinedEntry(item) && (<View style={styles.recQuarantineBadge}>
+      <Text style={styles.recQuarantineBadgeText}>🔒 {quarantineBadgeText()}</Text>
+    </View>)}
     <View style={styles.recWaveContainer}>
       {item.wave.map((h, i) => (<View key={i} style={[
             styles.recWaveBar,
@@ -655,7 +659,7 @@ export default function App() {
         }));
         setIsEditingTranscript(false);
     };
-    const handleSaveCorrection = async (audioId, original, corrected, edits, editDistance) => {
+    const handleSaveCorrection = async (audioId, original, corrected, edits, editDistance, quarantined) => {
         setRecordings(prev => prev.map(r => {
             if (r.id === audioId) {
                 return studioSegment === 'cleaned'
@@ -664,6 +668,12 @@ export default function App() {
             }
             return r;
         }));
+        // Quarantine egress block (ticket #136): the local edit stays on-device,
+        // but nothing is POSTed and nothing enters correction training.
+        if (quarantined === true) {
+            setIsEditingTranscript(false);
+            return;
+        }
         try {
             const response = await fetch('https://api.velavoice.com/save_correction', {
                 method: 'POST',
@@ -759,7 +769,7 @@ export default function App() {
 
             {/* Transcript Panel */}
             <View style={styles.transcriptPanel}>
-        {isEditingTranscript ? (<TranscriptionEditor audioId={activeRec.id} originalTranscription={studioSegment === 'cleaned' ? activeRec.cleaned : activeRec.raw} onSave={handleSaveCorrection} onCancel={() => setIsEditingTranscript(false)}/>) : (<View>
+        {isEditingTranscript ? (<TranscriptionEditor audioId={activeRec.id} originalTranscription={studioSegment === 'cleaned' ? activeRec.cleaned : activeRec.raw} onSave={handleSaveCorrection} onCancel={() => setIsEditingTranscript(false)} quarantined={activeRec.quarantined}/>) : (<View>
                   <Text style={styles.transcriptText}>
                     {studioSegment === 'cleaned' ? activeRec.cleaned : activeRec.raw}
                   </Text>
@@ -1384,6 +1394,21 @@ const styles = StyleSheet.create({
     recChevron: {
         fontSize: 16,
         color: '#859491',
+    },
+    recQuarantineBadge: {
+        alignSelf: 'flex-start',
+        backgroundColor: '#5c1a1a',
+        borderColor: '#ff6b6b',
+        borderWidth: 1,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+        marginTop: 6,
+    },
+    recQuarantineBadgeText: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: '#ffffff',
     },
     recWaveContainer: {
         flexDirection: 'row',

@@ -59,7 +59,8 @@ async function getDb() {
           cleaned_llm_transcript TEXT,
           user_final_text TEXT,
           scribe_style TEXT,
-          wer_score REAL
+          wer_score REAL,
+          quarantined INTEGER DEFAULT 0
         );
       `);
       // Run migrations for existing databases missing tri-state columns
@@ -70,6 +71,7 @@ async function getDb() {
           ALTER TABLE corrections ADD COLUMN user_final_text TEXT;
           ALTER TABLE corrections ADD COLUMN scribe_style TEXT;
           ALTER TABLE corrections ADD COLUMN wer_score REAL;
+          ALTER TABLE corrections ADD COLUMN quarantined INTEGER DEFAULT 0;
         `);
       } catch (e) {
         // Columns already exist or migration not needed
@@ -206,13 +208,19 @@ export class ModelManager {
         const db = await getDb();
         await db.runAsync('DELETE FROM dictionary_keywords WHERE id = ?', [id]);
     }
-  static async saveCorrection(audioId, original, corrected, edits, editDistance, userId, confidenceScore, rawWhisper, cleanedLlm, userFinal, scribeStyle, werScore) {
+  static async saveCorrection(audioId, original, corrected, edits, editDistance, userId, confidenceScore, rawWhisper, cleanedLlm, userFinal, scribeStyle, werScore, quarantined) {
+    // Second fail-closed gate (ticket #136): even bypassing CorrectionAPI, a
+    // quarantined write throws before SQLite — never trainable. Counts only.
+    if (quarantined === true) {
+      throw new Error('quarantined session is local-only and never saved for training');
+    }
     const db = await getDb();
     await db.runAsync(`INSERT INTO corrections (
       audio_id, original_transcription, corrected_transcription,
       edits, edit_distance, user_id, confidence_score,
-      raw_whisper_transcript, cleaned_llm_transcript, user_final_text, scribe_style, wer_score
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+      raw_whisper_transcript, cleaned_llm_transcript, user_final_text, scribe_style, wer_score,
+      quarantined
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
       audioId,
       original,
       corrected,
@@ -224,7 +232,8 @@ export class ModelManager {
       cleanedLlm || corrected,
       userFinal || corrected,
       scribeStyle || 'default',
-      werScore !== undefined && werScore !== null ? werScore : (editDistance / Math.max(1, original.length))
+      werScore !== undefined && werScore !== null ? werScore : (editDistance / Math.max(1, original.length)),
+      quarantined === true ? 1 : 0
     ]);
   }
     static async getCorrections() {

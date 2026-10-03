@@ -8,13 +8,27 @@ export interface SaveCorrectionPayload {
   edit_distance: number;
   user_id?: string | null;
   confidence_score?: number | null;
+  // Quarantine verdict (map #130 ticket #136): quarantined sessions are
+  // local-only and must never enter the correction-training pipeline.
+  privacySensitive?: boolean;
+  quarantined?: boolean;
 }
+
+export const isQuarantinedPayload = (
+  payload: SaveCorrectionPayload | null | undefined
+): boolean =>
+  payload?.privacySensitive === true || payload?.quarantined === true;
 
 export class CorrectionAPI {
   static async saveCorrection(payload: SaveCorrectionPayload): Promise<{ success: boolean; message?: string; error?: string }> {
     try {
       if (!payload) {
         return { success: false, error: 'payload is required' };
+      }
+      // Fail-closed quarantine gate: refuse before validation or SQLite so
+      // quarantined content is never trainable. Counts only — never content.
+      if (isQuarantinedPayload(payload)) {
+        return { success: false, error: 'quarantined session is local-only and never saved for training' };
       }
       if (!payload.audio_id) {
         return { success: false, error: 'audio_id is required' };
@@ -40,7 +54,8 @@ export class CorrectionAPI {
         editsStr,
         payload.edit_distance,
         payload.user_id,
-        payload.confidence_score
+        payload.confidence_score,
+        isQuarantinedPayload(payload)
       );
       return { success: true, message: 'Correction saved successfully' };
     } catch (e: any) {

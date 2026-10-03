@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { calculateEditDistance, getEdits } from '../utils/editCalculator';
-export const TranscriptionEditor = ({ audioId, originalTranscription, onSave, onCancel, }) => {
+import { isQuarantinedEntry, quarantineBadgeText } from '../utils/quarantineBadge';
+export const TranscriptionEditor = ({ audioId, originalTranscription, onSave, onCancel, quarantined, }) => {
     const [correctedText, setCorrectedText] = useState(originalTranscription);
     useEffect(() => {
         setCorrectedText(originalTranscription);
@@ -9,9 +10,14 @@ export const TranscriptionEditor = ({ audioId, originalTranscription, onSave, on
     const handleSave = () => {
         const edits = getEdits(originalTranscription, correctedText);
         const editDistance = calculateEditDistance(originalTranscription, correctedText);
-        onSave(audioId, originalTranscription, correctedText, edits, editDistance);
+        onSave(audioId, originalTranscription, correctedText, edits, editDistance, undefined, quarantined === true);
     };
     return (<View style={styles.container}>
+      {isQuarantinedEntry({ quarantined }) && (
+        <View style={styles.quarantineBanner}>
+          <Text style={styles.quarantineBannerText}>🔒 {quarantineBadgeText()} — edits stay on this device</Text>
+        </View>
+      )}
       <Text style={styles.sectionTitle}>Original Transcription</Text>
       <View style={styles.readOnlyContainer}>
         <Text style={styles.readOnlyText}>{originalTranscription}</Text>
@@ -38,6 +44,19 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         padding: 16,
         marginVertical: 12,
+    },
+    quarantineBanner: {
+        backgroundColor: '#5c1a1a',
+        borderColor: '#ff6b6b',
+        borderWidth: 1,
+        borderRadius: 6,
+        padding: 10,
+        marginBottom: 8,
+    },
+    quarantineBannerText: {
+        color: '#ffffff',
+        fontSize: 12,
+        fontWeight: 'bold',
     },
     sectionTitle: {
         color: '#859491',
