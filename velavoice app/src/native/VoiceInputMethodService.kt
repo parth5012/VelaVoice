@@ -58,6 +58,19 @@ class VoiceInputMethodService : InputMethodService() {
     private var streamingPipeline: StreamingPipeline? = null
     private val streamingBuffer = StringBuilder()
     private var streamingCommittedLength = 0
+    /**
+     * Privacy verdict captured when the current voice session started
+     * (map #130 ticket #133, mirrors keyboard #78 snapshot). Rechecks may
+     * only TIGHTEN (abort non-sensitive→sensitive), never widen.
+     */
+    @Volatile
+    private var sessionStartedPrivacySensitive = false
+    /**
+     * Set when a privacy recheck aborts streaming: suppresses the trailing
+     * onFinal save so the aborted tail is discarded (no save, no UI tail).
+     */
+    @Volatile
+    private var streamingCancelled = false
 
     override fun onCreate() {
         super.onCreate()
@@ -149,6 +162,39 @@ class VoiceInputMethodService : InputMethodService() {
         }
     }
 
+    override fun onStartInput(info: EditorInfo?, restarting: Boolean) {
+        super.onStartInput(info, restarting)
+        // Focus moved: abort a running voice session if the new field is
+        // sensitive (map #130 ticket #133, same wiring LatinIME got in #78).
+        recheckSessionPrivacy(info)
+    }
+
+    override fun onUpdateSelection(
+        oldSelStart: Int,
+        oldSelEnd: Int,
+        newSelStart: Int,
+        newSelEnd: Int,
+        candidatesStart: Int,
+        candidatesEnd: Int
+    ) {
+        super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
+        // Editor attributes can change mid-session without input finishing;
+        // cheap no-op outside an active voice session (ticket #133, cf. #78).
+        recheckSessionPrivacy(currentInputEditorInfo)
+    }
+
+    override fun onFinishInput() {
+        super.onFinishInput()
+        // Input is ending: stop any running voice session and never keep
+        // recording into the next field (same wiring LatinIME got in #78:
+        // onFinishInput* -> stop).
+        if (isStreaming.get()) {
+            stopStreaming()
+        } else {
+            cancelRecording()
+        }
+    }
+
     override fun onFinishInputView(finishingInput: Boolean) {
         super.onFinishInputView(finishingInput)
         if (isStreaming.get()) {
@@ -176,10 +222,37 @@ class VoiceInputMethodService : InputMethodService() {
         return editor == null || PrivacyGuard.isPrivacySensitiveEditor(editor)
     }
 
+    /** True while a voice session may still be recording or streaming (map #130 ticket #133). */
+    private fun isSessionActive(): Boolean {
+        return isRecording.get() || isStreaming.get()
+    }
+
+    /**
+     * Re-evaluate the privacy verdict while a session runs (map #130 ticket #133,
+     * mirrors keyboard #78 recheckSessionPrivacy).
+     * Focus can change without the input finishing; if the verdict flips to
+     * sensitive after a non-sensitive start, abort the session (fail closed)
+     * and discard audio — never transcribe/save/commit the tail.
+     * A session already started sensitive is never touched, and outside an
+     * active session this is a no-op so hot paths stay cheap. Never widens:
+     * only false→true, never true→false. Null editor fails closed (abort).
+     */
+    fun recheckSessionPrivacy(editorInfo: EditorInfo?) {
+        if (!isSessionActive()) return
+        if (sessionStartedPrivacySensitive) return
+        if (!PrivacyGuard.isPrivacySensitiveEditor(editorInfo, true)) return
+        // Tighten-only: record the flip so trailing callbacks stay gated.
+        sessionStartedPrivacySensitive = true
+        cancelRecording()
+        cancelStreaming()
+    }
+
     private fun startStreaming() {
         if (isStreaming.get()) return
         loadStreamingMode()
         val sessionPrivacySensitive = isSessionPrivacySensitive()
+        sessionStartedPrivacySensitive = sessionPrivacySensitive
+        streamingCancelled = false
 
         if (streamingMode == "instant") {
             startRecording()
@@ -213,6 +286,8 @@ class VoiceInputMethodService : InputMethodService() {
 
                 pipeline.setCallback(object : StreamingTranscriptionCallback {
                     override fun onRevisionMarker(marker: RevisionMarker) {
+                        // Aborted session (privacy flip): discard trailing markers.
+                        if (streamingCancelled) return
                         mainHandler.post {
                             when (marker.type) {
                                 "partial" -> {
@@ -238,6 +313,8 @@ class VoiceInputMethodService : InputMethodService() {
                     }
 
                     override fun onFinal(text: String) {
+                        // Aborted session (privacy flip): discard the tail — no save.
+                        if (streamingCancelled) return
                         mainHandler.post {
                             // Single-commit: stopStreaming() already committed the
                             // remaining buffer to the InputConnection — onFinal
@@ -326,6 +403,26 @@ class VoiceInputMethodService : InputMethodService() {
         streamingPipeline = null
     }
 
+    /**
+     * Abort streaming and discard buffered audio without commit, save or
+     * composing-tail (map #130 ticket #133). Distinct from stopStreaming()
+     * which commits remaining text and drives the single canonical onFinal;
+     * cancel suppresses that trailing onFinal via streamingCancelled so the
+     * aborted tail is never persisted nor committed.
+     */
+    private fun cancelStreaming() {
+        if (!isStreaming.get()) return
+        isStreaming.set(false)
+        streamingCancelled = true
+        streamingBuffer.setLength(0)
+        streamingCommittedLength = 0
+        streamingPipeline?.stop()
+        streamingPipeline?.release()
+        streamingPipeline = null
+        voiceRecordingPane.waveformView.clear()
+        showKeyboardView()
+    }
+
     private fun updateStreamingBuffer(text: String, range: IntRange) {
         if (streamingBuffer.length < range.last) {
             streamingBuffer.setLength(range.last)
@@ -368,6 +465,7 @@ class VoiceInputMethodService : InputMethodService() {
         voiceRecordingPane.resetDisplay()
         voiceRecordingPane.statusText.text = "Initializing..."
         val sessionPrivacySensitive = isSessionPrivacySensitive()
+        sessionStartedPrivacySensitive = sessionPrivacySensitive
 
         bgHandler?.post {
             try {
@@ -474,6 +572,10 @@ class VoiceInputMethodService : InputMethodService() {
     private fun cancelRecording() {
         isRecording.set(false)
         timerHandler?.removeCallbacksAndMessages(null)
+        // Cancel semantics (#74): discard audio without transcription, flush
+        // or save — never plain stopRecording which would transcribe the tail.
+        // AudioRecorder.cancel() emits no callback, so no transcript/file/UI tail.
+        transcriber?.cancelRecording()
         transcriber?.release()
         transcriber = null
         voiceRecordingPane.waveformView.clear()
