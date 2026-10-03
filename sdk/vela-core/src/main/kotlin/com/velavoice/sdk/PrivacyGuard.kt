@@ -83,6 +83,17 @@ object PrivacyGuard {
     }
 
     /**
+     * LLM-cleaner construction gate (map #130, ticket #131): mirrors
+     * `KeyboardSwitcher.buildVelaTranscriber` (`useLlm && !privacySensitive`).
+     * Both native services consult this at session start so no ONNX model
+     * loads for sensitive sessions (avoids the GenAI telemetry/memory surface).
+     * `clean(..., privacySensitive)` remains as the second layer.
+     */
+    @JvmStatic
+    fun shouldEnableLlmCleaner(useLlmPref: Boolean, privacySensitive: Boolean): Boolean =
+        useLlmPref && !privacySensitive
+
+    /**
      * Cloud-gate helper: when [privacySensitive], audio must never be sent to a cloud
      * transcription service. Falls back to local transcription when a local model is
      * available, otherwise returns null — the caller must abort transcription

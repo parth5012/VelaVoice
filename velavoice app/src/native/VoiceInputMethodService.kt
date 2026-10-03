@@ -447,7 +447,7 @@ class VoiceInputMethodService : InputMethodService() {
                     .personalDictionary(personalDictionary)
                     .dictionaryKeywords(dictionaryKeywords)
 
-                if (useLlm && cachedLlmPath != null) {
+                if (PrivacyGuard.shouldEnableLlmCleaner(useLlm, sessionPrivacySensitive) && cachedLlmPath != null) {
                     builder.useLlmCleaner(true, cachedLlmPath)
                 }
 
