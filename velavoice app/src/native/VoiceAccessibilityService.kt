@@ -87,9 +87,12 @@ class VoiceAccessibilityService : AccessibilityService() {
     private var streamingCancelled = false
     /**
      * Monotonic streaming-session id, bumped on every start and every abort
-     * (map #130 PR #137 fix). A queued onFinal cleanup captures it and rejects
-     * itself when the id has moved on, so a slow final can never insert or
-     * save its text under a newer session.
+     * (map #130 PR #137 fix, extended to the batch recording path in PR
+     * #138). A queued onFinal cleanup captures it and rejects itself when the
+     * id has moved on, so a slow final can never insert or save its text
+     * under a newer session. Batch startRecording() also bumps it and the
+     * async batch transcription in stopRecording() captures + checks it, so a
+     * stale batch result can never save under a newer session either.
      */
     @Volatile
     private var streamingSessionId = 0
@@ -411,6 +414,11 @@ class VoiceAccessibilityService : AccessibilityService() {
         if (isRecording) return
         refreshSessionPrivacySensitive()
         isRecording = true
+        // Generation-bound batch (map #130 PR #138 fix): the async batch
+        // transcription in stopRecording() outlives the stop call, and a later
+        // session resets sessionPrivacySensitive meanwhile. Bump the session
+        // id at start so a stale batch completion can tell it is stale.
+        streamingSessionId++
         recordedAudioData.reset()
         waveformView.clear()
 
@@ -489,8 +497,18 @@ class VoiceAccessibilityService : AccessibilityService() {
 
     statusText.text = "Processing..."
     val audioBytes = recordedAudioData.toByteArray()
+    // Bind the async batch transcription to THIS session (map #130 PR #138
+    // fix): capture id + verdict before spawning — a newer non-sensitive
+    // session resets the live flag while transcription is still running.
+    val sessionIdAtStop = streamingSessionId
+    val sensitiveAtStop = sessionPrivacySensitive
 
     Thread({
+        // Fail-fast stale batch (map #130 PR #138 fix): a newer session
+        // already owns the service — never transcribe-then-save under it.
+        // A second check before the save below covers a start that lands
+        // DURING this transcription.
+        if (sessionIdAtStop != streamingSessionId) return@Thread
         val prefs = this@VoiceAccessibilityService.getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
         val configuredMode = prefs.getString("transcriptionMode", null)
             ?: prefs.getString("vela_transcription_mode", "local") ?: "local"
@@ -525,9 +543,11 @@ class VoiceAccessibilityService : AccessibilityService() {
         }
         // Privacy gate (map #72 ticket #76): audio recorded while a sensitive field is
         // focused must never reach a cloud API. Falls back to local, or aborts.
+        // Uses the verdict captured at stop (map #130 PR #138 fix), not the
+        // live flag a newer session may have reset.
         val resolvedMode = PrivacyGuard.resolveTranscriptionMode(
             mode,
-            sessionPrivacySensitive,
+            sensitiveAtStop,
             getWhisperModelPath(this@VoiceAccessibilityService) != null
         )
 
@@ -647,19 +667,24 @@ class VoiceAccessibilityService : AccessibilityService() {
             val personalDictionary = createPersonalDictionary()
             val dictionaryKeywords = createDictionaryKeywords()
             val cleaner = TextCleaner(CleanerConfig(
-                useLlm = PrivacyGuard.shouldEnableLlmCleaner(useLlm, sessionPrivacySensitive),
+                useLlm = PrivacyGuard.shouldEnableLlmCleaner(useLlm, sensitiveAtStop),
                 llmModelPath = llmPath,
                 personalDictionary = personalDictionary,
                 dictionaryKeywords = dictionaryKeywords
             ))
             val finalTranscript = if (rawTranscript.isNotEmpty()) {
-                cleaner.clean(rawTranscript, privacySensitive = sessionPrivacySensitive)
+                cleaner.clean(rawTranscript, privacySensitive = sensitiveAtStop)
             } else {
                 rawTranscript
             }
 
-        // Auto-save — never persist transcripts of privacy-sensitive fields
-        if (!sessionPrivacySensitive && rawTranscript.isNotEmpty()) {
+        // Stale batch completion (map #130 PR #138 fix): the session moved on
+        // while this transcription ran — never save or insert a dead session's
+        // transcript under the new one. Fail-closed: discard.
+        if (sessionIdAtStop != streamingSessionId) return@Thread
+        // Auto-save — never persist transcripts of privacy-sensitive fields.
+        // Gate on the verdict captured at stop, not the live flag.
+        if (!sensitiveAtStop && rawTranscript.isNotEmpty()) {
             val durationMs = ((audioBytes.size / 2) / 16L)
             TranscriptionStorage.save(
                 this@VoiceAccessibilityService,
@@ -667,16 +692,19 @@ class VoiceAccessibilityService : AccessibilityService() {
                 cleaned = finalTranscript,
                 durationMs = durationMs,
                 audioBytes = audioBytes,
-                privacySensitive = sessionPrivacySensitive
+                privacySensitive = sensitiveAtStop
             )
         }
 
         Handler(Looper.getMainLooper()).post {
+            // Stale batch insert (map #130 PR #138 fix): a newer session may
+            // have started after the save gate — never insert dead text.
+            if (sessionIdAtStop != streamingSessionId) return@post
             if (errorMessage != null) {
                 statusText.text = errorMessage
             } else {
                 if (finalTranscript.isNotEmpty()) {
-                    insertText(finalTranscript, sessionPrivacySensitive)
+                    insertText(finalTranscript, sensitiveAtStop)
                 }
                 statusText.text = "Ready"
             }
@@ -1064,7 +1092,7 @@ class VoiceAccessibilityService : AccessibilityService() {
                                 raw = text,
                                 cleaned = cleaned,
                                 durationMs = 0,
-                                privacySensitive = sessionPrivacySensitive
+                                privacySensitive = sensitiveAtFinal
                             )
                         }
                     }

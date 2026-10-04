@@ -135,7 +135,53 @@ def run_tests():
     os.remove(q_db)
     os.remove(q_out)
 
-    # 6. Clean up files
+    # 6. All-quarantined (map #130 PR #138 fix): when every row is quarantined
+    # the run must not leave a stale output file behind for a later consumer.
+    aq_db = "test_all_quarantined.db"
+    aq_out = "test_all_quarantined_dataset.jsonl"
+    for stale in (aq_db, aq_out):
+        if os.path.exists(stale):
+            os.remove(stale)
+    aq_conn = sqlite3.connect(aq_db)
+    aq_cur = aq_conn.cursor()
+    aq_cur.execute("""
+        CREATE TABLE corrections (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            audio_id TEXT NOT NULL,
+            original_transcription TEXT NOT NULL,
+            corrected_transcription TEXT NOT NULL,
+            edits TEXT NOT NULL,
+            edit_distance INTEGER NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            user_id TEXT,
+            confidence_score REAL,
+            quarantined INTEGER DEFAULT 0
+        )
+    """)
+    aq_cur.execute("""
+        INSERT INTO corrections (audio_id, original_transcription, corrected_transcription, edits, edit_distance, quarantined)
+        VALUES ('audio_quarantined_only', 'my password is hunter2', 'my password is hunter2!', '[]', 1, 1)
+    """)
+    aq_conn.commit()
+    aq_conn.close()
+    # Pre-create a stale output file simulating an earlier successful export.
+    with open(aq_out, 'w', encoding='utf-8') as f:
+        f.write('{"audio_id": "stale_from_earlier_run"}\n')
+
+    aq_result = subprocess.run(
+        [sys.executable, script_path, "--db", aq_db, "--out", aq_out],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+    assert_eq(aq_result.returncode, 0, "All-quarantined export script executed with exit code 0")
+    assert_eq(os.path.exists(aq_out), False, "All-quarantined run removes the stale output file (no stale dataset)")
+
+    os.remove(aq_db)
+    if os.path.exists(aq_out):
+        os.remove(aq_out)
+
+    # 7. Clean up files
     os.remove(test_db)
     os.remove(test_out)
     print("SUCCESS: All export_corrections python script tests passed successfully!")
