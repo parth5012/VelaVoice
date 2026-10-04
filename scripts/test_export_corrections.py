@@ -177,6 +177,52 @@ def run_tests():
     assert_eq(aq_result.returncode, 0, "All-quarantined export script executed with exit code 0")
     assert_eq(os.path.exists(aq_out), False, "All-quarantined run removes the stale output file (no stale dataset)")
 
+    # 6b. All-quarantined with unremovable stale output (map #130 PR #138
+    # review): if the stale file cannot be removed, the run must fail loudly
+    # (nonzero exit) so no caller treats the stale dataset as this run's result.
+    aq_fail_db = "test_all_quarantined_unremovable.db"
+    aq_fail_out = "test_all_quarantined_unremovable_dataset.jsonl"
+    for stale in (aq_fail_db, aq_fail_out):
+        if os.path.exists(stale):
+            if os.path.isdir(stale):
+                os.rmdir(stale)
+            else:
+                os.remove(stale)
+    fail_conn = sqlite3.connect(aq_fail_db)
+    fail_cur = fail_conn.cursor()
+    fail_cur.execute("""
+        CREATE TABLE corrections (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            audio_id TEXT NOT NULL,
+            original_transcription TEXT NOT NULL,
+            corrected_transcription TEXT NOT NULL,
+            edits TEXT NOT NULL,
+            edit_distance INTEGER NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            user_id TEXT,
+            confidence_score REAL,
+            quarantined INTEGER DEFAULT 0
+        )
+    """)
+    fail_cur.execute("""
+        INSERT INTO corrections (audio_id, original_transcription, corrected_transcription, edits, edit_distance, quarantined)
+        VALUES ('audio_quarantined_only', 'my password is hunter2', 'my password is hunter2!', '[]', 1, 1)
+    """)
+    fail_conn.commit()
+    fail_conn.close()
+    # A directory at the output path makes os.remove raise, simulating an
+    # unremovable stale file.
+    os.mkdir(aq_fail_out)
+    fail_result = subprocess.run(
+        [sys.executable, script_path, "--db", aq_fail_db, "--out", aq_fail_out],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+    assert_eq(fail_result.returncode != 0, True, "Unremovable stale output fails the export (nonzero exit)")
+    os.rmdir(aq_fail_out)
+    os.remove(aq_fail_db)
+
     os.remove(aq_db)
     if os.path.exists(aq_out):
         os.remove(aq_out)
