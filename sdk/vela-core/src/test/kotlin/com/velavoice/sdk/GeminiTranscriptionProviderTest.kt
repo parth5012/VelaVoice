@@ -189,11 +189,13 @@ class GeminiTranscriptionProviderTest {
     @Test
     fun `transcribe executes successful 200 OK request and returns transcript`() {
         var recordedUrl = ""
+        var recordedHeaderKey: String? = null
         val mockClient = createMockClient(
             responseCode = 200,
             responseBody = sampleGeminiResponse("Testing 1 2 3"),
             onRequest = { req ->
                 recordedUrl = req.url.toString()
+                recordedHeaderKey = req.header("x-goog-api-key")
             }
         )
 
@@ -202,7 +204,8 @@ class GeminiTranscriptionProviderTest {
         val result = provider.transcribe(pcm, "my-secret-key")
 
         assertEquals("Testing 1 2 3", result)
-        assertTrue(recordedUrl.contains("key=my-secret-key"))
+        assertEquals("my-secret-key", recordedHeaderKey)
+        assertFalse("URL must not contain API key query parameter", recordedUrl.contains("key="))
         assertTrue(recordedUrl.contains("gemini-3.5-transcribe:generateContent"))
     }
 
@@ -403,5 +406,96 @@ class GeminiTranscriptionProviderTest {
         val result2 = normalizedProvider.transcribe(ByteArray(320) { 0 }, "test-key")
         assertEquals("Model override successful", result2)
         assertTrue(recordedUrl.contains("gemini-3.5-transcribe:generateContent"))
+    }
+
+    @Test
+    fun `validateEndpoint permits standard generativelanguage googleapis https endpoints`() {
+        GeminiTranscriptionProvider.validateEndpoint(
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+        )
+    }
+
+    @Test
+    fun `validateEndpoint rejects non-https endpoints when custom endpoint not allowed`() {
+        try {
+            GeminiTranscriptionProvider.validateEndpoint(
+                "http://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+            )
+            fail("Expected IllegalArgumentException for cleartext HTTP endpoint")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message?.contains("allowlist") == true)
+        }
+    }
+
+    @Test
+    fun `validateEndpoint rejects non-allowlist hosts when custom endpoint not allowed`() {
+        try {
+            GeminiTranscriptionProvider.validateEndpoint(
+                "https://attacker.example.com/v1beta/models/gemini-2.0-flash:generateContent"
+            )
+            fail("Expected IllegalArgumentException for untrusted host")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message?.contains("allowlist") == true)
+        }
+    }
+
+    @Test
+    fun `validateEndpoint rejects endpoint containing key query parameter`() {
+        try {
+            GeminiTranscriptionProvider.validateEndpoint(
+                "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=leaked-key"
+            )
+            fail("Expected IllegalArgumentException for URL with key query parameter")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message?.contains("API key in query parameters") == true)
+        }
+    }
+
+    @Test
+    fun `validateEndpoint allows custom endpoint when allowCustomEndpoint is true`() {
+        GeminiTranscriptionProvider.validateEndpoint(
+            "https://custom-proxy.internal.net/v1beta/models/gemini:generateContent",
+            allowCustomEndpoint = true
+        )
+    }
+
+    @Test
+    fun `constructor rejects disallowed custom endpoint without opt-in`() {
+        try {
+            GeminiTranscriptionProvider(
+                baseUrl = "https://untrusted.domain.com/models/gemini:generateContent",
+                allowCustomEndpoint = false
+            )
+            fail("Expected IllegalArgumentException from constructor on disallowed endpoint")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message?.contains("allowlist") == true)
+        }
+    }
+
+    @Test
+    fun `transcribe with opted-in custom endpoint sends x-goog-api-key header and keeps key out of URL`() {
+        var recordedUrl = ""
+        var recordedHeaderKey: String? = null
+        val mockClient = createMockClient(
+            responseCode = 200,
+            responseBody = sampleGeminiResponse("Custom endpoint success"),
+            onRequest = { req ->
+                recordedUrl = req.url.toString()
+                recordedHeaderKey = req.header("x-goog-api-key")
+            }
+        )
+
+        val customEndpoint = "https://custom-proxy.internal.net/v1beta/models/gemini:generateContent"
+        val provider = GeminiTranscriptionProvider(
+            client = mockClient,
+            baseUrl = customEndpoint,
+            allowCustomEndpoint = true
+        )
+
+        val result = provider.transcribe(ByteArray(320) { 0 }, "opted-in-key")
+        assertEquals("Custom endpoint success", result)
+        assertEquals("opted-in-key", recordedHeaderKey)
+        assertEquals(customEndpoint, recordedUrl)
+        assertFalse(recordedUrl.contains("key="))
     }
 }

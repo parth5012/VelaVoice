@@ -1,5 +1,6 @@
 package com.velavoice.sdk
 
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -19,7 +20,8 @@ import kotlin.math.sqrt
  * Gemini transcription provider (default: gemini-3.6 voice / multimodal model).
  *
  * Connects to the Google Gemini REST endpoint for verbatim speech-to-text transcription:
- * https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={apiKey}
+ * https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent
+ * Authenticates using the 'x-goog-api-key' request header.
  *
  * Supports both standalone burst transcription [transcribe] and streaming session
  * integration [StreamingTranscriber].
@@ -28,13 +30,22 @@ class GeminiTranscriptionProvider(
     private val client: OkHttpClient = defaultOkHttpClient(),
     rawModel: String = DEFAULT_MODEL,
     baseUrl: String? = null,
+    val allowCustomEndpoint: Boolean = false,
     private val executor: ExecutorService = Executors.newSingleThreadExecutor()
 ) : StreamingTranscriber {
 
     val model: String = normalizeModel(rawModel)
     val baseUrl: String = baseUrl ?: "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent"
 
+    init {
+        validateEndpoint(this.baseUrl, allowCustomEndpoint)
+    }
+
     companion object {
+        const val ALLOWED_SCHEME = "https"
+        const val ALLOWED_HOST = "generativelanguage.googleapis.com"
+        const val HEADER_API_KEY = "x-goog-api-key"
+
         const val MODEL_TRANSCRIBE_LIVE = "gemini-3.5-transcribe-live"
         const val MODEL_TRANSCRIBE_BATCH = "gemini-3.5-transcribe"
         const val DEFAULT_MODEL = MODEL_TRANSCRIBE_BATCH
@@ -43,6 +54,23 @@ class GeminiTranscriptionProvider(
         const val SAMPLE_RATE = 16000
         const val CHANNELS = 1
         const val BITS_PER_SAMPLE = 16
+
+        fun validateEndpoint(url: String, allowCustomEndpoint: Boolean = false) {
+            val httpUrl = url.toHttpUrlOrNull()
+                ?: throw IllegalArgumentException("Invalid Gemini endpoint URL: $url")
+            if (!allowCustomEndpoint) {
+                if (httpUrl.scheme != ALLOWED_SCHEME || httpUrl.host != ALLOWED_HOST) {
+                    throw IllegalArgumentException(
+                        "Gemini endpoint must match https://$ALLOWED_HOST/ allowlist, got: $url"
+                    )
+                }
+            }
+            if (httpUrl.queryParameter("key") != null) {
+                throw IllegalArgumentException(
+                    "Gemini endpoint must not include API key in query parameters: $url"
+                )
+            }
+        }
 
         fun normalizeModel(rawModel: String?, isStreaming: Boolean = false): String {
             if (rawModel.isNullOrBlank()) {
@@ -265,16 +293,15 @@ class GeminiTranscriptionProvider(
         } else {
             this.baseUrl
         }
+        validateEndpoint(effectiveBaseUrl, allowCustomEndpoint)
 
         val wavAudio = pcmToWav(pcmAudio)
         val base64Audio = encodeBase64(wavAudio)
         val requestBodyJson = buildRequestBodyJson(base64Audio)
 
-        val separator = if (effectiveBaseUrl.contains("?")) "&" else "?"
-        val url = "$effectiveBaseUrl${separator}key=$trimmedKey"
-
         val request = Request.Builder()
-            .url(url)
+            .url(effectiveBaseUrl)
+            .header(HEADER_API_KEY, trimmedKey)
             .post(requestBodyJson.toRequestBody(JSON_MEDIA_TYPE))
             .build()
 

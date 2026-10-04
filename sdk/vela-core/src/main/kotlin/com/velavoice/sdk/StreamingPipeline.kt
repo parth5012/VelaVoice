@@ -88,10 +88,12 @@ class StreamingPipeline internal constructor(
         private var vadThreshold: Float = 0.02f
         private var privacySensitive: Boolean = false
         private var consentToUpload: Boolean = false
+        private var allowCustomEndpoint: Boolean = false
 
         fun whisperModelPath(path: String) = apply { this.whisperModelPath = path }
         fun apiKey(key: String) = apply { this.apiKey = key }
         fun endpoint(url: String) = apply { this.endpoint = url }
+        fun allowCustomEndpoint(allow: Boolean) = apply { this.allowCustomEndpoint = allow }
         fun model(model: String) = apply { this.model = model }
         fun language(lang: String) = apply { this.language = lang }
         fun threads(n: Int) = apply { this.numThreads = n }
@@ -134,7 +136,11 @@ class StreamingPipeline internal constructor(
                 } else {
                     model
                 }
-                GeminiTranscriptionProvider(rawModel = liveModel)
+                GeminiTranscriptionProvider(
+                    rawModel = liveModel,
+                    baseUrl = endpoint.takeIf { it.isNotBlank() },
+                    allowCustomEndpoint = allowCustomEndpoint
+                )
             } else if (endpoint.startsWith("ws://") || endpoint.startsWith("wss://")) {
                 CloudStreamingTranscriber()
             } else {

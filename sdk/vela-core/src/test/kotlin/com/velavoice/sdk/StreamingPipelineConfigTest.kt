@@ -195,4 +195,39 @@ class StreamingPipelineConfigTest {
         assertEquals("it", resolved.language)
         assertEquals(9, resolved.numThreads)
     }
+
+    @Test
+    fun `builder rejects untrusted gemini endpoint when allowCustomEndpoint is false`() {
+        try {
+            StreamingPipeline.Builder(context)
+                .apiKey("gemini-test-key")
+                .model("gemini-2.0-flash")
+                .endpoint("https://untrusted-domain.com/v1beta/models/gemini:generateContent")
+                .build()
+            org.junit.Assert.fail("Expected IllegalArgumentException for untrusted gemini endpoint")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message?.contains("allowlist") == true)
+        }
+    }
+
+    @Test
+    fun `builder allows untrusted gemini endpoint when allowCustomEndpoint is explicitly enabled`() {
+        val pipeline = StreamingPipeline.Builder(context)
+            .apiKey("gemini-test-key")
+            .model("gemini-2.0-flash")
+            .endpoint("https://custom-proxy.internal.net/v1beta/models/gemini:generateContent")
+            .allowCustomEndpoint(true)
+            .build()
+        assertEquals("https://custom-proxy.internal.net/v1beta/models/gemini:generateContent", pipeline.config().endpoint)
+    }
+
+    @Test
+    fun `builder allows allowlisted generativelanguage endpoint by default`() {
+        val pipeline = StreamingPipeline.Builder(context)
+            .apiKey("gemini-test-key")
+            .model("gemini-2.0-flash")
+            .endpoint("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent")
+            .build()
+        assertEquals("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent", pipeline.config().endpoint)
+    }
 }
