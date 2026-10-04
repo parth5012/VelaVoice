@@ -1,11 +1,33 @@
 // Quarantine egress tests (map #130 ticket #136): quarantined sessions are
 // local-only and must NEVER reach the correction-tracking SQLite (no training
 // on quarantined content), the /save_correction egress, or the export script.
-// Run with NODE_PATH=/tmp/vv-stubs/node_modules from the repo root, e.g.:
-//   NODE_PATH=/tmp/vv-stubs/node_modules node <tsx-cli> "velavoice app/src/services/quarantineEgress.test.ts"
-import { CorrectionAPI } from './api';
-import { ModelManager } from './ModelManager';
-import { isQuarantinedEntry } from '../utils/quarantineBadge';
+// Run with the native-module test stubs in place, e.g. from the repo root:
+//   npx tsx "velavoice app/src/services/quarantineEgress.test.ts"
+// Native modules resolve to test stubs under /tmp/vv-stubs/node_modules
+// (expo-sqlite exposing __writes/__reset, react-native, expo-file-system)
+// via the Module._resolveFilename redirect below, installed BEFORE the
+// service imports load — the real react-native entry is Flow and cannot be
+// parsed by tsx/esbuild in Node, and the local node_modules copies would
+// otherwise shadow any NODE_PATH stubs.
+import Module from 'module';
+
+const NATIVE_STUBS_DIR = '/tmp/vv-stubs/node_modules';
+const NATIVE_STUBS = ['react-native', 'expo-file-system', 'expo-sqlite'];
+const ModuleClass = Module as any;
+const origResolve = ModuleClass._resolveFilename;
+ModuleClass._resolveFilename = function (request: string, parent: any, isMain: boolean) {
+  if (NATIVE_STUBS.includes(request)) {
+    return NATIVE_STUBS_DIR + '/' + request + '/index.js';
+  }
+  return origResolve.apply(this, arguments);
+};
+
+// Loaded via runtime require() after the redirect: tsx/esbuild hoists static
+// imports above the module body, so the real react-native would load before
+// the hook is installed (same pattern as GeminiService.test.ts).
+const { CorrectionAPI } = require('./api') as typeof import('./api');
+const { ModelManager } = require('./ModelManager') as typeof import('./ModelManager');
+const { isQuarantinedEntry } = require('../utils/quarantineBadge') as typeof import('../utils/quarantineBadge');
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -15,6 +37,11 @@ const sqliteStub = require('expo-sqlite') as {
   __writes: { sql: string; params: unknown[] }[];
   __reset: () => void;
 };
+
+// The tsconfig module flag rejects literal `import()` calls (TS1323), so route
+// the runtime dynamic imports of the copied .js mirrors through an indirection
+// string — identical runtime behavior, no static-import syntax to check.
+const dynamicImport = new Function('u', 'return import(u)') as (u: string) => Promise<any>;
 
 function assert(expr: boolean, message: string) {
   if (!expr) {
@@ -137,8 +164,8 @@ async function runTests() {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vv-jsmirror-'));
     fs.copyFileSync(path.join(__dirname, 'ModelManager.js'), path.join(dir, 'ModelManager.js'));
     fs.copyFileSync(path.join(__dirname, 'api.js'), path.join(dir, 'api.js'));
-    const mmjs = await import(pathToFileURL(path.join(dir, 'ModelManager.js')).href);
-    const apijs = await import(pathToFileURL(path.join(dir, 'api.js')).href);
+    const mmjs = await dynamicImport(pathToFileURL(path.join(dir, 'ModelManager.js')).href);
+    const apijs = await dynamicImport(pathToFileURL(path.join(dir, 'api.js')).href);
     const ModelManagerJS = mmjs.ModelManager;
     const CorrectionAPIJS = apijs.CorrectionAPI;
     const freshJsDb = async () => {
@@ -170,7 +197,7 @@ async function runTests() {
   {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vv-jsmig-'));
     fs.copyFileSync(path.join(__dirname, 'ModelManager.js'), path.join(dir, 'ModelManager.js'));
-    const mmjs = await import(pathToFileURL(path.join(dir, 'ModelManager.js')).href);
+    const mmjs = await dynamicImport(pathToFileURL(path.join(dir, 'ModelManager.js')).href);
     const ModelManagerJS = mmjs.ModelManager;
     const columns = new Set([
       'id', 'audio_id', 'original_transcription', 'corrected_transcription',
