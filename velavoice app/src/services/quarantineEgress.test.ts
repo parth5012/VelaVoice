@@ -92,13 +92,16 @@ async function runTests() {
   // 4. ModelManager is a second fail-closed gate: a direct quarantined write
   // throws and never reaches SQLite, even bypassing the API layer.
   await freshDb();
-  let threw = false;
+  let threw: unknown = null;
   try {
     await ModelManager.saveCorrection('audio_q2', 'raw', 'fixed', '[]', 1, null, null, true);
-  } catch {
-    threw = true;
+  } catch (e) {
+    threw = e;
   }
-  assert(threw === true, 'ModelManager.saveCorrection throws on quarantined write');
+  assert(
+    threw instanceof Error && /quarantined session is local-only/.test(threw.message),
+    'ModelManager.saveCorrection throws the quarantine gate error on quarantined write'
+  );
   assert(insertCount() === 0, 'quarantined ModelManager write issued zero SQLite INSERTs');
 
   // 5. A quarantined session never becomes readable training data: after a
@@ -174,13 +177,16 @@ async function runTests() {
       await ModelManager.closeDb();
     };
     await freshJsDb();
-    let threwJs = false;
+    let threwJs: unknown = null;
     try {
       await ModelManagerJS.saveCorrection('audio_q3', 'raw', 'fixed', '[]', 1, null, null, true);
-    } catch {
-      threwJs = true;
+    } catch (e) {
+      threwJs = e;
     }
-    assert(threwJs === true, 'JS ModelManager.saveCorrection throws on quarantined 8th-arg write');
+    assert(
+      threwJs instanceof Error && /quarantined session is local-only/.test(threwJs.message),
+      'JS ModelManager.saveCorrection throws the quarantine gate error on quarantined 8th-arg write'
+    );
     assert(insertCount() === 0, 'JS direct-bypass write issued zero SQLite INSERTs');
     // The CorrectionAPI pre-validation refusal stays intact (zero writes).
     await freshJsDb();

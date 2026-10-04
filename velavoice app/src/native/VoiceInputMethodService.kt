@@ -77,9 +77,12 @@ class VoiceInputMethodService : InputMethodService() {
     @Volatile
     private var streamingCancelled = false
     /**
-     * Monotonic streaming-session generation (map #130 PR #137 fix). Bumped at
-     * queue time by startStreaming() and by invalidatePendingStreamingStart(),
-     * so a worker whose start outlived its session can tell it is stale.
+     * Monotonic streaming-session generation (map #130 PR #137 fix, extended
+     * to the batch recording path in PR #138). Bumped at queue time by
+     * startStreaming() and at start by startRecording(), and by
+     * invalidatePendingStreamingStart(), so a worker whose start outlived its
+     * session can tell it is stale — including an async AudioRecorder.stop()
+     * onResult that outlives a later session's privacy-flag reset.
      */
     @Volatile
     private var streamingSessionGeneration = 0
@@ -433,7 +436,7 @@ class VoiceInputMethodService : InputMethodService() {
                                     raw = text,
                                     cleaned = text,
                                     durationMs = 0,
-                                    privacySensitive = sessionStartedPrivacySensitive
+                                    privacySensitive = sensitiveAtFinal
                                 )
                             }
                             showKeyboardView()
@@ -637,6 +640,12 @@ class VoiceInputMethodService : InputMethodService() {
         voiceRecordingPane.statusText.text = "Initializing..."
         val sessionPrivacySensitive = isSessionPrivacySensitive()
         sessionStartedPrivacySensitive = sessionPrivacySensitive
+        // Generation-bound batch (map #130 PR #138 fix): AudioRecorder.stop()
+        // delivers onResult asynchronously on the main thread; a later session
+        // resets sessionStartedPrivacySensitive before the old callback runs,
+        // so the live-flag gate alone would save a sensitive transcript. Claim
+        // the generation at start and reject stale completions in onResult.
+        val recordingGeneration = ++streamingSessionGeneration
 
         bgHandler?.post {
             try {
@@ -692,6 +701,12 @@ class VoiceInputMethodService : InputMethodService() {
                         }
 
                         override fun onResult(result: TranscriptionResult) {
+                            // Generation-bound batch (map #130 PR #138 fix): a
+                            // stale async result must never save or commit under
+                            // a newer session — return before touching shared
+                            // state so the new session's isRecording/timer/UI
+                            // and storage stay intact. Fail-closed: discard.
+                            if (recordingGeneration != streamingSessionGeneration) return
                             isRecording.set(false)
                             timerHandler?.removeCallbacksAndMessages(null)
                             voiceRecordingPane.statusText.text = "Done"

@@ -92,6 +92,15 @@ def export_corrections(db_path, output_path, format_type="default"):
         if not rows:
             print("No exportable corrections found (all quarantined).")
             conn.close()
+            # All-quarantined (map #130 PR #138 fix): an earlier run may have
+            # left output_path behind — remove it so a later consumer cannot
+            # read a stale dataset instead of this run's empty result.
+            # Counts only, never content.
+            try:
+                if os.path.exists(output_path):
+                    os.remove(output_path)
+            except Exception as e:
+                print(f"Warning: could not remove stale output file '{output_path}': {e}")
             return
 
         print(f"Exporting {len(rows)} corrections to {output_path} (format: {format_type})...")
