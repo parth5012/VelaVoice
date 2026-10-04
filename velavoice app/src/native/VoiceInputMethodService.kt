@@ -55,6 +55,11 @@ class VoiceInputMethodService : InputMethodService() {
     // Streaming state
     private val isStreaming = AtomicBoolean(false)
     private var streamingMode = "instant"
+    // Written by the bg startup worker, read by the main thread on cancel/stop:
+    // @Volatile so the cancel path sees a freshly published pipeline (map #130
+    // PR #137 TOCTOU fix — visibility only, the publish-time re-checks below
+    // are what close the race).
+    @Volatile
     private var streamingPipeline: StreamingPipeline? = null
     private val streamingBuffer = StringBuilder()
     private var streamingCommittedLength = 0
@@ -315,6 +320,10 @@ class VoiceInputMethodService : InputMethodService() {
         }
 
         handler.post {
+            // Held from build() until the pipeline is published (or discarded):
+            // start() can throw before publication, and the failure path below
+            // must release whatever this worker built (no leak, #132-fix).
+            var unpublished: StreamingPipeline? = null
             try {
                 loadModelPaths()
                 val whisperPath = cachedWhisperPath
@@ -335,6 +344,7 @@ class VoiceInputMethodService : InputMethodService() {
                     .whisperModelPath(whisperPath)
                     .privacySensitive(sessionPrivacySensitive)
                     .build()
+                unpublished = pipeline
                 // Stale-start guard (map #130 PR #137 fix): a privacy flip or
                 // onFinishInput may have invalidated this start while the
                 // pipeline was being built — discard it (never start, never
@@ -344,18 +354,25 @@ class VoiceInputMethodService : InputMethodService() {
                         pipeline.release()
                     } catch (ignored: Exception) {
                     }
+                    unpublished = null
                     mainHandler.post {
                         voiceRecordingPane.statusText.text = "Ready"
                     }
                     return@post
                 }
-                streamingPipeline = pipeline
 
                 pipeline.setCallback(object : StreamingTranscriptionCallback {
                     override fun onRevisionMarker(marker: RevisionMarker) {
+                        // Generation-bound (map #130 PR #137 TOCTOU fix): events
+                        // from a stale pipeline must never write into a newer
+                        // session's editor — its buffer is not ours to compose.
+                        if (generation != streamingSessionGeneration) return
                         // Aborted session (privacy flip): discard trailing markers.
                         if (streamingCancelled) return
-                        mainHandler.post {
+                        mainHandler.post main@{
+                            // Re-check at effect time: the session may have moved
+                            // on while this marker was queued.
+                            if (generation != streamingSessionGeneration) return@main
                             when (marker.type) {
                                 "partial" -> {
                                     updateStreamingBuffer(marker.text, marker.range)
@@ -380,6 +397,10 @@ class VoiceInputMethodService : InputMethodService() {
                     }
 
                     override fun onFinal(text: String) {
+                        // Generation-bound (map #130 PR #137 TOCTOU fix): a stale
+                        // pipeline's final must never commit or save under a
+                        // newer session, whatever that session's verdict is.
+                        if (generation != streamingSessionGeneration) return
                         // Aborted session (privacy flip): discard the tail — no save.
                         if (streamingCancelled) return
                         // Capture the verdict + generation synchronously, before
@@ -389,7 +410,12 @@ class VoiceInputMethodService : InputMethodService() {
                         // inside the task could save a sensitive transcript.
                         val sensitiveAtFinal = sessionStartedPrivacySensitive
                         val sessionGeneration = streamingSessionGeneration
-                        mainHandler.post {
+                        mainHandler.post main@{
+                            // Generation-bound at effect time too: the session may
+                            // have moved on while this task was queued, and then
+                            // neither the flag flip nor the keyboard restore is
+                            // ours to perform.
+                            if (sessionGeneration != streamingSessionGeneration) return@main
                             // Single-commit: stopStreaming() already committed the
                             // remaining buffer to the InputConnection — onFinal
                             // must NOT commit again (double commit). Only
@@ -414,13 +440,20 @@ class VoiceInputMethodService : InputMethodService() {
                     }
 
                     override fun onError(error: VelaException) {
-                        mainHandler.post {
+                        // Generation-bound (map #130 PR #137 TOCTOU fix): a stale
+                        // pipeline's error must not flip a newer session's state.
+                        if (generation != streamingSessionGeneration) return
+                        mainHandler.post main@{
+                            if (generation != streamingSessionGeneration) return@main
                             voiceRecordingPane.statusText.text = error.message
                             isStreaming.set(false)
                         }
                     }
 
                     override fun onAmplitude(normalized: Float) {
+                        // Generation-bound (map #130 PR #137 TOCTOU fix): a stale
+                        // pipeline must not draw into the newer session's meter.
+                        if (generation != streamingSessionGeneration) return
                         voiceRecordingPane.waveformView.post {
                             voiceRecordingPane.waveformView.addAmplitude(normalized)
                         }
@@ -439,7 +472,53 @@ class VoiceInputMethodService : InputMethodService() {
                 )
                 pipeline.start("local", streamConfig)
 
-                mainHandler.post {
+                // Post-start guard (map #130 PR #137 TOCTOU fix, CWE-367):
+                // start() begins audio capture before it returns, so a cancel,
+                // privacy flip or input finish can invalidate this session while
+                // it runs and only become visible here. Stop and release the
+                // capture we just opened, then return without publishing the
+                // pipeline and without touching session state — a canceled
+                // start never records, never commits, never activates.
+                // StreamingPipeline offers no pre-start/synchronized-start hook,
+                // so this check -> start -> re-check ordering is best-effort and
+                // the guards below cover the remaining windows.
+                if (generation != streamingSessionGeneration) {
+                    try {
+                        pipeline.stop()
+                    } catch (ignored: Exception) {
+                    }
+                    try {
+                        pipeline.release()
+                    } catch (ignored: Exception) {
+                    }
+                    unpublished = null
+                    return@post
+                }
+
+                // Publish only a pipeline whose generation is still current.
+                streamingPipeline = pipeline
+                unpublished = null
+
+                mainHandler.post main@{
+                    // Success-post guard (map #130 PR #137 TOCTOU fix): the
+                    // session can be invalidated between the post-start check
+                    // and this task (cancel sees no pipeline yet, or onFinishInput
+                    // invalidates a still-pending start). Stop and release the
+                    // raced pipeline instead of marking a dead session active.
+                    if (generation != streamingSessionGeneration) {
+                        if (streamingPipeline === pipeline) {
+                            try {
+                                pipeline.stop()
+                            } catch (ignored: Exception) {
+                            }
+                            try {
+                                pipeline.release()
+                            } catch (ignored: Exception) {
+                            }
+                            streamingPipeline = null
+                        }
+                        return@main
+                    }
                     isStreaming.set(true)
                     streamingStartPending = false
                     streamingBuffer.setLength(0)
@@ -447,8 +526,13 @@ class VoiceInputMethodService : InputMethodService() {
                 }
             } catch (e: Exception) {
                 android.util.Log.e("VoiceIME", "Start streaming failed", e)
-                // No leak: start() may throw after the pipeline was assigned —
-                // release and nullify so a failed start owns nothing.
+                // No leak: start() may throw after the pipeline was built but
+                // before it was published — release what this worker owns and
+                // nullify so a failed start owns nothing.
+                try {
+                    unpublished?.release()
+                } catch (ignored: Exception) {
+                }
                 try {
                     streamingPipeline?.release()
                 } catch (ignored: Exception) {
