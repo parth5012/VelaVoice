@@ -307,7 +307,10 @@ static async saveCorrection(
 ): Promise<void> {
   // Second fail-closed gate (ticket #136): even bypassing CorrectionAPI, a
   // quarantined write throws before SQLite — never trainable. Counts only.
-  if (quarantined === true) {
+  // Captured before the gate so the intent survives control-flow narrowing
+  // (after the throw, `quarantined === true` would be a provably-dead check).
+  const isQuarantined = quarantined === true;
+  if (isQuarantined) {
     throw new Error('quarantined session is local-only and never saved for training');
   }
   const db = await getDb();
@@ -324,7 +327,7 @@ static async saveCorrection(
       editDistance,
       userId || null,
       confidenceScore !== undefined && confidenceScore !== null ? confidenceScore : null,
-      quarantined === true ? 1 : 0
+      isQuarantined ? 1 : 0
     ]
   );
 }
