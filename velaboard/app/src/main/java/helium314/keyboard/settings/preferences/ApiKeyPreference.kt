@@ -10,6 +10,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import helium314.keyboard.latin.R
 import helium314.keyboard.latin.settings.VelaApiKey
 import helium314.keyboard.latin.settings.VelaApiKeyStore
@@ -21,7 +23,8 @@ import helium314.keyboard.settings.dialogs.TextInputDialog
  * Reads and writes exclusively through [VelaApiKeyStore].
  *
  * Exposes only the masked fingerprint for UI display so raw credentials never
- * enter the UI presentation layer.
+ * enter the UI presentation layer, and masks entry with [PasswordVisualTransformation]
+ * and [KeyboardType.Password].
  */
 @Composable
 fun ApiKeyPreference(
@@ -35,13 +38,13 @@ fun ApiKeyPreference(
     var showDialog by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     var maskedFingerprint by remember(apiKey) {
-        mutableStateOf(VelaApiKeyStore.getMaskedFingerprint(context, apiKey))
+        mutableStateOf(PasswordTextInputPreferenceHelper.getRenderedSummary(context, apiKey))
     }
 
     Preference(
         name = setting.title,
         onClick = { showDialog = true },
-        description = maskedFingerprint.takeIf { it.isNotEmpty() }
+        description = maskedFingerprint
     )
 
     if (showDialog) {
@@ -49,16 +52,18 @@ fun ApiKeyPreference(
             onDismissRequest = { showDialog = false },
             onConfirmed = {
                 VelaApiKeyStore.setApiKey(context, apiKey, it)
-                maskedFingerprint = VelaApiKeyStore.getMaskedFingerprint(context, apiKey)
+                maskedFingerprint = PasswordTextInputPreferenceHelper.getRenderedSummary(context, apiKey)
                 showDialog = false
             },
             initialText = "", // Raw key never pre-filled to prevent screen leakage
             title = { Text(setting.title) },
             description = if (info == null) null else { { Text(info) } },
             checkTextValid = checkTextValid,
+            keyboardType = PasswordTextInputPreferenceHelper.keyboardType,
+            visualTransformation = PasswordTextInputPreferenceHelper.visualTransformation,
             onNeutral = {
                 VelaApiKeyStore.clearApiKey(context, apiKey)
-                maskedFingerprint = ""
+                maskedFingerprint = null
                 showDialog = false
             },
             neutralButtonText = stringResource(R.string.button_default)

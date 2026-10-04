@@ -37,6 +37,7 @@ import helium314.keyboard.settings.SearchSettingsScreen
 import helium314.keyboard.settings.Setting
 import helium314.keyboard.settings.preferences.ApiKeyPreference
 import helium314.keyboard.settings.preferences.ListPreference
+import helium314.keyboard.settings.preferences.PasswordTextInputPreference
 import helium314.keyboard.settings.preferences.TextInputPreference
 
 @Composable
@@ -81,7 +82,7 @@ fun VoiceEngineScreen(onClickBack: () -> Unit) {
             ?: Defaults.PREF_VELA_TRANSCRIPTION_MODE
         if (mode == "gemini") {
             Setting(context, Settings.PREF_VELA_GEMINI_API_KEY, R.string.voice_gemini_api_key_title, R.string.voice_gemini_api_key_summary) {
-                ApiKeyPreference(setting = it, apiKey = VelaApiKey.GEMINI)
+                PasswordTextInputPreference(setting = it, apiKey = VelaApiKey.GEMINI)
             }.Preference()
             Setting(context, Settings.PREF_VELA_GEMINI_MODEL, R.string.voice_gemini_model_title, R.string.voice_gemini_model_summary) {
                 TextInputPreference(setting = it, default = Defaults.PREF_VELA_GEMINI_MODEL)
@@ -89,7 +90,7 @@ fun VoiceEngineScreen(onClickBack: () -> Unit) {
         }
         if (mode == "groq") {
             Setting(context, Settings.PREF_VELA_GROQ_API_KEY, R.string.voice_groq_api_key_title, R.string.voice_groq_api_key_summary) {
-                ApiKeyPreference(setting = it, apiKey = VelaApiKey.GROQ)
+                PasswordTextInputPreference(setting = it, apiKey = VelaApiKey.GROQ)
             }.Preference()
             Setting(context, Settings.PREF_VELA_GROQ_MODEL, R.string.voice_groq_model_title, R.string.voice_groq_model_summary) {
                 TextInputPreference(setting = it, default = Defaults.PREF_VELA_GROQ_MODEL)
@@ -97,7 +98,7 @@ fun VoiceEngineScreen(onClickBack: () -> Unit) {
         }
         if (mode == "openai") {
             Setting(context, Settings.PREF_VELA_OPENAI_API_KEY, R.string.voice_openai_api_key_title, R.string.voice_openai_api_key_summary) {
-                ApiKeyPreference(setting = it, apiKey = VelaApiKey.OPENAI)
+                PasswordTextInputPreference(setting = it, apiKey = VelaApiKey.OPENAI)
             }.Preference()
             Setting(context, Settings.PREF_VELA_OPENAI_MODEL, R.string.voice_openai_model_title, R.string.voice_openai_model_summary) {
                 TextInputPreference(setting = it, default = Defaults.PREF_VELA_OPENAI_MODEL)
@@ -108,7 +109,7 @@ fun VoiceEngineScreen(onClickBack: () -> Unit) {
         }
         if (mode == "custom") {
             Setting(context, Settings.PREF_VELA_CUSTOM_API_KEY, R.string.voice_custom_api_key_title, R.string.voice_custom_api_key_summary) {
-                ApiKeyPreference(setting = it, apiKey = VelaApiKey.CUSTOM)
+                PasswordTextInputPreference(setting = it, apiKey = VelaApiKey.CUSTOM)
             }.Preference()
             Setting(context, Settings.PREF_VELA_CUSTOM_MODEL, R.string.voice_custom_model_title, R.string.voice_custom_model_summary) {
                 TextInputPreference(setting = it, default = Defaults.PREF_VELA_CUSTOM_MODEL)
