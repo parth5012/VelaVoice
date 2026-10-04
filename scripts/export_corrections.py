@@ -100,7 +100,8 @@ def export_corrections(db_path, output_path, format_type="default"):
                 if os.path.exists(output_path):
                     os.remove(output_path)
             except Exception as e:
-                print(f"Warning: could not remove stale output file '{output_path}': {e}")
+                print(f"ERROR: could not remove stale output file '{output_path}': {e}")
+                sys.exit(1)
             return
 
         print(f"Exporting {len(rows)} corrections to {output_path} (format: {format_type})...")
