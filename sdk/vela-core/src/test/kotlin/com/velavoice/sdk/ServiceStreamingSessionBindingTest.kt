@@ -2,6 +2,7 @@ package com.velavoice.sdk
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -11,7 +12,7 @@ import java.io.File
  * PR #137 review follow-up on top of #131/#132/#133: bind every queued
  * streaming side effect to the session that produced it.
  *
- * Three races, one root cause — mutable service state read by a task that runs
+ * Four races, one root cause — mutable service state read by a task that runs
  * after the state moved on:
  * 1. VAS (`VoiceAccessibilityService.onFinal`): a sensitive session queues a
  *    background TextCleaner pass + main-thread insert/save. A new non-sensitive
@@ -34,6 +35,15 @@ import java.io.File
  *    non-sensitive session starting first resets that flag and the sensitive
  *    transcript got saved. Fix: capture the verdict (and session generation)
  *    synchronously in the callback and gate the posted save on that snapshot.
+ * 4. VIMS (`startStreaming`, CWE-367 TOCTOU, CodeRabbit r4176579899): the
+ *    generation was re-checked before `pipeline.start(...)` — which starts
+ *    audio capture before it returns — but a cancellation landing during or
+ *    after that call and before publication was invisible, and the
+ *    unconditional success post then marked the canceled session active. Fix:
+ *    check -> start -> re-check ordering that stops+releases a raced pipeline
+ *    without publishing it, a generation check in the success post, callbacks
+ *    bound to the generation captured for their pipeline, and a @Volatile
+ *    pipeline field for cross-thread visibility.
  *
  * Source-contract guards over the two native services (which cannot be
  * instantiated in a unit test) plus tiny executable race models that replay the
@@ -98,6 +108,24 @@ class ServiceStreamingSessionBindingTest {
         var s = source.replace(Regex("//.*"), "")
         s = s.replace(Regex("/\\*.*?\\*/", RegexOption.DOT_MATCHES_ALL), "")
         return s
+    }
+
+    /** Balanced-brace block starting at the first `{` at or after [fromIdx]. */
+    private fun extractBraceBlock(source: String, fromIdx: Int): String {
+        val open = source.indexOf('{', fromIdx)
+        assertTrue("no '{' at or after index $fromIdx", open >= 0)
+        var depth = 0
+        for (i in open until source.length) {
+            when (source[i]) {
+                '{' -> depth++
+                '}' -> {
+                    depth--
+                    if (depth == 0) return source.substring(open, i + 1)
+                }
+            }
+        }
+        fail("unbalanced braces at or after index $fromIdx")
+        throw IllegalStateException("unreachable")
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -643,5 +671,364 @@ class ServiceStreamingSessionBindingTest {
         session.mainQueue.drain()
 
         assertEquals(listOf("hello"), session.saves)
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // Finding 4 — VIMS: CWE-367 TOCTOU between the generation check and
+    // pipeline.start(...) (CodeRabbit r4176579899 on PR #137)
+    // ══════════════════════════════════════════════════════════════════════
+
+    @Test
+    fun `VIMS publishes the streaming pipeline field as volatile`() {
+        val (_, vims) = serviceSources()
+        assertTrue(
+            "VIMS must declare streamingPipeline @Volatile (bg worker publishes, main thread cancels)",
+            Regex("@Volatile\\s+private var streamingPipeline: StreamingPipeline\\? = null")
+                .containsMatchIn(codeOnly(vims))
+        )
+    }
+
+    @Test
+    fun `VIMS re-checks the generation after start and stops the raced pipeline before publishing`() {
+        val (_, vims) = serviceSources()
+        val start = codeOnly(extractFunBody(vims, "startStreaming"))
+        val startCallIdx = start.indexOf("pipeline.start(")
+        assertTrue("startStreaming must still start the pipeline", startCallIdx > 0)
+        val postStartGuardIdx = start.indexOf("if (generation != streamingSessionGeneration)", startCallIdx)
+        assertTrue(
+            "startStreaming must re-check the generation AFTER pipeline.start(...) — start() begins " +
+                "audio capture before it returns, so cancellation can land while it runs",
+            postStartGuardIdx > startCallIdx
+        )
+        val publishIdx = start.indexOf("streamingPipeline = pipeline")
+        assertTrue(
+            "the pipeline may only be published once its generation is still current " +
+                "(a stale start must never become the service's pipeline)",
+            publishIdx > postStartGuardIdx
+        )
+        val racedBranch = start.substring(postStartGuardIdx, publishIdx)
+        assertTrue(
+            "a start that raced cancellation must stop the capture it just began",
+            racedBranch.contains("pipeline.stop()")
+        )
+        assertTrue(
+            "a start that raced cancellation must release the pipeline it just built",
+            racedBranch.contains("pipeline.release()")
+        )
+        assertTrue(
+            "a start that raced cancellation must return without touching session state",
+            racedBranch.contains("return@post")
+        )
+        assertNoMatch(
+            Regex("isStreaming\\.set\\(true\\)"),
+            racedBranch,
+            "a raced start must never mark the session active"
+        )
+        assertNoMatch(
+            Regex("streamingStartPending = false"),
+            racedBranch,
+            "a raced start must not clear the pending marker (a newer session may already own it)"
+        )
+    }
+
+    @Test
+    fun `VIMS success post stops a raced-start pipeline instead of marking it active`() {
+        val (_, vims) = serviceSources()
+        val start = codeOnly(extractFunBody(vims, "startStreaming"))
+        val startCallIdx = start.indexOf("pipeline.start(")
+        assertTrue(startCallIdx > 0)
+        val successIdx = start.indexOf("mainHandler.post", startCallIdx)
+        assertTrue("startStreaming must still post its success task after start", successIdx > startCallIdx)
+        val success = extractBraceBlock(start, successIdx)
+        val guardIdx = success.indexOf("if (generation != streamingSessionGeneration)")
+        val activeIdx = success.indexOf("isStreaming.set(true)")
+        assertTrue(activeIdx > 0)
+        assertTrue(
+            "the success post must re-check the generation before marking the session active " +
+                "(cancellation can land between start and this task)",
+            guardIdx in 0 until activeIdx
+        )
+        val racedBranch = success.substring(guardIdx, activeIdx)
+        assertTrue(
+            "the success post must stop a pipeline whose cancellation raced startup",
+            racedBranch.contains("pipeline.stop()")
+        )
+        assertTrue(
+            "the success post must release that raced pipeline",
+            racedBranch.contains("pipeline.release()")
+        )
+        assertTrue(
+            "the success post must bail out without touching session state",
+            racedBranch.contains("return@main")
+        )
+        assertTrue(
+            "the success post must still activate a session whose generation held",
+            success.substring(activeIdx).contains("streamingStartPending = false")
+        )
+    }
+
+    @Test
+    fun `VIMS binds every streaming callback to the generation captured for its pipeline`() {
+        val (_, vims) = serviceSources()
+        val start = codeOnly(extractFunBody(vims, "startStreaming"))
+        val guard = "if (generation != streamingSessionGeneration) return"
+        for (cb in listOf("onRevisionMarker", "onFinal", "onError", "onAmplitude")) {
+            val body = codeOnly(extractFunBody(start, cb))
+            val guardIdx = body.indexOf(guard)
+            assertTrue("VIMS $cb must ignore events from a stale pipeline", guardIdx >= 0)
+            val postIdx = body.indexOf("mainHandler.post")
+            if (postIdx >= 0) {
+                assertTrue(
+                    "VIMS $cb must check the generation BEFORE it touches shared state",
+                    guardIdx < postIdx
+                )
+            }
+        }
+        val onFinal = codeOnly(extractFunBody(start, "onFinal"))
+        assertTrue(
+            "the onFinal generation guard must run before the verdict snapshot — a stale final " +
+                "must never reach the save gate",
+            onFinal.indexOf(guard) < onFinal.indexOf("val sensitiveAtFinal")
+        )
+        for (cb in listOf("onRevisionMarker", "onError")) {
+            val body = codeOnly(extractFunBody(start, cb))
+            val postIdx = body.indexOf("mainHandler.post")
+            assertTrue(postIdx >= 0)
+            assertTrue(
+                "VIMS $cb must re-check the generation when its posted task runs (the session " +
+                    "may have moved on while the task was queued)",
+                body.substring(postIdx).contains("return@main")
+            )
+        }
+    }
+
+    /** Minimal stand-in for a pipeline the worker built but may not publish. */
+    private class RacePipeline(private val duringStart: () -> Unit = {}) {
+        var started = false
+        var stopped = false
+        var released = false
+
+        fun start() {
+            started = true
+            duringStart()
+        }
+
+        fun stop() {
+            stopped = true
+        }
+
+        fun release() {
+            released = true
+        }
+    }
+
+    /**
+     * VIMS startStreaming race (CWE-367): the generation is checked before
+     * `pipeline.start(...)`, but cancellation can invalidate it after that
+     * check — while start() runs, or after start() returns and before the
+     * success post marks the session active. The model replays both windows
+     * against the guarded shape: stop+release the raced pipeline and never
+     * activate it.
+     */
+    private class VimsStartRace {
+        var streamingSessionGeneration = 0
+        var isStreaming = false
+        var streamingStartPending = false
+        var streamingPipeline: RacePipeline? = null
+        var lastPipeline: RacePipeline? = null
+        val bgQueue = PostQueue()
+        val mainQueue = PostQueue()
+        var duringStart: (() -> Unit)? = null
+        var beforeSuccessPost: (() -> Unit)? = null
+
+        fun isSessionActive(): Boolean = isStreaming || streamingStartPending
+
+        fun invalidatePendingStreamingStart() {
+            streamingSessionGeneration++
+            streamingStartPending = false
+        }
+
+        fun startStreaming() {
+            if (isStreaming || streamingStartPending) return
+            val generation = ++streamingSessionGeneration
+            streamingStartPending = true
+            bgQueue.post {
+                val pipeline = RacePipeline { duringStart?.invoke() }
+                lastPipeline = pipeline
+                if (generation != streamingSessionGeneration) {
+                    pipeline.release()
+                    return@post
+                }
+                pipeline.start()
+                // Post-start guard (mirrors VIMS check -> start -> re-check):
+                // start() begins capture before it returns, so a cancel that
+                // landed during start() is only visible here — stop+release
+                // without publishing and without touching session state.
+                if (generation != streamingSessionGeneration) {
+                    pipeline.stop()
+                    pipeline.release()
+                    return@post
+                }
+                streamingPipeline = pipeline
+                beforeSuccessPost?.invoke()
+                mainQueue.post main@{
+                    // Success-post guard (mirrors VIMS): cancellation can land
+                    // between publication and this task — stop+release instead
+                    // of marking the dead session active.
+                    if (generation != streamingSessionGeneration) {
+                        if (streamingPipeline === pipeline) {
+                            pipeline.stop()
+                            pipeline.release()
+                            streamingPipeline = null
+                        }
+                        return@main
+                    }
+                    isStreaming = true
+                    streamingStartPending = false
+                }
+            }
+        }
+
+        fun cancelStreaming() {
+            if (!isStreaming && !streamingStartPending) return
+            isStreaming = false
+            invalidatePendingStreamingStart()
+            streamingPipeline?.stop()
+            streamingPipeline?.release()
+            streamingPipeline = null
+        }
+    }
+
+    @Test
+    fun `VIMS model - cancellation landing during start never marks the session active`() {
+        val session = VimsStartRace()
+        session.duringStart = { session.cancelStreaming() }
+        session.startStreaming()
+        session.bgQueue.drain()
+
+        // The worker itself must stop the capture before any main-thread hop:
+        // a success post would only run later, leaving the mic live meanwhile.
+        val pipeline = session.lastPipeline
+        assertTrue("the raced pipeline must actually have started capturing", pipeline!!.started)
+        assertTrue(
+            "capture begun during start must be stopped by the worker, not deferred to a main-thread task",
+            pipeline.stopped
+        )
+        assertTrue("the raced pipeline must be released, not leaked", pipeline.released)
+        assertNull(
+            "a stale start must never be published as the service's pipeline",
+            session.streamingPipeline
+        )
+
+        session.mainQueue.drain()
+
+        assertFalse("a canceled session must never be marked active", session.isStreaming)
+        assertFalse("nothing may count as an active session after cancellation", session.isSessionActive())
+    }
+
+    @Test
+    fun `VIMS model - cancellation after startup but before the success post stops the pipeline`() {
+        val session = VimsStartRace()
+        session.beforeSuccessPost = { session.cancelStreaming() }
+        session.startStreaming()
+        session.bgQueue.drain()
+        session.mainQueue.drain()
+
+        val pipeline = session.lastPipeline
+        assertTrue("the raced pipeline must be stopped", pipeline!!.stopped)
+        assertTrue("the raced pipeline must be released", pipeline.released)
+        assertFalse(
+            "the success post must not mark a canceled session active",
+            session.isStreaming
+        )
+        assertFalse("nothing may count as an active session after cancellation", session.isSessionActive())
+    }
+
+    /**
+     * VIMS callback shape: each callback captures the generation claimed for
+     * its pipeline and refuses every event from a stale one — otherwise
+     * stopping a dead pipeline commits or saves under a newer session.
+     */
+    private class VimsCallbackGeneration {
+        var streamingSessionGeneration = 0
+        var streamingCancelled = false
+        var isStreaming = false
+        val mainQueue = PostQueue()
+        val saves = mutableListOf<String>()
+        val commits = mutableListOf<String>()
+        var errorPosted = 0
+
+        fun startPipeline(): Int {
+            streamingSessionGeneration++
+            streamingCancelled = false
+            isStreaming = true
+            return streamingSessionGeneration
+        }
+
+        fun onFinal(generation: Int, text: String) {
+            if (generation != streamingSessionGeneration) return
+            if (streamingCancelled) return
+            val sessionGeneration = streamingSessionGeneration
+            mainQueue.post {
+                if (sessionGeneration != streamingSessionGeneration) return@post
+                if (sessionGeneration == streamingSessionGeneration && text.isNotEmpty()) {
+                    saves.add(text)
+                }
+            }
+        }
+
+        fun onRevisionMarker(generation: Int, text: String) {
+            if (generation != streamingSessionGeneration) return
+            if (streamingCancelled) return
+            mainQueue.post {
+                if (generation != streamingSessionGeneration) return@post
+                commits.add(text)
+            }
+        }
+
+        fun onError(generation: Int) {
+            if (generation != streamingSessionGeneration) return
+            mainQueue.post {
+                if (generation != streamingSessionGeneration) return@post
+                errorPosted++
+                isStreaming = false
+            }
+        }
+    }
+
+    @Test
+    fun `VIMS model - callbacks of a stale generation never commit, save or flip the session`() {
+        val session = VimsCallbackGeneration()
+        val staleGeneration = session.startPipeline()
+        session.startPipeline() // a newer session now owns the service
+
+        session.onRevisionMarker(staleGeneration, "stale partial")
+        session.onFinal(staleGeneration, "stale secret")
+        session.onError(staleGeneration)
+        session.mainQueue.drain()
+
+        assertTrue(
+            "a stale pipeline's markers must never commit into the newer session",
+            session.commits.isEmpty()
+        )
+        assertTrue(
+            "a stale pipeline's final must never be saved",
+            session.saves.isEmpty()
+        )
+        assertEquals(
+            "a stale pipeline's error must not post into the newer session",
+            0,
+            session.errorPosted
+        )
+        assertTrue("the newer session must still be active", session.isStreaming)
+
+        // Control: the current generation still commits and saves.
+        val fresh = VimsCallbackGeneration()
+        val current = fresh.startPipeline()
+        fresh.onRevisionMarker(current, "fresh partial")
+        fresh.onFinal(current, "fresh text")
+        fresh.mainQueue.drain()
+        assertEquals(listOf("fresh partial"), fresh.commits)
+        assertEquals(listOf("fresh text"), fresh.saves)
     }
 }
