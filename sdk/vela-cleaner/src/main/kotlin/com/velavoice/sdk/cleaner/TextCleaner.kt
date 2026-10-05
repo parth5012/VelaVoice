@@ -181,13 +181,27 @@ open class TextCleaner(private val config: CleanerConfig) {
         val rawContext = ((contextBefore ?: "") + " " + (contextAfter ?: "")).trim()
         val surrounding = if (rawContext.length > 1000) rawContext.takeLast(1000) else rawContext
 
-        return promptTemplate
-            .replace("{{app_name}}", app)
-            .replace("{app_name}", app)
-            .replace("{{target_field_type}}", field)
-            .replace("{target_field_type}", field)
-            .replace("{{surrounding_text}}", surrounding)
-            .replace("{surrounding_text}", surrounding)
+        val placeholders = mapOf(
+            "app_name" to app,
+            "target_field_type" to field,
+            "surrounding_text" to surrounding
+        )
+        var compiled = promptTemplate
+        for ((key, value) in placeholders) {
+            compiled = compiled
+                .replace("{{$key}}", value)
+                .replace("{$key}", value)
+        }
+        return compiled
+    }
+
+    /** Wraps system/user blocks in the Llama-3 chat framing shared by all prompts. */
+    private fun wrapLlamaPrompt(systemBlock: String, userBlock: String): String = buildString {
+        append("<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n")
+        append(systemBlock)
+        append("<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n")
+        append(userBlock)
+        append("<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n")
     }
 
     internal fun formatScribePrompt(
@@ -212,8 +226,7 @@ open class TextCleaner(private val config: CleanerConfig) {
         val appSafe = appName ?: "Unknown App"
         val inputSafe = inputType ?: "text"
 
-        return buildString {
-            append("<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n")
+        val systemBlock = buildString {
             append(compiledSystemPrompt).append('\n')
             append("Style: ").append(styleInstruction).append('\n')
             append("App Name/ID: ").append(appSafe).append('\n')
@@ -222,10 +235,8 @@ open class TextCleaner(private val config: CleanerConfig) {
                 append("Preceding Context: ").append(contextBeforeSafe).append('\n')
                 append("Following Context: ").append(contextAfterSafe).append('\n')
             }
-            append("<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n")
-            append("Raw input: ").append(rawInput).append('\n')
-            append("<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n")
         }
+        return wrapLlamaPrompt(systemBlock, "Raw input: $rawInput\n")
     }
 
     private fun formatStandardCleanupPrompt(text: String): String {
@@ -234,26 +245,34 @@ open class TextCleaner(private val config: CleanerConfig) {
             Fix any spelling, grammar, and punctuation mistakes without changing the style or structure.
             Only output the corrected text.
         """.trimIndent()
-        return buildString {
-            append("<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n")
-            append(systemPrompt).append('\n')
-            append("<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n")
-            append("Raw input: ").append(text).append('\n')
-            append("<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n")
-        }
+        return wrapLlamaPrompt("$systemPrompt\n", "Raw input: $text\n")
     }
 
     /**
      * Canonical style instructions from Ticket 002. Values match the style enum used by
      * the keyboard settings (scribe_default_style / scribe_app_<package>).
      */
+    companion object {
+        const val PROFESSIONAL_INSTRUCTION =
+            "Rewrite the input to be formal, professional, polite, and grammatically perfect. Retain the core meaning."
+    }
+
     fun styleInstruction(style: String): String = when (style) {
-        "Professional" -> "Rewrite the input to be formal, professional, polite, and grammatically perfect. Retain the core meaning."
+        "Professional" -> PROFESSIONAL_INSTRUCTION
         "Casual" -> "Rewrite the input to be casual, friendly, natural, and conversational."
         "Bullet Points" -> "Summarize the input as a clear, concise bullet-point list."
         "Email Draft" -> "Draft a professional email based on the brief notes provided, including a subject line and greeting."
         "Proofread" -> "Fix any spelling, grammar, and punctuation mistakes without changing the style or structure."
-        else -> "Rewrite the input to be formal, professional, polite, and grammatically perfect. Retain the core meaning."
+        else -> PROFESSIONAL_INSTRUCTION
+    }
+
+    /**
+     * Visible-for-testing harness (map #72, ticket #80): forces [isLlmInitialized] so the
+     * `!privacySensitive` guard is exercised against an initialized LLM path without
+     * needing a real model file.
+     */
+    internal fun forceLlmInitializedForTesting() {
+        isLlmInitialized = true
     }
 
     /**
@@ -264,15 +283,6 @@ open class TextCleaner(private val config: CleanerConfig) {
      * generator (each step runs generateNextToken and yields the last token), decoding
      * each token incrementally through a TokenizerStream to preserve multi-byte text.
      */
-    /**
-     * Visible-for-testing harness (map #72, ticket #80): forces [isLlmInitialized] so the
-     * `!privacySensitive` guard is exercised against an initialized LLM path without
-     * needing a real model file.
-     */
-    internal fun forceLlmInitializedForTesting() {
-        isLlmInitialized = true
-    }
-
     internal open fun generate(prompt: String): String? {
         val m = model ?: return null
         val t = tokenizer ?: return null
@@ -297,42 +307,5 @@ open class TextCleaner(private val config: CleanerConfig) {
             Log.e("TextCleaner", "LLM generation failed: ${e.message}")
             null
         }
-    }
-
-    private fun cleanLlm(text: String): String {
-        if (text.isEmpty()) return ""
-
-        // Heuristic correction simulator:
-        // 1. Capitalize sentences
-        val sentences = text.split(Regex("(?<=[.!?])\\s+"))
-        val formattedSentences = sentences.map { sentence ->
-            if (sentence.isNotEmpty()) {
-                val firstChar = sentence[0].uppercaseChar()
-                if (sentence.length > 1) {
-                    firstChar + sentence.substring(1)
-                } else {
-                    firstChar.toString()
-                }
-            } else {
-                ""
-            }
-        }
-
-        var cleanedText = formattedSentences.joinToString(" ")
-
-        // 2. Ensure ends with punctuation
-        if (cleanedText.isNotEmpty() && !cleanedText.last().toString().matches(Regex("[.!?]"))) {
-            cleanedText += "."
-        }
-
-        // 3. Common voice typos corrections
-        cleanedText = cleanedText
-            .replace(" i ", " I ")
-            .replace(" i'm ", " I'm ")
-            .replace(" i've ", " I've ")
-            .replace(" i'll ", " I'll ")
-            .replace(" i'd ", " I'd ")
-
-        return cleanedText
     }
 }

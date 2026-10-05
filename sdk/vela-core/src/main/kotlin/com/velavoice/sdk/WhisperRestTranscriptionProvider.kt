@@ -1,5 +1,6 @@
 package com.velavoice.sdk
 
+import com.velavoice.sdk.whisper.AudioConverter
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -13,7 +14,6 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.math.sqrt
 
 /**
  * REST transcription provider for OpenAI-compatible Whisper endpoints.
@@ -59,67 +59,7 @@ class WhisperRestTranscriptionProvider(
         sampleRate: Int = SAMPLE_RATE,
         channels: Int = CHANNELS,
         bitsPerSample: Int = BITS_PER_SAMPLE
-    ): ByteArray {
-        val byteRate = sampleRate * channels * bitsPerSample / 8
-        val blockAlign = channels * bitsPerSample / 8
-        val dataSize = pcmAudio.size
-        val chunkSize = 36 + dataSize
-
-        val header = ByteArray(44)
-        // "RIFF"
-        header[0] = 'R'.code.toByte()
-        header[1] = 'I'.code.toByte()
-        header[2] = 'F'.code.toByte()
-        header[3] = 'F'.code.toByte()
-        header[4] = (chunkSize and 0xff).toByte()
-        header[5] = ((chunkSize shr 8) and 0xff).toByte()
-        header[6] = ((chunkSize shr 16) and 0xff).toByte()
-        header[7] = ((chunkSize shr 24) and 0xff).toByte()
-
-        // "WAVE"
-        header[8] = 'W'.code.toByte()
-        header[9] = 'A'.code.toByte()
-        header[10] = 'V'.code.toByte()
-        header[11] = 'E'.code.toByte()
-
-        // "fmt " sub-chunk
-        header[12] = 'f'.code.toByte()
-        header[13] = 'm'.code.toByte()
-        header[14] = 't'.code.toByte()
-        header[15] = ' '.code.toByte()
-        header[16] = 16 // SubChunk1Size (16 for PCM)
-        header[17] = 0
-        header[18] = 0
-        header[19] = 0
-        header[20] = 1 // AudioFormat (1 = PCM)
-        header[21] = 0
-        header[22] = channels.toByte()
-        header[23] = 0
-        header[24] = (sampleRate and 0xff).toByte()
-        header[25] = ((sampleRate shr 8) and 0xff).toByte()
-        header[26] = ((sampleRate shr 16) and 0xff).toByte()
-        header[27] = ((sampleRate shr 24) and 0xff).toByte()
-        header[28] = (byteRate and 0xff).toByte()
-        header[29] = ((byteRate shr 8) and 0xff).toByte()
-        header[30] = ((byteRate shr 16) and 0xff).toByte()
-        header[31] = ((byteRate shr 24) and 0xff).toByte()
-        header[32] = (blockAlign and 0xff).toByte()
-        header[33] = ((blockAlign shr 8) and 0xff).toByte()
-        header[34] = (bitsPerSample and 0xff).toByte()
-        header[35] = ((bitsPerSample shr 8) and 0xff).toByte()
-
-        // "data" sub-chunk
-        header[36] = 'd'.code.toByte()
-        header[37] = 'a'.code.toByte()
-        header[38] = 't'.code.toByte()
-        header[39] = 'a'.code.toByte()
-        header[40] = (dataSize and 0xff).toByte()
-        header[41] = ((dataSize shr 8) and 0xff).toByte()
-        header[42] = ((dataSize shr 16) and 0xff).toByte()
-        header[43] = ((dataSize shr 24) and 0xff).toByte()
-
-        return header + pcmAudio
-    }
+    ): ByteArray = AudioConverter.pcmToWav(pcmAudio, sampleRate, channels, bitsPerSample)
 
     /**
      * Parses the JSON response from OpenAI/Groq/Custom REST transcription endpoint.
@@ -276,15 +216,11 @@ class WhisperRestTranscriptionProvider(
 
     private fun computeRms(audioChunk: ByteArray): Float {
         if (audioChunk.size < 2) return 0.0f
-        var sumSquares = 0.0
-        val sampleCount = audioChunk.size / 2
-        for (i in 0 until sampleCount) {
+        val shorts = ShortArray(audioChunk.size / 2) { i ->
             val low = audioChunk[i * 2].toInt() and 0xFF
             val high = audioChunk[i * 2 + 1].toInt()
-            val sample = (high shl 8) or low
-            sumSquares += (sample * sample).toDouble()
+            ((high shl 8) or low).toShort()
         }
-        val rms = sqrt(sumSquares / sampleCount)
-        return (rms / 32768.0).toFloat().coerceIn(0.0f, 1.0f)
+        return AudioConverter.rmsNormalized(shorts, shorts.size).coerceIn(0.0f, 1.0f)
     }
 }

@@ -1,5 +1,6 @@
 package com.velavoice.sdk
 
+import com.velavoice.sdk.whisper.AudioConverter
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -113,65 +114,7 @@ class GeminiTranscriptionProvider(
         sampleRate: Int = SAMPLE_RATE,
         channels: Int = CHANNELS,
         bitsPerSample: Int = BITS_PER_SAMPLE
-    ): ByteArray {
-        val byteRate = sampleRate * channels * bitsPerSample / 8
-        val blockAlign = channels * bitsPerSample / 8
-        val dataSize = pcmAudio.size
-        val fileSize = 36 + dataSize
-
-        val header = ByteArray(44)
-        // RIFF chunk descriptor
-        header[0] = 'R'.code.toByte()
-        header[1] = 'I'.code.toByte()
-        header[2] = 'F'.code.toByte()
-        header[3] = 'F'.code.toByte()
-        header[4] = (fileSize and 0xff).toByte()
-        header[5] = ((fileSize shr 8) and 0xff).toByte()
-        header[6] = ((fileSize shr 16) and 0xff).toByte()
-        header[7] = ((fileSize shr 24) and 0xff).toByte()
-        header[8] = 'W'.code.toByte()
-        header[9] = 'A'.code.toByte()
-        header[10] = 'V'.code.toByte()
-        header[11] = 'E'.code.toByte()
-
-        // "fmt " sub-chunk
-        header[12] = 'f'.code.toByte()
-        header[13] = 'm'.code.toByte()
-        header[14] = 't'.code.toByte()
-        header[15] = ' '.code.toByte()
-        header[16] = 16 // Subchunk1Size (16 for PCM)
-        header[17] = 0
-        header[18] = 0
-        header[19] = 0
-        header[20] = 1 // AudioFormat: 1 = PCM
-        header[21] = 0
-        header[22] = channels.toByte()
-        header[23] = 0
-        header[24] = (sampleRate and 0xff).toByte()
-        header[25] = ((sampleRate shr 8) and 0xff).toByte()
-        header[26] = ((sampleRate shr 16) and 0xff).toByte()
-        header[27] = ((sampleRate shr 24) and 0xff).toByte()
-        header[28] = (byteRate and 0xff).toByte()
-        header[29] = ((byteRate shr 8) and 0xff).toByte()
-        header[30] = ((byteRate shr 16) and 0xff).toByte()
-        header[31] = ((byteRate shr 24) and 0xff).toByte()
-        header[32] = (blockAlign and 0xff).toByte()
-        header[33] = ((blockAlign shr 8) and 0xff).toByte()
-        header[34] = (bitsPerSample and 0xff).toByte()
-        header[35] = ((bitsPerSample shr 8) and 0xff).toByte()
-
-        // "data" sub-chunk
-        header[36] = 'd'.code.toByte()
-        header[37] = 'a'.code.toByte()
-        header[38] = 't'.code.toByte()
-        header[39] = 'a'.code.toByte()
-        header[40] = (dataSize and 0xff).toByte()
-        header[41] = ((dataSize shr 8) and 0xff).toByte()
-        header[42] = ((dataSize shr 16) and 0xff).toByte()
-        header[43] = ((dataSize shr 24) and 0xff).toByte()
-
-        return header + pcmAudio
-    }
+    ): ByteArray = AudioConverter.pcmToWav(pcmAudio, sampleRate, channels, bitsPerSample)
 
     /**
      * Encodes bytes to Base64 using android.util.Base64 with fallback to java.util.Base64.
