@@ -107,7 +107,24 @@ class StreamingPipeline internal constructor(
         fun privacySensitive(sensitive: Boolean) = apply { this.privacySensitive = sensitive }
         fun consentToUpload(consent: Boolean) = apply { this.consentToUpload = consent }
 
+        /**
+         * Ticket 88 (map #81): fail closed on cleartext transports. Only
+         * encrypted schemes are accepted; a blank endpoint falls back to the
+         * secure built-in default. The scheme alone is reported so no key
+         * material or host details can leak through the error.
+         */
+        private fun validateEndpointScheme(endpoint: String) {
+            if (endpoint.isBlank()) return
+            if (endpoint.startsWith("wss://") || endpoint.startsWith("https://")) return
+            val scheme = endpoint.substringBefore("://", missingDelimiterValue = "unknown")
+            throw IllegalArgumentException(
+                "Insecure transcription endpoint scheme \"$scheme\" rejected: " +
+                    "endpoints must use wss:// or https://"
+            )
+        }
+
         fun build(): StreamingPipeline {
+            validateEndpointScheme(endpoint)
             val streamConfig = StreamConfig(
                 modelPath = whisperModelPath,
                 language = language,

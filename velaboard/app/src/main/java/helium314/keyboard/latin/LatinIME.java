@@ -64,6 +64,7 @@ import helium314.keyboard.latin.common.InputPointers;
 import helium314.keyboard.latin.common.ViewOutlineProviderUtilsKt;
 import helium314.keyboard.latin.define.DebugFlags;
 import helium314.keyboard.latin.inputlogic.InputLogic;
+import helium314.keyboard.latin.permissions.PermissionsUtil;
 import helium314.keyboard.latin.personalization.PersonalizationHelper;
 import helium314.keyboard.latin.settings.Settings;
 import helium314.keyboard.latin.settings.SettingsValues;
@@ -562,11 +563,10 @@ public class LatinIME extends InputMethodService implements
 
         final IntentFilter permissionFilter = new IntentFilter();
         permissionFilter.addAction(helium314.keyboard.latin.permissions.PermissionsActivity.ACTION_RECORD_AUDIO_GRANTED);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(mPermissionReceiver, permissionFilter, Context.RECEIVER_NOT_EXPORTED);
-        } else {
-            registerReceiver(mPermissionReceiver, permissionFilter);
-        }
+        // Ticket 88 (map #81): NOT_EXPORTED on all API levels. The pre-Tiramisu
+        // exported fallback let any app spoof this broadcast and force the
+        // recording pane open; ContextCompat backports the flag below API 33.
+        ContextCompat.registerReceiver(this, mPermissionReceiver, permissionFilter, ContextCompat.RECEIVER_NOT_EXPORTED);
 
         // Register to receive installation and removal of a dictionary pack.
         final IntentFilter packageFilter = new IntentFilter();
@@ -1736,6 +1736,12 @@ public class LatinIME extends InputMethodService implements
         @Override
         public void onReceive(final Context context, final Intent intent) {
             if (helium314.keyboard.latin.permissions.PermissionsActivity.ACTION_RECORD_AUDIO_GRANTED.equals(intent.getAction())) {
+                // Ticket 88 (map #81): re-check the mic grant here. The sender
+                // only sets the package, so a spoofed broadcast must not open
+                // the recording pane without the actual RECORD_AUDIO grant.
+                if (!PermissionsUtil.checkAllPermissionsGranted(context, android.Manifest.permission.RECORD_AUDIO)) {
+                    return;
+                }
                 if (mKeyboardSwitcher != null && mRichImm.isVelaReady()) {
                     mKeyboardSwitcher.showVelaVoicePane(LatinIME.this);
                 }

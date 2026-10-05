@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   Copyright (C) 2026 VelaVoice Project
+   SPDX-License-Identifier: GPL-3.0-only
+
+   Ticket 88 (map #81): explicit transport policy. Cleartext traffic is
+   forbidden everywhere so API keys and transcripts can never leave the
+   device over ws:// or http://, even if a caller supplies such an endpoint.
+   targetSdk 35 already blocks cleartext by default; this stanza states the
+   policy explicitly so a future config change cannot silently re-permit it.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
