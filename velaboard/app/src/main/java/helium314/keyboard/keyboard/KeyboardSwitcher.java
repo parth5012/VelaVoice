@@ -829,8 +829,17 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             // reach this branch (wantsCloud is forced false above).
             builder.consentToUpload(true);
             builder.apiKey(apiKey);
-            if (endpoint != null && (endpoint.startsWith("ws://") || endpoint.startsWith("wss://") || endpoint.startsWith("https://"))) {
-                builder.endpoint(endpoint);
+            // Ticket 88 (map #81): only encrypted transports carry API keys.
+            // ws:// and http:// are rejected with a clear error instead of
+            // silently falling back, so a misconfigured endpoint can never
+            // leak credentials over cleartext.
+            if (endpoint != null && !endpoint.isEmpty()) {
+                if (endpoint.startsWith("wss://") || endpoint.startsWith("https://")) {
+                    builder.endpoint(endpoint);
+                } else {
+                    showToast("Insecure transcription endpoint rejected. Use wss:// or https://.", false);
+                    return false;
+                }
             }
             if (model != null && !model.isEmpty()) {
                 builder.model(model);
