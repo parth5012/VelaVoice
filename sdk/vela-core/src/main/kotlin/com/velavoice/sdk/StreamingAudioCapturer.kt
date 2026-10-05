@@ -11,11 +11,16 @@ import com.velavoice.sdk.whisper.AudioConverter
  *
  * Extracted from [VelaTranscriber] so the facade stays a thin delegation layer.
  * [stop] is safe to call when idle (mirrors the original null-safe teardown).
+ *
+ * The worker keeps its recorder in a local reference and releases it in a
+ * `finally` block, so [stop] can never miss a recorder the worker is about
+ * to start, nor release one out from under a blocking `read()`.
  */
 class StreamingAudioCapturer {
     @Volatile
     private var isActive = false
     private var audioThread: Thread? = null
+    private val audioRecordLock = Any()
     private var audioRecord: AudioRecord? = null
 
     fun start(transcriber: StreamingTranscriber) {
@@ -27,7 +32,7 @@ class StreamingAudioCapturer {
                     AudioFormat.CHANNEL_IN_MONO,
                     AudioFormat.ENCODING_PCM_16BIT
                 )
-                audioRecord = AudioRecord(
+                val record = AudioRecord(
                     MediaRecorder.AudioSource.MIC,
                     16000,
                     AudioFormat.CHANNEL_IN_MONO,
@@ -35,15 +40,27 @@ class StreamingAudioCapturer {
                     bufferSize
                 )
 
-                if (audioRecord?.state == AudioRecord.STATE_INITIALIZED) {
-                    audioRecord?.startRecording()
-                    val buffer = ShortArray(bufferSize / 2)
-
-                    while (isActive) {
-                        val read = audioRecord?.read(buffer, 0, buffer.size) ?: 0
-                        if (read > 0) {
-                            transcriber.emit(AudioConverter.shortsToBytes(buffer, read))
+                try {
+                    synchronized(audioRecordLock) {
+                        audioRecord = record
+                        if (record.state == AudioRecord.STATE_INITIALIZED) {
+                            record.startRecording()
                         }
+                    }
+
+                    if (record.state == AudioRecord.STATE_INITIALIZED) {
+                        val buffer = ShortArray(bufferSize / 2)
+                        while (isActive) {
+                            val read = record.read(buffer, 0, buffer.size)
+                            if (read > 0) {
+                                transcriber.emit(AudioConverter.shortsToBytes(buffer, read))
+                            }
+                        }
+                    }
+                } finally {
+                    synchronized(audioRecordLock) {
+                        if (audioRecord === record) audioRecord = null
+                        record.release()
                     }
                 }
             } catch (e: Exception) {
@@ -56,9 +73,9 @@ class StreamingAudioCapturer {
     fun stop() {
         isActive = false
         try {
-            audioRecord?.stop()
-            audioRecord?.release()
-            audioRecord = null
+            synchronized(audioRecordLock) {
+                audioRecord?.stop()
+            }
             audioThread?.join(2000)
             audioThread = null
         } catch (e: Exception) {

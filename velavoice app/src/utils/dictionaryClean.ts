@@ -17,7 +17,8 @@ export function cleanWithDictionary(
   const sortedDict = [...dictionary].sort((a, b) => (b.priority || 0) - (a.priority || 0));
   for (const entry of sortedDict) {
     if (entry.original_word) {
-      const regex = new RegExp(`\\b${entry.original_word}\\b`, 'gi');
+      const escaped = entry.original_word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`\\b${escaped}\\b`, 'gi');
       cleaned = cleaned.replace(regex, entry.replacement);
     }
   }
