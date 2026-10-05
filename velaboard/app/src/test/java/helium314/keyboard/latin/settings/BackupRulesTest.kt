@@ -93,6 +93,10 @@ class BackupRulesTest {
             "cloud-backup must exclude encrypted API key prefs"
         )
         assertTrue(
+            cloudExcludes.any { it.domain == "device_sharedpref" && it.path.contains("vela_encrypted_api_keys") },
+            "cloud-backup must exclude encrypted API key prefs from device-protected storage (IME default)"
+        )
+        assertTrue(
             cloudExcludes.any { it.domain == "file" && it.path == "transcriptions" },
             "cloud-backup must exclude transcriptions directory"
         )
@@ -107,6 +111,10 @@ class BackupRulesTest {
         assertTrue(
             deviceExcludes.any { it.domain == "sharedpref" && it.path.contains("vela_encrypted_api_keys") },
             "device-transfer must exclude encrypted API key prefs"
+        )
+        assertTrue(
+            deviceExcludes.any { it.domain == "device_sharedpref" && it.path.contains("vela_encrypted_api_keys") },
+            "device-transfer must exclude encrypted API key prefs from device-protected storage (IME default)"
         )
         assertTrue(
             deviceExcludes.any { it.domain == "file" && it.path == "transcriptions" },
@@ -135,6 +143,10 @@ class BackupRulesTest {
         assertTrue(
             excludes.any { it.domain == "sharedpref" && it.path.contains("vela_encrypted_api_keys") },
             "backup_rules must exclude encrypted API key prefs"
+        )
+        assertTrue(
+            excludes.any { it.domain == "device_sharedpref" && it.path.contains("vela_encrypted_api_keys") },
+            "backup_rules must exclude encrypted API key prefs from device-protected storage (IME default)"
         )
         assertTrue(
             excludes.any { it.domain == "file" && it.path == "transcriptions" },
@@ -171,6 +183,7 @@ class BackupRulesTest {
 
         // Sensitive items MUST be excluded
         assertTrue(isExcluded("sharedpref", "vela_encrypted_api_keys.xml"))
+        assertTrue(isExcluded("device_sharedpref", "vela_encrypted_api_keys.xml"))
         assertTrue(isExcluded("file", "transcriptions/2026-10-04_12-00-00.wav"))
         assertTrue(isExcluded("file", "transcriptions/2026-10-04_12-00-00.json"))
         assertTrue(isExcluded("file", "transcriptions_quarantine/2026-10-04_12-00-00.wav"))
