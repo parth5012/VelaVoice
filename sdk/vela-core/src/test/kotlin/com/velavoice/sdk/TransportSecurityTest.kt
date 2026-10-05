@@ -83,4 +83,56 @@ class TransportSecurityTest {
             endpoint.startsWith("wss://") || endpoint.startsWith("https://")
         )
     }
+
+    @Test(timeout = 30000)
+    fun `start rejects http endpoint override with error callback`() {
+        val errors = mutableListOf<String>()
+        val pipeline = StreamingPipeline.Builder(context)
+            .apiKey("key-123")
+            .build()
+        pipeline.setCallback(object : StreamingTranscriptionCallback {
+            override fun onRevisionMarker(marker: RevisionMarker) {}
+            override fun onFinal(text: String) {}
+            override fun onError(error: VelaException) {
+                errors += (error.message ?: "")
+            }
+            override fun onAmplitude(normalized: Float) {}
+        })
+
+        pipeline.start(
+            "cloud",
+            StreamConfig(endpoint = "http://evil.example.com/x", consentToUpload = true)
+        )
+
+        assertTrue(
+            "Insecure start-time endpoint override must report wss/https error, got: $errors",
+            errors.any { it.contains("wss://") && it.contains("https://") }
+        )
+    }
+
+    @Test(timeout = 30000)
+    fun `start rejects ws endpoint override with error callback`() {
+        val errors = mutableListOf<String>()
+        val pipeline = StreamingPipeline.Builder(context)
+            .apiKey("key-123")
+            .build()
+        pipeline.setCallback(object : StreamingTranscriptionCallback {
+            override fun onRevisionMarker(marker: RevisionMarker) {}
+            override fun onFinal(text: String) {}
+            override fun onError(error: VelaException) {
+                errors += (error.message ?: "")
+            }
+            override fun onAmplitude(normalized: Float) {}
+        })
+
+        pipeline.start(
+            "cloud",
+            StreamConfig(endpoint = "ws://evil.example.com/ws", consentToUpload = true)
+        )
+
+        assertTrue(
+            "Insecure start-time endpoint override must report wss/https error, got: $errors",
+            errors.any { it.contains("wss://") && it.contains("https://") }
+        )
+    }
 }
