@@ -10,6 +10,24 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.sqrt
 
 /**
+ * Ticket 88 (map #81): fail closed on cleartext transports. Only encrypted
+ * schemes are accepted; a blank endpoint falls back to the secure built-in
+ * default. The scheme alone is reported so no key material or host details
+ * can leak through the error. Enforced both at [StreamingPipeline.Builder.build]
+ * time and on every [StreamingPipeline.start] after config reconciliation, so
+ * a start-time endpoint override cannot bypass it.
+ */
+internal fun validateEndpointScheme(endpoint: String) {
+    if (endpoint.isBlank()) return
+    if (endpoint.startsWith("wss://") || endpoint.startsWith("https://")) return
+    val scheme = endpoint.substringBefore("://", missingDelimiterValue = "unknown")
+    throw IllegalArgumentException(
+        "Insecure transcription endpoint scheme \"$scheme\" rejected: " +
+            "endpoints must use wss:// or https://"
+    )
+}
+
+/**
  * High-level streaming transcription pipeline.
  *
  * Orchestrates:
@@ -107,22 +125,6 @@ class StreamingPipeline internal constructor(
         fun privacySensitive(sensitive: Boolean) = apply { this.privacySensitive = sensitive }
         fun consentToUpload(consent: Boolean) = apply { this.consentToUpload = consent }
 
-        /**
-         * Ticket 88 (map #81): fail closed on cleartext transports. Only
-         * encrypted schemes are accepted; a blank endpoint falls back to the
-         * secure built-in default. The scheme alone is reported so no key
-         * material or host details can leak through the error.
-         */
-        private fun validateEndpointScheme(endpoint: String) {
-            if (endpoint.isBlank()) return
-            if (endpoint.startsWith("wss://") || endpoint.startsWith("https://")) return
-            val scheme = endpoint.substringBefore("://", missingDelimiterValue = "unknown")
-            throw IllegalArgumentException(
-                "Insecure transcription endpoint scheme \"$scheme\" rejected: " +
-                    "endpoints must use wss:// or https://"
-            )
-        }
-
         fun build(): StreamingPipeline {
             validateEndpointScheme(endpoint)
             val streamConfig = StreamConfig(
@@ -200,6 +202,15 @@ class StreamingPipeline internal constructor(
     fun start(mode: String, config: StreamConfig) {
         if (isRecording.get()) return
         val resolved = reconcile(config)
+        // CodeRabbit review on #143: reconcile() can swap in a start-time
+        // endpoint override after build()-time validation. Re-validate here
+        // so http:///ws:// overrides are rejected before any key is sent.
+        try {
+            validateEndpointScheme(resolved.endpoint)
+        } catch (e: IllegalArgumentException) {
+            callback?.onError(VelaError(e.message ?: "Insecure transcription endpoint rejected"))
+            return
+        }
         this.streamConfig = resolved
         this.committedText = ""
         this.currentSegmentStart = 0
