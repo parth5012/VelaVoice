@@ -3,12 +3,18 @@
    Copyright (C) 2026 VelaVoice Project
    SPDX-License-Identifier: GPL-3.0-only
 -->
-<full-backup-content>
-    <!-- Exclude Keystore-backed encrypted API keys & test fallback -->
+ <full-backup-content>
+    <!-- Exclude Keystore-backed encrypted API keys & test fallback.
+         device_sharedpref covers the IME's device-protected default storage
+         (CodeRabbit review on #139); sharedpref kept for other callers. -->
     <exclude domain="sharedpref" path="vela_encrypted_api_keys.xml" />
     <exclude domain="sharedpref" path="vela_encrypted_api_keys" />
     <exclude domain="sharedpref" path="vela_api_keys_test_fallback.xml" />
     <exclude domain="sharedpref" path="vela_api_keys_test_fallback" />
+    <exclude domain="device_sharedpref" path="vela_encrypted_api_keys.xml" />
+    <exclude domain="device_sharedpref" path="vela_encrypted_api_keys" />
+    <exclude domain="device_sharedpref" path="vela_api_keys_test_fallback.xml" />
+    <exclude domain="device_sharedpref" path="vela_api_keys_test_fallback" />
 
     <!-- Exclude user audio recordings and transcription text pairs -->
     <exclude domain="file" path="transcriptions" />

@@ -5,11 +5,19 @@
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <!-- Exclude Keystore-backed encrypted API keys & test fallback -->
+        <!-- Exclude Keystore-backed encrypted API keys & test fallback.
+             Both sharedpref (credential-protected callers) and
+             device_sharedpref (directBootAware/device-protected callers, the
+             IME default): the Keystore key does not survive restore, so the
+             file would come back unreadable (CodeRabbit review on #139). -->
         <exclude domain="sharedpref" path="vela_encrypted_api_keys.xml" />
         <exclude domain="sharedpref" path="vela_encrypted_api_keys" />
         <exclude domain="sharedpref" path="vela_api_keys_test_fallback.xml" />
         <exclude domain="sharedpref" path="vela_api_keys_test_fallback" />
+        <exclude domain="device_sharedpref" path="vela_encrypted_api_keys.xml" />
+        <exclude domain="device_sharedpref" path="vela_encrypted_api_keys" />
+        <exclude domain="device_sharedpref" path="vela_api_keys_test_fallback.xml" />
+        <exclude domain="device_sharedpref" path="vela_api_keys_test_fallback" />
 
         <!-- Exclude user audio recordings and transcription text pairs -->
         <exclude domain="file" path="transcriptions" />
@@ -17,11 +25,16 @@
     </cloud-backup>
 
     <device-transfer>
-        <!-- Exclude keystore-bound shared preferences from D2D transfers (non-exportable Keystore keys cannot be decrypted on target) -->
+        <!-- Exclude keystore-bound shared preferences from D2D transfers (non-exportable Keystore keys cannot be decrypted on target).
+             device_sharedpref covers the IME's device-protected default (CodeRabbit review on #139). -->
         <exclude domain="sharedpref" path="vela_encrypted_api_keys.xml" />
         <exclude domain="sharedpref" path="vela_encrypted_api_keys" />
         <exclude domain="sharedpref" path="vela_api_keys_test_fallback.xml" />
         <exclude domain="sharedpref" path="vela_api_keys_test_fallback" />
+        <exclude domain="device_sharedpref" path="vela_encrypted_api_keys.xml" />
+        <exclude domain="device_sharedpref" path="vela_encrypted_api_keys" />
+        <exclude domain="device_sharedpref" path="vela_api_keys_test_fallback.xml" />
+        <exclude domain="device_sharedpref" path="vela_api_keys_test_fallback" />
 
         <!-- Exclude user audio recordings and transcription text pairs -->
         <exclude domain="file" path="transcriptions" />
