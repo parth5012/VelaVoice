@@ -19,6 +19,20 @@ export const isQuarantinedPayload = (
 ): boolean =>
   payload?.privacySensitive === true || payload?.quarantined === true;
 
+function requiredFieldError(payload: SaveCorrectionPayload, field: 'audio_id' | 'original_transcription' | 'corrected_transcription' | 'edits' | 'edit_distance'): string | null {
+  const value = payload[field];
+  if (field === 'edits') {
+    if (!value) return 'edits list is required';
+    return null;
+  }
+  if (field === 'audio_id') {
+    if (!value) return 'audio_id is required';
+    return null;
+  }
+  if (value === undefined || value === null) return `${field} is required`;
+  return null;
+}
+
 export class CorrectionAPI {
   static async saveCorrection(payload: SaveCorrectionPayload): Promise<{ success: boolean; message?: string; error?: string }> {
     try {
@@ -33,17 +47,9 @@ export class CorrectionAPI {
       if (!payload.audio_id) {
         return { success: false, error: 'audio_id is required' };
       }
-      if (payload.original_transcription === undefined || payload.original_transcription === null) {
-        return { success: false, error: 'original_transcription is required' };
-      }
-      if (payload.corrected_transcription === undefined || payload.corrected_transcription === null) {
-        return { success: false, error: 'corrected_transcription is required' };
-      }
-      if (!payload.edits) {
-        return { success: false, error: 'edits list is required' };
-      }
-      if (payload.edit_distance === undefined || payload.edit_distance === null) {
-        return { success: false, error: 'edit_distance is required' };
+      for (const field of ['original_transcription', 'corrected_transcription', 'edits', 'edit_distance'] as const) {
+        const error = requiredFieldError(payload, field);
+        if (error) return { success: false, error };
       }
 
       const editsStr = JSON.stringify(payload.edits);

@@ -114,13 +114,9 @@ class VelaTranscriber private constructor(
         private fun buildInitialPrompt(): String? =
         dictionaryKeywords?.getKeywords()?.takeIf { it.isNotEmpty() }?.joinToString(", ")
 
-    /** Start recording and transcribe live */
-    fun startRecording(callback: VelaRecordingCallback) {
-        audioRecorder.start(whisperEngine, textCleaner, callback, ScribeInput(), buildInitialPrompt())
-    }
-
-    /** Start recording with Scribe context (surrounding text / app metadata from the IME) */
-    fun startRecording(callback: VelaRecordingCallback, scribeInput: ScribeInput) {
+    /** Start recording and transcribe live, with optional Scribe context from the IME */
+    @JvmOverloads
+    fun startRecording(callback: VelaRecordingCallback, scribeInput: ScribeInput = ScribeInput()) {
         audioRecorder.start(whisperEngine, textCleaner, callback, scribeInput, buildInitialPrompt())
     }
 
@@ -151,7 +147,7 @@ class VelaTranscriber private constructor(
         config: StreamConfig = StreamConfig()
     ) {
         val streamConfig = config.copy(
-            modelPath = config.modelPath.ifBlank { whisperEngine.let { "" } },
+            modelPath = config.modelPath,
             language = config.language.ifBlank { "en" },
             numThreads = if (config.numThreads > 0) config.numThreads else 4
         )
@@ -182,74 +178,17 @@ class VelaTranscriber private constructor(
         }
 
         // Start audio capture for streaming
-        startStreamingAudio(activeStreamingTranscriber!!)
+        streamingAudioCapturer.start(activeStreamingTranscriber!!)
     }
 
     fun stopStreaming() {
-        stopStreamingAudio()
+        streamingAudioCapturer.stop()
         activeStreamingTranscriber?.stop()
         activeStreamingTranscriber = null
     }
 
     private var activeStreamingTranscriber: StreamingTranscriber? = null
-    private var streamingAudioThread: Thread? = null
-    private var streamingAudioRecord: android.media.AudioRecord? = null
-    @Volatile
-    private var isStreamingAudioActive = false
-
-    private fun startStreamingAudio(transcriber: StreamingTranscriber) {
-        isStreamingAudioActive = true
-        streamingAudioThread = Thread({
-            try {
-                val bufferSize = android.media.AudioRecord.getMinBufferSize(
-                    16000,
-                    android.media.AudioFormat.CHANNEL_IN_MONO,
-                    android.media.AudioFormat.ENCODING_PCM_16BIT
-                )
-                streamingAudioRecord = android.media.AudioRecord(
-                    android.media.MediaRecorder.AudioSource.MIC,
-                    16000,
-                    android.media.AudioFormat.CHANNEL_IN_MONO,
-                    android.media.AudioFormat.ENCODING_PCM_16BIT,
-                    bufferSize
-                )
-
-                if (streamingAudioRecord?.state == android.media.AudioRecord.STATE_INITIALIZED) {
-                    streamingAudioRecord?.startRecording()
-                    val buffer = ShortArray(bufferSize / 2)
-                    val byteBuffer = ByteArray(bufferSize)
-
-                    while (isStreamingAudioActive) {
-                        val read = streamingAudioRecord?.read(buffer, 0, buffer.size) ?: 0
-                        if (read > 0) {
-                            for (i in 0 until read) {
-                                val sv = buffer[i]
-                                byteBuffer[i * 2] = (sv.toInt() and 0xff).toByte()
-                                byteBuffer[i * 2 + 1] = ((sv.toInt() shr 8) and 0xff).toByte()
-                            }
-                            transcriber.emit(byteBuffer.copyOfRange(0, read * 2))
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("VelaTranscriber", "Streaming audio error", e)
-            }
-        }, "VelaStreamingAudio")
-        streamingAudioThread?.start()
-    }
-
-    private fun stopStreamingAudio() {
-        isStreamingAudioActive = false
-        try {
-            streamingAudioRecord?.stop()
-            streamingAudioRecord?.release()
-            streamingAudioRecord = null
-            streamingAudioThread?.join(2000)
-            streamingAudioThread = null
-        } catch (e: Exception) {
-            android.util.Log.e("VelaTranscriber", "Error stopping streaming audio", e)
-        }
-    }
+    private val streamingAudioCapturer = StreamingAudioCapturer()
 
     fun release() {
         stopStreaming()

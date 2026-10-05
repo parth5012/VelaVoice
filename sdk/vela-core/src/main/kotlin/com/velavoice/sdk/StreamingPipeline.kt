@@ -5,9 +5,9 @@ import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.util.Log
+import com.velavoice.sdk.whisper.AudioConverter
 import com.velavoice.sdk.whisper.WhisperConfig
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.math.sqrt
 
 /**
  * Ticket 88 (map #81): fail closed on cleartext transports. Only encrypted
@@ -148,34 +148,12 @@ class StreamingPipeline internal constructor(
                 LocalStreamingTranscriber(WhisperConfig(whisperModelPath, language, numThreads))
             } else null
 
-        val cloudTranscriber: StreamingTranscriber? = if (apiKey.isNotBlank()) {
-            if (model.contains("gemini") || endpoint.contains("googleapis.com")) {
-                val liveModel = if (model.isBlank() || model == "gpt-live-transcribe" || model.contains("gemini-3.5")) {
-                    GeminiTranscriptionProvider.MODEL_TRANSCRIBE_LIVE
-                } else {
-                    model
-                }
-                GeminiTranscriptionProvider(
-                    rawModel = liveModel,
-                    baseUrl = endpoint.takeIf { it.isNotBlank() },
-                    allowCustomEndpoint = allowCustomEndpoint
-                )
-            } else if (endpoint.startsWith("ws://") || endpoint.startsWith("wss://")) {
-                CloudStreamingTranscriber()
-            } else {
-                val resolvedEndpoint = endpoint.takeIf { it.isNotBlank() && !it.startsWith("ws") } ?: when {
-                    model.contains("whisper-large") || apiKey.startsWith("gsk_") ->
-                        "https://api.groq.com/openai/v1/audio/transcriptions"
-                    else ->
-                        "https://api.openai.com/v1/audio/transcriptions"
-                }
-                WhisperRestTranscriptionProvider(
-                    apiKey = apiKey,
-                    model = model.ifBlank { "whisper-1" },
-                    endpoint = resolvedEndpoint
-                )
-            }
-        } else null
+        val cloudTranscriber: StreamingTranscriber? = TranscriberFactory.createCloud(
+            apiKey = apiKey,
+            model = model,
+            endpoint = endpoint,
+            allowCustomEndpoint = allowCustomEndpoint
+        )
 
             return StreamingPipeline(localTranscriber, cloudTranscriber, streamConfig)
         }
@@ -314,28 +292,18 @@ class StreamingPipeline internal constructor(
 
             recordingThread = Thread({
                 val buffer = ShortArray(BUFFER_SIZE / 2)
-                val byteBuffer = ByteArray(BUFFER_SIZE)
                 var lastVadCheck = System.currentTimeMillis()
 
                 while (isRecording.get()) {
                     val readResult = record.read(buffer, 0, buffer.size)
                     if (readResult > 0) {
-                        var sumSquares = 0.0
-                        for (i in 0 until readResult) {
-                            val shortVal = buffer[i]
-                            sumSquares += shortVal * shortVal
-                            byteBuffer[i * 2] = (shortVal.toInt() and 0xff).toByte()
-                            byteBuffer[i * 2 + 1] = ((shortVal.toInt() shr 8) and 0xff).toByte()
-                        }
-
-                        val audioBytes = byteBuffer.copyOfRange(0, readResult * 2)
+                        val audioBytes = AudioConverter.shortsToBytes(buffer, readResult)
 
                         // Emit to transcriber (upload-gated)
                         dispatchEmit(transcriber, audioBytes)
 
                         // Amplitude callback
-                        val rms = sqrt(sumSquares / readResult)
-                        val normalized = (rms / 32768.0).toFloat()
+                        val normalized = AudioConverter.rmsNormalized(buffer, readResult)
                         callback?.onAmplitude(normalized)
 
                         // VAD-based commit boundary detection
@@ -398,20 +366,33 @@ class StreamingPipeline internal constructor(
         }
     }
 
-    internal fun checkCommitBoundary(amplitude: Float, now: Long) {
+    /** True when a VAD pause or the max segment time requires committing the tail. */
+    internal fun shouldCommit(amplitude: Float, now: Long): Boolean {
         val timeSinceLastCommit = now - lastCommitTime
         val timeSinceLastActivity = now - lastActivityTime
+        return (timeSinceLastActivity > VAD_PAUSE_MS && amplitude < streamConfig.vadThreshold) ||
+            timeSinceLastCommit > MAX_SEGMENT_MS
+    }
 
-        // Commit if: VAD pause detected OR max segment time reached
-        val shouldCommit = (timeSinceLastActivity > VAD_PAUSE_MS && amplitude < streamConfig.vadThreshold) ||
-                timeSinceLastCommit > MAX_SEGMENT_MS
+    internal fun checkCommitBoundary(amplitude: Float, now: Long) {
+        if (!shouldCommit(amplitude, now)) return
+        commitSegment(now, updateCommitTime = true)
+    }
 
-        if (!shouldCommit) return
+    private fun commitRemaining() {
+        commitSegment(now = 0L, updateCommitTime = false)
+    }
 
+    /**
+     * Commits the uncommitted tail `[currentSegmentStart, committedText.length)` as a
+     * revision marker. Shared by [checkCommitBoundary] and [commitRemaining], which
+     * differ only in whether [lastCommitTime] advances.
+     */
+    private fun commitSegment(now: Long, updateCommitTime: Boolean) {
         val snapshot = committedText
         val start = currentSegmentStart
         if (start >= snapshot.length) {
-            lastCommitTime = now
+            if (updateCommitTime) lastCommitTime = now
             return
         }
 
@@ -426,24 +407,7 @@ class StreamingPipeline internal constructor(
             )
         }
         currentSegmentStart = snapshot.length
-        lastCommitTime = now
-    }
-
-    private fun commitRemaining() {
-        val snapshot = committedText
-        val start = currentSegmentStart
-        if (start >= snapshot.length) return
-        val remaining = snapshot.substring(start).trim()
-        if (remaining.isNotEmpty()) {
-            callback?.onRevisionMarker(
-                RevisionMarker(
-                    type = "commit",
-                    text = remaining,
-                    range = start until snapshot.length
-                )
-            )
-        }
-        currentSegmentStart = snapshot.length
+        if (updateCommitTime) lastCommitTime = now
     }
 
     internal fun createTranscriberCallback(): StreamingTranscriptionCallback {

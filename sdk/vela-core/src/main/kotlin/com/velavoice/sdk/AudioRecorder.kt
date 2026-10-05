@@ -4,9 +4,9 @@ import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import com.velavoice.sdk.cleaner.TextCleaner
+import com.velavoice.sdk.whisper.AudioConverter
 import com.velavoice.sdk.whisper.WhisperEngine
 import java.io.ByteArrayOutputStream
-import kotlin.math.sqrt
 
 class AudioRecorder {
     private var isRecording = false
@@ -65,22 +65,11 @@ class AudioRecorder {
 
             recordingThread = Thread({
                 val buffer = ShortArray(BUFFER_SIZE / 2)
-                val byteBuffer = ByteArray(BUFFER_SIZE)
                 while (isRecording) {
                     val readResult = audioRecord?.read(buffer, 0, buffer.size) ?: 0
                     if (readResult > 0) {
-                        var sum = 0.0
-                        for (i in 0 until readResult) {
-                            val shortVal = buffer[i]
-                            sum += shortVal * shortVal
-                            byteBuffer[i * 2] = (shortVal.toInt() and 0xff).toByte()
-                            byteBuffer[i * 2 + 1] = ((shortVal.toInt() shr 8) and 0xff).toByte()
-                        }
-                        recordedAudioData.write(byteBuffer, 0, readResult * 2)
-
-                        val rms = sqrt(sum / readResult)
-                        val normalized = (rms / 32768.0).toFloat()
-                        callback.onAmplitude(normalized)
+                        recordedAudioData.write(AudioConverter.shortsToBytes(buffer, readResult))
+                        callback.onAmplitude(AudioConverter.rmsNormalized(buffer, readResult))
                     }
                 }
             }, "VelaAudioRecorderThread")

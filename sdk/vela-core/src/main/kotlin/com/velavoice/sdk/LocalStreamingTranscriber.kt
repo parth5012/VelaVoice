@@ -1,12 +1,12 @@
 package com.velavoice.sdk
 
 import android.util.Log
+import com.velavoice.sdk.whisper.AudioConverter
 import com.velavoice.sdk.whisper.WhisperConfig
 import com.velavoice.sdk.whisper.WhisperEngine
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
-import kotlin.math.sqrt
 
 /**
  * Local streaming transcription using whisper.cpp with persistent state.
@@ -242,38 +242,28 @@ class LocalStreamingTranscriber(private val config: WhisperConfig) : StreamingTr
             // Extract only the new portion
             val newPortion = newTextTrimmed.substring(overlapLength).trimStart()
             if (newPortion.isNotEmpty()) {
-                val startIdx = committedLength
-                val endIdx = startIdx + newPortion.length
-
-                // Emit as partial (revisable)
-                val marker = RevisionMarker(
-                    type = "partial",
-                    text = newPortion,
-                    range = startIdx until endIdx
-                )
-                callback?.onRevisionMarker(marker)
-
-                partialText = newPortion
-                committedLength = endIdx
-                lastCommittedText = newTextTrimmed
+                emitPartial(newPortion, committedLength, newTextTrimmed)
             }
         } else {
             // No overlap — new text segment
             val separator = if (committedLength > 0) " " else ""
-            val startIdx = committedLength + separator.length
-            val endIdx = startIdx + newTextTrimmed.length
+            emitPartial(newTextTrimmed, committedLength + separator.length, newTextTrimmed)
+        }
+    }
 
-            val marker = RevisionMarker(
+    /** Emits a revisable partial marker and advances the committed-text bookkeeping. */
+    private fun emitPartial(text: String, startIdx: Int, fullText: String) {
+        val endIdx = startIdx + text.length
+        callback?.onRevisionMarker(
+            RevisionMarker(
                 type = "partial",
-                text = newTextTrimmed,
+                text = text,
                 range = startIdx until endIdx
             )
-            callback?.onRevisionMarker(marker)
-
-            partialText = newTextTrimmed
-            committedLength = endIdx
-            lastCommittedText = newTextTrimmed
-        }
+        )
+        partialText = text
+        committedLength = endIdx
+        lastCommittedText = fullText
     }
 
     /**
@@ -344,21 +334,8 @@ class LocalStreamingTranscriber(private val config: WhisperConfig) : StreamingTr
         }
     }
 
-    internal fun isSilent(audioData: ByteArray, threshold: Float): Boolean {
-        if (audioData.isEmpty()) return true
-        val samples = audioData.size / 2
-        if (samples == 0) return true
-        var sumSquares = 0.0
-        for (i in 0 until samples) {
-            val low = audioData[i * 2].toInt() and 0xff
-            val high = audioData[i * 2 + 1].toInt()
-            val sample = (high shl 8) or low
-            sumSquares += sample.toDouble() * sample.toDouble()
-        }
-        val rms = sqrt(sumSquares / samples)
-        val normalized = rms / 32768.0
-        return normalized < threshold
-    }
+    internal fun isSilent(audioData: ByteArray, threshold: Float): Boolean =
+        AudioConverter.isSilent(audioData, threshold)
 
     private companion object {
         const val DEFAULT_WINDOW_BYTES = 16000 * 2 * 15

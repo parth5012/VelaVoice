@@ -22,61 +22,14 @@ import { StatusBar } from 'expo-status-bar';
 import Constants from 'expo-constants';
 import { ModelManager, ModelInfo, DictionaryEntry, DictionaryKeyword } from './src/services/ModelManager';
 import OverlayLogo from './src/components/OverlayLogo';
+import { Recording, RecordingCard } from './src/components/RecordingCard';
+import { buildScribeDrafts } from './src/services/scribeSimulator';
+import { cleanWithDictionary } from './src/utils/dictionaryClean';
 import { TranscriptionEditor } from './src/components/TranscriptionEditor';
 import { CorrectionAPI } from './src/services/api';
 import { isQuarantinedEntry, quarantineBadgeText } from './src/utils/quarantineBadge';
 import GeminiSettings from './src/components/GeminiSettings';
 import { getGeminiApiKey } from './src/services/GeminiService';
-
-interface Recording {
-  id: string;
-  title: string;
-  date: string;
-  size: string;
-  raw: string;
-  cleaned: string;
-  wave: number[];
-  // Quarantined sessions stay visible with an explicit local-only badge
-  // (ticket #136) — hiding them would look like data loss.
-  quarantined?: boolean;
-}
-
-// Memoized recording card for FlatList performance
-const RecordingCard = React.memo(({ item, isSelected, onPress }: {
-  item: Recording;
-  isSelected: boolean;
-  onPress: () => void;
-}) => (
-  <TouchableOpacity
-    style={[styles.recordingCard, isSelected && styles.recordingCardSelected]}
-    onPress={onPress}
-  >
-    <View style={styles.recCardHeader}>
-      <View>
-        <Text style={styles.recTitle}>{item.title}</Text>
-        <Text style={styles.recDate}>{item.date} • {item.size}</Text>
-      </View>
-      <Text style={styles.recChevron}>➔</Text>
-    </View>
-    {isQuarantinedEntry(item) && (
-      <View style={styles.recQuarantineBadge}>
-        <Text style={styles.recQuarantineBadgeText}>🔒 {quarantineBadgeText()}</Text>
-      </View>
-    )}
-    <View style={styles.recWaveContainer}>
-      {item.wave.map((h, i) => (
-        <View
-          key={i}
-          style={[
-            styles.recWaveBar,
-            { height: h },
-            isSelected ? { backgroundColor: '#62f9ee' } : { backgroundColor: '#859491' }
-          ]}
-        />
-      ))}
-    </View>
-  </TouchableOpacity>
-));
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'hub' | 'studio' | 'engine'>('hub');
@@ -546,135 +499,22 @@ export default function App() {
   // Run Personal Dictionary Clean simulation
   const runCustomClean = () => {
     if (!testText.trim()) return;
-    let cleaned = testText;
-
-    // Step 1: Apply dictionary replacements (corrections)
-    const sortedDict = [...dictionary].sort((a, b) => (b.priority || 0) - (a.priority || 0));
-    for (const entry of sortedDict) {
-      if (entry.original_word) {
-        const regex = new RegExp(`\\b${entry.original_word}\\b`, 'gi');
-        cleaned = cleaned.replace(regex, entry.replacement);
-      }
-    }
-
-    // Step 2: Show which keywords are protected from filler removal
-    const keywordSet = new Set(keywords.map(k => k.keyword.toLowerCase()));
-    const protectedFound: string[] = [];
-    const testWords = testText.toLowerCase().split(/\b/);
-    for (const word of testWords) {
-      const trimmed = word.trim();
-      if (trimmed && keywordSet.has(trimmed)) {
-        protectedFound.push(trimmed);
-      }
-    }
-    if (protectedFound.length > 0) {
-      cleaned += `\n\n[Protected keywords in text: ${[...new Set(protectedFound)].join(', ')}]`;
-    }
-
-    setTestCleanedText(cleaned);
+    setTestCleanedText(cleanWithDictionary(testText, dictionary, keywords));
   };
 
   // simulated Scribe engine prompt builder and draft generator
   const runScribeRewrite = () => {
     const activeRec = recordings.find(r => r.id === selectedRecordingId);
     if (!activeRec) return;
-    
+
     const baseText = studioSegment === 'cleaned' ? activeRec.cleaned : activeRec.raw;
     if (!baseText.trim()) return;
 
     setIsGeneratingScribe(true);
-    
+
     // Simulate mobile LLM inference latency (800ms)
     setTimeout(() => {
-      let drafts: string[] = [];
-      const userText = baseText.trim();
-      const style = scribeStyle;
-      const app = scribeAppName;
-      const input = scribeInputType;
-      
-      // Dynamic draft generation based on text contents
-      const cleanText = userText.replace(/^(So, |um, |like, |eh, |uh, |er, |hm, |oh, )+/gi, '').trim();
-      const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-      
-      let base = cleanText;
-      if (scribeInstruction.trim()) {
-        const inst = scribeInstruction.trim().toLowerCase();
-        if (inst.includes('spanish') || inst.includes('espanol') || inst.includes('español')) {
-          drafts = [
-            `[Español] Con respecto a: ${cleanText}`,
-            `[Español - Casual] Oye, sobre esto: ${cleanText.toLowerCase()}`,
-            `[Español - Profesional] Estimado equipo, adjunto el detalle: ${cleanText}`
-          ];
-          setScribeDrafts(drafts);
-          setSelectedScribeDraftIndex(0);
-          setIsGeneratingScribe(false);
-          return;
-        }
-        if (inst.includes('german') || inst.includes('deutsch')) {
-          drafts = [
-            `[Deutsch] Bezüglich: ${cleanText}`,
-            `[Deutsch - Casual] Hallo, hier ist der Text: ${cleanText.toLowerCase()}`,
-            `[Deutsch - Info] Betreffend: ${cleanText}`
-          ];
-          setScribeDrafts(drafts);
-          setSelectedScribeDraftIndex(0);
-          setIsGeneratingScribe(false);
-          return;
-        }
-        if (inst.includes('short') || inst.includes('brief') || inst.includes('concise')) {
-          base = cleanText.substring(0, Math.min(cleanText.length, 60)) + '...';
-        } else {
-          base = `${cleanText} (${scribeInstruction.trim()})`;
-        }
-      }
-
-      switch (style) {
-        case 'Professional':
-          drafts = [
-            `Regarding the issue: ${cap(base)} I wanted to confirm this details.`,
-            `Please be advised that: ${cap(base)} Let me know if you would like to proceed.`,
-            `Concerning the details: ${cap(base)} I will keep you updated on progress.`
-          ];
-          break;
-        case 'Casual':
-          drafts = [
-            `Hey! So: ${cap(base)} Let's catch up later.`,
-            `Yeah, basically: ${base.toLowerCase()}`,
-            `Just wanted to let you know: ${base} Let me know what you think!`
-          ];
-          break;
-        case 'Bullet Points':
-          const sentences = base.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 0);
-          drafts = [
-            sentences.map(s => `- ${cap(s)}`).join('\n'),
-            `Key Points:\n` + sentences.map((s, idx) => `${idx + 1}. ${cap(s)}`).join('\n'),
-            sentences.map(s => `• [Action Item] ${cap(s)}`).join('\n')
-          ];
-          break;
-        case 'Email Draft':
-          const subject = base.split(/[.!?]+/)[0] || 'Update';
-          drafts = [
-            `Subject: Update on ${subject}\n\nHi Team,\n\nI hope you are doing well.\n\n${cap(base)}\n\nBest regards,\n[Name]`,
-            `Subject: Notes: ${subject}\n\nHi everyone,\n\nHere is a quick recap:\n${cap(base)}\n\nThanks,\n[Name]`,
-            `Subject: Quick question re: ${subject}\n\nHello,\n\n${cap(base)}\n\nLet me know your availability.\n\nThank you,\n[Name]`
-          ];
-          break;
-        case 'Proofread':
-        default:
-          const corrected = base
-            .replace(/\b(i)\b/g, 'I')
-            .replace(/\b(im)\b/gi, "I'm")
-            .replace(/\b(ive)\b/gi, "I've")
-            .replace(/\b(id)\b/gi, "I'd")
-            .replace(/\b(ill)\b/gi, "I'll");
-          drafts = [
-            cap(corrected),
-            `Cleaned transcription: ${cap(corrected)}`,
-            `Standard corrected text: ${cap(corrected)}`
-          ];
-      }
-
-      setScribeDrafts(drafts);
+      setScribeDrafts(buildScribeDrafts(baseText, scribeStyle, scribeInstruction));
       setSelectedScribeDraftIndex(0);
       setIsGeneratingScribe(false);
     }, 800);
@@ -1838,48 +1678,6 @@ const styles = StyleSheet.create({
     marginTop: 40,
     lineHeight: 20,
   },
-  recordingCard: {
-    backgroundColor: '#161d1c', // Low container background
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#3c4948',
-  },
-  recordingCardSelected: {
-    borderColor: '#62f9ee', // Active outline
-  },
-  recCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  recTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#ffffff',
-  },
-  recDate: {
-    fontSize: 12,
-    color: '#859491',
-    marginTop: 2,
-  },
-  recChevron: {
-    fontSize: 16,
-    color: '#859491',
-  },
-  recWaveContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    height: 30,
-    marginTop: 4,
-  },
-  recWaveBar: {
-    width: 3,
-    marginRight: 2,
-    borderRadius: 1.5,
-  },
   recordFab: {
     position: 'absolute',
     bottom: 25,
@@ -2367,21 +2165,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#5c1a1a',
     borderColor: '#ff6b6b',
     borderWidth: 1,
-  },
-  recQuarantineBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#5c1a1a',
-    borderColor: '#ff6b6b',
-    borderWidth: 1,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginTop: 6,
-  },
-  recQuarantineBadgeText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#ffffff',
   },
   transcriptLabel: {
     fontSize: 11,

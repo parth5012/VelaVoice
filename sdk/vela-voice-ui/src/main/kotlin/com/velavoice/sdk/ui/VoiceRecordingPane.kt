@@ -33,23 +33,12 @@ class VoiceRecordingPane(context: Context) : LinearLayout(context) {
         val density = context.resources.displayMetrics.density
 
         val isDark = (context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
-        val baseBgColor = Color.parseColor(if (isDark) "#1e1e2e" else "#eff1f5")
-        val crustColor = Color.parseColor(if (isDark) "#11111b" else "#dce0e8")
-        val surfaceColor = Color.parseColor(if (isDark) "#181825" else "#e6e9ef")
-        val mainTextColor = Color.parseColor(if (isDark) "#cdd6f4" else "#4c4f69")
-        val subTextColor = Color.parseColor(if (isDark) "#bac2de" else "#5c5f77")
-        val stopCleanColor = Color.parseColor(if (isDark) "#a6e3a1" else "#40a02b")
-        val stopRawColor = Color.parseColor(if (isDark) "#fab387" else "#df8e1d")
-        val cancelColor = Color.parseColor(if (isDark) "#f38ba8" else "#d20f39")
-
-        val stopCleanTextColor = if (isDark) Color.parseColor("#11111b") else Color.parseColor("#eff1f5")
-        val stopRawTextColor = if (isDark) Color.parseColor("#11111b") else Color.parseColor("#eff1f5")
-        val cancelTextColor = if (isDark) Color.parseColor("#11111b") else Color.parseColor("#eff1f5")
+        val colors = VelaColors.forTheme(isDark)
 
         val sansSerifMedium = Typeface.create("sans-serif-medium", Typeface.NORMAL)
         val sansSerifLight = Typeface.create("sans-serif-light", Typeface.NORMAL)
 
-        setBackgroundColor(baseBgColor)
+        setBackgroundColor(colors.baseBg)
         setPadding((12 * density).toInt(), (10 * density).toInt(), (12 * density).toInt(), 0)
 
         // --- Top row: Status + Timer ---
@@ -63,7 +52,7 @@ class VoiceRecordingPane(context: Context) : LinearLayout(context) {
             text = "Listening..."
             textSize = 13f
             typeface = sansSerifLight
-            setTextColor(mainTextColor)
+            setTextColor(colors.mainText)
             gravity = Gravity.START
             layoutParams = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f)
         }
@@ -72,7 +61,7 @@ class VoiceRecordingPane(context: Context) : LinearLayout(context) {
             text = "0:00"
             textSize = 13f
             typeface = sansSerifMedium
-            setTextColor(subTextColor)
+            setTextColor(colors.subText)
             gravity = Gravity.END
             visibility = View.GONE
         }
@@ -94,7 +83,7 @@ class VoiceRecordingPane(context: Context) : LinearLayout(context) {
         transcriptPreview = TextView(context).apply {
             textSize = 12f
             typeface = sansSerifLight
-            setTextColor(subTextColor)
+            setTextColor(colors.subText)
             gravity = Gravity.START
             setLineSpacing(0f, 1.2f)
             maxLines = 3
@@ -106,8 +95,8 @@ class VoiceRecordingPane(context: Context) : LinearLayout(context) {
             }
             setPadding((4 * density).toInt(), (6 * density).toInt(),
                 (4 * density).toInt(), (6 * density).toInt())
-            setBackgroundColor(surfaceColor)
-            setTextColor(subTextColor)
+            setBackgroundColor(colors.surface)
+            setTextColor(colors.subText)
         }
         addView(transcriptPreview)
 
@@ -116,31 +105,20 @@ class VoiceRecordingPane(context: Context) : LinearLayout(context) {
             orientation = HORIZONTAL
             gravity = Gravity.CENTER
             setPadding((8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt())
-            setBackgroundColor(crustColor)
+            setBackgroundColor(colors.crust)
             layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
         }
 
-        val btnLayoutParams = LayoutParams(0, (42 * density).toInt(), 1f).apply {
-            leftMargin = (4 * density).toInt()
-            rightMargin = (4 * density).toInt()
+        stopCleanButton = makeActionButton("Stop Clean", colors.stopClean, colors.buttonText, density, sansSerifMedium) {
+            onStopCleanListener?.invoke()
         }
 
-        stopCleanButton = Button(context).apply {
-            styleButton(this, "Stop Clean", stopCleanColor, stopCleanTextColor, density, sansSerifMedium)
-            layoutParams = btnLayoutParams
-            setOnClickListener { onStopCleanListener?.invoke() }
+        stopRawButton = makeActionButton("Stop Raw", colors.stopRaw, colors.buttonText, density, sansSerifMedium) {
+            onStopRawListener?.invoke()
         }
 
-        stopRawButton = Button(context).apply {
-            styleButton(this, "Stop Raw", stopRawColor, stopRawTextColor, density, sansSerifMedium)
-            layoutParams = btnLayoutParams
-            setOnClickListener { onStopRawListener?.invoke() }
-        }
-
-        cancelButton = Button(context).apply {
-            styleButton(this, "Cancel", cancelColor, cancelTextColor, density, sansSerifMedium)
-            layoutParams = btnLayoutParams
-            setOnClickListener { onCancelListener?.invoke() }
+        cancelButton = makeActionButton("Cancel", colors.cancel, colors.buttonText, density, sansSerifMedium) {
+            onCancelListener?.invoke()
         }
 
         buttonContainer.addView(stopCleanButton)
@@ -187,6 +165,57 @@ class VoiceRecordingPane(context: Context) : LinearLayout(context) {
             timerText.visibility = View.GONE
             timerText.text = "0:00"
             waveformView.clear()
+        }
+    }
+
+    /** Resolved theme palette (Catppuccin-inspired) for the recording pane. */
+    private data class VelaColors(
+        val baseBg: Int,
+        val crust: Int,
+        val surface: Int,
+        val mainText: Int,
+        val subText: Int,
+        val stopClean: Int,
+        val stopRaw: Int,
+        val cancel: Int,
+        val buttonText: Int
+    ) {
+        companion object {
+            fun forTheme(isDark: Boolean): VelaColors {
+                fun color(light: String, dark: String): Int =
+                    Color.parseColor(if (isDark) dark else light)
+                // All three action buttons share one button-text color per theme.
+                val buttonText = Color.parseColor(if (isDark) "#11111b" else "#eff1f5")
+                return VelaColors(
+                    baseBg = color("#eff1f5", "#1e1e2e"),
+                    crust = color("#dce0e8", "#11111b"),
+                    surface = color("#e6e9ef", "#181825"),
+                    mainText = color("#4c4f69", "#cdd6f4"),
+                    subText = color("#5c5f77", "#bac2de"),
+                    stopClean = color("#40a02b", "#a6e3a1"),
+                    stopRaw = color("#df8e1d", "#fab387"),
+                    cancel = color("#d20f39", "#f38ba8"),
+                    buttonText = buttonText
+                )
+            }
+        }
+    }
+
+    private fun makeActionButton(
+        text: String,
+        bgColor: Int,
+        textColor: Int,
+        density: Float,
+        typeface: Typeface,
+        onClick: () -> Unit
+    ): Button {
+        return Button(context).apply {
+            styleButton(this, text, bgColor, textColor, density, typeface)
+            layoutParams = LayoutParams(0, (42 * density).toInt(), 1f).apply {
+                leftMargin = (4 * density).toInt()
+                rightMargin = (4 * density).toInt()
+            }
+            setOnClickListener { onClick() }
         }
     }
 
