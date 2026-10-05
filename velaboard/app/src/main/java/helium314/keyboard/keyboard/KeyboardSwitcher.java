@@ -683,14 +683,11 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         String resolvedModel = null;
         String resolvedEndpoint = null;
 
-        SharedPreferences companionPrefs = null;
-        try {
-            final android.content.Context companionContext = latinIME.createPackageContext(
-                    "com.velavoice.app", android.content.Context.CONTEXT_IGNORE_SECURITY);
-            companionPrefs = companionContext.getSharedPreferences(
-                    "com.velavoice.app_preferences", android.content.Context.MODE_PRIVATE);
-        } catch (final Exception ignored) {
-        }
+        // Ticket 87 (map #81): the keyboard app owns credentials (VelaApiKeyStore,
+        // ticket 82). The legacy CONTEXT_IGNORE_SECURITY cross-app read is gone:
+        // cross-UID MODE_PRIVATE reads fail with EACCES (silently swallowed), so
+        // the fallback was dead, and any future sharedUserId "fix" would make it
+        // an unauthenticated channel. No fallback: fail closed with the toast below.
 
         if ("gemini".equals(transcriptionMode)) {
             final boolean isStreamed = "streamed".equals(streamingMode);
@@ -709,18 +706,6 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             }
             resolvedEndpoint = "https://generativelanguage.googleapis.com";
 
-            if ((resolvedApiKey == null || resolvedApiKey.trim().isEmpty()) && companionPrefs != null) {
-                final String compKey = companionPrefs.getString("geminiApiKey", "");
-                if (compKey != null && !compKey.trim().isEmpty()) {
-                    resolvedApiKey = compKey.trim();
-                    VelaApiKeyStore.setApiKey(latinIME, VelaApiKey.GEMINI, resolvedApiKey);
-                }
-                final String compModel = companionPrefs.getString("geminiModel", "");
-                if (compModel != null && !compModel.trim().isEmpty()) {
-                    resolvedModel = compModel.trim();
-                    prefs.edit().putString(Settings.PREF_VELA_GEMINI_MODEL, resolvedModel).apply();
-                }
-            }
         } else if ("groq".equals(transcriptionMode)) {
             resolvedApiKey = VelaApiKeyStore.getRawApiKey(latinIME, VelaApiKey.GROQ);
             if (resolvedApiKey == null) {
@@ -730,18 +715,6 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                     helium314.keyboard.latin.settings.Defaults.PREF_VELA_GROQ_MODEL);
             resolvedEndpoint = "https://api.groq.com/openai/v1/audio/transcriptions";
 
-            if ((resolvedApiKey == null || resolvedApiKey.trim().isEmpty()) && companionPrefs != null) {
-                final String compKey = companionPrefs.getString("groqApiKey", "");
-                if (compKey != null && !compKey.trim().isEmpty()) {
-                    resolvedApiKey = compKey.trim();
-                    VelaApiKeyStore.setApiKey(latinIME, VelaApiKey.GROQ, resolvedApiKey);
-                }
-                final String compModel = companionPrefs.getString("groqModel", "");
-                if (compModel != null && !compModel.trim().isEmpty()) {
-                    resolvedModel = compModel.trim();
-                    prefs.edit().putString(Settings.PREF_VELA_GROQ_MODEL, resolvedModel).apply();
-                }
-            }
         } else if ("custom".equals(transcriptionMode)) {
             resolvedApiKey = VelaApiKeyStore.getRawApiKey(latinIME, VelaApiKey.CUSTOM);
             if (resolvedApiKey == null) {
@@ -752,23 +725,6 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             resolvedEndpoint = prefs.getString(Settings.PREF_VELA_CUSTOM_ENDPOINT,
                     helium314.keyboard.latin.settings.Defaults.PREF_VELA_CUSTOM_ENDPOINT);
 
-            if ((resolvedApiKey == null || resolvedApiKey.trim().isEmpty()) && companionPrefs != null) {
-                final String compKey = companionPrefs.getString("customApiKey", "");
-                if (compKey != null && !compKey.trim().isEmpty()) {
-                    resolvedApiKey = compKey.trim();
-                    VelaApiKeyStore.setApiKey(latinIME, VelaApiKey.CUSTOM, resolvedApiKey);
-                }
-                final String compModel = companionPrefs.getString("customModel", "");
-                if (compModel != null && !compModel.trim().isEmpty()) {
-                    resolvedModel = compModel.trim();
-                    prefs.edit().putString(Settings.PREF_VELA_CUSTOM_MODEL, resolvedModel).apply();
-                }
-                final String compEndpoint = companionPrefs.getString("customEndpoint", "");
-                if (compEndpoint != null && !compEndpoint.trim().isEmpty()) {
-                    resolvedEndpoint = compEndpoint.trim();
-                    prefs.edit().putString(Settings.PREF_VELA_CUSTOM_ENDPOINT, resolvedEndpoint).apply();
-                }
-            }
         } else {
             resolvedApiKey = VelaApiKeyStore.getRawApiKey(latinIME, VelaApiKey.OPENAI);
             if (resolvedApiKey == null) {
@@ -778,24 +734,6 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                     helium314.keyboard.latin.settings.Defaults.PREF_VELA_OPENAI_MODEL);
             resolvedEndpoint = prefs.getString(Settings.PREF_VELA_OPENAI_ENDPOINT,
                     helium314.keyboard.latin.settings.Defaults.PREF_VELA_OPENAI_ENDPOINT);
-
-            if ((resolvedApiKey == null || resolvedApiKey.trim().isEmpty()) && companionPrefs != null) {
-                final String compKey = companionPrefs.getString("openaiApiKey", "");
-                if (compKey != null && !compKey.trim().isEmpty()) {
-                    resolvedApiKey = compKey.trim();
-                    VelaApiKeyStore.setApiKey(latinIME, VelaApiKey.OPENAI, resolvedApiKey);
-                }
-                final String compModel = companionPrefs.getString("openaiModel", "");
-                if (compModel != null && !compModel.trim().isEmpty()) {
-                    resolvedModel = compModel.trim();
-                    prefs.edit().putString(Settings.PREF_VELA_OPENAI_MODEL, resolvedModel).apply();
-                }
-                final String compEndpoint = companionPrefs.getString("openaiEndpoint", "");
-                if (compEndpoint != null && !compEndpoint.trim().isEmpty()) {
-                    resolvedEndpoint = compEndpoint.trim();
-                    prefs.edit().putString(Settings.PREF_VELA_OPENAI_ENDPOINT, resolvedEndpoint).apply();
-                }
-            }
         }
 
         final String apiKey = resolvedApiKey;
