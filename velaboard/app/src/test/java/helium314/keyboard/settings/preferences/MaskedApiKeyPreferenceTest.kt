@@ -49,11 +49,13 @@ class MaskedApiKeyPreferenceTest {
 
     @Test
     fun `rendered summary for all four Vela API keys never equals stored raw key`() {
+        // NOTE: fixtures must stay obviously synthetic (plain TEST words,
+        // no real-looking key material) so secret scanners don't flag test data.
         val testKeys = mapOf(
-            VelaApiKey.GEMINI to "AIzaSyD-gemini-secret-api-key-9876543210-abcdef",
-            VelaApiKey.GROQ to "gsk_groq-secret-api-key-1234567890-abcdef",
-            VelaApiKey.OPENAI to "sk-proj-openai-secret-api-key-abcdef1234567890",
-            VelaApiKey.CUSTOM to "custom-endpoint-secret-key-xyz-987654321"
+            VelaApiKey.GEMINI to "TEST_SYNTHETIC_MIDDLE_GEMINI_01",
+            VelaApiKey.GROQ to "TEST_SYNTHETIC_MIDDLE_GROQ_02",
+            VelaApiKey.OPENAI to "TEST_SYNTHETIC_MIDDLE_OPENAI_03",
+            VelaApiKey.CUSTOM to "TEST_SYNTHETIC_MIDDLE_CUSTOM_04"
         )
 
         for ((apiKey, rawSecret) in testKeys) {
@@ -65,10 +67,8 @@ class MaskedApiKeyPreferenceTest {
             assertTrue(renderedSummary.isNotEmpty())
             // Critical assertion: rendered summary must NEVER equal the stored raw key
             assertNotEquals(rawSecret, renderedSummary)
-            // Critical assertion: raw key substring must not be leaked into rendered summary
-            assertFalse(renderedSummary.contains("secret-api-key"))
-            assertFalse(renderedSummary.contains("1234567890"))
-            assertFalse(renderedSummary.contains("9876543210"))
+            // Critical assertion: raw key middle must not be leaked into rendered summary
+            assertFalse(renderedSummary.contains("SYNTHETIC_MIDDLE"))
             // Must contain masked fingerprint pattern
             assertTrue(renderedSummary.contains("..."))
             assertTrue(renderedSummary.contains("${rawSecret.length} chars"))
@@ -81,7 +81,7 @@ class MaskedApiKeyPreferenceTest {
             assertNull(PasswordTextInputPreferenceHelper.getRenderedSummary(context, apiKey))
         }
 
-        VelaApiKeyStore.setApiKey(context, VelaApiKey.GEMINI, "AIzaSyD-gemini-key")
+        VelaApiKeyStore.setApiKey(context, VelaApiKey.GEMINI, "TEST_SYNTHETIC_GEMINI_KEY")
         assertNotNull(PasswordTextInputPreferenceHelper.getRenderedSummary(context, apiKey = VelaApiKey.GEMINI))
 
         VelaApiKeyStore.clearApiKey(context, VelaApiKey.GEMINI)
