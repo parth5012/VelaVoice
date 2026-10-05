@@ -5,8 +5,10 @@ import android.content.Context
 import helium314.keyboard.latin.R
 import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
+import helium314.keyboard.latin.settings.VelaApiKey
 import helium314.keyboard.settings.Setting
 import helium314.keyboard.settings.TranscriptionStorage
+import helium314.keyboard.settings.preferences.ApiKeyPreference
 import helium314.keyboard.settings.preferences.ListPreference
 import helium314.keyboard.settings.preferences.SwitchPreference
 import helium314.keyboard.settings.preferences.TextInputPreference
@@ -98,14 +100,20 @@ fun createVoiceSettings(context: Context): List<Setting> = listOf(
             default = Defaults.PREF_VELA_STREAMING_MODE
         )
     },
+    Setting(context, Settings.PREF_VELA_GEMINI_API_KEY, R.string.voice_gemini_api_key_title, R.string.voice_gemini_api_key_summary) {
+        ApiKeyPreference(setting = it, apiKey = VelaApiKey.GEMINI)
+    },
+    Setting(context, Settings.PREF_VELA_GEMINI_MODEL, R.string.voice_gemini_model_title, R.string.voice_gemini_model_summary) {
+        TextInputPreference(setting = it, default = Defaults.PREF_VELA_GEMINI_MODEL)
+    },
     Setting(context, Settings.PREF_VELA_GROQ_API_KEY, R.string.voice_groq_api_key_title, R.string.voice_groq_api_key_summary) {
-        TextInputPreference(setting = it, default = Defaults.PREF_VELA_GROQ_API_KEY)
+        ApiKeyPreference(setting = it, apiKey = VelaApiKey.GROQ)
     },
     Setting(context, Settings.PREF_VELA_GROQ_MODEL, R.string.voice_groq_model_title, R.string.voice_groq_model_summary) {
         TextInputPreference(setting = it, default = Defaults.PREF_VELA_GROQ_MODEL)
     },
     Setting(context, Settings.PREF_VELA_OPENAI_API_KEY, R.string.voice_openai_api_key_title, R.string.voice_openai_api_key_summary) {
-        TextInputPreference(setting = it, default = Defaults.PREF_VELA_OPENAI_API_KEY)
+        ApiKeyPreference(setting = it, apiKey = VelaApiKey.OPENAI)
     },
     Setting(context, Settings.PREF_VELA_OPENAI_MODEL, R.string.voice_openai_model_title, R.string.voice_openai_model_summary) {
         TextInputPreference(setting = it, default = Defaults.PREF_VELA_OPENAI_MODEL)
@@ -114,7 +122,7 @@ fun createVoiceSettings(context: Context): List<Setting> = listOf(
         TextInputPreference(setting = it, default = Defaults.PREF_VELA_OPENAI_ENDPOINT)
     },
     Setting(context, Settings.PREF_VELA_CUSTOM_API_KEY, R.string.voice_custom_api_key_title, R.string.voice_custom_api_key_summary) {
-        TextInputPreference(setting = it, default = Defaults.PREF_VELA_CUSTOM_API_KEY)
+        ApiKeyPreference(setting = it, apiKey = VelaApiKey.CUSTOM)
     },
     Setting(context, Settings.PREF_VELA_CUSTOM_MODEL, R.string.voice_custom_model_title, R.string.voice_custom_model_summary) {
         TextInputPreference(setting = it, default = Defaults.PREF_VELA_CUSTOM_MODEL)

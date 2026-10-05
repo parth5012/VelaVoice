@@ -16,6 +16,7 @@ import helium314.keyboard.latin.common.Constants
 import helium314.keyboard.latin.common.LocaleUtils.getBestMatch
 import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
+import helium314.keyboard.latin.settings.VelaApiKeyStore
 import helium314.keyboard.latin.utils.LanguageOnSpacebarUtils
 import helium314.keyboard.latin.utils.Log
 import helium314.keyboard.latin.utils.ScriptUtils.script
@@ -61,12 +62,7 @@ class RichInputMethodManager private constructor() {
             val prefs = context.prefs()
             val mode = prefs.getString(Settings.PREF_VELA_TRANSCRIPTION_MODE, Defaults.PREF_VELA_TRANSCRIPTION_MODE) ?: "local"
             if (mode != "local") {
-                val apiKey = when (mode) {
-                    "gemini" -> prefs.getString(Settings.PREF_VELA_GEMINI_API_KEY, Defaults.PREF_VELA_GEMINI_API_KEY)
-                    "groq" -> prefs.getString(Settings.PREF_VELA_GROQ_API_KEY, Defaults.PREF_VELA_GROQ_API_KEY)
-                    "custom" -> prefs.getString(Settings.PREF_VELA_CUSTOM_API_KEY, Defaults.PREF_VELA_CUSTOM_API_KEY)
-                    else -> prefs.getString(Settings.PREF_VELA_OPENAI_API_KEY, Defaults.PREF_VELA_OPENAI_API_KEY)
-                }
+                val apiKey = VelaApiKeyStore.getRawApiKeyForMode(context, mode)
                 if (!apiKey.isNullOrBlank()) {
                     return true
                 }
