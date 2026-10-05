@@ -84,7 +84,12 @@ object ModelDownloadHelper {
     /**
      * Resolves the path of a model file downloaded by the main Vela Voice application (com.velavoice.app).
      * Works by accessing com.velavoice.app's databases/models.db directly.
-     * Requires both apps to be signed with the same key and have sharedUserId configured.
+     *
+     * Ticket 87 (map #81) correction: there is no sharedUserId configured in
+     * either app's manifest, so this is strictly a best-effort lookup that
+     * silently returns null on normal installs (cross-UID file access fails).
+     * Model files only — this path must never be used for credentials, which
+     * live solely in this app's VelaApiKeyStore.
      */
     @JvmStatic
     fun getSharedModelPath(context: Context, model: String): String? {

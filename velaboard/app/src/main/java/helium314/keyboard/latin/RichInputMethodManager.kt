@@ -62,25 +62,13 @@ class RichInputMethodManager private constructor() {
             val prefs = context.prefs()
             val mode = prefs.getString(Settings.PREF_VELA_TRANSCRIPTION_MODE, Defaults.PREF_VELA_TRANSCRIPTION_MODE) ?: "local"
             if (mode != "local") {
+                // Ticket 87 (map #81): credentials live only in this app's
+                // VelaApiKeyStore. The legacy CONTEXT_IGNORE_SECURITY read of
+                // the companion app's prefs never worked cross-UID (EACCES,
+                // silently swallowed) and is removed; fail closed instead.
                 val apiKey = VelaApiKeyStore.getRawApiKeyForMode(context, mode)
                 if (!apiKey.isNullOrBlank()) {
                     return true
-                }
-                try {
-                    val companionContext = context.createPackageContext("com.velavoice.app", Context.CONTEXT_IGNORE_SECURITY)
-                    val companionPrefs = companionContext.getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
-                    val compKey = if (mode == "gemini") {
-                        companionPrefs.getString("geminiApiKey", null)
-                    } else if (mode == "groq") {
-                        companionPrefs.getString("groqApiKey", null)
-                    } else {
-                        companionPrefs.getString("openaiApiKey", null)
-                    }
-                    if (!compKey.isNullOrBlank()) {
-                        return true
-                    }
-                } catch (e: Exception) {
-                    // Ignore
                 }
             }
             var modelPath = prefs.getString(Settings.PREF_VELA_MODEL_PATH, "/sdcard/Models/ggml-tiny.en.bin") ?: ""
