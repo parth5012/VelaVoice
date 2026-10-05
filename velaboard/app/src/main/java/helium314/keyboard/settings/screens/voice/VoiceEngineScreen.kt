@@ -31,9 +31,11 @@ import androidx.core.content.edit
 import helium314.keyboard.latin.R
 import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
+import helium314.keyboard.latin.settings.VelaApiKey
 import helium314.keyboard.latin.utils.prefs
 import helium314.keyboard.settings.SearchSettingsScreen
 import helium314.keyboard.settings.Setting
+import helium314.keyboard.settings.preferences.ApiKeyPreference
 import helium314.keyboard.settings.preferences.ListPreference
 import helium314.keyboard.settings.preferences.TextInputPreference
 
@@ -79,42 +81,42 @@ fun VoiceEngineScreen(onClickBack: () -> Unit) {
             ?: Defaults.PREF_VELA_TRANSCRIPTION_MODE
         if (mode == "gemini") {
             Setting(context, Settings.PREF_VELA_GEMINI_API_KEY, R.string.voice_gemini_api_key_title, R.string.voice_gemini_api_key_summary) {
-                TextInputPreference(setting = it, default = Defaults.PREF_VELA_GEMINI_API_KEY)
+                ApiKeyPreference(setting = it, apiKey = VelaApiKey.GEMINI)
             }.Preference()
             Setting(context, Settings.PREF_VELA_GEMINI_MODEL, R.string.voice_gemini_model_title, R.string.voice_gemini_model_summary) {
                 TextInputPreference(setting = it, default = Defaults.PREF_VELA_GEMINI_MODEL)
             }.Preference()
         }
         if (mode == "groq") {
-                        Setting(context, Settings.PREF_VELA_GROQ_API_KEY, R.string.voice_groq_api_key_title, R.string.voice_groq_api_key_summary) {
-                            TextInputPreference(setting = it, default = Defaults.PREF_VELA_GROQ_API_KEY)
-                        }.Preference()
-                        Setting(context, Settings.PREF_VELA_GROQ_MODEL, R.string.voice_groq_model_title, R.string.voice_groq_model_summary) {
-                            TextInputPreference(setting = it, default = Defaults.PREF_VELA_GROQ_MODEL)
-                        }.Preference()
-                    }
-                    if (mode == "openai") {
-                        Setting(context, Settings.PREF_VELA_OPENAI_API_KEY, R.string.voice_openai_api_key_title, R.string.voice_openai_api_key_summary) {
-                            TextInputPreference(setting = it, default = Defaults.PREF_VELA_OPENAI_API_KEY)
-                        }.Preference()
-                        Setting(context, Settings.PREF_VELA_OPENAI_MODEL, R.string.voice_openai_model_title, R.string.voice_openai_model_summary) {
-                            TextInputPreference(setting = it, default = Defaults.PREF_VELA_OPENAI_MODEL)
-                        }.Preference()
-                        Setting(context, Settings.PREF_VELA_OPENAI_ENDPOINT, R.string.voice_openai_endpoint_title, R.string.voice_openai_endpoint_summary) {
-                            TextInputPreference(setting = it, default = Defaults.PREF_VELA_OPENAI_ENDPOINT)
-                        }.Preference()
-                    }
-                    if (mode == "custom") {
-                        Setting(context, Settings.PREF_VELA_CUSTOM_API_KEY, R.string.voice_custom_api_key_title, R.string.voice_custom_api_key_summary) {
-                            TextInputPreference(setting = it, default = Defaults.PREF_VELA_CUSTOM_API_KEY)
-                        }.Preference()
-                        Setting(context, Settings.PREF_VELA_CUSTOM_MODEL, R.string.voice_custom_model_title, R.string.voice_custom_model_summary) {
-                            TextInputPreference(setting = it, default = Defaults.PREF_VELA_CUSTOM_MODEL)
-                        }.Preference()
-                        Setting(context, Settings.PREF_VELA_CUSTOM_ENDPOINT, R.string.voice_custom_endpoint_title, R.string.voice_custom_endpoint_summary) {
-                            TextInputPreference(setting = it, default = Defaults.PREF_VELA_CUSTOM_ENDPOINT)
-                        }.Preference()
-                    }
+            Setting(context, Settings.PREF_VELA_GROQ_API_KEY, R.string.voice_groq_api_key_title, R.string.voice_groq_api_key_summary) {
+                ApiKeyPreference(setting = it, apiKey = VelaApiKey.GROQ)
+            }.Preference()
+            Setting(context, Settings.PREF_VELA_GROQ_MODEL, R.string.voice_groq_model_title, R.string.voice_groq_model_summary) {
+                TextInputPreference(setting = it, default = Defaults.PREF_VELA_GROQ_MODEL)
+            }.Preference()
+        }
+        if (mode == "openai") {
+            Setting(context, Settings.PREF_VELA_OPENAI_API_KEY, R.string.voice_openai_api_key_title, R.string.voice_openai_api_key_summary) {
+                ApiKeyPreference(setting = it, apiKey = VelaApiKey.OPENAI)
+            }.Preference()
+            Setting(context, Settings.PREF_VELA_OPENAI_MODEL, R.string.voice_openai_model_title, R.string.voice_openai_model_summary) {
+                TextInputPreference(setting = it, default = Defaults.PREF_VELA_OPENAI_MODEL)
+            }.Preference()
+            Setting(context, Settings.PREF_VELA_OPENAI_ENDPOINT, R.string.voice_openai_endpoint_title, R.string.voice_openai_endpoint_summary) {
+                TextInputPreference(setting = it, default = Defaults.PREF_VELA_OPENAI_ENDPOINT)
+            }.Preference()
+        }
+        if (mode == "custom") {
+            Setting(context, Settings.PREF_VELA_CUSTOM_API_KEY, R.string.voice_custom_api_key_title, R.string.voice_custom_api_key_summary) {
+                ApiKeyPreference(setting = it, apiKey = VelaApiKey.CUSTOM)
+            }.Preference()
+            Setting(context, Settings.PREF_VELA_CUSTOM_MODEL, R.string.voice_custom_model_title, R.string.voice_custom_model_summary) {
+                TextInputPreference(setting = it, default = Defaults.PREF_VELA_CUSTOM_MODEL)
+            }.Preference()
+            Setting(context, Settings.PREF_VELA_CUSTOM_ENDPOINT, R.string.voice_custom_endpoint_title, R.string.voice_custom_endpoint_summary) {
+                TextInputPreference(setting = it, default = Defaults.PREF_VELA_CUSTOM_ENDPOINT)
+            }.Preference()
+        }
 
                     Spacer(Modifier.height(32.dp))
                 }
