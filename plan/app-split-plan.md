@@ -1,9 +1,8 @@
 # App.tsx Split Plan (repo-quality audit, 2026-10-06)
 
-Status: `pass-2 done` (2026-10-06) — pass 1 `installHttpOverrides.ts` +
-`EngineRoomScreen.tsx`; pass 2 `HubScreen.tsx` + `StudioScreen.tsx` +
-`theme/appStyles.ts` consolidation; App.tsx 2639 → 1045 LOC. Pass 3
-(handler hooks) pending approval.
+Status: `done` (2026-10-06) — pass 1 engine extraction; pass 2 hub/studio
+screens + theme; pass 3 handler hooks (`useDictionaryKeywords`,
+`useSyncToDrive`, `useRecordingSim`); App.tsx 2639 → 831 LOC (-69%).
 Per skill constraints each implementation pass extracts **at most 2 units** and
 re-verifies (tsc filter + full `npm test` chain + manual smoke of the touched tab).
 
@@ -75,11 +74,17 @@ in App or a future `theme.ts` only when a second consumer appears.
    tsc gate (SaveCorrectionPayload fixture annotation, quarantineEgress.test).
    Verification: non-env tsc errors 0; full 8-suite chain RC=0.
 
-### Pass 3 — handler hooks (one hook per pass if any doubt)
-5. `useDictionary` + `useKeywords` (they share `ModelManager` and are
-   self-contained CRUD).
-6. `useSyncToDrive` (Drive sync state + handler).
-7. `useRecordingSim` (sim recording timers + amplitudes).
+### Pass 3 — handler hooks ✅ DONE 2026-10-06
+5. **`useDictionaryKeywords.ts`** ✅: dictionary + keywords states, loads,
+   add/delete handlers (share ModelManager; one hook per plan).
+6. **`useSyncToDrive.ts`** ✅: drive sync state + initDriveCredentials /
+   refreshDriveStatus / handleSyncToDrive (no-ops without native module).
+7. **`useRecordingSim.ts`** ✅: sim timers/amplitudes effect, permission-gated
+   start, stop-time Recording construction; library/navigation mutation stays
+   in App via `onRecordingFinished(rec, runCleaner)` callback (App-side thin
+   orchestrator keeps setRecordings/selection/segment/tab wiring).
+   Rounds 5+6 verified together (non-env tsc 0, chain RC=0), then 7 with the
+   same gate. App.tsx 1045 → 831 LOC.
 
 ## Rules for every pass
 

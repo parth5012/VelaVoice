@@ -39,12 +39,14 @@
 
 - Batch 3: split plan written to `plan/app-split-plan.md` (3 passes, ≤2 extractions each).
 - Pass 1 (2026-10-06): fetch patch → `src/services/installHttpOverrides.ts` (idempotent, called from mount effect); `renderEngineRoom` + 67 engine-only style keys → `src/components/engine/EngineRoomScreen.tsx` (props-only screen, `EngineRoomScreenProps`); dead imports removed (Switch, Dimensions, CorrectionAPI, quarantineBadgeText).
-- Pass 2 (2026-10-06): `renderVoiceHub` → `src/components/hub/HubScreen.tsx`; `renderStudio` → `src/components/studio/StudioScreen.tsx` (both `React.FC` + exported prop interfaces; JSX byte-identical via same-name props); shared tab primitives consolidated into `src/theme/appStyles.ts` (`sharedScreenStyles`), EngineRoomScreen switched to it; App pruned 72 style keys (incl. 4 pre-existing dead studio keys) + 6 dead imports. App.tsx **2639 → 1755 → 1045 LOC**. Remaining: handler pileup + `any[]` transcriptions (pass 3) and post-split typing pass.
+- Pass 2 (2026-10-06): `renderVoiceHub` → `src/components/hub/HubScreen.tsx`; `renderStudio` → `src/components/studio/StudioScreen.tsx` (both `React.FC` + exported prop interfaces; JSX byte-identical via same-name props); shared tab primitives consolidated into `src/theme/appStyles.ts` (`sharedScreenStyles`), EngineRoomScreen switched to it; App pruned 72 style keys (incl. 4 pre-existing dead studio keys) + 6 dead imports. App.tsx **2639 → 1755 → 1045 LOC**.
+- Pass 3 (2026-10-06): handler pileup → `src/hooks/useDictionaryKeywords.ts` (dictionary+keyword CRUD), `src/hooks/useSyncToDrive.ts` (Drive sync state/handlers), `src/hooks/useRecordingSim.ts` (sim timers + start/stop; library mutation via onRecordingFinished callback). App.tsx **1045 → 831 LOC** (2639 original, −69%). Remaining (out of split scope): `any[]` transcriptions typing pass; device smoke.
 
 #### New files (split outputs, all verified)
 
 - `src/services/installHttpOverrides.ts`, `src/components/engine/EngineRoomScreen.tsx` (pass 1)
 - `src/theme/appStyles.ts`, `src/components/hub/HubScreen.tsx`, `src/components/studio/StudioScreen.tsx` (pass 2)
+- `src/hooks/useDictionaryKeywords.ts`, `src/hooks/useSyncToDrive.ts`, `src/hooks/useRecordingSim.ts` (pass 3)
 
 #### Regression found & fixed during pass 2
 
