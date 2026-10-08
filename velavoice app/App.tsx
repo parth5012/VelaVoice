@@ -14,8 +14,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import Constants from 'expo-constants';
-import { ModelManager, ModelInfo, DictionaryEntry, DictionaryKeyword } from './src/services/ModelManager';
+import { ModelManager, ModelInfo } from './src/services/ModelManager';
 import OverlayLogo from './src/components/OverlayLogo';
 import { Recording } from './src/components/RecordingCard';
 import { buildScribeDrafts } from './src/services/scribeSimulator';
@@ -23,6 +22,9 @@ import { cleanWithDictionary } from './src/utils/dictionaryClean';
 import { isQuarantinedEntry } from './src/utils/quarantineBadge';
 import { getGeminiApiKey } from './src/services/GeminiService';
 import { installHttpOverrides } from './src/services/installHttpOverrides';
+import { useDictionaryKeywords } from './src/hooks/useDictionaryKeywords';
+import { useSyncToDrive } from './src/hooks/useSyncToDrive';
+import { useRecordingSim } from './src/hooks/useRecordingSim';
 import { EngineRoomScreen } from './src/components/engine/EngineRoomScreen';
 import { HubScreen } from './src/components/hub/HubScreen';
 import { StudioScreen } from './src/components/studio/StudioScreen';
@@ -61,24 +63,34 @@ export default function App() {
     }
   };
 
-  // Personal Dictionary States
-  const [dictionary, setDictionary] = useState<DictionaryEntry[]>([]);
-  const [originalWord, setOriginalWord] = useState('');
-  const [replacement, setReplacement] = useState('');
-  const [language, setLanguage] = useState('');
-  const [priority, setPriority] = useState('1');
+  const {
+    dictionary,
+    originalWord,
+    setOriginalWord,
+    replacement,
+    setReplacement,
+    keywords,
+    keywordInput,
+    setKeywordInput,
+    loadDictionary,
+    loadKeywords,
+    handleAddEntry,
+    handleDeleteEntry,
+    handleAddKeyword,
+    handleDeleteKeyword,
+  } = useDictionaryKeywords();
 
-  // Dictionary Keywords States
-  const [keywords, setKeywords] = useState<DictionaryKeyword[]>([]);
-  const [keywordInput, setKeywordInput] = useState('');
-
-  // Google Drive Sync States
-  const [driveConfigured, setDriveConfigured] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncResult, setSyncResult] = useState<string | null>(null);
-  const [unsyncedCount, setUnsyncedCount] = useState(0);
-  const [totalTranscriptions, setTotalTranscriptions] = useState(0);
-  const [recentTranscriptions, setRecentTranscriptions] = useState<any[]>([]);
+  const {
+    driveConfigured,
+    isSyncing,
+    syncResult,
+    unsyncedCount,
+    totalTranscriptions,
+    recentTranscriptions,
+    initDriveCredentials,
+    refreshDriveStatus,
+    handleSyncToDrive,
+  } = useSyncToDrive();
 
   // Recordings Library (Voice Hub / Studio)
   const [recordings, setRecordings] = useState<Recording[]>([
@@ -102,11 +114,6 @@ export default function App() {
     }
   ]);
   const [selectedRecordingId, setSelectedRecordingId] = useState<string>('1');
-
-  // Recording Simulation States
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingSeconds, setRecordingSeconds] = useState(0);
-  const [recordingAmplitudes, setRecordingAmplitudes] = useState<number[]>([]);
 
   // Custom text test state in Studio
   const [testText, setTestText] = useState('');
@@ -161,34 +168,6 @@ export default function App() {
     }
   }, [selectedRecordingId, studioSegment, recordings]);
 
-  // Recording Simulation logic
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    let timer: NodeJS.Timeout;
-    if (isRecording) {
-      setRecordingSeconds(0);
-      setRecordingAmplitudes([]);
-      timer = setInterval(() => {
-        setRecordingSeconds(prev => prev + 1);
-      }, 1000);
-      
-      interval = setInterval(() => {
-        const amp = Math.floor(Math.random() * 32) + 4;
-        setRecordingAmplitudes(prev => {
-          const next = [...prev, amp];
-          if (next.length > 20) {
-            next.shift();
-          }
-          return next;
-        });
-      }, 150);
-    }
-    return () => {
-      clearInterval(interval);
-      clearInterval(timer);
-    };
-  }, [isRecording]);
-
   const loadModels = useCallback(async () => {
     try {
       const list = await ModelManager.getModels();
@@ -199,91 +178,6 @@ export default function App() {
       setLoading(false);
     }
   }, []);
-
-  const loadDictionary = useCallback(async () => {
-    try {
-      const list = await ModelManager.getDictionaryEntries();
-      setDictionary(list);
-    } catch (e) {
-      console.error('Failed to load dictionary', e);
-    }
-  }, []);
-
-  const loadKeywords = useCallback(async () => {
-    try {
-      const list = await ModelManager.getKeywords();
-      setKeywords(list);
-    } catch (e) {
-      console.error('Failed to load keywords', e);
-    }
-  }, []);
-
-  const handleAddEntry = useCallback(async () => {
-    if (!originalWord.trim() || !replacement.trim()) {
-      alert('Please fill out both the original word and its replacement.');
-      return;
-    }
-
-    try {
-      await ModelManager.addDictionaryEntry(
-        originalWord.trim(),
-        replacement.trim(),
-        language.trim() || null,
-        parseInt(priority, 10) || 1
-      );
-      setOriginalWord('');
-      setReplacement('');
-      setLanguage('');
-      setPriority('1');
-      await loadDictionary();
-    } catch (e) {
-      console.error('Failed to add dictionary entry', e);
-      alert('Failed to add entry. Word might already exist.');
-    }
-  }, [originalWord, replacement, language, priority, loadDictionary]);
-
-  const handleDeleteEntry = useCallback(async (id?: number) => {
-    if (id === undefined) return;
-    try {
-      await ModelManager.deleteDictionaryEntry(id);
-      await loadDictionary();
-    } catch (e) {
-      console.error('Failed to delete dictionary entry', e);
-      alert('Failed to delete entry.');
-    }
-  }, [loadDictionary]);
-
-  const handleAddKeyword = useCallback(async () => {
-    const trimmed = keywordInput.trim();
-    if (!trimmed) {
-      alert('Please enter a keyword.');
-      return;
-    }
-    // Validate that keyword contains only valid word characters
-    if (!/^[\w\s-]+$/.test(trimmed)) {
-      alert('Keywords can only contain letters, numbers, spaces, and hyphens.');
-      return;
-    }
-    try {
-      await ModelManager.addKeyword(trimmed, null);
-      setKeywordInput('');
-      await loadKeywords();
-    } catch (e) {
-      console.error('Failed to add keyword', e);
-      alert('Failed to add keyword. It might already exist.');
-    }
-  }, [keywordInput, loadKeywords]);
-
-  const handleDeleteKeyword = useCallback(async (id?: number) => {
-    if (id === undefined) return;
-    try {
-      await ModelManager.deleteKeyword(id);
-      await loadKeywords();
-    } catch (e) {
-      console.error('Failed to delete keyword', e);
-      alert('Failed to delete keyword.');
-    }
-  }, [loadKeywords]);
 
   const checkAccessibilityStatus = useCallback(async () => {
     if (NativeModules.ModelVerifier) {
@@ -354,86 +248,6 @@ export default function App() {
       }
     }
     return true;
-  };
-
-  // ──────────────────────────────────────────────
-  // Google Drive Sync
-  // ──────────────────────────────────────────────
-
-  const initDriveCredentials = async () => {
-    if (!NativeModules.GoogleDriveSync) return;
-    try {
-      // Check if credentials are already stored in native prefs
-      const hasCreds = await NativeModules.GoogleDriveSync.hasDriveCredentials();
-      if (!hasCreds) {
-        // Read from Constants.extra (loaded from .env) and store in native prefs
-        const extras = Constants.expoConfig?.extra || {};
-        const clientId = extras.googleDriveClientId;
-        const clientSecret = extras.googleDriveClientSecret;
-        const refreshToken = extras.googleDriveRefreshToken;
-        if (clientId && clientSecret && refreshToken) {
-          await NativeModules.GoogleDriveSync.setDriveCredentials(
-            clientId,
-            clientSecret,
-            refreshToken
-          );
-        }
-      }
-    } catch (e) {
-      console.error('Failed to init Drive credentials', e);
-    }
-  };
-
-  const refreshDriveStatus = async () => {
-    if (!NativeModules.GoogleDriveSync) return;
-    try {
-      const hasCreds = await NativeModules.GoogleDriveSync.hasDriveCredentials();
-      setDriveConfigured(hasCreds);
-      if (hasCreds) {
-        const unsynced = await NativeModules.GoogleDriveSync.getUnsyncedCount();
-        setUnsyncedCount(unsynced);
-        const total = await NativeModules.GoogleDriveSync.getTotalTranscriptionCount();
-        setTotalTranscriptions(total);
-      }
-      if (NativeModules.GoogleDriveSync.getRecentTranscriptions) {
-        const recentJson = await NativeModules.GoogleDriveSync.getRecentTranscriptions(20);
-        const parsed = JSON.parse(recentJson);
-        setRecentTranscriptions(parsed);
-      }
-    } catch (e) {
-      console.error('Failed refresh Drive status', e);
-    }
-  };
-
-  const handleSyncToDrive = async () => {
-    if (!NativeModules.GoogleDriveSync || isSyncing) return;
-    setIsSyncing(true);
-    setSyncResult(null);
-    try {
-      const resultJson = await NativeModules.GoogleDriveSync.syncToDrive();
-      const result = typeof resultJson === 'string' ? JSON.parse(resultJson) : resultJson;
-      const uploaded = result.uploaded || 0;
-      const failed = result.failed || 0;
-      if (uploaded > 0) {
-        setSyncResult(`✅ Synced ${uploaded} transcription${uploaded > 1 ? 's' : ''} to Google Drive.`);
-      } else if (result === 'No new transcriptions to sync.') {
-        setSyncResult('✅ All transcriptions already synced.');
-      } else {
-        setSyncResult(`Synced: ${uploaded}, Failed: ${failed}`);
-      }
-      await refreshDriveStatus();
-    } catch (e: any) {
-      const msg = e?.message || String(e);
-      if (msg.includes('NO_CREDENTIALS')) {
-        setSyncResult('⚠️ Drive credentials not configured. Check your .env file.');
-      } else if (msg.includes('AUTH_FAILED')) {
-        setSyncResult('⚠️ Authentication failed. Your Google Drive token may be expired.');
-      } else {
-        setSyncResult(`❌ Sync failed: ${msg}`);
-      }
-    } finally {
-      setIsSyncing(false);
-    }
   };
 
   const handleOpenAccessibilitySettings = () => {
@@ -525,45 +339,17 @@ export default function App() {
     setScribeInstruction('');
   };
 
-  // Start simulated recording
-  const startRecordingSim = async () => {
-    const hasPermission = await requestMicPermission();
-    if (!hasPermission) {
-      alert('Microphone permission required to record.');
-      return;
-    }
-    setIsRecording(true);
-  };
-
-  // Stop simulated recording and process
-  const stopRecordingSim = (runCleaner: boolean) => {
-    setIsRecording(false);
-    const mins = Math.floor(recordingSeconds / 60);
-    const secs = recordingSeconds % 60;
-    const durationStr = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-    const newId = (recordings.length + 1).toString();
-    
-    // Simulate raw vs cleaned transcription
-    const rawText = "So, like, this is, um, a new recording from the, you know, Vela Voice App Hub tab. We are recording audio locally.";
-    const cleanedText = runCleaner 
-      ? "This is a new recording from the Vela Voice App Hub tab. We are recording audio locally."
-      : rawText;
-
-    const newRec: Recording = {
-      id: newId,
-      title: `Voice Memo ${newId}`,
-      date: `${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • ${durationStr}`,
-      size: '0.9 MB',
-      raw: rawText,
-      cleaned: cleanedText,
-      wave: recordingAmplitudes.length > 0 ? recordingAmplitudes : [8, 15, 24, 18, 12, 10, 15, 22, 10, 8]
-    };
-
-    setRecordings([newRec, ...recordings]);
-    setSelectedRecordingId(newId);
-    setStudioSegment(runCleaner ? 'cleaned' : 'raw');
-    setActiveTab('studio');
-  };
+  const { isRecording, recordingSeconds, recordingAmplitudes, startRecordingSim, stopRecordingSim } =
+    useRecordingSim({
+      requestMicPermission,
+      recordings,
+      onRecordingFinished: (newRec, runCleaner) => {
+        setRecordings([newRec, ...recordings]);
+        setSelectedRecordingId(newRec.id);
+        setStudioSegment(runCleaner ? 'cleaned' : 'raw');
+        setActiveTab('studio');
+      },
+    });
 
   const handleSaveEditedTranscript = () => {
     setRecordings(prev =>
