@@ -38,7 +38,17 @@
 #### Improvements applied
 
 - Batch 3: split plan written to `plan/app-split-plan.md` (3 passes, ≤2 extractions each).
-- Pass 1 (2026-10-06): fetch patch → `src/services/installHttpOverrides.ts` (idempotent, called from mount effect); `renderEngineRoom` + 67 engine-only style keys → `src/components/engine/EngineRoomScreen.tsx` (props-only screen, `EngineRoomScreenProps`); dead imports removed (Switch, Dimensions, CorrectionAPI, quarantineBadgeText). App.tsx **2639 → 1755 LOC**. Remaining: hub/studio sub-renders (~320 LOC), handler pileup, `any[]` transcriptions — passes 2–3.
+- Pass 1 (2026-10-06): fetch patch → `src/services/installHttpOverrides.ts` (idempotent, called from mount effect); `renderEngineRoom` + 67 engine-only style keys → `src/components/engine/EngineRoomScreen.tsx` (props-only screen, `EngineRoomScreenProps`); dead imports removed (Switch, Dimensions, CorrectionAPI, quarantineBadgeText).
+- Pass 2 (2026-10-06): `renderVoiceHub` → `src/components/hub/HubScreen.tsx`; `renderStudio` → `src/components/studio/StudioScreen.tsx` (both `React.FC` + exported prop interfaces; JSX byte-identical via same-name props); shared tab primitives consolidated into `src/theme/appStyles.ts` (`sharedScreenStyles`), EngineRoomScreen switched to it; App pruned 72 style keys (incl. 4 pre-existing dead studio keys) + 6 dead imports. App.tsx **2639 → 1755 → 1045 LOC**. Remaining: handler pileup + `any[]` transcriptions (pass 3) and post-split typing pass.
+
+#### New files (split outputs, all verified)
+
+- `src/services/installHttpOverrides.ts`, `src/components/engine/EngineRoomScreen.tsx` (pass 1)
+- `src/theme/appStyles.ts`, `src/components/hub/HubScreen.tsx`, `src/components/studio/StudioScreen.tsx` (pass 2)
+
+#### Regression found & fixed during pass 2
+
+- `quarantineEgress.test.ts` ×4 TS2345: batch-1's `edits: any[] → EditOperation[]` widened the `basePayload` literal — fixed by annotating `basePayload: SaveCorrectionPayload` (type-only import). Non-env tsc errors now 0.
 
 #### Verification
 

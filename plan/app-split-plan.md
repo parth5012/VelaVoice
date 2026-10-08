@@ -1,7 +1,9 @@
 # App.tsx Split Plan (repo-quality audit, 2026-10-06)
 
-Status: `pass-1 done` (2026-10-06) — `installHttpOverrides.ts` + `EngineRoomScreen.tsx`
-extracted; App.tsx 2639 → 1755 LOC. Passes 2–3 pending approval.
+Status: `pass-2 done` (2026-10-06) — pass 1 `installHttpOverrides.ts` +
+`EngineRoomScreen.tsx`; pass 2 `HubScreen.tsx` + `StudioScreen.tsx` +
+`theme/appStyles.ts` consolidation; App.tsx 2639 → 1045 LOC. Pass 3
+(handler hooks) pending approval.
 Per skill constraints each implementation pass extracts **at most 2 units** and
 re-verifies (tsc filter + full `npm test` chain + manual smoke of the touched tab).
 
@@ -56,11 +58,22 @@ in App or a future `theme.ts` only when a second consumer appears.
    environmental), full 8-suite chain RC=0. Manual device smoke still pending
    (no Expo runtime in this env — no node_modules).
 
-### Pass 2 — screens
-3. **`HubScreen.tsx`**: extract `renderHub` (:660–706) + hub styles.
-   Props: `{ recordings, unsyncedCount, onOpenRecording }`.
-4. **`StudioScreen.tsx`**: extract `renderStudio` (:707–984) + studio styles.
-   Props: `{ studioSegment, scribeDrafts, selectedDraft, ... }`.
+### Pass 2 — screens ✅ DONE 2026-10-06
+3. **`HubScreen.tsx`** ✅: `renderVoiceHub` + 10 hub styles →
+   `src/components/hub/HubScreen.tsx`. Props: `{ models, recordings,
+   selectedRecordingId, onSelectRecording, onStartRecording }`
+   (onSelectRecording wires select + navigate-to-Studio in the parent).
+4. **`StudioScreen.tsx`** ✅: `renderStudio` + 54 studio styles →
+   `src/components/studio/StudioScreen.tsx`. Props: 14 state values +
+   17 callbacks (`StudioScreenProps`) — JSX byte-identical because every
+   prop name equals the original variable name; only change: FAB onPress
+   `startRecordingSim` → `onStartRecording`.
+   Shared-style consolidation executed as planned: `src/theme/appStyles.ts`
+   (`sharedScreenStyles` = tabContent/hubTitle/studioSubtitle/sandboxResult*)
+   now imported by all three screens; App pruned 72 style keys + 6 dead
+   imports. Also fixed a batch-1 type regression surfaced by the pass-2
+   tsc gate (SaveCorrectionPayload fixture annotation, quarantineEgress.test).
+   Verification: non-env tsc errors 0; full 8-suite chain RC=0.
 
 ### Pass 3 — handler hooks (one hook per pass if any doubt)
 5. `useDictionary` + `useKeywords` (they share `ModelManager` and are
