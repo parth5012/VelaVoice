@@ -21,6 +21,7 @@ import {
 import { ModelInfo, DictionaryEntry, DictionaryKeyword } from '../../services/ModelManager';
 import GeminiSettings from '../GeminiSettings';
 import { isQuarantinedEntry, quarantineBadgeText } from '../../utils/quarantineBadge';
+import { sharedScreenStyles } from '../../theme/appStyles';
 
 export interface EngineRoomScreenProps {
   models: ModelInfo[];
@@ -574,496 +575,468 @@ export const EngineRoomScreen: React.FC<EngineRoomScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  // Local colocation of the five generic styles shared with Hub/Studio
-  // (tabContent/hubTitle/studioSubtitle/sandboxResult*). Consolidate into a
-  // theme module in split pass 2 when Hub/Studio screens are extracted.
-  tabContent: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 15,
-  },
-  hubTitle: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#ffffff',
-  },
-  studioSubtitle: {
-    fontSize: 14,
-    color: '#859491',
-    marginTop: -16,
-    marginBottom: 20,
-  },
-  sandboxResult: {
-    marginTop: 15,
-    backgroundColor: '#1a2120',
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#3c4948',
-  },
-  sandboxResultText: {
-    fontSize: 14,
-    color: '#dde4e2',
-    lineHeight: 20,
-  },
-
-  engineCard: {
-    backgroundColor: '#161d1c',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#3c4948',
-  },
-  engineCardTitle: {
-    fontSize: 17,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    marginBottom: 12,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  statusLabel: {
-    fontSize: 14,
-    color: '#bacac7',
-  },
-  statusValue: {
-    fontSize: 13,
-    fontWeight: 'bold',
-  },
-  statusActive: {
-    color: '#28a745',
-  },
-  statusInactive: {
-    color: '#ffb4ab',
-  },
-  engineActions: {
-    marginTop: 10,
-  },
-  engineButton: {
-    backgroundColor: '#1a2120',
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#3c4948',
-    marginBottom: 8,
-  },
-  engineButtonText: {
-    color: '#62f9ee',
-    fontWeight: 'bold',
-    fontSize: 13,
-  },
-  engineStatusIndicator: {
-    backgroundColor: '#1a2120',
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#3c4948',
-  },
-  engineStatusIndicatorText: {
-    color: '#62f9ee',
-    fontWeight: 'bold',
-    fontSize: 13,
-  },
-  cleanerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  transcriptionList: {
-    marginTop: 10,
-  },
-  transcriptionItem: {
-    backgroundColor: '#0a0f0e',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#3c4948',
-  },
-  transcriptionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#202928',
-    paddingBottom: 6,
-  },
-  transcriptionDate: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#dde4e2',
-  },
-  syncBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  syncBadgeSuccess: {
-    backgroundColor: '#00504b',
-  },
-  syncBadgePending: {
-    backgroundColor: '#3c1800',
-  },
-  syncBadgeText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#ffffff',
-  },
-  // Quarantined sessions are visible entries that never sync (ticket #136):
-  // deep-red badge, distinct from the pending-sync amber.
-  quarantineBadge: {
-    backgroundColor: '#5c1a1a',
-    borderColor: '#ff6b6b',
-    borderWidth: 1,
-  },
-  transcriptLabel: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: '#859491',
-    marginTop: 4,
-  },
-  engineTranscriptText: {
-    fontSize: 13,
-    color: '#dde4e2',
-    lineHeight: 18,
-    marginBottom: 4,
-  },
-  engineTranscriptTextCleaned: {
-    fontSize: 13,
-    color: '#62f9ee',
-    lineHeight: 18,
-    marginBottom: 4,
-  },
-  engineTranscriptMeta: {
-    fontSize: 10,
-    color: '#859491',
-    marginTop: 6,
-    borderTopWidth: 1,
-    borderTopColor: '#202928',
-    paddingTop: 4,
-  },
-  disabledText: {
-    fontSize: 12,
-    color: '#859491',
-    lineHeight: 18,
-    marginTop: 8,
-  },
-  enabledText: {
-    fontSize: 12,
-    color: '#62f9ee',
-    lineHeight: 18,
-    marginTop: 8,
-  },
-  modelItem: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#3c4948',
-    paddingVertical: 12,
-  },
-  modelItemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  modelItemName: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#ffffff',
-  },
-  modelItemFile: {
-    fontSize: 11,
-    color: '#859491',
-    marginTop: 2,
-  },
-  modelStatusTag: {
-    fontSize: 9,
-    fontWeight: 'bold',
-    paddingVertical: 2,
-    paddingHorizontal: 6,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  pending: {
-    backgroundColor: '#2f3635',
-    color: '#859491',
-  },
-  downloading: {
-    backgroundColor: '#00504b',
-    color: '#62f9ee',
-  },
-  completed: {
-    backgroundColor: '#161d1c',
-    color: '#28a745',
-    borderWidth: 1,
-    borderColor: '#28a745',
-  },
-  failed: {
-    backgroundColor: '#93000a',
-    color: '#ffb4ab',
-  },
-  checksum_failed: {
-    backgroundColor: '#93000a',
-    color: '#ffb4ab',
-  },
-  progressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  progressBarBg: {
-    flex: 1,
-    backgroundColor: '#0e1514',
-    borderRadius: 4,
-    height: 6,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#62f9ee',
-  },
-  progressText: {
-    color: '#dde4e2',
-    fontSize: 11,
-    width: 35,
-    textAlign: 'right',
-  },
-  modelActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 8,
-  },
-  downloadBtn: {
-    backgroundColor: '#1a2120',
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#3c4948',
-  },
-  downloadBtnText: {
-    color: '#62f9ee',
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-  deleteBtn: {
-    backgroundColor: '#93000a',
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 4,
-  },
-  deleteBtnText: {
-    color: '#ffb4ab',
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-  dictionaryDescription: {
-    fontSize: 12,
-    color: '#859491',
-    lineHeight: 18,
-    marginBottom: 12,
-  },
-  formContainer: {
-    marginBottom: 12,
-  },
-  inputField: {
-    backgroundColor: '#0e1514',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#3c4948',
-    padding: 10,
-    color: '#dde4e2',
-    fontSize: 14,
-    marginBottom: 10,
-  },
-  addButton: {
-    backgroundColor: '#62f9ee',
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  addButtonText: {
-    color: '#003734',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  dictionaryList: {
-    marginTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#3c4948',
-    paddingTop: 10,
-  },
-  listHeader: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: '#bacac7',
-    marginBottom: 8,
-  },
-  dictionaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1a2120',
-  },
-  dictionaryTextContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  originalWordText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#ffffff',
-  },
-  arrowText: {
-    fontSize: 14,
-    color: '#859491',
-    marginHorizontal: 8,
-  },
-  replacementText: {
-    fontSize: 14,
-    color: '#62f9ee',
-  },
-  rowDeleteBtn: {
-    padding: 6,
-  },
-  rowDeleteBtnText: {
-    color: '#ffb4ab',
-    fontSize: 14,
-  },
-  emptyDictText: {
-    fontSize: 12,
-    color: '#859491',
-    textAlign: 'center',
-    marginTop: 10,
-  },
-  keywordInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  keywordInputField: {
-    flex: 1,
-    backgroundColor: '#0e1514',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#3c4948',
-    padding: 10,
-    color: '#dde4e2',
-    fontSize: 14,
-  },
-  keywordAddButton: {
-    width: 40,
-    height: 40,
-    backgroundColor: '#62f9ee',
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  keywordAddButtonText: {
-    color: '#003734',
-    fontSize: 20,
-    fontWeight: 'bold',
-    lineHeight: 22,
-  },
-  keywordChipContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 4,
-  },
-  keywordChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#622599',
-    borderRadius: 16,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: '#ddb7ff',
-  },
-  keywordChipText: {
-    color: '#ffffff',
-    fontSize: 13,
-    fontWeight: '500',
-    marginRight: 6,
-  },
-  keywordChipDelete: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  keywordChipDeleteText: {
-    color: '#ffffff',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  keywordTip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 14,
-    padding: 10,
-    backgroundColor: '#1a2120',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#3c4948',
-    gap: 8,
-  },
-  keywordTipIcon: {
-    fontSize: 16,
-  },
-  keywordTipText: {
-    flex: 1,
-    fontSize: 12,
-    color: '#bacac7',
-    lineHeight: 16,
-  },
-  modeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  modeButton: {
-    flex: 1,
-    backgroundColor: '#0e1514',
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#3c4948',
-    alignItems: 'center',
-    marginHorizontal: 4,
-  },
-  modeButtonActive: {
-    backgroundColor: '#62f9ee',
-    borderColor: '#62f9ee',
-  },
-  modeButtonText: {
-    color: '#bacac7',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  modeButtonTextActive: {
-    color: '#003734',
-  },
-  apiFields: {
-    marginTop: 8,
-  },
-  fieldLabel: {
-    color: '#bacac7',
-    fontSize: 12,
-    marginBottom: 4,
-    marginTop: 6,
-  },
-});
+const styles = {
+  // Tab-level primitives (tabContent/hubTitle/studioSubtitle/sandboxResult*)
+  // come from the shared theme module; everything below is engine-local.
+  ...sharedScreenStyles,
+  ...StyleSheet.create({
+    engineCard: {
+      backgroundColor: '#161d1c',
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 16,
+      borderWidth: 1,
+      borderColor: '#3c4948',
+    },
+    engineCardTitle: {
+      fontSize: 17,
+      fontWeight: 'bold',
+      color: '#ffffff',
+      marginBottom: 12,
+    },
+    statusRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 10,
+    },
+    statusLabel: {
+      fontSize: 14,
+      color: '#bacac7',
+    },
+    statusValue: {
+      fontSize: 13,
+      fontWeight: 'bold',
+    },
+    statusActive: {
+      color: '#28a745',
+    },
+    statusInactive: {
+      color: '#ffb4ab',
+    },
+    engineActions: {
+      marginTop: 10,
+    },
+    engineButton: {
+      backgroundColor: '#1a2120',
+      paddingVertical: 10,
+      borderRadius: 8,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: '#3c4948',
+      marginBottom: 8,
+    },
+    engineButtonText: {
+      color: '#62f9ee',
+      fontWeight: 'bold',
+      fontSize: 13,
+    },
+    engineStatusIndicator: {
+      backgroundColor: '#1a2120',
+      paddingVertical: 10,
+      borderRadius: 8,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: '#3c4948',
+    },
+    engineStatusIndicatorText: {
+      color: '#62f9ee',
+      fontWeight: 'bold',
+      fontSize: 13,
+    },
+    cleanerHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    transcriptionList: {
+      marginTop: 10,
+    },
+    transcriptionItem: {
+      backgroundColor: '#0a0f0e',
+      borderRadius: 8,
+      padding: 12,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: '#3c4948',
+    },
+    transcriptionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: '#202928',
+      paddingBottom: 6,
+    },
+    transcriptionDate: {
+      fontSize: 12,
+      fontWeight: 'bold',
+      color: '#dde4e2',
+    },
+    syncBadge: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+    },
+    syncBadgeSuccess: {
+      backgroundColor: '#00504b',
+    },
+    syncBadgePending: {
+      backgroundColor: '#3c1800',
+    },
+    syncBadgeText: {
+      fontSize: 10,
+      fontWeight: 'bold',
+      color: '#ffffff',
+    },
+    // Quarantined sessions are visible entries that never sync (ticket #136):
+    // deep-red badge, distinct from the pending-sync amber.
+    quarantineBadge: {
+      backgroundColor: '#5c1a1a',
+      borderColor: '#ff6b6b',
+      borderWidth: 1,
+    },
+    transcriptLabel: {
+      fontSize: 11,
+      fontWeight: 'bold',
+      color: '#859491',
+      marginTop: 4,
+    },
+    engineTranscriptText: {
+      fontSize: 13,
+      color: '#dde4e2',
+      lineHeight: 18,
+      marginBottom: 4,
+    },
+    engineTranscriptTextCleaned: {
+      fontSize: 13,
+      color: '#62f9ee',
+      lineHeight: 18,
+      marginBottom: 4,
+    },
+    engineTranscriptMeta: {
+      fontSize: 10,
+      color: '#859491',
+      marginTop: 6,
+      borderTopWidth: 1,
+      borderTopColor: '#202928',
+      paddingTop: 4,
+    },
+    disabledText: {
+      fontSize: 12,
+      color: '#859491',
+      lineHeight: 18,
+      marginTop: 8,
+    },
+    enabledText: {
+      fontSize: 12,
+      color: '#62f9ee',
+      lineHeight: 18,
+      marginTop: 8,
+    },
+    modelItem: {
+      borderBottomWidth: 1,
+      borderBottomColor: '#3c4948',
+      paddingVertical: 12,
+    },
+    modelItemHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+    },
+    modelItemName: {
+      fontSize: 15,
+      fontWeight: 'bold',
+      color: '#ffffff',
+    },
+    modelItemFile: {
+      fontSize: 11,
+      color: '#859491',
+      marginTop: 2,
+    },
+    modelStatusTag: {
+      fontSize: 9,
+      fontWeight: 'bold',
+      paddingVertical: 2,
+      paddingHorizontal: 6,
+      borderRadius: 4,
+      overflow: 'hidden',
+    },
+    pending: {
+      backgroundColor: '#2f3635',
+      color: '#859491',
+    },
+    downloading: {
+      backgroundColor: '#00504b',
+      color: '#62f9ee',
+    },
+    completed: {
+      backgroundColor: '#161d1c',
+      color: '#28a745',
+      borderWidth: 1,
+      borderColor: '#28a745',
+    },
+    failed: {
+      backgroundColor: '#93000a',
+      color: '#ffb4ab',
+    },
+    checksum_failed: {
+      backgroundColor: '#93000a',
+      color: '#ffb4ab',
+    },
+    progressContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 10,
+    },
+    progressBarBg: {
+      flex: 1,
+      backgroundColor: '#0e1514',
+      borderRadius: 4,
+      height: 6,
+      overflow: 'hidden',
+    },
+    progressBarFill: {
+      height: '100%',
+      backgroundColor: '#62f9ee',
+    },
+    progressText: {
+      color: '#dde4e2',
+      fontSize: 11,
+      width: 35,
+      textAlign: 'right',
+    },
+    modelActions: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      marginTop: 8,
+    },
+    downloadBtn: {
+      backgroundColor: '#1a2120',
+      paddingVertical: 4,
+      paddingHorizontal: 10,
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: '#3c4948',
+    },
+    downloadBtnText: {
+      color: '#62f9ee',
+      fontSize: 11,
+      fontWeight: 'bold',
+    },
+    deleteBtn: {
+      backgroundColor: '#93000a',
+      paddingVertical: 4,
+      paddingHorizontal: 10,
+      borderRadius: 4,
+    },
+    deleteBtnText: {
+      color: '#ffb4ab',
+      fontSize: 11,
+      fontWeight: 'bold',
+    },
+    dictionaryDescription: {
+      fontSize: 12,
+      color: '#859491',
+      lineHeight: 18,
+      marginBottom: 12,
+    },
+    formContainer: {
+      marginBottom: 12,
+    },
+    inputField: {
+      backgroundColor: '#0e1514',
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#3c4948',
+      padding: 10,
+      color: '#dde4e2',
+      fontSize: 14,
+      marginBottom: 10,
+    },
+    addButton: {
+      backgroundColor: '#62f9ee',
+      paddingVertical: 10,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    addButtonText: {
+      color: '#003734',
+      fontWeight: 'bold',
+      fontSize: 14,
+    },
+    dictionaryList: {
+      marginTop: 10,
+      borderTopWidth: 1,
+      borderTopColor: '#3c4948',
+      paddingTop: 10,
+    },
+    listHeader: {
+      fontSize: 13,
+      fontWeight: 'bold',
+      color: '#bacac7',
+      marginBottom: 8,
+    },
+    dictionaryRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 6,
+      borderBottomWidth: 1,
+      borderBottomColor: '#1a2120',
+    },
+    dictionaryTextContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    originalWordText: {
+      fontSize: 14,
+      fontWeight: 'bold',
+      color: '#ffffff',
+    },
+    arrowText: {
+      fontSize: 14,
+      color: '#859491',
+      marginHorizontal: 8,
+    },
+    replacementText: {
+      fontSize: 14,
+      color: '#62f9ee',
+    },
+    rowDeleteBtn: {
+      padding: 6,
+    },
+    rowDeleteBtnText: {
+      color: '#ffb4ab',
+      fontSize: 14,
+    },
+    emptyDictText: {
+      fontSize: 12,
+      color: '#859491',
+      textAlign: 'center',
+      marginTop: 10,
+    },
+    keywordInputRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    keywordInputField: {
+      flex: 1,
+      backgroundColor: '#0e1514',
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#3c4948',
+      padding: 10,
+      color: '#dde4e2',
+      fontSize: 14,
+    },
+    keywordAddButton: {
+      width: 40,
+      height: 40,
+      backgroundColor: '#62f9ee',
+      borderRadius: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    keywordAddButtonText: {
+      color: '#003734',
+      fontSize: 20,
+      fontWeight: 'bold',
+      lineHeight: 22,
+    },
+    keywordChipContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+      marginTop: 4,
+    },
+    keywordChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#622599',
+      borderRadius: 16,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderWidth: 1,
+      borderColor: '#ddb7ff',
+    },
+    keywordChipText: {
+      color: '#ffffff',
+      fontSize: 13,
+      fontWeight: '500',
+      marginRight: 6,
+    },
+    keywordChipDelete: {
+      width: 18,
+      height: 18,
+      borderRadius: 9,
+      backgroundColor: 'rgba(255,255,255,0.2)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    keywordChipDeleteText: {
+      color: '#ffffff',
+      fontSize: 10,
+      fontWeight: 'bold',
+    },
+    keywordTip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 14,
+      padding: 10,
+      backgroundColor: '#1a2120',
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#3c4948',
+      gap: 8,
+    },
+    keywordTipIcon: {
+      fontSize: 16,
+    },
+    keywordTipText: {
+      flex: 1,
+      fontSize: 12,
+      color: '#bacac7',
+      lineHeight: 16,
+    },
+    modeContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 12,
+    },
+    modeButton: {
+      flex: 1,
+      backgroundColor: '#0e1514',
+      paddingVertical: 10,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#3c4948',
+      alignItems: 'center',
+      marginHorizontal: 4,
+    },
+    modeButtonActive: {
+      backgroundColor: '#62f9ee',
+      borderColor: '#62f9ee',
+    },
+    modeButtonText: {
+      color: '#bacac7',
+      fontSize: 12,
+      fontWeight: 'bold',
+    },
+    modeButtonTextActive: {
+      color: '#003734',
+    },
+    apiFields: {
+      marginTop: 8,
+    },
+    fieldLabel: {
+      color: '#bacac7',
+      fontSize: 12,
+      marginBottom: 4,
+      marginTop: 6,
+    },
+  }),
+};

@@ -28,6 +28,9 @@ ModuleClass._resolveFilename = function (request: string, parent: any, isMain: b
 const { CorrectionAPI } = require('./api') as typeof import('./api');
 const { ModelManager } = require('./ModelManager') as typeof import('./ModelManager');
 const { isQuarantinedEntry } = require('../utils/quarantineBadge') as typeof import('../utils/quarantineBadge');
+// Type-only query: keeps basePayload literal-widening from invalidating the
+// EditOperation[] field of SaveCorrectionPayload (batch-1 type regression).
+type SaveCorrectionPayload = import('./api').SaveCorrectionPayload;
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -49,7 +52,7 @@ function assert(expr: boolean, message: string) {
   }
 }
 
-const basePayload = {
+const basePayload: SaveCorrectionPayload = {
   audio_id: 'audio_quarantine_001',
   original_transcription: 'my password is hunter2',
   corrected_transcription: 'my password is hunter2!',
