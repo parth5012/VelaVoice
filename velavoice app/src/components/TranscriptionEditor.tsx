@@ -49,6 +49,26 @@ export const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
   const [aiError, setAiError] = useState<string | null>(null);
   const [customPrompt, setCustomPrompt] = useState('');
   const [showPromptInput, setShowPromptInput] = useState(false);
+  // Hydrated once on mount from isConfiguredAsync (SecureStore-aware);
+  // default false so rewrite stays disabled until the check resolves.
+  const [configuredModels, setConfiguredModels] = useState<Record<AIModel, boolean>>({
+    gemini: false,
+    groq: false,
+  });
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const [gemini, groq] = await Promise.all([
+        ScribeAI.isConfiguredAsync('gemini'),
+        ScribeAI.isConfiguredAsync('groq'),
+      ]);
+      if (alive) setConfiguredModels({ gemini, groq });
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   useEffect(() => {
     setCorrectedText(originalTranscription);
@@ -188,27 +208,27 @@ export const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
             style={[
               styles.aiModelChip,
               selectedModel === model && styles.activeAiModelChip,
-              !ScribeAI.isConfigured(model) && styles.unconfiguredChip,
+              !configuredModels[model] && styles.unconfiguredChip,
             ]}
-            onPress={() => ScribeAI.isConfigured(model) && setSelectedModel(model)}
+            onPress={() => configuredModels[model] && setSelectedModel(model)}
           >
             <Text style={[
               styles.aiModelChipText,
               selectedModel === model && styles.activeAiModelChipText,
-              !ScribeAI.isConfigured(model) && styles.unconfiguredChipText,
+              !configuredModels[model] && styles.unconfiguredChipText,
             ]}>
               {model === 'gemini' ? 'Gemini' : 'Groq'}
-              {!ScribeAI.isConfigured(model) ? ' (off)' : ''}
+              {!configuredModels[model] ? ' (off)' : ''}
             </Text>
           </TouchableOpacity>
         ))}
         <TouchableOpacity
           style={[
             styles.aiRewriteButton,
-            (isAIReWriting || !ScribeAI.isConfigured(selectedModel) || !correctedText.trim()) && styles.disabledButton,
+            (isAIReWriting || !configuredModels[selectedModel] || !correctedText.trim()) && styles.disabledButton,
           ]}
           onPress={handleAIReWrite}
-          disabled={isAIReWriting || !ScribeAI.isConfigured(selectedModel) || !correctedText.trim()}
+          disabled={isAIReWriting || !configuredModels[selectedModel] || !correctedText.trim()}
         >
           <Text style={styles.aiRewriteButtonText}>
             {isAIReWriting ? 'Rewriting...' :

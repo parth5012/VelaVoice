@@ -1,3 +1,12 @@
+/**
+ * Module: src/services/ScribeAI
+ * Intent: Scribe rewrite orchestration across Gemini/Groq providers.
+ * Responsibilities: Style prompt assembly, provider dispatch, async config checks.
+ * Public API: ScribeAI.rewrite, ScribeAI.isConfiguredAsync (provider helpers are private)
+ * Invariants: Never throws to callers — returns { success:false, error } on failure; config checks fail closed.
+ * Side Effects: fetch to generativelanguage.googleapis.com / api.groq.com; SecureStore read via getGeminiApiKey.
+ * Maintenance: Update this block when exports, invariants, side effects, or ownership change.
+ */
 import Constants from 'expo-constants';
 import { getGeminiApiKey, getGeminiModel, GEMINI_MODEL } from './GeminiService';
 
@@ -39,14 +48,14 @@ export class ScribeAI {
       } else if (model === 'groq') {
         return await this.rewriteWithGroq(prompt);
       }
-    } catch (error: any) {
-      return { success: false, error: error.message || 'Rewrite failed' };
+    } catch (error: unknown) {
+      return { success: false, error: error instanceof Error ? error.message : 'Rewrite failed' };
     }
 
     return { success: false, error: 'Invalid model specified' };
   }
 
-  static async rewriteWithGemini(prompt: string): Promise<ScribeRewriteResult> {
+  private static async rewriteWithGemini(prompt: string): Promise<ScribeRewriteResult> {
     const apiKey = (await getGeminiApiKey().catch(() => null)) || GEMINI_API_KEY;
     if (!apiKey) {
       return { success: false, error: 'Gemini API key not configured. Please configure your key in Engine Settings.' };
@@ -80,7 +89,7 @@ export class ScribeAI {
     return { success: true, text };
   }
 
-  static async rewriteWithGroq(prompt: string): Promise<ScribeRewriteResult> {
+  private static async rewriteWithGroq(prompt: string): Promise<ScribeRewriteResult> {
     if (!GROQ_API_KEY) {
       return { success: false, error: 'Groq API key not configured' };
     }
@@ -114,8 +123,21 @@ export class ScribeAI {
     return { success: true, text };
   }
 
-  static isConfigured(model: 'gemini' | 'groq'): boolean {
-    if (model === 'gemini') return !!GEMINI_API_KEY;
-    return !!GROQ_API_KEY;
+  // Async because the live Gemini key lives in SecureStore (set in Engine
+  // Settings at runtime), not only in build-time Constants. The previous
+  // sync isConfigured read only Constants.expoConfig and wrongly reported
+  // SecureStore-configured users as (off). Fails closed on SecureStore
+  // errors. Reads Constants fresh so runtime mutations are observed.
+  static async isConfiguredAsync(model: 'gemini' | 'groq'): Promise<boolean> {
+    if (model === 'groq') {
+      // Groq has no SecureStore path — build-time extra only.
+      return !!(Constants.expoConfig?.extra?.groqApiKey || process.env.GROQ_API_KEY);
+    }
+    const stored = await getGeminiApiKey().catch(() => null);
+    return !!(
+      stored ||
+      Constants.expoConfig?.extra?.geminiApiKey ||
+      process.env.GEMINI_API_KEY
+    );
   }
 }

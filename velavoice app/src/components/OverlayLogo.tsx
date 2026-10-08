@@ -1,5 +1,14 @@
+/**
+ * Module: src/components/OverlayLogo
+ * Intent: Brand V mark for the Vela Voice overlay.
+ * Responsibilities: Size/color-parameterized logo rendering only.
+ * Public API: default OverlayLogo({ size, color, strokeRatio })
+ * Invariants: Pure render, no I/O, no side effects.
+ * Side Effects: none
+ * Maintenance: Update this block when exports, invariants, side effects, or ownership change.
+ */
 import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet, type ViewStyle } from 'react-native';
 
 interface OverlayLogoProps {
   /** Total size of the logo square (default: 40) */
@@ -11,12 +20,10 @@ interface OverlayLogoProps {
 }
 
 /**
- * Clean minimal "V" mark for the Vela Voice overlay.
- *
- * Uses two rounded bars rotated outward to form a V shape.
- * transformOrigin lets each arm pivot from its bottom-center,
- * creating a precise joined apex.
+ * RN ViewStyle historically lacks transformOrigin typing across versions.
+ * Narrow extension keeps the cast explicit instead of `any`.
  */
+type ArmStyleWithOrigin = ViewStyle & { transformOrigin: string };
 const OverlayLogo: React.FC<OverlayLogoProps> = ({
   size = 40,
   color = '#62f9ee',
@@ -32,7 +39,7 @@ const OverlayLogo: React.FC<OverlayLogoProps> = ({
 
   return (
     <View style={[styles.container, { width: size, height: size }]}>
-      {/* Left arm — rotates counter-clockwise from bottom center */}
+      {/* Left arm — rotates counter-clockwise from bottom center to form V apex */}
       <View
         style={[
           styles.arm,
@@ -45,7 +52,7 @@ const OverlayLogo: React.FC<OverlayLogoProps> = ({
             left: centerOffset,
             transformOrigin: 'bottom center',
             transform: [{ rotate: `-${angle}` }],
-          } as any, // transformOrigin typing varies by RN version
+          } as ArmStyleWithOrigin,
         ]}
       />
       {/* Right arm — rotates clockwise from bottom center */}
@@ -61,7 +68,7 @@ const OverlayLogo: React.FC<OverlayLogoProps> = ({
             left: centerOffset,
             transformOrigin: 'bottom center',
             transform: [{ rotate: angle }],
-          } as any,
+          } as ArmStyleWithOrigin,
         ]}
       />
     </View>

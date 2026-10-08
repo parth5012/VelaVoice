@@ -1,10 +1,21 @@
+/**
+ * Module: src/services/api
+ * Intent: Fail-closed correction-training gate with quarantine enforcement.
+ * Responsibilities: Payload validation, quarantine refusal, SQLite delegation via ModelManager.
+ * Public API: CorrectionAPI.saveCorrection/mockFetch, isQuarantinedPayload, SaveCorrectionPayload
+ * Invariants: Quarantined payloads never reach SQLite; validation precedes persistence.
+ * Side Effects: Delegates persistence to ModelManager (SQLite); console.error on failure only.
+ * Maintenance: Update this block when exports, invariants, side effects, or ownership change.
+ */
 import { ModelManager } from './ModelManager';
+import { isQuarantinedEntry } from '../utils/quarantineBadge';
+import type { EditOperation } from '../utils/editCalculator';
 
 export interface SaveCorrectionPayload {
   audio_id: string;
   original_transcription: string;
   corrected_transcription: string;
-  edits: any[];
+  edits: EditOperation[];
   edit_distance: number;
   user_id?: string | null;
   confidence_score?: number | null;
@@ -14,10 +25,13 @@ export interface SaveCorrectionPayload {
   quarantined?: boolean;
 }
 
+// Quarantine verdict for training payloads: delegates to the single JS
+// authority (quarantineBadge.isQuarantinedEntry) so the API gate and the
+// library badge can never disagree. SaveCorrectionPayload is structurally a
+// QuarantinableEntry (privacySensitive/quarantined, no isQuarantined).
 export const isQuarantinedPayload = (
   payload: SaveCorrectionPayload | null | undefined
-): boolean =>
-  payload?.privacySensitive === true || payload?.quarantined === true;
+): boolean => isQuarantinedEntry(payload);
 
 function requiredFieldError(payload: SaveCorrectionPayload, field: 'audio_id' | 'original_transcription' | 'corrected_transcription' | 'edits' | 'edit_distance'): string | null {
   const value = payload[field];
@@ -64,9 +78,10 @@ export class CorrectionAPI {
         isQuarantinedPayload(payload)
       );
       return { success: true, message: 'Correction saved successfully' };
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Database error occurred';
       console.error('Failed to save correction in API handler:', e);
-      return { success: false, error: e.message || 'Database error occurred' };
+      return { success: false, error: message };
     }
   }
 
@@ -81,7 +96,7 @@ export class CorrectionAPI {
           json: async () => result,
           text: async () => JSON.stringify(result),
         } as Response;
-      } catch (e: any) {
+      } catch {
         return {
           ok: false,
           status: 400,

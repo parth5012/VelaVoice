@@ -30,6 +30,20 @@ function runTests() {
   assert(isQuarantinedEntry(null) === false, 'null entry is not quarantined');
   assert(isQuarantinedEntry(undefined) === false, 'undefined entry is not quarantined');
 
+  // Single-verdict union: correction-training payloads carry privacySensitive
+  // (api.ts gate); the shared helper must honour it so payload and entry
+  // verdicts can never diverge.
+  assert(isQuarantinedEntry({ privacySensitive: true }) === true, 'privacySensitive flag detected');
+  assert(
+    isQuarantinedEntry({ privacySensitive: true, quarantined: false, isQuarantined: false }) === true,
+    'privacySensitive true wins over explicit false quarantine flags'
+  );
+  assert(isQuarantinedEntry({ privacySensitive: false }) === false, 'explicit false privacySensitive is not quarantined');
+
+  // The payload gate (api.ts) delegates to the same verdict — verified here
+  // without importing api.ts (which pulls SQLite via ModelManager).
+  assert(isQuarantinedEntry({ privacySensitive: true, quarantined: true }) === true, 'combined payload-style flags detected');
+
   // The badge text is explicit: quarantined sessions are visible entries that
   // never leave the device (hiding them would look like data loss).
   const text = quarantineBadgeText();

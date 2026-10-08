@@ -1,3 +1,12 @@
+/**
+ * Module: src/services/ModelManager
+ * Intent: Single SQLite gateway for models, dictionary, keywords, corrections.
+ * Responsibilities: Schema creation/migration, model download/verify, dictionary CRUD, quarantine-fail-closed correction writes.
+ * Public API: ModelManager static methods; ModelInfo/DictionaryEntry/DictionaryKeyword/CorrectionRow types.
+ * Invariants: saveCorrection throws before SQLite for quarantined sessions (never trainable).
+ * Side Effects: SQLite R/W (models.db); expo-file-system downloads/deletes; console.warn/error on degraded paths.
+ * Maintenance: Update this block when exports, invariants, side effects, or ownership change.
+ */
 import * as FileSystem from 'expo-file-system';
 import * as SQLite from 'expo-sqlite';
 import { NativeModules } from 'react-native';
@@ -39,7 +48,7 @@ let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
 async function getDb(): Promise<SQLite.SQLiteDatabase> {
   if (!dbPromise) {
-    dbPromise = SQLite.openDatabaseAsync('models.db').then(async (database) => {
+    dbPromise = SQLite.openDatabaseAsync('models.db').then(async (database: SQLite.SQLiteDatabase) => {
       await database.execAsync(`
         CREATE TABLE IF NOT EXISTS models (
           id TEXT PRIMARY KEY,
@@ -106,14 +115,36 @@ export interface DictionaryKeyword {
   created_at?: string;
 }
 
+// Column shape of the `models` table (only the columns getModels reads).
+interface ModelRow {
+  id: string;
+  path: string | null;
+  status: ModelInfo['status'] | string;
+}
+
+// Column shape of the `corrections` table (exposed for the fine-tuning
+// export pipeline and e2e verification).
+export interface CorrectionRow {
+  id: number;
+  audio_id: string;
+  original_transcription: string;
+  corrected_transcription: string;
+  edits: string;
+  edit_distance: number;
+  timestamp: string;
+  user_id: string | null;
+  confidence_score: number | null;
+  quarantined: number;
+}
+
 export class ModelManager {
   static async getModels(): Promise<ModelInfo[]> {
     const db = await getDb();
-    const rows = await db.getAllAsync<any>('SELECT * FROM models');
+    const rows = await db.getAllAsync<ModelRow>('SELECT * FROM models');
     
     // Merge database state with DEFAULT_MODELS list
     return DEFAULT_MODELS.map((def) => {
-      const row = rows.find((r) => r.id === def.id);
+      const row = rows.find((r: ModelRow) => r.id === def.id);
       if (row) {
         return {
           ...def,
@@ -156,7 +187,7 @@ export class ModelManager {
       model.url,
       localUri,
       {},
-      (downloadProgress) => {
+      (downloadProgress: { totalBytesWritten: number; totalBytesExpectedToWrite: number }) => {
         const progress =
           downloadProgress.totalBytesWritten /
           downloadProgress.totalBytesExpectedToWrite;
@@ -332,9 +363,9 @@ static async saveCorrection(
   );
 }
 
-static async getCorrections(): Promise<any[]> {
+static async getCorrections(): Promise<CorrectionRow[]> {
   const db = await getDb();
-  return await db.getAllAsync<any>(
+  return await db.getAllAsync<CorrectionRow>(
     'SELECT * FROM corrections ORDER BY timestamp DESC'
   );
 }
@@ -342,8 +373,11 @@ static async getCorrections(): Promise<any[]> {
 static async closeDb(): Promise<void> {
   if (dbPromise) {
     const db = await dbPromise;
-    if ((db as any).closeAsync) {
-      await (db as any).closeAsync();
+    // closeAsync exists on expo-sqlite's runtime object but is missing from
+    // some type versions; probe structurally instead of `any`.
+    const closable = db as { closeAsync?: () => Promise<void> };
+    if (closable.closeAsync) {
+      await closable.closeAsync();
     }
     dbPromise = null;
   }

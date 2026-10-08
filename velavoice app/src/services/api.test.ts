@@ -31,9 +31,13 @@ mockModule('expo-sqlite', {
   openDatabaseAsync: async () => ({})
 });
 
-// Now import ModelManager and API safely
-import { CorrectionAPI, SaveCorrectionPayload } from './api';
-import { ModelManager } from './ModelManager';
+// Modules under test load via runtime require() after the mock hooks:
+// tsx/esbuild hoists static imports above the module body, so a static
+// `import './api'` would resolve expo-* before the mocks are installed
+// (same fix pattern as quarantineEgress.test.ts / GeminiService.test.ts).
+const { CorrectionAPI } = require('./api') as typeof import('./api');
+const { ModelManager } = require('./ModelManager') as typeof import('./ModelManager');
+import type { SaveCorrectionPayload } from './api';
 
 // Mock ModelManager.saveCorrection
 const originalSaveCorrection = ModelManager.saveCorrection;

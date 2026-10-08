@@ -66,10 +66,13 @@ mockModule('expo-file-system', {
   documentDirectory: 'file://mock/'
 });
 
-// Import modules under test
-import { CorrectionAPI } from './api';
-import { ModelManager } from './ModelManager';
-import { getEdits, calculateEditDistance } from '../utils/editCalculator';
+// Modules under test load via runtime require() after the mock hooks:
+// tsx/esbuild hoists static imports above the module body, so a static
+// `import './api'` would resolve expo-* before the mocks are installed
+// (same fix pattern as quarantineEgress.test.ts / GeminiService.test.ts).
+const { CorrectionAPI } = require('./api') as typeof import('./api');
+const { ModelManager } = require('./ModelManager') as typeof import('./ModelManager');
+const { getEdits, calculateEditDistance } = require('../utils/editCalculator') as typeof import('../utils/editCalculator');
 
 function assert(expr: boolean, message: string) {
   if (!expr) {

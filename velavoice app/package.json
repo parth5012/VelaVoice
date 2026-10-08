@@ -10,7 +10,7 @@
     "ios:prod": "cross-env APP_ENV=production expo run:ios",
     "web": "expo start --web",
     "ts:check": "tsc",
-    "test": "tsx src/services/GeminiService.test.ts && tsx src/utils/editCalculator.test.ts && tsx src/services/geminiE2E.test.ts",
+    "test": "tsx src/services/GeminiService.test.ts && tsx src/services/ScribeAI.test.ts && tsx src/utils/editCalculator.test.ts && tsx src/services/api.test.ts && tsx src/utils/quarantineBadge.test.ts && tsx src/services/quarantineEgress.test.ts && tsx src/services/e2eCorrectionTracking.test.ts && tsx src/services/geminiE2E.test.ts",
     "test:gemini": "tsx src/services/GeminiService.test.ts",
     "test:e2e": "tsx src/services/geminiE2E.test.ts"
   },

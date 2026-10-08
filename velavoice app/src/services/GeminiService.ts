@@ -1,3 +1,12 @@
+/**
+ * Module: src/services/GeminiService
+ * Intent: Google Gemini transcription + SecureStore key/model persistence boundary.
+ * Responsibilities: API validation/transcription, pcmToWav/encodeBase64, payload builders, response parsing.
+ * Public API: testGeminiApiKey, transcribeAudio, save/get/deleteGeminiApiKey, save/getGeminiModel, pcmToWav, encodeBase64, buildGeminiTranscriptionPayload, cleanTranscript, parseGeminiTranscriptionResponse
+ * Invariants: Keys never logged; timeouts always cleared; empty audio rejected before network.
+ * Side Effects: fetch to generativelanguage.googleapis.com, SecureStore/localStorage/native prefs I/O.
+ * Maintenance: Update this block when exports, invariants, side effects, or ownership change.
+ */
 import * as SecureStore from 'expo-secure-store';
 import { NativeModules } from 'react-native';
 
@@ -77,6 +86,35 @@ export interface GeminiTranscriptionResult {
   error?: string;
 }
 
+// Shared fetch/timeout/error helpers (Batch 1 DRY — preserves behavior, no API change)
+export function toErrorMessage(e: unknown, fallback: string): string {
+  if (e instanceof Error && e.message) return e.message;
+  return fallback;
+}
+
+export function isTimeoutError(e: unknown): boolean {
+  if (e instanceof Error) {
+    if (e.name === 'AbortError') return true;
+    const msg = e.message.toLowerCase();
+    return msg.includes('timeout') || msg.includes('aborted');
+  }
+  return false;
+}
+
+export async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number
+): Promise<Response> {
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+  try {
+    return await fetch(url, { ...init, signal: controller ? controller.signal : undefined });
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+
 // In-memory fallback for environments where native SecureStore is unavailable
 let inMemoryApiKey: string | null = null;
 let inMemoryModel: string = GEMINI_MODEL;
@@ -122,37 +160,29 @@ export async function testGeminiApiKey(
     trimmedKey
   )}`;
 
-  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-  const timeoutId = controller
-    ? setTimeout(() => {
-        controller.abort();
-      }, timeoutMs)
-    : null;
-
   try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: 'ping' }],
-          },
-        ],
-        generationConfig: {
-          maxOutputTokens: 1,
-          temperature: 0.1,
+    const response = await fetchWithTimeout(
+      endpoint,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      }),
-      signal: controller ? controller.signal : undefined,
-    });
-
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: 'ping' }],
+            },
+          ],
+          generationConfig: {
+            maxOutputTokens: 1,
+            temperature: 0.1,
+          },
+        }),
+      },
+      timeoutMs
+    );
 
     if (response.ok) {
       return { success: true };
@@ -163,6 +193,11 @@ export async function testGeminiApiKey(
     const serverMessage = errorBody?.error?.message;
 
     if (response.status === 404) {
+      // 404-fallback decision (repo-quality audit 2026-10-06): auto-fallback
+      // to gemini-2.0-flash is INTENTIONAL. AI Studio retires model aliases
+      // without notice; a silent retry keeps preflight usable instead of
+      // failing every user on a renamed default. The error surfaced when the
+      // fallback also fails names the replacement explicitly.
       if (model.includes('3.5') || model.includes('3.6')) {
         const fallback = await testGeminiApiKey(trimmedKey, 'gemini-2.0-flash', timeoutMs);
         if (fallback.success) {
@@ -199,26 +234,19 @@ export async function testGeminiApiKey(
         ? `Gemini API error (${response.status}): ${serverMessage}`
         : `Gemini API returned status code ${response.status}. Please check your credentials and try again.`,
     };
-  } catch (error: any) {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-
-    if (
-      error?.name === 'AbortError' ||
-      error?.message?.toLowerCase().includes('timeout') ||
-      error?.message?.toLowerCase().includes('aborted')
-    ) {
+  } catch (error: unknown) {
+    if (isTimeoutError(error)) {
       return {
         success: false,
         error: 'Connection timed out while reaching Gemini API. Please check internet connection.',
       };
     }
 
+    const msg = error instanceof Error && error.message ? error.message : null;
     return {
       success: false,
-      error: error?.message
-        ? `Network error: ${error.message}`
+      error: msg
+        ? `Network error: ${msg}`
         : 'Unable to reach Google Gemini API. Please check network connection.',
     };
   }
@@ -487,7 +515,7 @@ export function cleanTranscript(raw: string): string {
 /**
  * Parses Gemini generateContent response and extracts cleaned transcript text.
  */
-export function parseGeminiTranscriptionResponse(responseJson: any): string {
+export function parseGeminiTranscriptionResponse(responseJson: unknown): string {
   if (!responseJson) return '';
   try {
     const data = typeof responseJson === 'string' ? JSON.parse(responseJson) : responseJson;
@@ -552,26 +580,18 @@ export async function transcribeAudio(
     keyToUse
   )}`;
 
-  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-  const timeoutId = controller
-    ? setTimeout(() => {
-        controller.abort();
-      }, timeoutMs)
-    : null;
-
   try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetchWithTimeout(
+      endpoint,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
       },
-      body: JSON.stringify(payload),
-      signal: controller ? controller.signal : undefined,
-    });
-
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
+      timeoutMs
+    );
 
     if (response.ok) {
       const responseData = await response.json();
@@ -586,7 +606,10 @@ export async function transcribeAudio(
     const serverMessage = errorBody?.error?.message;
 
     if (response.status === 404) {
-      // Auto-fallback to gemini-2.0-flash if requested model was not found
+      // 404-fallback decision (repo-quality audit 2026-10-06): auto-fallback
+      // to gemini-2.0-flash is INTENTIONAL — same rationale as the preflight
+      // path in testGeminiApiKey. One retry only (guard below), so a missing
+      // fallback model still errors with a clear replacement message.
       if (model !== 'gemini-2.0-flash') {
         return transcribeAudio(pcmAudio, keyToUse, 'gemini-2.0-flash', timeoutMs);
       }
@@ -617,26 +640,19 @@ export async function transcribeAudio(
         ? `Gemini API error (${response.status}): ${serverMessage}`
         : `Gemini API returned status code ${response.status}. Please check your credentials and try again.`,
     };
-  } catch (error: any) {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-
-    if (
-      error?.name === 'AbortError' ||
-      error?.message?.toLowerCase().includes('timeout') ||
-      error?.message?.toLowerCase().includes('aborted')
-    ) {
+  } catch (error: unknown) {
+    if (isTimeoutError(error)) {
       return {
         success: false,
         error: 'Connection timed out while reaching Gemini API. Please check internet connection.',
       };
     }
 
+    const msg = error instanceof Error && error.message ? error.message : null;
     return {
       success: false,
-      error: error?.message
-        ? `Network error: ${error.message}`
+      error: msg
+        ? `Network error: ${msg}`
         : 'Unable to reach Google Gemini API. Please check network connection.',
     };
   }
