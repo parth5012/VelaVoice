@@ -48,18 +48,30 @@ VelaBoard baseline: HeliBoard fork (`helium314.keyboard`), streaming on-device W
 | 20 | Wake word / hands-free mode | Ambient "Hey Vela" → always-available PTT | Med | ★ | XL |
 | 21 | Meeting diarization (VelaVoice side) | Speaker-labeled transcripts in companion app | Med | ★ | XL |
 
-## Tier 3 — Platform catch-up (verify BEFORE building)
+## Tier 3 — Platform catch-up (AUDITED 2026-10-09)
 
-Cited by the platform agent as already present in upstream HeliBoard 4.0/4.2 or other open-source IMEs:
+**Fork-diff audit result — do not build these; they already exist:**
 
-- Spacebar-trackpad cursor swipe
-- Clipboard history panel
-- Split / foldable layout
-- Predictive back (`OnBackInvokedCallback`)
-- Inline autofill chips
-- Hardware-keyboard mini-toolbar (desktop mode)
+| Item | Verdict | Evidence |
+|------|---------|----------|
+| Spacebar-trackpad cursor swipe | ✅ already in VelaBoard | `TouchpadHandler.java`, pre-fork |
+| Clipboard history panel | ✅ already in VelaBoard | clipboard toolbar + `clipboard_bottom` layout, pre-fork; upstream only sped up suggestion display since |
+| Split / foldable layout | ✅ already in VelaBoard | `PREF_ENABLE_SPLIT_KEYBOARD[_LANDSCAPE/_FOLDED*]`, `KeyboardSwitcher.toggleSplitKeyboardMode`, foldable-aware |
+| Predictive back | ✅ already enabled | `android:enableOnBackInvokedCallback="true"` in AndroidManifest |
+| Inline autofill chips | ✅ already in VelaBoard | `InlineAutofillUtils.java` + `LatinIME.onCreateInlineSuggestionsRequest` |
+| Hardware-keyboard toggle | ❌ missing (post-fork upstream) | upstream `f4d278ce` (2026-10-04, #2251) |
 
-**Flag:** we forked HeliBoard at an older base. Several Tier-3 items may be *merge upstream*, not *build*. First action before any Tier-3 work → **fork-diff audit** against upstream.
+**Fork baseline:** vendored 2026-08-19 from upstream `13307828` (2026-07-20) — verified by 96% blob-hash identity + exact match on the only 2 files changed upstream between Jul 20 and Aug 10. Upstream head `65aa8f46` (2026-10-09) = **45 commits / ~12 weeks ahead**.
+
+**Upstream sync shortlist** (new upstream value worth porting, by signal):
+1. Hardware keyboard support toggle (#2251) — the one genuinely missing Tier-3 item
+2. Floating keyboard drag/resize handle reachability (#2692) + min-size increase
+3. Recent-emoji clear/remove (#2603), emoji-from-suggestions→recents (#2062)
+4. D-Pad key removal setting (#6ac2e014)
+5. Gradle/targetSdk/dependency refresh (c9d917d5) — security/maintenance
+6. Fixes: apps ignoring paste (257b4fbe), emoji search end (d3455b47), flags regional indicators (f0ef4931), auto-shift on gesture start (432a10a9)
+
+**Merge-conflict risk: MEDIUM.** We modified 35 files vs fork; upstream touched 177; **13 overlap** including heavily-AI-modified cores (`LatinIME.java`, `Settings.java`, `KeyboardSwitcher.java`, `app/build.gradle.kts`, `strings.xml`). A full upstream sync is a planned half-week project (cherry-pick safe commits first: #2251, #2692, #2603 — low-overlap), not an ad-hoc merge.
 
 ---
 
@@ -76,3 +88,4 @@ Cited by the platform agent as already present in upstream HeliBoard 4.0/4.2 or 
 | Date | Decision |
 |------|----------|
 | 2026-10-09 | Research complete; 21 candidates scored across 3 tiers. Next: (a) fork-diff audit vs upstream HeliBoard, (b) grill → cut Tier 1 to a first implementation batch. |
+| 2026-10-09 | **Fork-diff audit done.** Fork point = upstream `13307828` (2026-07-20); 45 commits behind. Tier 3 collapsed: 5/6 items already exist in VelaBoard — build nothing there. Remaining upstream work = sync shortlist (6 items, conflict-risk M, 13 overlapping files). Tier 1 (voice-UX quick wins) confirmed as the real greenfield. |
