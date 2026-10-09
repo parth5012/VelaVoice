@@ -18,6 +18,7 @@ Origin: grilling session on 2026-10-09 (cut from `plan/features-research.md` Tie
 | [#153](https://github.com/parth5012/VelaVoice/issues/153) | Undo pill: strip pill UI + dismissal rules | #152 |
 | [#154](https://github.com/parth5012/VelaVoice/issues/154) | Batch integration: debug APKs + device-smoke checklist | #149, #151, #153 |
 | [#155](https://github.com/parth5012/VelaVoice/issues/155) | VelaBoard 4.1 release cut (post-smoke) | #154 + maintainer sign-off (HITL) |
+| [#163](https://github.com/parth5012/VelaVoice/issues/163) | Spoken emoji lexicon extension (graduated from Batch 2 planning) | #148 |
 
 Handover: each ticket body carries locked constraints, file paths, acceptance criteria, and env/verification notes — a fresh agent can claim and execute it autonomously. Frontier now: #148, #150, #152 (parallel-safe).
 
