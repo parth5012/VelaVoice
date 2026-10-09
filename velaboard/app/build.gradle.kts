@@ -58,7 +58,7 @@ android {
         minSdk = 24
         targetSdk = 35
         versionCode = 4006
-        versionName = "4.0-dev1"
+        versionName = "4.0"
 
         // Inject Google Drive credentials from .env into BuildConfig
         buildConfigField("String", "GOOGLE_DRIVE_CLIENT_ID", escapeBuildConfig(envConfig["GOOGLE_CLIENT_ID"] ?: ""))
