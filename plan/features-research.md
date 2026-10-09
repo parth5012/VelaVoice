@@ -89,3 +89,4 @@ VelaBoard baseline: HeliBoard fork (`helium314.keyboard`), streaming on-device W
 |------|----------|
 | 2026-10-09 | Research complete; 21 candidates scored across 3 tiers. Next: (a) fork-diff audit vs upstream HeliBoard, (b) grill → cut Tier 1 to a first implementation batch. |
 | 2026-10-09 | **Fork-diff audit done.** Fork point = upstream `13307828` (2026-07-20); 45 commits behind. Tier 3 collapsed: 5/6 items already exist in VelaBoard — build nothing there. Remaining upstream work = sync shortlist (6 items, conflict-risk M, 13 overlapping files). Tier 1 (voice-UX quick wins) confirmed as the real greenfield. |
+| 2026-10-09 | Upstream sync to be planned as a **wayfinder map** (deferred); Tier 1 grilling session started to cut 10 candidates → first implementation batch. |
