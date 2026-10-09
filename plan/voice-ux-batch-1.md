@@ -4,7 +4,22 @@ Created: 2026-10-09
 Status: `planned` → tracked as a wayfinder map (see below)
 Origin: grilling session on 2026-10-09 (cut from `plan/features-research.md` Tier 1)
 
-**Wayfinder map:** GitHub issue on `parth5012/VelaVoice` labelled `wayfinder:map` ("VelaBoard Voice-UX Batch 1"). Implementation proceeds via its AFK task tickets; this doc is the durable record of the locked decisions.
+**Wayfinder map:** [#147 VelaBoard Voice-UX Batch 1 — dictation control (4.1)](https://github.com/parth5012/VelaVoice/issues/147) (label `wayfinder:map`). Implementation proceeds via its AFK task tickets; this doc is the durable record of the locked decisions.
+
+## Map tickets (AFK handover-ready)
+
+| Ticket | Title | Blocked by |
+|--------|-------|------------|
+| [#148](https://github.com/parth5012/VelaVoice/issues/148) | Spoken commands: lexicon module + unit tests | — (frontier) |
+| [#149](https://github.com/parth5012/VelaVoice/issues/149) | Spoken commands: final-pass wiring + settings toggle | #148 |
+| [#150](https://github.com/parth5012/VelaVoice/issues/150) | Spacebar PTT: gesture state machine + unit tests | — (frontier) |
+| [#151](https://github.com/parth5012/VelaVoice/issues/151) | Spacebar PTT: transcriber wiring + ptt_spacebar pref | #150 |
+| [#152](https://github.com/parth5012/VelaVoice/issues/152) | Undo pill: commit snapshot/restore logic + unit tests | — (frontier) |
+| [#153](https://github.com/parth5012/VelaVoice/issues/153) | Undo pill: strip pill UI + dismissal rules | #152 |
+| [#154](https://github.com/parth5012/VelaVoice/issues/154) | Batch integration: debug APKs + device-smoke checklist | #149, #151, #153 |
+| [#155](https://github.com/parth5012/VelaVoice/issues/155) | VelaBoard 4.1 release cut (post-smoke) | #154 + maintainer sign-off (HITL) |
+
+Handover: each ticket body carries locked constraints, file paths, acceptance criteria, and env/verification notes — a fresh agent can claim and execute it autonomously. Frontier now: #148, #150, #152 (parallel-safe).
 
 ## Destination
 
@@ -48,3 +63,4 @@ VelaBoard **4.1** ships three features — spoken punctuation/edit commands, spa
 |------|----------|
 | 2026-10-09 | Grilling completed; 6 decisions locked (table above). |
 | 2026-10-09 | User ordered wayfinder map with AFK implementation tickets via gh CLI; execution carried into the map (effort override). |
+| 2026-10-09 | Map #147 + 8 task tickets (#148–#155) created on GitHub; blocking via body convention + tasklist (repo lacks sub-issues API); frontier = #148/#150/#152. |
