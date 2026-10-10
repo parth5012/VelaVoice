@@ -192,10 +192,10 @@ object Defaults {
     const val PREF_SAVE_SUBTYPE_PER_APP = false
     const val PREF_SPELLCHECK_SUGGEST = true
     const val PREF_SHOW_ONLY_TOOLBAR_WITH_HARDWARE_KEYBOARD = false
-    const val PREF_VELA_MODEL_PATH = "/sdcard/Models/ggml-tiny.en.bin"
+    const val PREF_VELA_MODEL_PATH = ""
     const val PREF_VELA_UI_STYLE = "vela"
     const val PREF_VELA_LLM_TOGGLE = false
-    const val PREF_VELA_LLM_MODEL_PATH = "/sdcard/Models/llama-cleaner.onnx"
+    const val PREF_VELA_LLM_MODEL_PATH = ""
     const val PREF_VELA_LANGUAGE = "en"
     const val PREF_VELA_THREADS = 4
     const val PREF_VELA_CUSTOM_FILLERS = "um,uh,like,ah,er,eh,hm,oh,you know"

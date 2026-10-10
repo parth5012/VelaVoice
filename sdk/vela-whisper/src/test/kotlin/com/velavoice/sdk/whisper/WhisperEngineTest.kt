@@ -6,12 +6,16 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.CyclicBarrier
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
+/**
+ * Ticket #95 (map #89): WhisperEngine model integrity tests.
+ */
 @RunWith(RobolectricTestRunner::class)
 class WhisperEngineTest {
 
@@ -301,6 +305,76 @@ class WhisperEngineTest {
         val result = engine.transcribe(ByteArray(320))
         assertEquals(emojiString, result)
         engine.close()
+    }
+
+    // ---------- Model-integrity tests (#95) ----------
+
+    @Test
+    fun `constructor throws SecurityException for path outside allowed roots`() {
+        // Create a real temp file so the existence check passes,
+        // but the containment check should reject it
+        val tmpFile = File.createTempFile("whisper-test-model", ".bin")
+        try {
+            val allowedRoot = File("/data/data/com.velavoice/files")
+            val config = WhisperConfig(
+                modelPath = tmpFile.absolutePath,
+                allowedModelRoots = listOf(allowedRoot)
+            )
+            val ex = assertThrows(SecurityException::class.java) {
+                WhisperEngine(config)
+            }
+            assertTrue(
+                "error should mention outside allowed roots",
+                ex.message?.contains("outside allowed storage roots") == true
+            )
+        } finally {
+            tmpFile.delete()
+        }
+    }
+
+    @Test
+    fun `constructor throws SecurityException for path traversal attack`() {
+        // Even if the canonical file exists, the traversal should be caught
+        val tmpDir = createTempDir("whisper-safe")
+        val modelFile = File(tmpDir, "model.bin")
+        modelFile.writeBytes("fake model".toByteArray())
+        try {
+            // allowedRoot is a sibling dir — the model is NOT inside it
+            val allowedRoot = File(tmpDir.parent, "other-safe-dir")
+            allowedRoot.mkdirs()
+            val config = WhisperConfig(
+                modelPath = modelFile.absolutePath,
+                allowedModelRoots = listOf(allowedRoot)
+            )
+            assertThrows(SecurityException::class.java) {
+                WhisperEngine(config)
+            }
+        } finally {
+            tmpDir.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `constructor throws SecurityException for wrong SHA-256 hash`() {
+        val tmpFile = File.createTempFile("whisper-tampered", ".bin")
+        try {
+            tmpFile.writeBytes("tampered model content".toByteArray())
+            // Use the tmpFile's parent as allowed root so containment passes
+            val config = WhisperConfig(
+                modelPath = tmpFile.absolutePath,
+                allowedModelRoots = listOf(tmpFile.parentFile),
+                expectedHash = "0000000000000000000000000000000000000000000000000000000000000000"
+            )
+            val ex = assertThrows(SecurityException::class.java) {
+                WhisperEngine(config)
+            }
+            assertTrue(
+                "error should mention SHA-256 verification",
+                ex.message?.contains("SHA-256") == true
+            )
+        } finally {
+            tmpFile.delete()
+        }
     }
 }
 

@@ -13,6 +13,7 @@ import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.velavoice.sdk.ModelIntegrity
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
@@ -35,6 +36,10 @@ object ModelDownloadHelper {
     // Model download URLs (matching ModelManager.ts in the Vela Voice app)
     const val WHISPER_MODEL_URL = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin"
     const val LLM_MODEL_URL = "https://huggingface.co/onnx-community/Llama-3.2-1B-Instruct-ONNX/resolve/main/onnx/model.onnx"
+
+    // Pinned SHA-256 hashes (must match ModelManager.ts / ModelIntegrity.EXPECTED_HASHES)
+    private const val WHISPER_EXPECTED_HASH = "921e4cf8686fdd993dcd081a5da5b6c365bfde1162e72b08d75ac75289920b1f"
+    private const val LLM_EXPECTED_HASH = "3002ec321434a9ac3e6e9b5e05b1e9e6eb751a2b560ecb898538f9cf7c1ae203"
 
     // Subdirectory under app files dir for downloaded models
     private const val MODELS_DIR = "vela_models"
@@ -255,12 +260,18 @@ object ModelDownloadHelper {
         activePath
     }
 
-    /** Streams [urlStr] into [destFile], reporting progress 0f..1f. */
+    /** Streams [urlStr] into [destFile] via a `.part` temp file, reports progress,
+     *  verifies SHA-256 against pinned hash, and atomically renames on success.
+     *
+     *  Ticket #95: maxBytes enforced, use{} for streams, .part+rename, finally cleanup. */
     private suspend fun downloadToFile(
         urlStr: String,
         destFile: File,
         onProgress: (Float) -> Unit
     ): Boolean = withContext(Dispatchers.IO) {
+        val partFile = File(destFile.parentFile, destFile.name + ".part")
+        val expectedHash = expectedHashForUrl(urlStr)
+        val maxBytes = ModelIntegrity.MAX_MODEL_BYTES
         try {
             destFile.parentFile?.mkdirs()
             val url = URL(urlStr)
@@ -276,26 +287,60 @@ object ModelDownloadHelper {
                 return@withContext false
             }
             val totalBytes = connection.contentLengthLong
-            val inputStream = connection.inputStream
-            val outputStream = FileOutputStream(destFile)
-            val buffer = ByteArray(8192)
-            var bytesRead: Int
-            var totalRead: Long = 0
-            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                outputStream.write(buffer, 0, bytesRead)
-                totalRead += bytesRead
-                if (totalBytes > 0) {
-                    onProgress(totalRead.toFloat() / totalBytes.toFloat())
+            // Reject unknown or oversized content-length
+            if (totalBytes > maxBytes || totalBytes == -1L) {
+                connection.disconnect()
+                return@withContext false
+            }
+            try {
+                connection.inputStream.use { inputStream ->
+                    FileOutputStream(partFile).use { outputStream ->
+                        val buffer = ByteArray(8192)
+                        var bytesRead: Int
+                        var totalRead: Long = 0
+                        while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                            totalRead += bytesRead
+                            if (totalRead > maxBytes) {
+                                return@withContext false
+                            }
+                            outputStream.write(buffer, 0, bytesRead)
+                            if (totalBytes > 0) {
+                                onProgress(totalRead.toFloat() / totalBytes.toFloat())
+                            }
+                        }
+                        outputStream.flush()
+                    }
+                }
+            } finally {
+                connection.disconnect()
+            }
+            // Verify SHA-256 against pinned hash
+            if (expectedHash != null) {
+                if (!ModelIntegrity.verifySha256(partFile, expectedHash)) {
+                    return@withContext false
                 }
             }
-            outputStream.close()
-            inputStream.close()
-            connection.disconnect()
+            // Atomic rename: .part → target
+            if (!partFile.renameTo(destFile)) {
+                partFile.copyTo(destFile, overwrite = true)
+            }
             true
         } catch (e: Exception) {
             e.printStackTrace()
             false
+        } finally {
+            // Always clean up .part file
+            if (partFile.exists()) {
+                partFile.delete()
+            }
         }
+    }
+
+    /** Returns the pinned SHA-256 hash for a known model URL, or null for unknown URLs. */
+    private fun expectedHashForUrl(url: String): String? = when (url) {
+        WHISPER_MODEL_URL -> WHISPER_EXPECTED_HASH
+        LLM_MODEL_URL -> LLM_EXPECTED_HASH
+        else -> null
     }
 
 /**

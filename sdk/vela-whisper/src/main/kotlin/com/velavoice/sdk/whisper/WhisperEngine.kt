@@ -1,6 +1,7 @@
 package com.velavoice.sdk.whisper
 
 import android.util.Log
+import com.velavoice.sdk.ModelIntegrity
 import java.io.File
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -19,6 +20,10 @@ import kotlin.concurrent.withLock
  *    with [IllegalStateException].
  *
  * Implements [AutoCloseable] so the lifetime is expressible with `use {}`.
+ *
+ * Ticket #95 (map #89): model load path hardened.
+ * - Canonical-path containment check against [config.allowedModelRoots] before native init.
+ * - Optional SHA-256 verification via [config.expectedHash].
  */
 open class WhisperEngine protected constructor(
     private val config: WhisperConfig?,
@@ -65,6 +70,24 @@ open class WhisperEngine protected constructor(
         val modelFile = File(cfg.modelPath)
         if (!modelFile.exists()) {
             throw IllegalArgumentException("Model file not found at: ${cfg.modelPath}")
+        }
+        // Ticket #95: containment check — refuse models outside app-private storage
+        if (cfg.allowedModelRoots.isNotEmpty()) {
+            if (!ModelIntegrity.isInsideAllowedRoots(cfg.modelPath, cfg.allowedModelRoots)) {
+                throw SecurityException(
+                    "Model path '${cfg.modelPath}' is outside allowed storage roots. " +
+                    "Only app-private storage (filesDir / getExternalFilesDir) is accepted."
+                )
+            }
+        }
+        // Ticket #95: optional SHA-256 verification (closes TOCTOU window when combined
+        // with containment — only the app can write to app-private storage)
+        if (cfg.expectedHash != null) {
+            if (!ModelIntegrity.verifySha256(modelFile, cfg.expectedHash)) {
+                throw SecurityException(
+                    "Model file at '${cfg.modelPath}' failed SHA-256 verification."
+                )
+            }
         }
         if (!isLibLoaded) {
             throw IllegalStateException("JNI library not loaded")

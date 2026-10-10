@@ -6,6 +6,7 @@ import ai.onnxruntime.genai.GeneratorParams
 import ai.onnxruntime.genai.Model
 import ai.onnxruntime.genai.Tokenizer
 import android.util.Log
+import com.velavoice.sdk.ModelIntegrity
 import java.io.File
 
 /**
@@ -15,6 +16,10 @@ import java.io.File
  * The [clean] overload with [contextBefore]/[contextAfter]/[appName]/[inputType]/[overrideStyle]
  * follows Ticket 003's API: the IME service supplies surrounding editor text and app metadata,
  * while this class owns prompt formatting and style routing.
+ *
+ * Ticket #95 (map #89): model load path hardened.
+ * - Canonical-path containment check against [CleanerConfig.allowedModelRoots].
+ * - genai_config.json presence/sanity checked before native init.
  */
 open class TextCleaner(private val config: CleanerConfig) {
     private var isLlmInitialized = false
@@ -34,11 +39,33 @@ open class TextCleaner(private val config: CleanerConfig) {
      * files) or a single .onnx file. Telemetry bundled with the GenAI AAR is disabled first
      * for privacy. Any failure (missing file, native load error, invalid model) leaves
      * [isLlmInitialized] false so [clean] falls back to rule-based cleanup.
+     *
+     * Ticket #95 (map #89): path containment and genai_config.json sanity.
      */
     private fun initLlm(modelPath: String): Boolean {
-        if (!File(modelPath).exists()) {
+        val modelFile = File(modelPath)
+        if (!modelFile.exists()) {
             Log.e("TextCleaner", "LLM model file not found at: $modelPath")
             return false
+        }
+        // Ticket #95: containment check — refuse models outside app-private storage
+        if (config.allowedModelRoots.isNotEmpty()) {
+            if (!ModelIntegrity.isInsideAllowedRoots(modelPath, config.allowedModelRoots)) {
+                Log.e("TextCleaner",
+                    "LLM model path '$modelPath' is outside allowed storage roots. " +
+                    "Only app-private storage (filesDir / getExternalFilesDir) is accepted."
+                )
+                return false
+            }
+        }
+        // Ticket #95: genai_config.json sanity check for model directories
+        if (modelFile.isDirectory) {
+            if (!ModelIntegrity.validateGenaiConfig(modelFile)) {
+                Log.e("TextCleaner",
+                    "LLM model directory '$modelPath' missing or invalid genai_config.json"
+                )
+                return false
+            }
         }
         return try {
             // Loads onnxruntime + onnxruntime-genai + onnxruntime-genai-jni native libraries

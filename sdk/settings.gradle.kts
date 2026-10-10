@@ -21,6 +21,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "vela-transcription-sdk"
 
+include(":vela-common")
 include(":vela-whisper")
 include(":vela-cleaner")
 include(":vela-voice-ui")
