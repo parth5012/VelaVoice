@@ -3,15 +3,17 @@
 // on quarantined content), the /save_correction egress, or the export script.
 // Run with the native-module test stubs in place, e.g. from the repo root:
 //   npx tsx "velavoice app/src/services/quarantineEgress.test.ts"
-// Native modules resolve to test stubs under /tmp/vv-stubs/node_modules
+// Native modules resolve to the committed test stubs under test-stubs/
 // (expo-sqlite exposing __writes/__reset, react-native, expo-file-system)
 // via the Module._resolveFilename redirect below, installed BEFORE the
 // service imports load — the real react-native entry is Flow and cannot be
 // parsed by tsx/esbuild in Node, and the local node_modules copies would
-// otherwise shadow any NODE_PATH stubs.
+// otherwise shadow any NODE_PATH stubs. The stubs are IN THE REPO (not
+// under /tmp): a fresh CI runner has no hand-made /tmp files, so a
+// /tmp-based path made `npm test` fail with ENOENT on every clean checkout.
 import Module from 'module';
 
-const NATIVE_STUBS_DIR = '/tmp/vv-stubs/node_modules';
+const NATIVE_STUBS_DIR = path.join(__dirname, '..', '..', 'test-stubs');
 const NATIVE_STUBS = ['react-native', 'expo-file-system', 'expo-sqlite'];
 const ModuleClass = Module as any;
 const origResolve = ModuleClass._resolveFilename;
