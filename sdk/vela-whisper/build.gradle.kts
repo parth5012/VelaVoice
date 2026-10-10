@@ -55,6 +55,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
+    implementation(project(":sdk:vela-core"))
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
 }

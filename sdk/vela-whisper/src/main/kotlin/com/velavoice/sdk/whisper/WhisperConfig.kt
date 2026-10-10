@@ -1,19 +1,42 @@
 package com.velavoice.sdk.whisper
 
+import java.io.File
+
+/**
+ * Configuration for the Whisper transcription engine.
+ *
+ * Ticket #95 (map #89): added [allowedModelRoots] for canonical-path containment
+ * and [expectedHash] for SHA-256 verification before native init.
+ *
+ * @param allowedModelRoots  directories the model path must resolve inside
+ *                           (canonical). Pass `context.filesDir` and/or
+ *                           `context.getExternalFilesDir(null)`. Empty list
+ *                           disables the check (backward compat only — callers
+ *                           should always supply roots).
+ * @param expectedHash       expected SHA-256 hex digest. When non-null, the model
+ *                           file is verified before native init; a mismatch
+ *                           throws [SecurityException].
+ */
 data class WhisperConfig private constructor(
     val modelPath: String,
     val language: String,
     val numThreads: Int,
+    val allowedModelRoots: List<File>,
+    val expectedHash: String?,
     @Suppress("UNUSED_PARAMETER") private val marker: Boolean
 ) {
     constructor(
         modelPath: String,
         language: String = DEFAULT_LANGUAGE,
-        numThreads: Int = DEFAULT_THREADS
+        numThreads: Int = DEFAULT_THREADS,
+        allowedModelRoots: List<File> = emptyList(),
+        expectedHash: String? = null
     ) : this(
         modelPath = modelPath,
         language = language,
         numThreads = clampThreads(numThreads),
+        allowedModelRoots = allowedModelRoots,
+        expectedHash = expectedHash,
         marker = true
     )
 
@@ -140,3 +163,4 @@ data class WhisperConfig private constructor(
         }
     }
 }
+

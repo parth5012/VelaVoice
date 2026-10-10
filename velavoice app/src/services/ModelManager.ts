@@ -181,11 +181,12 @@ export class ModelManager {
     );
 
     const localUri = FileSystem.documentDirectory + model.filename;
+    const partUri = localUri + '.part';
     
-    // Create download resumable
+    // Create download resumable into temporary .part file
     const downloadResumable = FileSystem.createDownloadResumable(
       model.url,
-      localUri,
+      partUri,
       {},
       (downloadProgress: { totalBytesWritten: number; totalBytesExpectedToWrite: number }) => {
         const progress =
@@ -202,27 +203,39 @@ export class ModelManager {
       }
 
       // Convert URI to absolute path (remove file:// prefix for Kotlin usage)
-      let absolutePath = result.uri;
-      if (absolutePath.startsWith('file://')) {
-        absolutePath = absolutePath.substring(7);
+      let partAbsolutePath = result.uri;
+      if (partAbsolutePath.startsWith('file://')) {
+        partAbsolutePath = partAbsolutePath.substring(7);
       }
 
-      // Verify SHA-256 using Native Module
+      // Verify SHA-256 using Native Module before moving to target path
       let isVerified = false;
       if (ModelVerifier && ModelVerifier.verifySHA256) {
         // Run native check
-        isVerified = await ModelVerifier.verifySHA256(absolutePath, model.expectedHash);
+        isVerified = await ModelVerifier.verifySHA256(partAbsolutePath, model.expectedHash);
       } else {
-        console.warn('ModelVerifier native module not available. Skipping checksum check.');
-        // Fallback to true if we are running in Expo Go or environment without native modules
-        isVerified = true;
+        console.error('ModelVerifier native module not available. Refusing to trust unverified model.');
+        isVerified = false;
       }
 
-      const finalStatus = isVerified ? 'completed' : 'checksum_failed';
-      const finalPath = isVerified ? absolutePath : null;
+      let finalPath: string | null = null;
+      let finalStatus: ModelInfo['status'] = isVerified ? 'completed' : 'checksum_failed';
 
-      if (!isVerified) {
-        // Delete invalid file
+      if (isVerified) {
+        try {
+          await FileSystem.deleteAsync(localUri, { idempotent: true });
+          await FileSystem.moveAsync({ from: result.uri, to: localUri });
+          let absolutePath = localUri;
+          if (absolutePath.startsWith('file://')) {
+            absolutePath = absolutePath.substring(7);
+          }
+          finalPath = absolutePath;
+        } catch (moveErr) {
+          console.error('Failed to move verified model to final destination', moveErr);
+          finalStatus = 'failed';
+        }
+      } else {
+        // Delete invalid/unverified file
         try {
           await FileSystem.deleteAsync(result.uri, { idempotent: true });
         } catch (e) {
@@ -239,7 +252,7 @@ export class ModelManager {
         ...model,
         path: finalPath,
         status: finalStatus,
-        progress: isVerified ? 1 : 0,
+        progress: finalStatus === 'completed' ? 1 : 0,
       };
     } catch (error) {
       console.error(`Download failed for model ${id}`, error);
@@ -248,6 +261,10 @@ export class ModelManager {
         [model.id, model.name, model.url, model.filename, model.expectedHash, null, 'failed']
       );
       throw error;
+    } finally {
+      try {
+        await FileSystem.deleteAsync(partUri, { idempotent: true });
+      } catch {}
     }
   }
 

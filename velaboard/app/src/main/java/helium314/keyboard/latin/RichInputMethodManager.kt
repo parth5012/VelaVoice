@@ -71,7 +71,7 @@ class RichInputMethodManager private constructor() {
                     return true
                 }
             }
-            var modelPath = prefs.getString(Settings.PREF_VELA_MODEL_PATH, "/sdcard/Models/ggml-tiny.en.bin") ?: ""
+            var modelPath = prefs.getString(Settings.PREF_VELA_MODEL_PATH, Defaults.PREF_VELA_MODEL_PATH) ?: ""
             if (modelPath.isEmpty() || !java.io.File(modelPath).exists()) {
                 val sharedPath = helium314.keyboard.settings.ModelDownloadHelper.getSharedModelPath(context, "whisper")
                 if (sharedPath != null) {
