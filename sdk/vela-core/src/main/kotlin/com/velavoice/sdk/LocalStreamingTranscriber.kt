@@ -59,15 +59,12 @@ class LocalStreamingTranscriber(
     internal var overlapSamples = 0
 
     override fun start(config: StreamConfig) {
-        // Drain any prior teardown so we don't race with previous session cleanup
+        // Drain any prior teardown with bounded join so we don't freeze the caller (UI) thread
         teardownThread?.let { td ->
-            while (td.isAlive) {
-                try {
-                    td.join()
-                } catch (e: InterruptedException) {
-                    Thread.currentThread().interrupt()
-                    break
-                }
+            try {
+                td.join(1000)
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
             }
         }
         teardownThread = null
@@ -383,7 +380,19 @@ class LocalStreamingTranscriber(
         }
 
         if (result != null && result.isNotBlank()) {
-            callback?.onFinal(result.trim())
+            val resultTrimmed = result.trim()
+            val overlapLength = findOverlapLength(lastCommittedText, resultTrimmed)
+            val fullFinal = if (lastCommittedText.isEmpty()) {
+                resultTrimmed
+            } else if (overlapLength > 0) {
+                val newPart = resultTrimmed.substring(overlapLength).trimStart()
+                if (newPart.isEmpty()) lastCommittedText else "$lastCommittedText $newPart"
+            } else if (lastCommittedText.contains(resultTrimmed)) {
+                lastCommittedText
+            } else {
+                "$lastCommittedText $resultTrimmed"
+            }
+            callback?.onFinal(fullFinal.trim())
         } else {
             callback?.onFinal(lastCommittedText)
         }
@@ -393,7 +402,8 @@ class LocalStreamingTranscriber(
         try {
             engine?.free()
             engine = engineFactory(engineConfig)
-            lastCommittedText = ""
+            // Preserve lastCommittedText across resets so findOverlapLength
+            // continues deduplicating against the overlapping audio chunk
             Log.d("LocalStreamingTranscriber", "Context reset after ${streamConfig?.resetIntervalMs}ms")
         } catch (e: Throwable) {
             engine = null
