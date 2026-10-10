@@ -18,7 +18,7 @@ open class AudioRecorder {
     private var transcribeThread: Thread? = null
 
     @Volatile
-    private var isTranscribeCancelled = false
+    private var currentTranscribeCancelled: java.util.concurrent.atomic.AtomicBoolean? = null
 
     private var currentWhisper: WhisperEngine? = null
     private var currentCleaner: TextCleaner? = null
@@ -101,7 +101,7 @@ open class AudioRecorder {
             audioRecord?.stop()
             audioRecord?.release()
             audioRecord = null
-            recordingThread?.join()
+            recordingThread?.join(CANCEL_JOIN_TIMEOUT_MS)
             recordingThread = null
         } catch (e: Exception) {
             currentCallback?.onError(AudioCaptureFailed("Error stopping recording: " + e.message))
@@ -121,13 +121,14 @@ open class AudioRecorder {
 
         if (whisper != null && callback != null) {
             drainTranscribeThread(CANCEL_JOIN_TIMEOUT_MS)
-            isTranscribeCancelled = false
+            val sessionCancelled = java.util.concurrent.atomic.AtomicBoolean(false)
+            currentTranscribeCancelled = sessionCancelled
 
             val thread = Thread({
                 try {
-                    if (isTranscribeCancelled || Thread.currentThread().isInterrupted) return@Thread
+                    if (sessionCancelled.get() || Thread.currentThread().isInterrupted) return@Thread
                     val rawTranscript = whisper.transcribe(audioBytes, initialPrompt)
-                    if (isTranscribeCancelled || Thread.currentThread().isInterrupted) return@Thread
+                    if (sessionCancelled.get() || Thread.currentThread().isInterrupted) return@Thread
                     val cleanedTranscript = if (clean) {
                         cleaner?.clean(
                             rawTranscript,
@@ -141,19 +142,19 @@ open class AudioRecorder {
                     } else {
                         rawTranscript
                     }
-                    if (isTranscribeCancelled || Thread.currentThread().isInterrupted) return@Thread
+                    if (sessionCancelled.get() || Thread.currentThread().isInterrupted) return@Thread
                     val durationMs = ((audioBytes.size / 2) / 16L)
-                    if (!isTranscribeCancelled && !Thread.currentThread().isInterrupted) {
+                    if (!sessionCancelled.get() && !Thread.currentThread().isInterrupted) {
                         android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            if (!isTranscribeCancelled) {
+                            if (!sessionCancelled.get()) {
                                 callback.onResult(TranscriptionResult(rawTranscript, cleanedTranscript, durationMs, audioBytes))
                             }
                         }
                     }
                 } catch (e: Exception) {
-                    if (!isTranscribeCancelled && !Thread.currentThread().isInterrupted) {
+                    if (!sessionCancelled.get() && !Thread.currentThread().isInterrupted) {
                         android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            if (!isTranscribeCancelled) {
+                            if (!sessionCancelled.get()) {
                                 callback.onError(WhisperError("Transcription failed: " + e.message))
                             }
                         }
@@ -199,7 +200,7 @@ open class AudioRecorder {
      * Sets the cancellation flag, interrupts the thread, and waits up to [timeoutMs] to join.
      */
     fun cancelTranscribe(timeoutMs: Long = CANCEL_JOIN_TIMEOUT_MS) {
-        isTranscribeCancelled = true
+        currentTranscribeCancelled?.set(true)
         val thread = transcribeThread
         if (thread != null && thread.isAlive) {
             thread.interrupt()
