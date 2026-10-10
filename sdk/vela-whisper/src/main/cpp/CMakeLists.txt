@@ -8,6 +8,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
+# Compile out assert() in whisper.cpp / ggml.c so that violated internal
+# invariants (e.g. hparams.n_text_state != n_audio_state on a corrupt model)
+# hit the guarding if-return or throw path instead of calling abort().
+# The JNI layer wraps every call in try/catch so recoverable errors are
+# surfaced as Java exceptions rather than killing the process.
+add_definitions(-DNDEBUG)
+
 add_library(whisper SHARED
     whisper.h
     whisper.cpp
