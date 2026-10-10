@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.velavoice.sdk"
+    namespace = "com.velavoice.sdk.common"
     compileSdk = 35
 
     defaultConfig {
@@ -40,14 +40,9 @@ android {
 }
 
 dependencies {
-    api(project(":vela-common"))
-    api(project(":vela-whisper"))
-    api(project(":vela-cleaner"))
     implementation(libs.androidx.core.ktx)
-    implementation(libs.okhttp)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
-    testImplementation(libs.mockito.core)
 }
 
 afterEvaluate {
@@ -56,7 +51,7 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 from(components["release"])
                 groupId = "com.velavoice.sdk"
-                artifactId = "vela-core"
+                artifactId = "vela-common"
                 version = "1.0.0"
             }
         }

@@ -44,7 +44,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
-    implementation(project(":sdk:vela-core"))
+    implementation(project(":vela-common"))
     // On-device LLM inference for Scribe / standard cleanup (Ticket 003).
     // onnxruntime-genai-android is NOT on Maven Central; it is published to
     // mavenLocal from the GitHub-release AAR (see README / commit message).
