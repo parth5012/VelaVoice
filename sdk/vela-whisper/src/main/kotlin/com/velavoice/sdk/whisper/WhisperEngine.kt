@@ -9,15 +9,18 @@ import kotlin.concurrent.withLock
  * Thin JNI wrapper around whisper.cpp.
  *
  * Thread-safety contract:
- *  - Multiple concurrent [transcribe] calls are safe (read lock).
- *  - [free]/[close] acquires the write lock, so it blocks until every
- *    in-flight [transcribe] drains before releasing the native context.
+ *  - [transcribe] and [free] are mutually exclusive (whisper_full is not
+ *    thread-safe on the same context; WHISPER_LOCKING is disabled).
+ *  - [cancel]/[stop] signals in-flight transcription to abort promptly.
+ *  - [free]/[close] signals abort first, then acquires the exclusive lock,
+ *    blocking until every in-flight [transcribe] drains before releasing
+ *    the native context.
  *  - Double-[free] is idempotent; post-free [transcribe] fails fast
  *    with [IllegalStateException].
  *
  * Implements [AutoCloseable] so the lifetime is expressible with `use {}`.
  */
-open class WhisperEngine private constructor(
+open class WhisperEngine protected constructor(
     private val config: WhisperConfig?,
     @Suppress("UNUSED_PARAMETER") stubInit: Boolean
 ) : AutoCloseable {
@@ -40,19 +43,19 @@ open class WhisperEngine private constructor(
     /**
      * Test-only constructor — skips JNI loading and model-file checks.
      * Subclasses must call [setContextPtrForTest] to install a fake pointer
-     * and override [doNativeTranscribe] / [doNativeFree].
+     * and override [doNativeTranscribe] / [doNativeFree] / [doNativeCancel].
      */
     protected constructor(stubInit: Boolean) : this(config = null, stubInit = true)
 
     private var isLibLoaded = false
 
     /** Guarded by [lock]. Marked @Volatile for safe reads outside the lock
-     *  (e.g. the fast-path isEmpty check in [transcribe]). */
+     *  (e.g. the fast-path isEmpty check in [transcribe] and [cancel]). */
     @Volatile
     private var contextPtr: Long = 0L
 
-    /** Mutual exclusion: serializes both in-flight transcribe calls (whisper_full is not
-     *  thread-safe on the same context) and free. */
+    /** Exclusive lock: whisper_full is not thread-safe on the same context
+     *  (WHISPER_LOCKING disabled), so transcribe and free must not overlap. */
     private val lock = ReentrantLock()
 
     // -- init helpers -------------------------------------------------------
@@ -81,29 +84,47 @@ open class WhisperEngine private constructor(
 
     fun transcribe(audioBytes: ByteArray, initialPrompt: String? = null): String {
         if (audioBytes.isEmpty()) return ""
-        val floatAudio = AudioConverter.convertPcmToFloat(audioBytes)
 
         lock.withLock {
             val ptr = contextPtr
             if (ptr == 0L) {
                 throw IllegalStateException("Whisper context is not initialized or has been freed")
             }
+            val lang = config?.language ?: WhisperConfig.DEFAULT_LANGUAGE
+            require(WhisperConfig.isValidLanguage(lang)) { "Invalid language: $lang" }
+            val threads = WhisperConfig.clampThreads(config?.numThreads ?: WhisperConfig.DEFAULT_THREADS)
+            val floatAudio = AudioConverter.convertPcmToFloat(audioBytes)
             return doNativeTranscribe(
                 ptr, floatAudio,
-                config?.language ?: "en",
-                config?.numThreads ?: 4,
+                lang,
+                threads,
                 initialPrompt
             ) ?: throw RuntimeException("Error during native transcription")
         }
     }
 
     /**
+     * Cancel any in-flight transcription promptly.
+     * Safe to call concurrently with [transcribe].
+     */
+    fun cancel() {
+        val ptr = contextPtr
+        if (ptr != 0L) {
+            doNativeCancel(ptr)
+        }
+    }
+
+    /** Alias for [cancel]. */
+    fun stop() = cancel()
+
+    /**
      * Release the native whisper context.
      *
-     * Blocks until every in-flight [transcribe] call has finished.
+     * Aborts any in-flight transcription and blocks until it has finished.
      * Idempotent — calling [free] (or [close]) more than once is safe.
      */
     fun free() {
+        cancel()
         lock.withLock {
             val ptr = contextPtr
             if (ptr != 0L) {
@@ -118,6 +139,9 @@ open class WhisperEngine private constructor(
 
     // -- native call points (open for test override) ------------------------
 
+    /** Override in test harnesses to stub native cancel. */
+    protected open fun doNativeCancel(ptr: Long) = nativeCancel(ptr)
+
     /** Override in test harnesses to stub native transcription. */
     protected open fun doNativeTranscribe(
         ptr: Long,
@@ -125,7 +149,10 @@ open class WhisperEngine private constructor(
         language: String,
         threads: Int,
         initialPrompt: String?
-    ): String? = nativeTranscribe(ptr, floatAudio, language, threads, initialPrompt)
+    ): String? {
+        val bytes = nativeTranscribe(ptr, floatAudio, language, threads, initialPrompt) ?: return null
+        return String(bytes, Charsets.UTF_8)
+    }
 
     /** Override in test harnesses to stub native free. */
     protected open fun doNativeFree(ptr: Long) = nativeFree(ptr)
@@ -136,7 +163,8 @@ open class WhisperEngine private constructor(
     private external fun nativeTranscribe(
         contextPtr: Long, audioData: FloatArray,
         language: String, threads: Int, initialPrompt: String?
-    ): String?
+    ): ByteArray?
+    private external fun nativeCancel(contextPtr: Long)
     private external fun nativeFree(contextPtr: Long)
 
     private companion object {
