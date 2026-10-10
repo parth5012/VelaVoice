@@ -662,17 +662,17 @@ class VoiceAccessibilityService : AccessibilityService() {
             }
         }
 
-            val useLlm = prefs.getBoolean("useLlmCleaner", false)
-            val llmPath = getLlmModelPath(this@VoiceAccessibilityService)
-            val personalDictionary = createPersonalDictionary()
-            val dictionaryKeywords = createDictionaryKeywords()
-            val cleaner = TextCleaner(CleanerConfig(
-                useLlm = PrivacyGuard.shouldEnableLlmCleaner(useLlm, sensitiveAtStop),
-                llmModelPath = llmPath,
-                personalDictionary = personalDictionary,
-                dictionaryKeywords = dictionaryKeywords
-            ))
             val finalTranscript = if (rawTranscript.isNotEmpty()) {
+                val useLlm = prefs.getBoolean("useLlmCleaner", false)
+                val llmPath = getLlmModelPath(this@VoiceAccessibilityService)
+                val personalDictionary = createPersonalDictionary()
+                val dictionaryKeywords = createDictionaryKeywords()
+                val cleaner = TextCleaner.getOrCreate(CleanerConfig(
+                    useLlm = PrivacyGuard.shouldEnableLlmCleaner(useLlm, sensitiveAtStop),
+                    llmModelPath = llmPath,
+                    personalDictionary = personalDictionary,
+                    dictionaryKeywords = dictionaryKeywords
+                ))
                 cleaner.clean(rawTranscript, privacySensitive = sensitiveAtStop)
             } else {
                 rawTranscript
@@ -1131,7 +1131,7 @@ class VoiceAccessibilityService : AccessibilityService() {
     private fun buildStreamingFinalCleaner(privacySensitive: Boolean): TextCleaner {
         val prefs = getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
         val useLlm = prefs.getBoolean("useLlmCleaner", false)
-        return TextCleaner(CleanerConfig(
+        return TextCleaner.getOrCreate(CleanerConfig(
             useLlm = PrivacyGuard.shouldEnableLlmCleaner(useLlm, privacySensitive),
             llmModelPath = getLlmModelPath(this),
             personalDictionary = createPersonalDictionary(),
@@ -1262,6 +1262,7 @@ class VoiceAccessibilityService : AccessibilityService() {
         streamingPipeline?.release()
         streamingPipeline = null
         streamingCleanupExecutor.shutdownNow()
+        TextCleaner.clearCache()
         floatingLayout?.let {
             windowManager?.removeView(it)
         }

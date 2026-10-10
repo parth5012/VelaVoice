@@ -157,7 +157,7 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
         mCleanupSpec = cleanupSpec;
         mListener = listener;
         mCleanerTask = cleanupSpec == null ? null
-            : new FutureTask<>(() -> new TextCleaner(cleanupSpec.config));
+            : new FutureTask<>(() -> TextCleaner.getOrCreate(cleanupSpec.config));
         mPipeline.setCallback(this);
     }
 
@@ -222,7 +222,7 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
         mLatinIME.mHandler.removeCallbacks(mTypingAnimator);
         mTypingQueue.setLength(0);
         if (mCleanerTask != null) {
-            mCleanerTask.cancel(false);
+            mCleanerTask.cancel(true);
         }
         new Thread(() -> {
             try {

@@ -102,4 +102,22 @@ class VelaTranscriberTest {
         assertEquals("Bullet Points", scribe.overrideStyle)
         assertEquals(true, scribe.privacySensitive)
     }
+
+    @Test
+    fun `release calls textCleaner release`() {
+        val constructor = VelaTranscriber::class.java.declaredConstructors
+            .single { it.parameterTypes.firstOrNull() == com.velavoice.sdk.whisper.WhisperEngine::class.java && it.parameterCount == 4 }
+            .apply { isAccessible = true }
+
+        val whisperEngine = org.mockito.Mockito.mock(com.velavoice.sdk.whisper.WhisperEngine::class.java)
+        val textCleaner = org.mockito.Mockito.mock(com.velavoice.sdk.cleaner.TextCleaner::class.java)
+        val audioRecorder = org.mockito.Mockito.mock(AudioRecorder::class.java)
+
+        val transcriber = constructor.newInstance(whisperEngine, textCleaner, audioRecorder, null) as VelaTranscriber
+        transcriber.release()
+
+        org.mockito.Mockito.verify(whisperEngine).free()
+        org.mockito.Mockito.verify(audioRecorder).release()
+        org.mockito.Mockito.verify(textCleaner).release()
+    }
 }

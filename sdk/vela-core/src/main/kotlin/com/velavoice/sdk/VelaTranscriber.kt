@@ -69,7 +69,7 @@ class VelaTranscriber internal constructor(
             val whisperConfig = WhisperConfig(modelPath, language, threads)
             val engine = WhisperEngine(whisperConfig)
             val cleaner = if (personalDictionary != null || customFillers != null || useLlmCleaner || dictionaryKeywords != null || scribeEnabled) {
-                TextCleaner(
+                TextCleaner.getOrCreate(
                     CleanerConfig(
                         useLlm = useLlmCleaner,
                         llmModelPath = llmModelPath,
@@ -194,5 +194,6 @@ class VelaTranscriber internal constructor(
         stopStreaming()
         audioRecorder.release()
         whisperEngine.free()
+        textCleaner?.release()
     }
 }

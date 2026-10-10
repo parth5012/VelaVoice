@@ -16,6 +16,7 @@ import com.velavoice.sdk.VelaException;
 import com.velavoice.sdk.cleaner.CleanerConfig;
 import com.velavoice.sdk.cleaner.DictionaryKeywords;
 import com.velavoice.sdk.cleaner.PersonalDictionary;
+import com.velavoice.sdk.cleaner.TextCleaner;
 
 import helium314.keyboard.settings.TranscriptionStorage;
 import helium314.keyboard.latin.settings.VelaApiKey;
@@ -288,6 +289,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             velaTranscriber.release();
             velaTranscriber = null;
         }
+        TextCleaner.clearCache();
         mCachedVelaModelPath = null;
         mCachedVelaLlmToggle = null;
         mCachedVelaScribeToggle = null;

@@ -21,14 +21,16 @@ import java.io.File
  * - Canonical-path containment check against [CleanerConfig.allowedModelRoots].
  * - genai_config.json presence/sanity checked before native init.
  */
-open class TextCleaner(private val config: CleanerConfig) {
+open class TextCleaner(@Volatile internal var config: CleanerConfig) : AutoCloseable {
     private var isLlmInitialized = false
     private var model: Model? = null
     private var tokenizer: Tokenizer? = null
+    @Volatile private var isClosed = false
 
     init {
-        if (config.useLlm && config.llmModelPath != null) {
-            initLlm(config.llmModelPath)
+        val modelPath = config.llmModelPath
+        if (config.useLlm && modelPath != null) {
+            initLlm(modelPath)
         }
     }
 
@@ -84,6 +86,24 @@ open class TextCleaner(private val config: CleanerConfig) {
         }
     }
 
+    /**
+     * Closes the on-device LLM session and tokenizer, releasing native memory.
+     * Safe to call multiple times.
+     */
+    open fun release() {
+        close()
+    }
+
+    override fun close() {
+        if (isClosed) return
+        isClosed = true
+        val path = config.llmModelPath
+        if (!path.isNullOrBlank()) {
+            modelCache.remove(path, this)
+        }
+        closeLlm()
+    }
+
     private fun closeLlm() {
         runCatching { tokenizer?.close() }
         runCatching { model?.close() }
@@ -91,6 +111,8 @@ open class TextCleaner(private val config: CleanerConfig) {
         model = null
         isLlmInitialized = false
     }
+
+    fun isClosed(): Boolean = isClosed
 
     /**
      * Clean and optionally Scribe-rewrite [text]. Context and metadata are passed from the IME.
@@ -282,6 +304,51 @@ open class TextCleaner(private val config: CleanerConfig) {
     companion object {
         const val PROFESSIONAL_INSTRUCTION =
             "Rewrite the input to be formal, professional, polite, and grammatically perfect. Retain the core meaning."
+
+        private val modelCache = java.util.concurrent.ConcurrentHashMap<String, TextCleaner>()
+
+        /**
+         * Returns a cached [TextCleaner] instance for the given [CleanerConfig.llmModelPath]
+         * if LLM cleanup is enabled, or creates and caches one.
+         * If the cached instance already exists, updates its [CleanerConfig] so dynamic settings
+         * (e.g. personal dictionary, scribe styles, fillers) reflect the latest call without
+         * reloading native ONNX model weights.
+         * If LLM is not used or model path is null/blank, returns an un-cached [TextCleaner].
+         */
+        @JvmStatic
+        fun getOrCreate(config: CleanerConfig): TextCleaner {
+            val path = config.llmModelPath
+            if (config.useLlm && !path.isNullOrBlank()) {
+                return modelCache.compute(path) { _, existing ->
+                    if (existing != null && !existing.isClosed) {
+                        existing.config = config
+                        existing
+                    } else {
+                        TextCleaner(config)
+                    }
+                }!!
+            }
+            return TextCleaner(config)
+        }
+
+        /**
+         * Clears all cached [TextCleaner] instances, invoking [close] on each to free
+         * native ONNX sessions and tokenizers.
+         */
+        @JvmStatic
+        fun clearCache() {
+            val cleaners = ArrayList(modelCache.values)
+            modelCache.clear()
+            for (cleaner in cleaners) {
+                cleaner.close()
+            }
+        }
+
+        /**
+         * Returns the number of currently cached [TextCleaner] instances.
+         */
+        @JvmStatic
+        fun cachedCount(): Int = modelCache.size
     }
 
     fun styleInstruction(style: String): String = when (style) {
