@@ -8,11 +8,17 @@ import com.velavoice.sdk.whisper.AudioConverter
 import com.velavoice.sdk.whisper.WhisperEngine
 import java.io.ByteArrayOutputStream
 
-class AudioRecorder {
+open class AudioRecorder {
     private var isRecording = false
     private var audioRecord: AudioRecord? = null
     private var recordingThread: Thread? = null
     private val recordedAudioData = ByteArrayOutputStream()
+
+    @Volatile
+    private var transcribeThread: Thread? = null
+
+    @Volatile
+    private var isTranscribeCancelled = false
 
     private var currentWhisper: WhisperEngine? = null
     private var currentCleaner: TextCleaner? = null
@@ -28,6 +34,9 @@ class AudioRecorder {
 
         /** Max time cancel() waits for the capture thread to exit (ANR budget). */
         const val CANCEL_JOIN_TIMEOUT_MS = 2000L
+
+        /** Max time to wait for the transcribe thread to drain during teardown. */
+        const val TRANSCRIBE_JOIN_TIMEOUT_MS = 5000L
     }
 
     fun isRecording(): Boolean = isRecording
@@ -111,9 +120,14 @@ class AudioRecorder {
         val initialPrompt = currentInitialPrompt
 
         if (whisper != null && callback != null) {
-            Thread({
+            drainTranscribeThread(CANCEL_JOIN_TIMEOUT_MS)
+            isTranscribeCancelled = false
+
+            val thread = Thread({
                 try {
+                    if (isTranscribeCancelled || Thread.currentThread().isInterrupted) return@Thread
                     val rawTranscript = whisper.transcribe(audioBytes, initialPrompt)
+                    if (isTranscribeCancelled || Thread.currentThread().isInterrupted) return@Thread
                     val cleanedTranscript = if (clean) {
                         cleaner?.clean(
                             rawTranscript,
@@ -127,40 +141,103 @@ class AudioRecorder {
                     } else {
                         rawTranscript
                     }
+                    if (isTranscribeCancelled || Thread.currentThread().isInterrupted) return@Thread
                     val durationMs = ((audioBytes.size / 2) / 16L)
-                    android.os.Handler(android.os.Looper.getMainLooper()).post {
-                        callback.onResult(TranscriptionResult(rawTranscript, cleanedTranscript, durationMs, audioBytes))
+                    if (!isTranscribeCancelled && !Thread.currentThread().isInterrupted) {
+                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                            if (!isTranscribeCancelled) {
+                                callback.onResult(TranscriptionResult(rawTranscript, cleanedTranscript, durationMs, audioBytes))
+                            }
+                        }
                     }
                 } catch (e: Exception) {
-                    android.os.Handler(android.os.Looper.getMainLooper()).post {
-                        callback.onError(WhisperError("Transcription failed: " + e.message))
+                    if (!isTranscribeCancelled && !Thread.currentThread().isInterrupted) {
+                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                            if (!isTranscribeCancelled) {
+                                callback.onError(WhisperError("Transcription failed: " + e.message))
+                            }
+                        }
+                    }
+                } finally {
+                    if (transcribeThread === Thread.currentThread()) {
+                        transcribeThread = null
                     }
                 }
-            }, "VelaTranscribeThread").start()
+            }, "VelaTranscribeThread")
+            transcribeThread = thread
+            thread.start()
         }
+    }
+
+    /**
+     * Drain the in-flight transcribe thread, waiting up to [timeoutMs] for completion.
+     * Bounded by [timeoutMs]. If timeout expires, cancels and interrupts the thread
+     * so it cannot run past teardown.
+     * Returns true if drained, false if timed out.
+     */
+    fun drainTranscribeThread(timeoutMs: Long = TRANSCRIBE_JOIN_TIMEOUT_MS): Boolean {
+        val thread = transcribeThread ?: return true
+        try {
+            thread.join(timeoutMs)
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+        }
+        if (thread.isAlive) {
+            cancelTranscribe(CANCEL_JOIN_TIMEOUT_MS)
+            return false
+        }
+        transcribeThread = null
+        return true
+    }
+
+    /** Convenience alias for [drainTranscribeThread]. */
+    fun joinTranscribeThread(timeoutMs: Long = TRANSCRIBE_JOIN_TIMEOUT_MS): Boolean =
+        drainTranscribeThread(timeoutMs)
+
+    /**
+     * Cancel any in-flight transcription deterministically.
+     * Sets the cancellation flag, interrupts the thread, and waits up to [timeoutMs] to join.
+     */
+    fun cancelTranscribe(timeoutMs: Long = CANCEL_JOIN_TIMEOUT_MS) {
+        isTranscribeCancelled = true
+        val thread = transcribeThread
+        if (thread != null && thread.isAlive) {
+            thread.interrupt()
+            try {
+                thread.join(timeoutMs)
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+            }
+        }
+        transcribeThread = null
     }
 
     /** Cancel recording immediately without transcription or callbacks */
-    fun cancel() {
-        if (!isRecording) return
-        isRecording = false
-
-        try {
-            audioRecord?.stop()
-            audioRecord?.release()
-            audioRecord = null
-            // Bounded join: a capture thread parked in a blocking read() must not
-            // wedge the (often main/UI) thread calling cancel() — ANR risk (OCR finding).
-            recordingThread?.join(CANCEL_JOIN_TIMEOUT_MS)
-            recordingThread = null
-        } catch (e: Exception) {
-            // ignore during cancel
+    open fun cancel() {
+        if (isRecording) {
+            isRecording = false
+            try {
+                audioRecord?.stop()
+                audioRecord?.release()
+                audioRecord = null
+                // Bounded join: a capture thread parked in a blocking read() must not
+                // wedge the (often main/UI) thread calling cancel() — ANR risk (OCR finding).
+                recordingThread?.join(CANCEL_JOIN_TIMEOUT_MS)
+                recordingThread = null
+            } catch (e: Exception) {
+                // ignore during cancel
+            }
         }
+        cancelTranscribe()
         recordedAudioData.reset()
     }
 
-    fun release() {
-        cancel()
+    open fun release() {
+        if (isRecording) {
+            cancel()
+        } else {
+            drainTranscribeThread()
+        }
         // cancel() early-returns when not recording (e.g. after a completed stop()),
         // so release() must free the captured audio buffer unconditionally.
         recordedAudioData.reset()
