@@ -7,7 +7,7 @@ Test ProGuard and consumer keep rules for VelaVoice SDK modules:
 4. Verify `consumer-rules.pro` exists on disk for all four SDK modules.
 5. Verify `proguard-rules.pro` exists on disk for all four SDK modules (preventing dangling references).
 6. Verify keep rules cover all enumerated native methods and JNI surface:
-   - Native methods in WhisperEngine: nativeInit, nativeTranscribe, nativeFree
+   - Native methods in WhisperEngine: nativeInit, nativeTranscribe, nativeCancel, nativeFree
    - C++ JNI symbols in whisper-jni.cpp: Java_com_velavoice_sdk_whisper_WhisperEngine_*
    - Class keep rule preserving WhisperEngine from renaming
    - General native methods keep rule (-keepclasseswithmembernames)
@@ -184,9 +184,10 @@ def run_tests():
 
         # Enumerate native methods from Kotlin source
         kt_native_methods = re.findall(r'external\s+fun\s+(\w+)', kt_src)
-        check(len(kt_native_methods) == 3, f"Enumerated exactly 3 native methods in WhisperEngine: {kt_native_methods}")
+        check(len(kt_native_methods) == 4, f"Enumerated exactly 4 native methods in WhisperEngine: {kt_native_methods}")
         check("nativeInit" in kt_native_methods, "WhisperEngine declares nativeInit")
         check("nativeTranscribe" in kt_native_methods, "WhisperEngine declares nativeTranscribe")
+        check("nativeCancel" in kt_native_methods, "WhisperEngine declares nativeCancel")
         check("nativeFree" in kt_native_methods, "WhisperEngine declares nativeFree")
 
         # Verify JNI C++ symbols correspond exactly to the package and methods
