@@ -48,6 +48,23 @@ const sqliteStub = require('expo-sqlite') as {
 // string — identical runtime behavior, no static-import syntax to check.
 const dynamicImport = new Function('u', 'return import(u)') as (u: string) => Promise<any>;
 
+// Read a named export from an import()-loaded JS mirror across Node versions:
+// the mirrors are ESM (`export class`) but run as tsx-transpiled CJS, and the
+// ESM->CJS interop differs. Node 20's import() surfaces only { default:
+// module.exports } (its lexer finds no named exports in the original source),
+// while newer Node also exposes module.exports properties as namespace keys —
+// under Node 20 the plain `ns.Name` read is undefined, which threw
+// "Cannot read properties of undefined (reading 'closeDb')" in CI.
+const mirrorExport = (ns: any, name: string, file: string) => {
+  const value = ns[name] ?? (ns.default && ns.default[name]);
+  if (value === undefined) {
+    throw new Error(
+      `${file} does not export ${name} (namespace keys: ${Object.keys(ns).join(', ')})`
+    );
+  }
+  return value;
+};
+
 function assert(expr: boolean, message: string) {
   if (!expr) {
     throw new Error('Assertion failed: ' + message);
@@ -174,8 +191,8 @@ async function runTests() {
     fs.copyFileSync(path.join(__dirname, 'api.js'), path.join(dir, 'api.js'));
     const mmjs = await dynamicImport(pathToFileURL(path.join(dir, 'ModelManager.js')).href);
     const apijs = await dynamicImport(pathToFileURL(path.join(dir, 'api.js')).href);
-    const ModelManagerJS = mmjs.ModelManager;
-    const CorrectionAPIJS = apijs.CorrectionAPI;
+    const ModelManagerJS = mirrorExport(mmjs, 'ModelManager', 'ModelManager.js');
+    const CorrectionAPIJS = mirrorExport(apijs, 'CorrectionAPI', 'api.js');
     const freshJsDb = async () => {
       sqliteStub.__reset();
       await ModelManagerJS.closeDb();
@@ -209,7 +226,7 @@ async function runTests() {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vv-jsmig-'));
     fs.copyFileSync(path.join(__dirname, 'ModelManager.js'), path.join(dir, 'ModelManager.js'));
     const mmjs = await dynamicImport(pathToFileURL(path.join(dir, 'ModelManager.js')).href);
-    const ModelManagerJS = mmjs.ModelManager;
+    const ModelManagerJS = mirrorExport(mmjs, 'ModelManager', 'ModelManager.js');
     const columns = new Set([
       'id', 'audio_id', 'original_transcription', 'corrected_transcription',
       'edits', 'edit_distance', 'timestamp', 'user_id', 'confidence_score',
