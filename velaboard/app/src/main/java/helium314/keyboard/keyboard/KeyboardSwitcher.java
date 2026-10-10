@@ -288,6 +288,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             velaTranscriber.release();
             velaTranscriber = null;
         }
+        TextCleaner.clearCache();
         mCachedVelaModelPath = null;
         mCachedVelaLlmToggle = null;
         mCachedVelaScribeToggle = null;

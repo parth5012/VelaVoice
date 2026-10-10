@@ -2,6 +2,8 @@ package com.velavoice.sdk.cleaner
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -354,5 +356,91 @@ class TextCleanerTest {
         val cleaner = TextCleaner(CleanerConfig(useLlm = true))
         // LLM init skipped (no model), isLlmInitialized false -> fallback
         assertEquals("", cleaner.clean("", privacySensitive = false))
+    }
+
+    // ── Ticket #96: Resource leak closure & caching tests ───────────
+
+    @Test
+    fun `TextCleaner implements AutoCloseable and release or close can be called safely`() {
+        val cleaner = TextCleaner(CleanerConfig())
+        assertTrue("TextCleaner must implement AutoCloseable", cleaner is AutoCloseable)
+        cleaner.use {
+            assertEquals("hello", it.cleanRuleBased("hello"))
+        }
+        // release() is idempotent
+        cleaner.release()
+        cleaner.close()
+    }
+
+    @Test
+    fun `TextCleaner getOrCreate caches instance per model path`() {
+        TextCleaner.clearCache()
+        val path = "/models/shared_cleaner.onnx"
+        val config1 = CleanerConfig(useLlm = true, llmModelPath = path)
+        val config2 = CleanerConfig(useLlm = true, llmModelPath = path)
+
+        val cleaner1 = TextCleaner.getOrCreate(config1)
+        val cleaner2 = TextCleaner.getOrCreate(config2)
+
+        assertSame("Subsequent getOrCreate with identical model path must return cached instance", cleaner1, cleaner2)
+        TextCleaner.clearCache()
+    }
+
+    @Test
+    fun `TextCleaner getOrCreate updates config on existing cached instance`() {
+        TextCleaner.clearCache()
+        val path = "/models/update_config_test.onnx"
+        val dict1 = object : PersonalDictionary {
+            override fun getEntries(): List<Pair<String, String>> = listOf("foo" to "bar")
+        }
+        val config1 = CleanerConfig(useLlm = true, llmModelPath = path, personalDictionary = dict1)
+        val cleaner1 = TextCleaner.getOrCreate(config1)
+        assertEquals("bar", cleaner1.cleanRuleBased("foo"))
+
+        val dict2 = object : PersonalDictionary {
+            override fun getEntries(): List<Pair<String, String>> = listOf("foo" to "baz")
+        }
+        val config2 = CleanerConfig(useLlm = true, llmModelPath = path, personalDictionary = dict2)
+        val cleaner2 = TextCleaner.getOrCreate(config2)
+
+        assertSame(cleaner1, cleaner2)
+        assertEquals("Config update must take effect on cached instance without reloading", "baz", cleaner2.cleanRuleBased("foo"))
+        TextCleaner.clearCache()
+    }
+
+    @Test
+    fun `TextCleaner getOrCreate with different model paths returns distinct instances`() {
+        TextCleaner.clearCache()
+        val cleanerA = TextCleaner.getOrCreate(CleanerConfig(useLlm = true, llmModelPath = "/models/model_a.onnx"))
+        val cleanerB = TextCleaner.getOrCreate(CleanerConfig(useLlm = true, llmModelPath = "/models/model_b.onnx"))
+
+        assertNotSame(cleanerA, cleanerB)
+        TextCleaner.clearCache()
+    }
+
+    @Test
+    fun `TextCleaner without useLlm or null path returns un-cached instances`() {
+        val cleaner1 = TextCleaner.getOrCreate(CleanerConfig(useLlm = false, llmModelPath = "/models/model.onnx"))
+        val cleaner2 = TextCleaner.getOrCreate(CleanerConfig(useLlm = false, llmModelPath = "/models/model.onnx"))
+        assertNotSame("Non-LLM cleaner should not be cached", cleaner1, cleaner2)
+
+        val cleaner3 = TextCleaner.getOrCreate(CleanerConfig(useLlm = true, llmModelPath = null))
+        val cleaner4 = TextCleaner.getOrCreate(CleanerConfig(useLlm = true, llmModelPath = null))
+        assertNotSame("Cleaner without model path should not be cached", cleaner3, cleaner4)
+    }
+
+    @Test
+    fun `TextCleaner clearCache releases and removes all cached instances`() {
+        TextCleaner.clearCache()
+        val path = "/models/evict_test.onnx"
+        val cleaner1 = TextCleaner.getOrCreate(CleanerConfig(useLlm = true, llmModelPath = path))
+        assertEquals(1, TextCleaner.cachedCount())
+
+        TextCleaner.clearCache()
+        assertEquals(0, TextCleaner.cachedCount())
+
+        val cleaner2 = TextCleaner.getOrCreate(CleanerConfig(useLlm = true, llmModelPath = path))
+        assertNotSame("After clearCache, getOrCreate should create a fresh instance", cleaner1, cleaner2)
+        TextCleaner.clearCache()
     }
 }
