@@ -21,9 +21,13 @@ import java.util.concurrent.atomic.AtomicLong
  * The native whisper context is owned by [WhisperEngine] from the vela-whisper
  * module; this class holds no JNI bindings of its own.
  */
-class LocalStreamingTranscriber(private val config: WhisperConfig) : StreamingTranscriber {
+class LocalStreamingTranscriber(
+    private val config: WhisperConfig,
+    private val engineFactory: (WhisperConfig) -> WhisperEngine = { WhisperEngine(it) }
+) : StreamingTranscriber {
     private var engine: WhisperEngine? = null
     private var engineConfig: WhisperConfig = config
+    @Volatile
     internal var isRunning = false
     private var callback: StreamingTranscriptionCallback? = null
     private var streamConfig: StreamConfig? = null
@@ -34,8 +38,12 @@ class LocalStreamingTranscriber(private val config: WhisperConfig) : StreamingTr
     private val bufferLock = Any()
 
     // Processing thread
-    private var processingThread: Thread? = null
+    @Volatile
+    internal var processingThread: Thread? = null
     private val shouldStop = AtomicBoolean(false)
+
+    @Volatile
+    internal var teardownThread: Thread? = null
 
     // State management
     private val totalSamples = AtomicLong(0)
@@ -51,6 +59,19 @@ class LocalStreamingTranscriber(private val config: WhisperConfig) : StreamingTr
     internal var overlapSamples = 0
 
     override fun start(config: StreamConfig) {
+        // Drain any prior teardown so we don't race with previous session cleanup
+        teardownThread?.let { td ->
+            while (td.isAlive) {
+                try {
+                    td.join()
+                } catch (e: InterruptedException) {
+                    Thread.currentThread().interrupt()
+                    break
+                }
+            }
+        }
+        teardownThread = null
+
         if (isRunning) return
         this.streamConfig = config
 
@@ -69,7 +90,7 @@ class LocalStreamingTranscriber(private val config: WhisperConfig) : StreamingTr
         }
 
         engine = try {
-            WhisperEngine(engineConfig)
+            engineFactory(engineConfig)
         } catch (e: Throwable) {
             callback?.onError(VelaError("Failed to initialize whisper context: ${e.message}"))
             null
@@ -108,8 +129,9 @@ class LocalStreamingTranscriber(private val config: WhisperConfig) : StreamingTr
     }
 
     override fun emit(audioChunk: ByteArray) {
-        if (!isRunning || audioChunk.isEmpty()) return
+        if (!isRunning || shouldStop.get() || audioChunk.isEmpty()) return
         synchronized(bufferLock) {
+            if (!isRunning || shouldStop.get()) return
             pendingChunks.addLast(audioChunk.copyOf())
             bufferedBytes += audioChunk.size
             trimBufferLocked()
@@ -118,26 +140,61 @@ class LocalStreamingTranscriber(private val config: WhisperConfig) : StreamingTr
     }
 
     override fun stop() {
-        if (!isRunning) return
-        shouldStop.set(true)
-        processingThread?.interrupt()
-        processingThread?.join(5000)
-        processingThread = null
-
-        // Final pass: transcribe remaining audio
-        flushRemaining()
-
+        if (!isRunning || shouldStop.getAndSet(true)) return
         isRunning = false
 
-        engine?.free()
-        engine = null
+        val thread = processingThread
+        thread?.interrupt()
 
-        synchronized(bufferLock) {
-            pendingChunks.clear()
-            bufferedBytes = 0
+        val td = Thread({
+            // Join until the processing thread is actually dead: no timeout-then-free path
+            if (thread != null) {
+                while (thread.isAlive) {
+                    try {
+                        thread.join()
+                    } catch (e: InterruptedException) {
+                        // Keep looping until the processing thread is dead
+                    }
+                }
+            }
+
+            try {
+                engine?.free()
+            } catch (e: Throwable) {
+                Log.e("LocalStreamingTranscriber", "Error freeing engine", e)
+            } finally {
+                engine = null
+                processingThread = null
+                synchronized(bufferLock) {
+                    pendingChunks.clear()
+                    bufferedBytes = 0
+                }
+            }
+
+            Log.d("LocalStreamingTranscriber", "Streaming stopped")
+        }, "LocalStreamingTeardown")
+
+        teardownThread = td
+        td.start()
+    }
+
+    /**
+     * Test/lifecycle helper to await completion of background teardown.
+     * Returns true if teardown finished within [timeoutMs], false otherwise.
+     */
+    internal fun awaitTeardown(timeoutMs: Long = 5000L): Boolean {
+        val td = teardownThread ?: return true
+        val deadline = System.currentTimeMillis() + timeoutMs
+        while (td.isAlive && System.currentTimeMillis() < deadline) {
+            try {
+                val remaining = (deadline - System.currentTimeMillis()).coerceAtLeast(1L)
+                td.join(remaining)
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                break
+            }
         }
-
-        Log.d("LocalStreamingTranscriber", "Streaming stopped")
+        return !td.isAlive
     }
 
     override fun setCallback(callback: StreamingTranscriptionCallback) {
@@ -149,22 +206,33 @@ class LocalStreamingTranscriber(private val config: WhisperConfig) : StreamingTr
     }
 
     private fun startProcessingThread() {
-        processingThread = Thread({
-            while (!shouldStop.get()) {
+        val thread = Thread({
+            try {
+                while (!shouldStop.get()) {
+                    try {
+                        processNextChunk()
+                        // Sleep for the step duration
+                        val stepMs = streamConfig?.chunkDurationMs?.toLong() ?: 3000L
+                        Thread.sleep(stepMs)
+                    } catch (e: InterruptedException) {
+                        break
+                    } catch (e: Exception) {
+                        Log.e("LocalStreamingTranscriber", "Processing error", e)
+                        callback?.onError(VelaError("Processing error: ${e.message}"))
+                    }
+                }
+            } finally {
+                // Clear interrupted status so whisper inference is not interrupted
+                Thread.interrupted()
                 try {
-                    processNextChunk()
-                    // Sleep for the step duration
-                    val stepMs = streamConfig?.chunkDurationMs?.toLong() ?: 3000L
-                    Thread.sleep(stepMs)
-                } catch (e: InterruptedException) {
-                    break
+                    flushRemaining()
                 } catch (e: Exception) {
-                    Log.e("LocalStreamingTranscriber", "Processing error", e)
-                    callback?.onError(VelaError("Processing error: ${e.message}"))
+                    Log.e("LocalStreamingTranscriber", "Error during final flush", e)
                 }
             }
         }, "LocalStreamingProcessor")
-        processingThread?.start()
+        processingThread = thread
+        thread.start()
     }
 
     private fun processNextChunk() {
@@ -324,7 +392,7 @@ class LocalStreamingTranscriber(private val config: WhisperConfig) : StreamingTr
     private fun resetContext() {
         try {
             engine?.free()
-            engine = WhisperEngine(engineConfig)
+            engine = engineFactory(engineConfig)
             lastCommittedText = ""
             Log.d("LocalStreamingTranscriber", "Context reset after ${streamConfig?.resetIntervalMs}ms")
         } catch (e: Throwable) {
