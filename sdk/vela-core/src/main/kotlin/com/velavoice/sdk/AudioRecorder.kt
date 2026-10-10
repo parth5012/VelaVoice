@@ -210,7 +210,7 @@ open class AudioRecorder {
                 Thread.currentThread().interrupt()
             }
         }
-        transcribeThread = null
+        if (thread == null || !thread.isAlive) transcribeThread = null
     }
 
     /** Cancel recording immediately without transcription or callbacks */
