@@ -2,9 +2,8 @@ package com.velavoice.sdk.whisper
 
 import android.util.Log
 import java.io.File
-import java.util.concurrent.locks.ReentrantReadWriteLock
-import kotlin.concurrent.read
-import kotlin.concurrent.write
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Thin JNI wrapper around whisper.cpp.
@@ -52,8 +51,9 @@ open class WhisperEngine private constructor(
     @Volatile
     private var contextPtr: Long = 0L
 
-    /** Read lock → transcribe (shared); write lock → free (exclusive). */
-    private val lock = ReentrantReadWriteLock()
+    /** Mutual exclusion: serializes both in-flight transcribe calls (whisper_full is not
+     *  thread-safe on the same context) and free. */
+    private val lock = ReentrantLock()
 
     // -- init helpers -------------------------------------------------------
 
@@ -81,13 +81,13 @@ open class WhisperEngine private constructor(
 
     fun transcribe(audioBytes: ByteArray, initialPrompt: String? = null): String {
         if (audioBytes.isEmpty()) return ""
+        val floatAudio = AudioConverter.convertPcmToFloat(audioBytes)
 
-        lock.read {
+        lock.withLock {
             val ptr = contextPtr
             if (ptr == 0L) {
                 throw IllegalStateException("Whisper context is not initialized or has been freed")
             }
-            val floatAudio = AudioConverter.convertPcmToFloat(audioBytes)
             return doNativeTranscribe(
                 ptr, floatAudio,
                 config?.language ?: "en",
@@ -104,7 +104,7 @@ open class WhisperEngine private constructor(
      * Idempotent — calling [free] (or [close]) more than once is safe.
      */
     fun free() {
-        lock.write {
+        lock.withLock {
             val ptr = contextPtr
             if (ptr != 0L) {
                 doNativeFree(ptr)
