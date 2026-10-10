@@ -208,12 +208,11 @@ class ModelIntegrityTest {
     // ── Tampered download rejection ──────────────────────────────────
 
     @Test
-    fun `ModelDownloadService rejects tampered file after download`() {
-        // downloadModelWithChecksum should delete a file whose hash doesn't match
+    fun `verifySha256 rejects tampered file after download`() {
         val tmp = File.createTempFile("tampered-model", ".bin")
         try {
             tmp.writeBytes("tampered content here".toByteArray(Charsets.UTF_8))
-            val result = ModelDownloadService.verifySha256(
+            val result = ModelIntegrity.verifySha256(
                 tmp,
                 "0000000000000000000000000000000000000000000000000000000000000000"
             )
@@ -223,27 +222,25 @@ class ModelIntegrityTest {
         }
     }
 
-    // ── ModelDownloadService hardening ────────────────────────────────
-
     @Test
-    fun `ModelDownloadService verifySha256 matches for correct content`() {
+    fun `verifySha256 matches for correct content`() {
         val tmp = File.createTempFile("verified-model", ".bin")
         try {
             tmp.writeBytes("test model content".toByteArray(Charsets.UTF_8))
             val expectedHash = ModelIntegrity.sha256(tmp)
-            assertTrue(ModelDownloadService.verifySha256(tmp, expectedHash))
+            assertTrue(ModelIntegrity.verifySha256(tmp, expectedHash))
         } finally {
             tmp.delete()
         }
     }
 
     @Test
-    fun `ModelDownloadService verifySha256 rejects wrong hash`() {
+    fun `verifySha256 rejects wrong hash`() {
         val tmp = File.createTempFile("bad-model", ".bin")
         try {
             tmp.writeBytes("bad content".toByteArray(Charsets.UTF_8))
             assertFalse(
-                ModelDownloadService.verifySha256(tmp, "aaaa")
+                ModelIntegrity.verifySha256(tmp, "aaaa")
             )
         } finally {
             tmp.delete()
