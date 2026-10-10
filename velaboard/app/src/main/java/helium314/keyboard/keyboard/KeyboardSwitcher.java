@@ -16,6 +16,7 @@ import com.velavoice.sdk.VelaException;
 import com.velavoice.sdk.cleaner.CleanerConfig;
 import com.velavoice.sdk.cleaner.DictionaryKeywords;
 import com.velavoice.sdk.cleaner.PersonalDictionary;
+import com.velavoice.sdk.cleaner.TextCleaner;
 
 import helium314.keyboard.settings.TranscriptionStorage;
 import helium314.keyboard.latin.settings.VelaApiKey;
