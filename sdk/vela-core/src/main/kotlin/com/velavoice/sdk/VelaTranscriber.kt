@@ -27,7 +27,7 @@ data class ScribeInput(
     val privacySensitive: Boolean = false
 )
 
-class VelaTranscriber private constructor(
+class VelaTranscriber internal constructor(
     private val whisperEngine: WhisperEngine,
     private val textCleaner: TextCleaner?,
     private val audioRecorder: AudioRecorder,
@@ -192,7 +192,7 @@ class VelaTranscriber private constructor(
 
     fun release() {
         stopStreaming()
-        whisperEngine.free()
         audioRecorder.release()
+        whisperEngine.free()
     }
 }
