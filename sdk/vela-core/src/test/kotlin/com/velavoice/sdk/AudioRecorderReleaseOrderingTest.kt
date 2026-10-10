@@ -343,4 +343,8 @@ private open class TestWhisperEngine : WhisperEngine(stubInit = true) {
         freeCalls.incrementAndGet()
         isFreed = true
     }
+
+    override fun doNativeCancel(ptr: Long) {
+        // no-op: nothing native to cancel in tests
+    }
 }
