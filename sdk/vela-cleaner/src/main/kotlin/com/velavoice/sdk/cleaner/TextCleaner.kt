@@ -28,8 +28,9 @@ open class TextCleaner(@Volatile internal var config: CleanerConfig) : AutoClose
     @Volatile private var isClosed = false
 
     init {
-        if (config.useLlm && config.llmModelPath != null) {
-            initLlm(config.llmModelPath)
+        val modelPath = config.llmModelPath
+        if (config.useLlm && modelPath != null) {
+            initLlm(modelPath)
         }
     }
 
