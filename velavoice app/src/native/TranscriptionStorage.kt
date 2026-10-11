@@ -7,6 +7,7 @@ import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.Executors
 
 /**
  * Auto-saves transcription (raw, cleaned) text pairs and their audio recordings
@@ -34,6 +35,32 @@ object TranscriptionStorage {
 
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US)
     private val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+
+    /**
+     * Dedicated single-thread executor for encode/write work (map #97 ticket
+     * #100): [save] is synchronous JSON + file I/O, so IME call sites dispatch
+     * it through [persistAsync] instead of running it inline on the main
+     * thread. FIFO keeps save order stable.
+     */
+    private val persistenceExecutor = Executors.newSingleThreadExecutor { runnable ->
+        Thread(runnable, "VelaPersistence")
+    }
+
+    /**
+     * Run a persistence task on [persistenceExecutor] (map #97 ticket #100).
+     * Failures are contained here so a storage error can never block or crash
+     * the input-insertion path — callers commit text independently of whether
+     * the transcript was persisted.
+     */
+    fun persistAsync(task: Runnable) {
+        persistenceExecutor.execute {
+            try {
+                task.run()
+            } catch (e: Exception) {
+                android.util.Log.e("TranscriptionStorage", "Async persistence failed", e)
+            }
+        }
+    }
 
     /**
      * Save a transcription pair to local storage, optionally with audio bytes.

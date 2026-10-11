@@ -1208,14 +1208,17 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                     return;
                 }
                 if (!privacySensitive) {
-                    TranscriptionStorage.save(
+                    // Encode + WAV/JSON writes run on the persistence executor,
+                    // never inline on this main-looper callback (map #97 #100):
+                    // the commit below is independent of whether the save succeeds.
+                    TranscriptionStorage.persistAsync(() -> TranscriptionStorage.save(
                         latinIME,
                         result.getRawTranscript(),
                         result.getCleanedTranscript(),
                         result.getDurationMs(),
                         result.getAudioBytes(),
                         privacySensitive
-                    );
+                    ));
                 }
                 latinIME.mHandler.post(() -> {
                     if (!mIsVelaRecordingCancelled) {

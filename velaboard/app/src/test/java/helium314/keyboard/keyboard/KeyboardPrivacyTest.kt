@@ -107,6 +107,14 @@ class KeyboardPrivacyTest {
         assertTrue(scribeInput.privacySensitive, "Null IME must fail closed")
     }
 
+    // Persistence is dispatched on the single-thread persistence executor
+    // (map #97 #100), so file assertions wait behind a queued no-op barrier.
+    private fun awaitPersisted() {
+        val latch = java.util.concurrent.CountDownLatch(1)
+        TranscriptionStorage.persistAsync(Runnable { latch.countDown() })
+        assertTrue(latch.await(5, java.util.concurrent.TimeUnit.SECONDS))
+    }
+
     @Test
     fun testOnResult_privacySensitive_doesNotSaveTranscriptionFile() {
         val storageDir = java.io.File(latinIME.filesDir, "transcriptions")
@@ -118,6 +126,7 @@ class KeyboardPrivacyTest {
         val result = com.velavoice.sdk.TranscriptionResult("raw password", "cleaned password", 500, audioBytes)
 
         callback.onResult(result)
+        awaitPersisted()
 
         val files = storageDir.listFiles()?.filter { it.extension == "json" } ?: emptyList()
         assertTrue(files.isEmpty(), "Expected 0 transcription files saved for privacy sensitive result, but found: ${files.size}")
@@ -134,6 +143,7 @@ class KeyboardPrivacyTest {
         val result = com.velavoice.sdk.TranscriptionResult("hello world", "Hello world", 500, audioBytes)
 
         callback.onResult(result)
+        awaitPersisted()
 
         val files = storageDir.listFiles()?.filter { it.extension == "json" } ?: emptyList()
         assertEquals(1, files.size, "Expected exactly 1 transcription file saved for non-sensitive result")
@@ -151,6 +161,7 @@ class KeyboardPrivacyTest {
         val result = com.velavoice.sdk.TranscriptionResult("cancelled audio", "Cancelled audio", 500, audioBytes)
 
         callback.onResult(result)
+        awaitPersisted()
 
         val files = storageDir.listFiles()?.filter { it.extension == "json" } ?: emptyList()
         assertTrue(files.isEmpty(), "Cancelled recording must not persist transcription files")
@@ -272,6 +283,7 @@ class KeyboardPrivacyTest {
         // Privacy-sensitive result: nothing may be persisted (map #72, ticket #80).
         ks.buildVelaCallbacks(latinIME, null, false, true)
             .onResult(TranscriptionResult("raw secret", "clean secret", 1000L, null))
+        awaitPersisted()
         assertEquals(
             before,
             TranscriptionStorage.getTranscriptionCount(latinIME),
@@ -281,6 +293,7 @@ class KeyboardPrivacyTest {
         // Non-sensitive result: file written - proves the gate works, not a broken writer.
         ks.buildVelaCallbacks(latinIME, null, false, false)
             .onResult(TranscriptionResult("raw text", "clean text", 1000L, null))
+        awaitPersisted()
         assertEquals(
             before + 1,
             TranscriptionStorage.getTranscriptionCount(latinIME),

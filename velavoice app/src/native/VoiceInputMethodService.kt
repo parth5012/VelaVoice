@@ -434,14 +434,20 @@ class VoiceInputMethodService : InputMethodService() {
                             // and reject a completion whose session has moved on
                             // (a newer start already reset the flag) — reading the
                             // mutable service flag here would save a sensitive final.
+                            // Encode/write runs on the persistence executor, never the
+                            // main thread (map #97 #100): the keyboard restore above and
+                            // the committed text are already settled, insertion does not
+                            // wait on storage.
                             if (sessionGeneration == streamingSessionGeneration && !sensitiveAtFinal) {
-                                TranscriptionStorage.save(
-                                    this@VoiceInputMethodService,
-                                    raw = text,
-                                    cleaned = text,
-                                    durationMs = 0,
-                                    privacySensitive = sensitiveAtFinal
-                                )
+                                TranscriptionStorage.persistAsync(Runnable {
+                                    TranscriptionStorage.save(
+                                        this@VoiceInputMethodService,
+                                        raw = text,
+                                        cleaned = text,
+                                        durationMs = 0,
+                                        privacySensitive = sensitiveAtFinal
+                                    )
+                                })
                             }
                             showKeyboardView()
                         }
@@ -749,14 +755,22 @@ class VoiceInputMethodService : InputMethodService() {
                             // Read the volatile flip snapshot (not the frozen start local) so a
                             // mid-session flip-to-sensitive blocks the save (map #130 ticket #133 fix).
                             if (!sessionStartedPrivacySensitive) {
-                                TranscriptionStorage.save(
-                                    this@VoiceInputMethodService,
-                                    raw = result.rawTranscript,
-                                    cleaned = result.cleanedTranscript,
-                                    durationMs = result.durationMs,
-                                    audioBytes = result.audioBytes,
-                                    privacySensitive = sessionStartedPrivacySensitive
-                                )
+                                // Verdict captured with the gate: the task runs later on the
+                                // persistence executor, never inline on this main-looper
+                                // callback (map #97 #100) — encode + WAV/JSON writes would
+                                // otherwise stall the IME. The commit below is independent
+                                // of whether the save succeeds.
+                                val sensitiveAtResult = sessionStartedPrivacySensitive
+                                TranscriptionStorage.persistAsync(Runnable {
+                                    TranscriptionStorage.save(
+                                        this@VoiceInputMethodService,
+                                        raw = result.rawTranscript,
+                                        cleaned = result.cleanedTranscript,
+                                        durationMs = result.durationMs,
+                                        audioBytes = result.audioBytes,
+                                        privacySensitive = sensitiveAtResult
+                                    )
+                                })
                             }
                             voiceRecordingPane.post {
                                 val ic = currentInputConnection
