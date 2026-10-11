@@ -42,6 +42,16 @@ class ShadowFakeAudioRecord {
         @Volatile
         var releaseCount: Int = 0
 
+        /** Value returned by getState(); STATE_UNINITIALIZED simulates mic init failure (ticket #99). */
+        @JvmStatic
+        @Volatile
+        var stateResult: Int = AudioRecord.STATE_INITIALIZED
+
+        /** When true, startRecording() throws IllegalStateException (ticket #99 error path). */
+        @JvmStatic
+        @Volatile
+        var throwOnStartRecording: Boolean = false
+
         /** Counted down on entry to a blocking read() so tests can wait deterministically. */
         @JvmStatic
         @Volatile
@@ -66,6 +76,8 @@ class ShadowFakeAudioRecord {
             readEntered = CountDownLatch(1)
             constructorCount = 0
             releaseCount = 0
+            stateResult = AudioRecord.STATE_INITIALIZED
+            throwOnStartRecording = false
         }
 
         @JvmStatic
@@ -85,10 +97,13 @@ class ShadowFakeAudioRecord {
     }
 
     @Implementation
-    fun getState(): Int = AudioRecord.STATE_INITIALIZED
+    fun getState(): Int = stateResult
 
     @Implementation
     fun startRecording() {
+        if (throwOnStartRecording) {
+            throw IllegalStateException("startRecording failed (test hook)")
+        }
     }
 
     @Implementation
