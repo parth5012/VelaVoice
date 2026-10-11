@@ -1,5 +1,6 @@
 package com.velavoice.sdk
 
+import android.media.AudioRecord
 import com.velavoice.sdk.whisper.WhisperEngine
 import org.junit.After
 import org.junit.Assert.assertFalse
@@ -11,6 +12,7 @@ import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.isNull
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -23,6 +25,9 @@ import org.robolectric.annotation.Config
  * Also covers AudioRecorder.release() mid-stream resetting isRecording so a
  * fresh start() after release works (the audit's "Already recording" dead
  * button — the flag must not survive release()).
+ * Ticket #99 adds the teardown-exactly-once contract: every path (stop, cancel,
+ * failed init, startRecording throw) funnels through one release routine so
+ * constructorCount == releaseCount always (zero held AudioRecords).
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(shadows = [ShadowFakeAudioRecord::class])
@@ -140,5 +145,75 @@ class AudioRecorderReentrantLifecycleTest {
         assertTrue(ShadowFakeAudioRecord.constructorCount == 2)
         recorder.stop(clean = false)
         assertTrue(ShadowFakeAudioRecord.releaseCount == 2)
+    }
+
+    @Test(timeout = 10000)
+    fun `start cancel start stop cancel leaves zero held AudioRecords`() {
+        val (recorder, whisper, callback) = newRecorder()
+
+        recorder.start(whisper, null, callback)
+        recorder.cancel()
+        recorder.start(whisper, null, callback)
+        recorder.stop(clean = false)
+        recorder.cancel()
+
+        assertFalse(recorder.isRecording())
+        assertTrue(
+            "start/cancel/start/stop/cancel must construct exactly two AudioRecords " +
+                "(one per start), actual=" + ShadowFakeAudioRecord.constructorCount,
+            ShadowFakeAudioRecord.constructorCount == 2
+        )
+        assertTrue(
+            "zero held AudioRecords at the end: every constructed instance released, " +
+                "constructed=" + ShadowFakeAudioRecord.constructorCount +
+                " released=" + ShadowFakeAudioRecord.releaseCount,
+            ShadowFakeAudioRecord.releaseCount == ShadowFakeAudioRecord.constructorCount
+        )
+    }
+
+    @Test(timeout = 10000)
+    fun `uninitialized AudioRecord is released and a later start succeeds`() {
+        ShadowFakeAudioRecord.stateResult = AudioRecord.STATE_UNINITIALIZED
+        val (recorder, whisper, callback) = newRecorder()
+
+        recorder.start(whisper, null, callback)
+
+        assertFalse("failed init must not report recording", recorder.isRecording())
+        assertTrue(
+            "failed init still constructed one AudioRecord",
+            ShadowFakeAudioRecord.constructorCount == 1
+        )
+        assertTrue(
+            "the uninitialized AudioRecord must still be released (native buffer leak " +
+                "otherwise), released=" + ShadowFakeAudioRecord.releaseCount,
+            ShadowFakeAudioRecord.releaseCount == 1
+        )
+
+        ShadowFakeAudioRecord.stateResult = AudioRecord.STATE_INITIALIZED
+        recorder.start(whisper, null, callback)
+        assertTrue("start() after failed init must work", recorder.isRecording())
+        assertTrue(ShadowFakeAudioRecord.constructorCount == 2)
+        recorder.stop(clean = false)
+        assertTrue(
+            "second session's AudioRecord must be released too",
+            ShadowFakeAudioRecord.releaseCount == 2
+        )
+    }
+
+    @Test(timeout = 10000)
+    fun `startRecording failure releases the constructed AudioRecord`() {
+        ShadowFakeAudioRecord.throwOnStartRecording = true
+        val (recorder, whisper, callback) = newRecorder()
+
+        recorder.start(whisper, null, callback)
+
+        assertFalse("startRecording() throwing must not report recording", recorder.isRecording())
+        assertTrue(ShadowFakeAudioRecord.constructorCount == 1)
+        assertTrue(
+            "the AudioRecord constructed before startRecording() threw must be released, " +
+                "released=" + ShadowFakeAudioRecord.releaseCount,
+            ShadowFakeAudioRecord.releaseCount == 1
+        )
+        verify(callback).onError(anyArg(VelaException::class.java))
     }
 }

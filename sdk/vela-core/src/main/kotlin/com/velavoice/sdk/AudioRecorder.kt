@@ -47,6 +47,9 @@ open class AudioRecorder {
 
     fun start(whisper: WhisperEngine, cleaner: TextCleaner?, callback: VelaRecordingCallback, scribeInput: ScribeInput, initialPrompt: String? = null) {
         if (isRecording) return
+        // Never reconstruct over a live instance: tear down any leftover from a
+        // failed prior session before allocating a new native buffer (ticket #99).
+        releaseAudioRecord()
         isRecording = true
         currentWhisper = whisper
         currentCleaner = cleaner
@@ -65,8 +68,9 @@ open class AudioRecorder {
             )
 
             if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
-                callback.onError(AudioCaptureFailed("Microphone initialization failed"))
                 isRecording = false
+                releaseAudioRecord()
+                callback.onError(AudioCaptureFailed("Microphone initialization failed"))
                 return
             }
 
@@ -86,27 +90,51 @@ open class AudioRecorder {
             recordingThread?.start()
         } catch (e: SecurityException) {
             isRecording = false
+            releaseAudioRecord()
             callback.onError(AudioCaptureFailed("Mic permission denied: " + e.message))
         } catch (e: Exception) {
             isRecording = false
+            releaseAudioRecord()
             callback.onError(AudioCaptureFailed("Error starting recording: " + e.message))
         }
+    }
+
+    /**
+     * Idempotent AudioRecord teardown (ticket #99): stop (IllegalStateException
+     * tolerated — an uninitialized or already-stopped recorder throws by
+     * contract), release unconditionally, null the field, then join the capture
+     * thread with the ANR-bounded timeout. Every path that ends a capture
+     * session — stop(), cancel(), release(), and start()'s error paths — must
+     * funnel through here so a live native buffer is never orphaned.
+     */
+    private fun releaseAudioRecord() {
+        val record = audioRecord ?: return
+        audioRecord = null
+        try {
+            record.stop()
+        } catch (e: IllegalStateException) {
+            // stop() throws when the recorder never initialized or was already
+            // stopped; release() below still must run.
+        }
+        try {
+            record.release()
+        } catch (e: Exception) {
+            currentCallback?.onError(AudioCaptureFailed("Error releasing recorder: " + e.message))
+        }
+        // Bounded join: a capture thread parked in a blocking read() must not
+        // wedge the (often main/UI) thread calling cancel()/stop() — ANR risk.
+        try {
+            recordingThread?.join(CANCEL_JOIN_TIMEOUT_MS)
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+        }
+        recordingThread = null
     }
 
     fun stop(clean: Boolean = true) {
         if (!isRecording) return
         isRecording = false
-
-        try {
-            audioRecord?.stop()
-            audioRecord?.release()
-            audioRecord = null
-            recordingThread?.join(CANCEL_JOIN_TIMEOUT_MS)
-            recordingThread = null
-        } catch (e: Exception) {
-            currentCallback?.onError(AudioCaptureFailed("Error stopping recording: " + e.message))
-            return
-        }
+        releaseAudioRecord()
 
         val audioBytes = recordedAudioData.toByteArray()
         val whisper = currentWhisper
@@ -215,20 +243,9 @@ open class AudioRecorder {
 
     /** Cancel recording immediately without transcription or callbacks */
     open fun cancel() {
-        if (isRecording) {
-            isRecording = false
-            try {
-                audioRecord?.stop()
-                audioRecord?.release()
-                audioRecord = null
-                // Bounded join: a capture thread parked in a blocking read() must not
-                // wedge the (often main/UI) thread calling cancel() — ANR risk (OCR finding).
-                recordingThread?.join(CANCEL_JOIN_TIMEOUT_MS)
-                recordingThread = null
-            } catch (e: Exception) {
-                // ignore during cancel
-            }
-        }
+        isRecording = false
+        // Idempotent: releases only if a live instance is held (ticket #99).
+        releaseAudioRecord()
         cancelTranscribe()
         recordedAudioData.reset()
     }
@@ -241,6 +258,7 @@ open class AudioRecorder {
         }
         // cancel() early-returns when not recording (e.g. after a completed stop()),
         // so release() must free the captured audio buffer unconditionally.
+        releaseAudioRecord()
         recordedAudioData.reset()
         currentWhisper = null
         currentCleaner = null
