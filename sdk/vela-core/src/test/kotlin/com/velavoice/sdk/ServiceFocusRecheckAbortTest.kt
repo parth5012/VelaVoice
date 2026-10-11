@@ -241,7 +241,10 @@ class ServiceFocusRecheckAbortTest {
             body.contains("sessionStartedPrivacySensitive") && body.contains("return")
         )
         val activeBody = codeOnly(extractFunBody(vims, "isSessionActive"))
-        assertTrue("VIMS isSessionActive must cover batch recording", activeBody.contains("isRecording"))
+        assertTrue(
+            "VIMS isSessionActive must cover batch recording",
+            activeBody.contains("recordingGate.isSessionActive()")
+        )
         assertTrue("VIMS isSessionActive must cover streaming", activeBody.contains("isStreaming"))
     }
 
@@ -352,13 +355,15 @@ class ServiceFocusRecheckAbortTest {
         val (_, vims) = serviceSources()
         val onFinish = codeOnly(extractFunBody(vims, "onFinishInput"))
         assertTrue(
-            "VIMS onFinishInput else branch must stay no-op without a session: else if (isRecording.get()) cancelRecording()",
-            onFinish.contains("else if (isRecording.get())") && onFinish.contains("cancelRecording(")
+            "VIMS onFinishInput else branch must stay no-op without a session: " +
+                "else if (recordingGate.isRecording()) cancelRecording()",
+            onFinish.contains("else if (recordingGate.isRecording())") && onFinish.contains("cancelRecording(")
         )
         val onFinishView = codeOnly(extractFunBody(vims, "onFinishInputView"))
         assertTrue(
-            "VIMS onFinishInputView else branch must stay no-op without a session: else if (isRecording.get()) cancelRecording()",
-            onFinishView.contains("else if (isRecording.get())") && onFinishView.contains("cancelRecording(")
+            "VIMS onFinishInputView else branch must stay no-op without a session: " +
+                "else if (recordingGate.isRecording()) cancelRecording()",
+            onFinishView.contains("else if (recordingGate.isRecording())") && onFinishView.contains("cancelRecording(")
         )
     }
 
@@ -367,8 +372,9 @@ class ServiceFocusRecheckAbortTest {
         val (_, vims) = serviceSources()
         val cancel = codeOnly(extractFunBody(vims, "cancelRecording"))
         assertTrue(
-            "VIMS cancelRecording must guard with if (!isRecording.get()) return so no-session calls are no-ops",
-            cancel.contains("!isRecording.get()") && cancel.contains("return")
+            "VIMS cancelRecording must guard with if (!recordingGate.tryCancel()) return " +
+                "so no-session calls are no-ops (map #97 #98 gate)",
+            cancel.contains("!recordingGate.tryCancel()") && cancel.contains("return")
         )
     }
 

@@ -32,6 +32,16 @@ class ShadowFakeAudioRecord {
         @Volatile
         var blockReads: Boolean = false
 
+        /** Number of AudioRecord instances constructed (leak detection, ticket #98). */
+        @JvmStatic
+        @Volatile
+        var constructorCount: Int = 0
+
+        /** Number of AudioRecord.release() calls (every constructed instance must be released exactly once). */
+        @JvmStatic
+        @Volatile
+        var releaseCount: Int = 0
+
         /** Counted down on entry to a blocking read() so tests can wait deterministically. */
         @JvmStatic
         @Volatile
@@ -54,6 +64,8 @@ class ShadowFakeAudioRecord {
             blockReads = false
             readLatch = CountDownLatch(1)
             readEntered = CountDownLatch(1)
+            constructorCount = 0
+            releaseCount = 0
         }
 
         @JvmStatic
@@ -69,6 +81,7 @@ class ShadowFakeAudioRecord {
         audioFormat: Int,
         bufferSizeInBytes: Int
     ) {
+        constructorCount++
     }
 
     @Implementation
@@ -105,5 +118,6 @@ class ShadowFakeAudioRecord {
 
     @Implementation
     fun release() {
+        releaseCount++
     }
 }

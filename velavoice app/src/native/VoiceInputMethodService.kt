@@ -27,6 +27,7 @@ import com.velavoice.sdk.RevisionMarker
 import com.velavoice.sdk.StreamConfig
 import com.velavoice.sdk.StreamingPipeline
 import com.velavoice.sdk.PrivacyGuard
+import com.velavoice.sdk.RecordingSessionGate
 import com.velavoice.sdk.ScribeInput
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
@@ -47,10 +48,13 @@ class VoiceInputMethodService : InputMethodService() {
     private var cachedWhisperPath: String? = null
     private var cachedLlmPath: String? = null
 
-    // Recording state
+    // Recording state — single IDLE/RECORDING/PROCESSING gate (map #97 #98):
+    // the only entry into a recording session; start/stop/cancel are no-ops
+    // outside their legal transitions, so double-taps and re-entries can
+    // never re-enter a live session or re-run teardown.
     private var recordingSeconds = 0
     private var timerHandler: Handler? = null
-    private val isRecording = AtomicBoolean(false)
+    private val recordingGate = RecordingSessionGate()
 
     // Streaming state
     private val isStreaming = AtomicBoolean(false)
@@ -218,7 +222,7 @@ class VoiceInputMethodService : InputMethodService() {
             // Input ended while the pipeline was still being built: discard the
             // queued start, never record into the next field (map #130 PR #137 fix).
             invalidatePendingStreamingStart()
-        } else if (isRecording.get()) {
+        } else if (recordingGate.isRecording()) {
             cancelRecording()
         }
     }
@@ -230,7 +234,7 @@ class VoiceInputMethodService : InputMethodService() {
         } else if (streamingStartPending) {
             // Same as onFinishInput: a queued start must not outlive the input.
             invalidatePendingStreamingStart()
-        } else if (isRecording.get()) {
+        } else if (recordingGate.isRecording()) {
             cancelRecording()
         }
     }
@@ -258,7 +262,7 @@ class VoiceInputMethodService : InputMethodService() {
         // A queued-but-unstarted streaming session is still active: the worker
         // has not reached pipeline.start() yet, so a flip must be able to abort
         // it (map #130 PR #137 fix).
-        return isRecording.get() || isStreaming.get() || streamingStartPending
+        return recordingGate.isSessionActive() || isStreaming.get() || streamingStartPending
     }
 
     /**
@@ -603,7 +607,7 @@ class VoiceInputMethodService : InputMethodService() {
 
     override fun onDestroy() {
         super.onDestroy()
-        isRecording.set(false)
+        recordingGate.reset()
         isStreaming.set(false)
         // A queued start must not survive the service: the worker discards its
         // pipeline instead of recording after destroy (map #130 PR #137 fix).
@@ -636,6 +640,11 @@ class VoiceInputMethodService : InputMethodService() {
     // ──────────────────────────────────────────────
 
     private fun startRecording() {
+        // Single gate (map #97 #98): a non-IDLE state (live session, or a
+        // session still building on the bg worker) makes start a no-op, so a
+        // double-tap or onStartInputView re-entry can never open a second
+        // AudioRecord over the live one.
+        if (!recordingGate.tryStart()) return
         voiceRecordingPane.resetDisplay()
         voiceRecordingPane.statusText.text = "Initializing..."
         val sessionPrivacySensitive = isSessionPrivacySensitive()
@@ -654,6 +663,9 @@ class VoiceInputMethodService : InputMethodService() {
 
                 val whisperPath = cachedWhisperPath
                 if (whisperPath == null) {
+                    if (recordingGeneration == streamingSessionGeneration) {
+                        recordingGate.reset()
+                    }
                     mainHandler.post {
                         voiceRecordingPane.statusText.text = "No whisper model found. Download one first."
                     }
@@ -681,7 +693,30 @@ class VoiceInputMethodService : InputMethodService() {
 
                 val builtTranscriber = builder.build()
 
-                mainHandler.post {
+                mainHandler.post main@{
+                    // Stale-start guard (map #97 #98): cancelRecording bumped the
+                    // generation and/or stopRecording moved the gate out of
+                    // RECORDING while this transcriber was building — discard it
+                    // (never start, never record, never leak) and settle the
+                    // gate if a stop was waiting on this build.
+                    if (recordingGeneration != streamingSessionGeneration || !recordingGate.isRecording()) {
+                        try {
+                            builtTranscriber.release()
+                        } catch (ignored: Exception) {
+                        }
+                        if (recordingGeneration == streamingSessionGeneration) {
+                            // Stop landed in the init window: nothing was
+                            // published, so there is nothing to process — settle
+                            // the session instead of leaving it stuck in
+                            // PROCESSING, and put the keyboard back.
+                            recordingGate.finish()
+                            mainHandler.post {
+                                voiceRecordingPane.statusText.text = "Ready"
+                                showKeyboardView()
+                            }
+                        }
+                        return@main
+                    }
                     // Assign to main thread reference
                     transcriber?.release()
                     transcriber = builtTranscriber
@@ -689,7 +724,6 @@ class VoiceInputMethodService : InputMethodService() {
                     voiceRecordingPane.statusText.text = "Recording..."
                     voiceRecordingPane.hideTimer()
 
-                    isRecording.set(true)
                     recordingSeconds = 0
                     startTimer()
 
@@ -704,10 +738,10 @@ class VoiceInputMethodService : InputMethodService() {
                             // Generation-bound batch (map #130 PR #138 fix): a
                             // stale async result must never save or commit under
                             // a newer session — return before touching shared
-                            // state so the new session's isRecording/timer/UI
-                            // and storage stay intact. Fail-closed: discard.
+                            // state so the new session's gate/timer/UI and
+                            // storage stay intact. Fail-closed: discard.
                             if (recordingGeneration != streamingSessionGeneration) return
-                            isRecording.set(false)
+                            recordingGate.finish()
                             timerHandler?.removeCallbacksAndMessages(null)
                             voiceRecordingPane.statusText.text = "Done"
                             val finalTranscript = result.cleanedTranscript
@@ -734,7 +768,7 @@ class VoiceInputMethodService : InputMethodService() {
                         }
 
                         override fun onError(error: VelaException) {
-                            isRecording.set(false)
+                            recordingGate.finish()
                             timerHandler?.removeCallbacksAndMessages(null)
                             voiceRecordingPane.statusText.post {
                                 voiceRecordingPane.statusText.text = error.message
@@ -744,6 +778,9 @@ class VoiceInputMethodService : InputMethodService() {
                 }
             } catch (e: Exception) {
                 android.util.Log.e("VoiceIME", "Start recording failed", e)
+                if (recordingGeneration == streamingSessionGeneration) {
+                    recordingGate.reset()
+                }
                 mainHandler.post {
                     voiceRecordingPane.statusText.text = "Initialization error"
                 }
@@ -752,15 +789,24 @@ class VoiceInputMethodService : InputMethodService() {
     }
 
     private fun stopRecording(runCleaner: Boolean) {
-        isRecording.set(false)
+        // Gated + idempotent (map #97 #98): only RECORDING may stop; a second
+        // stop, or a stop with no live session, must not re-run teardown or
+        // show a phantom Processing state.
+        if (!recordingGate.tryStop()) return
         timerHandler?.removeCallbacksAndMessages(null)
         voiceRecordingPane.statusText.text = "Processing..."
         transcriber?.stopRecording(clean = runCleaner)
     }
 
     private fun cancelRecording() {
-        if (!isRecording.get()) return
-        isRecording.set(false)
+        // Gated + idempotent (map #97 #98): only RECORDING may cancel; cancel
+        // after stop (PROCESSING) is a no-op so stop's in-flight transcript
+        // stays owned by the stop path.
+        if (!recordingGate.tryCancel()) return
+        // Invalidate a pending bg start (mirror of cancelStreaming): a cancel
+        // landing while startRecording's transcriber is still building must
+        // discard that build instead of recording into the canceled session.
+        streamingSessionGeneration++
         timerHandler?.removeCallbacksAndMessages(null)
         // Cancel semantics (#74): discard audio without transcription, flush
         // or save — never plain stopRecording which would transcribe the tail.
@@ -782,7 +828,7 @@ class VoiceInputMethodService : InputMethodService() {
         voiceRecordingPane.updateTimer(0)
         timerHandler?.post(object : Runnable {
             override fun run() {
-                if (!isRecording.get()) return
+                if (!recordingGate.isRecording()) return
                 recordingSeconds++
                 voiceRecordingPane.updateTimer(recordingSeconds)
                 timerHandler?.postDelayed(this, 1000)
