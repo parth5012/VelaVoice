@@ -133,6 +133,8 @@ class ShadowInputMethodService {
         var composingStart = -1
         var composingEnd = -1
         var currentInputType = InputType.TYPE_CLASS_TEXT
+        /** Editor package name returned by getCurrentInputEditorInfo (per-app Scribe style). */
+        var currentPackageName: String? = null
         /** Simulates the framework returning no EditorInfo (map #72, ticket #80). */
         var returnNullEditorInfo = false
 
@@ -154,6 +156,7 @@ class ShadowInputMethodService {
             composingStart = -1
             composingEnd = -1
             currentInputType = InputType.TYPE_CLASS_TEXT
+            currentPackageName = null
             returnNullEditorInfo = false
         }
     }
@@ -163,6 +166,7 @@ class ShadowInputMethodService {
         if (returnNullEditorInfo) null
         else EditorInfo().apply {
             inputType = currentInputType
+            packageName = currentPackageName
             // anything else?
         }
     @Implementation

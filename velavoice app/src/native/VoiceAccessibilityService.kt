@@ -68,6 +68,27 @@ class VoiceAccessibilityService : AccessibilityService() {
     private val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
     private val BUFFER_SIZE = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT)
 
+    // ── Model-path + engine cache (map #97, ticket #101) ────────────────────
+    // The batch path used to open the companion app's models.db cross-app AND
+    // construct a WhisperEngine (tens-of-MB mmap) once per capture. Both are
+    // owned by the service for its lifetime: a NON-null path is cached until
+    // the cached file vanishes, while a null resolution is re-queried next
+    // call (a model may download later — review blocker 1). The engine is
+    // built lazily under the service monitor and freed exactly once via
+    // freeWhisperEngine() in onDestroy (review blocker 3). onDestroy is the
+    // single invalidation point (next to TextCleaner.clearCache, the #96 cache).
+    @Volatile
+    private var cachedWhisperModelPath: String? = null
+    @Volatile
+    private var whisperModelPathResolved = false
+    @Volatile
+    private var cachedLlmModelPath: String? = null
+    @Volatile
+    private var llmModelPathResolved = false
+    @Volatile
+    private var cachedWhisperEngine: WhisperEngine? = null
+    private var cachedWhisperEnginePath: String? = null
+
     // Streaming state
     private var isStreaming = false
     private var streamingMode = "instant"
@@ -644,11 +665,11 @@ class VoiceAccessibilityService : AccessibilityService() {
         } else {
             val whisperPath = getWhisperModelPath(this@VoiceAccessibilityService)
             if (whisperPath != null) {
-                val whisper = WhisperEngine(WhisperConfig(whisperPath))
-                try {
+                // Cached engine (ticket #101): one whisper_init per service
+                // lifetime, freed exactly once in onDestroy — never per capture.
+                val whisper = acquireWhisperEngine(whisperPath)
+                if (whisper != null) {
                     rawTranscript = whisper.transcribe(audioBytes)
-                } finally {
-                    whisper.free()
                 }
             } else {
                 val seconds = (audioBytes.size / 2) / 16000f
@@ -784,7 +805,79 @@ class VoiceAccessibilityService : AccessibilityService() {
         return null
     }
 
+    /**
+     * Cached whisper model path (ticket #101): one models.db resolution per service
+     * lifetime. A NULL resolution is never cached as final (review blocker 1): if the
+     * model has not downloaded yet, the next call re-queries so a later download is
+     * picked up without toggling the service. Only a non-null path whose file still
+     * exists is served from the cache.
+     */
     private fun getWhisperModelPath(context: Context): String? {
+        if (whisperModelPathResolved) {
+            val cached = cachedWhisperModelPath
+            if (cached != null && File(cached).exists()) return cached
+        }
+        val path = queryWhisperModelPath(context)
+        cachedWhisperModelPath = path
+        whisperModelPathResolved = path != null
+        return path
+    }
+
+    /** Cached LLM model path (ticket #101): same null-safe contract as [getWhisperModelPath]. */
+    private fun getLlmModelPath(context: Context): String? {
+        if (llmModelPathResolved) {
+            val cached = cachedLlmModelPath
+            if (cached != null && File(cached).exists()) return cached
+        }
+        val path = queryLlmModelPath(context)
+        cachedLlmModelPath = path
+        llmModelPathResolved = path != null
+        return path
+    }
+
+    /**
+     * One cached local engine per service lifetime (ticket #101): the batch
+     * path used to whisper_init + free a tens-of-MB mmap per capture. Freed
+     * exactly once via [freeWhisperEngine]; a model-path change frees the old
+     * engine before building the new one. Construction failures return null.
+     *
+     * @Synchronized (review blocker 3): stopRecording's completion runs on raw
+     * Thread bodies, so two concurrent captures could otherwise both construct
+     * a ~40MB native engine and overwrite one reference without free().
+     * [freeWhisperEngine] shares this same monitor, so onDestroy can never free
+     * an engine while an acquire is mid-flight.
+     */
+    @Synchronized
+    private fun acquireWhisperEngine(path: String): WhisperEngine? {
+        cachedWhisperEngine?.let { existing ->
+            if (cachedWhisperEnginePath == path) return existing
+            runCatching { existing.free() }
+            cachedWhisperEngine = null
+            cachedWhisperEnginePath = null
+        }
+        return try {
+            WhisperEngine(WhisperConfig(path)).also {
+                cachedWhisperEngine = it
+                cachedWhisperEnginePath = path
+            }
+        } catch (e: Exception) {
+            Log.e("VoiceAccessibility", "Whisper engine init failed: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * Free the cached engine under the SAME lock as [acquireWhisperEngine]
+     * (review blocker 3): the teardown can never free an engine mid-acquire.
+     */
+    @Synchronized
+    private fun freeWhisperEngine() {
+        cachedWhisperEngine?.let { engine -> runCatching { engine.free() } }
+        cachedWhisperEngine = null
+        cachedWhisperEnginePath = null
+    }
+
+    private fun queryWhisperModelPath(context: Context): String? {
         val dbFile = findDatabaseFile(context) ?: return null
         var db: SQLiteDatabase? = null
         var path: String? = null
@@ -803,7 +896,7 @@ class VoiceAccessibilityService : AccessibilityService() {
         return path
     }
 
-    private fun getLlmModelPath(context: Context): String? {
+    private fun queryLlmModelPath(context: Context): String? {
         val dbFile = findDatabaseFile(context) ?: return null
         var db: SQLiteDatabase? = null
         var path: String? = null
@@ -1262,6 +1355,13 @@ class VoiceAccessibilityService : AccessibilityService() {
         streamingPipeline?.release()
         streamingPipeline = null
         streamingCleanupExecutor.shutdownNow()
+        // Ticket #101: release the cached engine exactly once (under the acquire
+        // lock — review blocker 3) and invalidate every model-path cache.
+        freeWhisperEngine()
+        cachedWhisperModelPath = null
+        whisperModelPathResolved = false
+        cachedLlmModelPath = null
+        llmModelPathResolved = false
         TextCleaner.clearCache()
         floatingLayout?.let {
             windowManager?.removeView(it)

@@ -99,6 +99,26 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     private String mCachedVelaLanguage = null;
     private int mCachedVelaThreads = -1;
     private java.util.List<String> mCachedVelaCustomFillers = null;
+
+    // ── Model-path resolution cache (map #97, ticket #101) ──────────────────
+    // Both the whisper and LLM fallbacks open the companion app's models.db
+    // cross-app (createPackageContext + SQLite open + query) via
+    // ModelDownloadHelper.getSharedModelPath(). That used to run on every
+    // voice session. Cache contract: ONE resolution per raw pref value; a pref
+    // change, a cached path that vanished from disk, or IME teardown
+    // (releaseVelaTranscriber) invalidates the cache explicitly. A miss (no
+    // path resolved yet) still re-resolves every call so a model downloaded
+    // after the last session is picked up.
+    private boolean mWhisperPathResolved = false;
+    private String mCachedWhisperPref = null;
+    private String mCachedResolvedWhisperPath = null;
+    /** Diagnostics for the #101 reuse lock test: counts actual resolutions. */
+    private int mWhisperModelResolveCount = 0;
+    private boolean mLlmPathResolved = false;
+    private String mCachedLlmPref = null;
+    private String mCachedResolvedLlmPath = null;
+    /** Diagnostics for the #101 reuse lock test: counts actual resolutions. */
+    private int mLlmModelResolveCount = 0;
     private KeyboardWrapperView mKeyboardViewWrapper;
     private View mMainKeyboardFrame;
     private MainKeyboardView mKeyboardView;
@@ -297,6 +317,13 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         mCachedVelaLanguage = null;
         mCachedVelaThreads = -1;
         mCachedVelaCustomFillers = null;
+        // Explicit invalidation of the model-path cache on IME teardown (ticket #101).
+        mWhisperPathResolved = false;
+        mCachedWhisperPref = null;
+        mCachedResolvedWhisperPath = null;
+        mLlmPathResolved = false;
+        mCachedLlmPref = null;
+        mCachedResolvedLlmPath = null;
         mSavedInputView = null;
         YapsUiManager.getInstance().stopActiveRecording();
     }
@@ -397,19 +424,86 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             && java.util.Objects.equals(customFillers, mCachedVelaCustomFillers);
     }
 
+    /**
+     * Resolve the whisper model path for this session (map #97, ticket #101).
+     * The cross-app models.db fallback used to run on every call; the resolved
+     * value is cached per raw pref value until the pref changes, the cached
+     * file vanishes, or IME teardown clears the cache.
+     */
+    String resolveWhisperModelPath(final Context context, final SharedPreferences prefs) {
+        final String pref = prefs.getString(Settings.PREF_VELA_MODEL_PATH,
+            helium314.keyboard.latin.settings.Defaults.PREF_VELA_MODEL_PATH);
+        if (!mWhisperPathResolved
+                || !java.util.Objects.equals(pref, mCachedWhisperPref)
+                || mCachedResolvedWhisperPath == null
+                || !new java.io.File(mCachedResolvedWhisperPath).exists()) {
+            mCachedResolvedWhisperPath = resolveWhisperModelPathUncached(context, pref);
+            mCachedWhisperPref = pref;
+            mWhisperPathResolved = true;
+            mWhisperModelResolveCount++;
+        }
+        return mCachedResolvedWhisperPath;
+    }
+
+    private static String resolveWhisperModelPathUncached(final Context context, final String pref) {
+        if (pref != null && !pref.isEmpty() && new java.io.File(pref).exists()) {
+            return pref;
+        }
+        final String sharedPath = helium314.keyboard.settings.ModelDownloadHelper.getSharedModelPath(context, "whisper");
+        return sharedPath != null ? sharedPath : pref;
+    }
+
+    /**
+     * Resolve the LLM model path for this session (map #97, ticket #101).
+     * Same cache contract as {@link #resolveWhisperModelPath}.
+     */
+    String resolveLlmModelPathCached(final LatinIME latinIME, final SharedPreferences prefs) {
+        final String pref = prefs.getString(Settings.PREF_VELA_LLM_MODEL_PATH,
+            helium314.keyboard.latin.settings.Defaults.PREF_VELA_LLM_MODEL_PATH);
+        if (!mLlmPathResolved
+                || !java.util.Objects.equals(pref, mCachedLlmPref)
+                || mCachedResolvedLlmPath == null
+                || !new java.io.File(mCachedResolvedLlmPath).exists()) {
+            mCachedResolvedLlmPath = resolveLlmModelPathUncached(latinIME, pref);
+            mCachedLlmPref = pref;
+            mLlmPathResolved = true;
+            mLlmModelResolveCount++;
+        }
+        return mCachedResolvedLlmPath;
+    }
+
+    private static String resolveLlmModelPathUncached(final LatinIME latinIME, final String pref) {
+        if (pref != null && !pref.isEmpty() && new java.io.File(pref).exists()) {
+            return pref;
+        }
+        final String sharedPath = helium314.keyboard.settings.ModelDownloadHelper.getSharedModelPath(latinIME, "llm");
+        return sharedPath != null ? sharedPath : pref;
+    }
+
+    /**
+     * Build seam for the cached Vela engine (map #97, ticket #101): production
+     * builds through {@link #buildVelaTranscriber}; the session-reuse lock test
+     * installs a counting fake so 20 simulated sessions can assert exactly one
+     * construction without loading whisper native code.
+     */
+    interface VelaTranscriberFactory {
+        VelaTranscriber create(LatinIME latinIME, SharedPreferences prefs, String modelPath,
+                boolean useLlm, String llmModelPath, String language, int threads,
+                java.util.List<String> customFillers, boolean forceScribe, boolean privacySensitive)
+                throws Exception;
+    }
+
+    private VelaTranscriberFactory mTranscriberFactory = this::buildVelaTranscriber;
+
+    void setVelaTranscriberFactoryForTest(@Nullable final VelaTranscriberFactory factory) {
+        mTranscriberFactory = factory != null ? factory : this::buildVelaTranscriber;
+    }
+
     private void showVelaVoicePaneInternal(final LatinIME latinIME, final boolean forceScribe) {
         // --- Read preferences with in-memory caching ---
         SharedPreferences prefs = Settings.getInstance().getPrefs();
         
-        String resolvedModelPath = prefs.getString(Settings.PREF_VELA_MODEL_PATH,
-            helium314.keyboard.latin.settings.Defaults.PREF_VELA_MODEL_PATH);
-        if (resolvedModelPath == null || resolvedModelPath.isEmpty() || !new java.io.File(resolvedModelPath).exists()) {
-            String sharedPath = helium314.keyboard.settings.ModelDownloadHelper.getSharedModelPath(latinIME, "whisper");
-            if (sharedPath != null) {
-                resolvedModelPath = sharedPath;
-            }
-        }
-        final String modelPath = resolvedModelPath;
+        final String modelPath = resolveWhisperModelPath(latinIME, prefs);
 
         final EditorInfo editorInfo = latinIME != null ? latinIME.getCurrentInputEditorInfo() : null;
         final boolean privacySensitive = isPrivacySensitiveEditor(editorInfo);
@@ -420,7 +514,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             helium314.keyboard.latin.settings.Defaults.PREF_VELA_SCRIBE_ENABLED);
         final boolean effectiveScribe = !privacySensitive && (forceScribe || scribeEnabled);
 
-        final String llmModelPath = resolveLlmModelPath(latinIME, prefs);
+        final String llmModelPath = resolveLlmModelPathCached(latinIME, prefs);
 
         final String language = prefs.getString(Settings.PREF_VELA_LANGUAGE,
             helium314.keyboard.latin.settings.Defaults.PREF_VELA_LANGUAGE);
@@ -547,7 +641,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                         velaTranscriber.release();
                         velaTranscriber = null;
                     }
-                    VelaTranscriber transcriber = buildVelaTranscriber(latinIME, prefs,
+                    VelaTranscriber transcriber = mTranscriberFactory.create(latinIME, prefs,
                         modelPath, useLlm, llmModelPath, language, threads, customFillers,
                         forceScribe, privacySensitive);
 
@@ -621,7 +715,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                     velaTranscriber.release();
                     velaTranscriber = null;
                 }
-                VelaTranscriber transcriber = buildVelaTranscriber(latinIME, prefs,
+                VelaTranscriber transcriber = mTranscriberFactory.create(latinIME, prefs,
                     modelPath, useLlm, llmModelPath, language, threads, customFillers,
                     forceScribe, privacySensitive);
 
@@ -1071,15 +1165,8 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     }
 
     static String resolveLlmModelPath(final LatinIME latinIME, final SharedPreferences prefs) {
-        String resolvedLlmPath = prefs.getString(Settings.PREF_VELA_LLM_MODEL_PATH,
-            helium314.keyboard.latin.settings.Defaults.PREF_VELA_LLM_MODEL_PATH);
-        if (resolvedLlmPath == null || resolvedLlmPath.isEmpty() || !new java.io.File(resolvedLlmPath).exists()) {
-            String sharedPath = helium314.keyboard.settings.ModelDownloadHelper.getSharedModelPath(latinIME, "llm");
-            if (sharedPath != null) {
-                resolvedLlmPath = sharedPath;
-            }
-        }
-        return resolvedLlmPath;
+        return resolveLlmModelPathUncached(latinIME, prefs.getString(Settings.PREF_VELA_LLM_MODEL_PATH,
+            helium314.keyboard.latin.settings.Defaults.PREF_VELA_LLM_MODEL_PATH));
     }
 
     /**
@@ -1096,7 +1183,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                 helium314.keyboard.latin.settings.Defaults.PREF_VELA_SCRIBE_ENABLED);
         return new CleanerConfig(
             useLlm,
-            resolveLlmModelPath(latinIME, prefs),
+            getInstance().resolveLlmModelPathCached(latinIME, prefs),
             buildPersonalDictionary(prefs),
             parseCustomFillers(prefs),
             buildDictionaryKeywords(prefs),
@@ -1156,12 +1243,22 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                 ? safeText(ic.getTextAfterCursor(256, 0)) : null;
             final String appPackage = editorInfo != null ? editorInfo.packageName : null;
             final String inputType = editorInfo != null ? String.valueOf(editorInfo.inputType) : null;
+            // Resolve the per-app Scribe style PER SESSION (#101 review blocker 2): the
+            // cached transcriber bakes whatever style it was built with into its
+            // TextCleaner config, so an overrideStyle on this ScribeInput is the only
+            // way a reused engine serves the CURRENT app's style (TextCleaner.clean:
+            // style = overrideStyle ?: config.defaultScribeStyle). The effective flag
+            // matches the session: we are past both the privacy gate and the
+            // scribeEnabled||forceScribe gate above, so scribe is active here.
+            final String overrideStyle = prefs != null
+                ? resolveScribeStyle(latinIME, prefs, scribeEnabled || forceScribe)
+                : null;
             return new ScribeInput(
                 before,
                 after,
                 appPackage,
                 inputType,
-                null, //overrideStyle resolved per-app inside buildVelaTranscriber
+                overrideStyle,
                 false
             );
         } catch (Exception e) {
