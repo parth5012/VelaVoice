@@ -374,8 +374,12 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
             Log.e(TAG, "failed to apply cleaned text, keeping raw text", e);
         }
         if (!mPrivacySensitive && !raw.trim().isEmpty()) {
-            TranscriptionStorage.save(mLatinIME, raw, cleaned,
-                System.currentTimeMillis() - mStartTimeMs, null, mPrivacySensitive);
+            // Encode + JSON write run on the persistence executor, never inline on
+            // LatinIME.mHandler (map #97 #100): the editor swap above already
+            // happened, insertion does not wait on storage.
+            final long durationMs = System.currentTimeMillis() - mStartTimeMs;
+            TranscriptionStorage.persistAsync(() -> TranscriptionStorage.save(mLatinIME, raw, cleaned,
+                durationMs, null, mPrivacySensitive));
         }
         markFinished(false);
     }
