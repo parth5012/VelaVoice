@@ -820,6 +820,15 @@ public class LatinIME extends InputMethodService implements
     }
 
     @Override
+    public void onUnbindInput() {
+        super.onUnbindInput();
+        // Full reset (map #97, ticket #103): an unbound client must not leave the
+        // Yaps pane (pill or recording toolbar) attached to the input view.
+        mKeyboardSwitcher.stopVelaRecording();
+        YapsUiManager.getInstance().resetToHidden();
+    }
+
+    @Override
     public void onCurrentInputMethodSubtypeChanged(final InputMethodSubtype subtype) {
         // Note that the calling sequence of onCreate() and onCurrentInputMethodSubtypeChanged()
         // is not guaranteed. It may even be called at the same time on a different thread.
@@ -1060,6 +1069,8 @@ public class LatinIME extends InputMethodService implements
         super.onFinishInputView(finishingInput);
         Log.i(TAG, "onFinishInputView");
         mKeyboardSwitcher.stopVelaRecording();
+        // Full reset (map #97, ticket #103): the pane must not survive the input view.
+        YapsUiManager.getInstance().resetToHidden();
         cleanupInternalStateForFinishInput();
     }
 
@@ -1742,7 +1753,9 @@ public class LatinIME extends InputMethodService implements
                 if (!PermissionsUtil.checkAllPermissionsGranted(context, android.Manifest.permission.RECORD_AUDIO)) {
                     return;
                 }
-                if (mKeyboardSwitcher != null && mRichImm.isVelaReady()) {
+                // Show guard (map #97, ticket #103): a grant arriving while no input
+                // view is connected must not open the recording pane.
+                if (mKeyboardSwitcher != null && isInputViewShown() && mRichImm.isVelaReady()) {
                     mKeyboardSwitcher.showVelaVoicePane(LatinIME.this);
                 }
             }

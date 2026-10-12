@@ -137,6 +137,8 @@ class ShadowInputMethodService {
         var currentPackageName: String? = null
         /** Simulates the framework returning no EditorInfo (map #72, ticket #80). */
         var returnNullEditorInfo = false
+        /** Simulates the input view being hidden (map #97, ticket #103). */
+        var inputViewShown = true
 
         // convenience for access
         val textBeforeCursor get() = text.substring(0, selectionStart)
@@ -158,6 +160,7 @@ class ShadowInputMethodService {
             currentInputType = InputType.TYPE_CLASS_TEXT
             currentPackageName = null
             returnNullEditorInfo = false
+            inputViewShown = true
         }
     }
 
@@ -171,8 +174,9 @@ class ShadowInputMethodService {
         }
     @Implementation
     fun getCurrentInputConnection() = ic
+    // controllable: false simulates the framework hiding the input view (ticket #103)
     @Implementation
-    fun isInputViewShown() = true // otherwise selection updates will do nothing
+    fun isInputViewShown() = inputViewShown // otherwise selection updates will do nothing
 
     // essentially this is the text field we're editing in
     private val ic = object : InputConnection {

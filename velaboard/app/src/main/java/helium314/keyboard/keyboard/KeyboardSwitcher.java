@@ -325,7 +325,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         mCachedLlmPref = null;
         mCachedResolvedLlmPath = null;
         mSavedInputView = null;
-        YapsUiManager.getInstance().stopActiveRecording();
+        YapsUiManager.getInstance().resetToHidden();
     }
 
     /**
@@ -364,6 +364,17 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     /** True while a Vela voice session may still be recording, loading or streaming (map #72, ticket #78). */
     public boolean isVelaSessionActive() {
         return mTimerHandler != null || mIsVelaLoading || isVelaStreaming();
+    }
+
+    /**
+     * True when a Vela engine may still record, load or stream (map #97, ticket #103).
+     * The Yaps pane uses this as a show guard: after {@link #releaseVelaTranscriber()}
+     * every handle is gone and the cancel flag is set, so this reads false until a show
+     * path explicitly starts a new session (it clears the flag before opening the pane).
+     */
+    public boolean isVelaEngineAlive() {
+        return !mIsVelaRecordingCancelled || mIsVelaLoading
+            || velaTranscriber != null || velaStreamingSession != null;
     }
 
     /**
@@ -522,6 +533,12 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     }
 
     private void showVelaVoicePaneInternal(final LatinIME latinIME, final boolean forceScribe) {
+        // Show guard (map #97, ticket #103): never start a voice session for an input
+        // view that is not connected — the pane would record into nothing and leave
+        // orphaned views behind when the real input view is created later.
+        if (latinIME == null || !latinIME.isInputViewShown()) {
+            return;
+        }
         // --- Read preferences with in-memory caching ---
         SharedPreferences prefs = Settings.getInstance().getPrefs();
         
