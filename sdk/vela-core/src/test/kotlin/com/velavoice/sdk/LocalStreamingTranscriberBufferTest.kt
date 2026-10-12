@@ -82,4 +82,25 @@ class LocalStreamingTranscriberBufferTest {
             t.bufferedBytes <= maxExpected
         )
     }
+
+    @Test
+    fun `hard pending cap bounds buffer under a synthetic five-minute feed with a pathological window`() {
+        // Ticket #104: window-trim alone cannot bound this — the window is
+        // configured a hundred times larger than the whole synthetic session,
+        // so only the absolute drop-oldest ceiling can. Five minutes of
+        // 16 kHz 16-bit mono = 300 s * 32000 B/s = 9.6 MB of pending audio
+        // with no consumer draining it.
+        val t = makeTranscriber(windowSamples = 50_000_000, chunkSamples = 1600)
+        val chunk = ByteArray(32000) // 1 second of PCM per emit
+        for (i in 0 until 300) {
+            t.emit(chunk)
+        }
+        assertTrue(
+            "pending buffer ${t.bufferedBytes} exceeds hard cap " +
+                "${LocalStreamingTranscriber.MAX_PENDING_BYTES} + one chunk",
+            t.bufferedBytes <= LocalStreamingTranscriber.MAX_PENDING_BYTES + chunk.size
+        )
+        // Drop-oldest keeps a usable tail: the newest window is still there.
+        assertTrue(t.extractWindow().isNotEmpty())
+    }
 }

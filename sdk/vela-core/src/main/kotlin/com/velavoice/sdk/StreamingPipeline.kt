@@ -64,6 +64,18 @@ class StreamingPipeline internal constructor(
     internal var currentSegmentStart = 0
     @Volatile
     internal var committedText = ""
+    /**
+     * Chars dropped from the front of [committedText] by [trimCommittedTextLocked]
+     * in this session. Internal indices ([currentSegmentStart], offsets into
+     * [committedText]) are relative to the trimmed buffer; every emitted
+     * RevisionMarker range is made absolute by adding this offset, per the
+     * StreamingTranscriber.kt:7 contract ("the character range within the FULL
+     * output"), so consumers like VIMS (streamingCommittedLength =
+     * marker.range.last, VoiceInputMethodService.kt:396) see monotonically
+     * non-decreasing offsets even after a trim rewinds internal indices.
+     * Guarded by [stateLock].
+     */
+    private var totalDroppedChars = 0
     private var isSessionLocal = true
 
     /** The configuration derived from [Builder]; used by [start] when no explicit config is given. */
@@ -89,6 +101,16 @@ class StreamingPipeline internal constructor(
         const val VAD_PAUSE_MS = 500L
         const val MAX_SEGMENT_MS = 8000L
         const val FINAL_PASS_SECONDS = 5
+
+        /**
+         * Hard cap on the partial-transcript bookkeeping buffer (map #97,
+         * ticket #104), drop-oldest. On overflow the already-committed prefix
+         * (text already delivered to the UI as commit markers) is dropped, so
+         * a long streamed session cannot grow this buffer without bound.
+         * ~4k chars is several minutes of speech; segment commits every
+         * MAX_SEGMENT_MS keep making the prefix droppable.
+         */
+        const val MAX_PARTIAL_CHARS = 4096
     }
 
     class Builder(private val context: Context) {
@@ -192,6 +214,7 @@ class StreamingPipeline internal constructor(
         this.streamConfig = resolved
         this.committedText = ""
         this.currentSegmentStart = 0
+        this.totalDroppedChars = 0
         this.lastCommitTime = System.currentTimeMillis()
         this.lastActivityTime = System.currentTimeMillis()
         this.uploadRefusalReported.set(false)
@@ -379,6 +402,23 @@ class StreamingPipeline internal constructor(
         commitSegment(now, updateCommitTime = true)
     }
 
+    /**
+     * Drop-oldest bound on the partial bookkeeping buffer (map #97, ticket
+     * #104): once [committedText] exceeds [MAX_PARTIAL_CHARS], drop the prefix
+     * that has already been delivered to the UI as commit markers (everything
+     * before [currentSegmentStart]). Uncommitted tail text is never dropped,
+     * and the capture thread's MAX_SEGMENT_MS commits keep advancing
+     * [currentSegmentStart], so the drop makes progress in a live session.
+     * Must be called under [stateLock].
+     */
+    private fun trimCommittedTextLocked() {
+        if (currentSegmentStart <= 0 || committedText.length <= MAX_PARTIAL_CHARS) return
+        val dropTo = currentSegmentStart.coerceAtMost(committedText.length)
+        committedText = committedText.substring(dropTo)
+        totalDroppedChars += dropTo
+        currentSegmentStart -= dropTo
+    }
+
     private fun commitRemaining() {
         commitSegment(now = 0L, updateCommitTime = false)
     }
@@ -386,28 +426,33 @@ class StreamingPipeline internal constructor(
     /**
      * Commits the uncommitted tail `[currentSegmentStart, committedText.length)` as a
      * revision marker. Shared by [checkCommitBoundary] and [commitRemaining], which
-     * differ only in whether [lastCommitTime] advances.
+     * differ only in whether [lastCommitTime] advances. Reads snapshot, start and
+     * [totalDroppedChars] coherently under [stateLock] so a concurrent
+     * [trimCommittedTextLocked] cannot rewind the emitted range: the marker always
+     * carries the ABSOLUTE full-output range (relative offset + totalDroppedChars).
      */
     private fun commitSegment(now: Long, updateCommitTime: Boolean) {
-        val snapshot = committedText
-        val start = currentSegmentStart
-        if (start >= snapshot.length) {
-            if (updateCommitTime) lastCommitTime = now
-            return
-        }
+        synchronized(stateLock) {
+            val snapshot = committedText
+            val start = currentSegmentStart
+            if (start >= snapshot.length) {
+                if (updateCommitTime) lastCommitTime = now
+                return
+            }
 
-        val segmentText = snapshot.substring(start)
-        if (segmentText.isNotBlank()) {
-            callback?.onRevisionMarker(
-                RevisionMarker(
-                    type = "commit",
-                    text = segmentText.trim(),
-                    range = start until snapshot.length
+            val segmentText = snapshot.substring(start)
+            if (segmentText.isNotBlank()) {
+                callback?.onRevisionMarker(
+                    RevisionMarker(
+                        type = "commit",
+                        text = segmentText.trim(),
+                        range = (totalDroppedChars + start) until (totalDroppedChars + snapshot.length)
+                    )
                 )
-            )
+            }
+            currentSegmentStart = snapshot.length
+            if (updateCommitTime) lastCommitTime = now
         }
-        currentSegmentStart = snapshot.length
-        if (updateCommitTime) lastCommitTime = now
     }
 
     internal fun createTranscriberCallback(): StreamingTranscriptionCallback {
@@ -418,6 +463,7 @@ class StreamingPipeline internal constructor(
                         // Append to committed text buffer
                         synchronized(stateLock) {
                             committedText += marker.text + " "
+                            trimCommittedTextLocked()
                         }
                         callback?.onRevisionMarker(marker)
                     }

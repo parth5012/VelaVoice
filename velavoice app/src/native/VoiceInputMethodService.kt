@@ -800,6 +800,20 @@ class VoiceInputMethodService : InputMethodService() {
                                 voiceRecordingPane.statusText.text = error.message
                             }
                         }
+
+                        override fun onDurationLimitReached() {
+                            // Hard duration cap (map #97 #104): delivered on the
+                            // capture thread — run the normal gated stop path on
+                            // the main thread so RECORDING -> PROCESSING -> IDLE
+                            // settles, and surface a short notice (pane status
+                            // text, replaced by "Done" when the result lands).
+                            if (recordingGeneration != streamingSessionGeneration) return
+                            mainHandler.post {
+                                if (recordingGeneration != streamingSessionGeneration) return@post
+                                stopRecording(runCleaner = true)
+                                voiceRecordingPane.statusText.text = "Time limit reached"
+                            }
+                        }
                     }, ScribeInput(privacySensitive = sessionPrivacySensitive))
                 }
             } catch (e: Exception) {
