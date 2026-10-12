@@ -6,6 +6,7 @@
 
 package helium314.keyboard.keyboard;
 
+import com.velavoice.sdk.AudioRecorder;
 import com.velavoice.sdk.VelaTranscriber;
 import com.velavoice.sdk.ScribeInput;
 import com.velavoice.sdk.StreamingPipeline;
@@ -1394,7 +1395,35 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                     }
                 });
             }
+
+            @Override
+            public void onDurationLimitReached() {
+                stopTimer();
+                if (mIsVelaRecordingCancelled) {
+                    return;
+                }
+                latinIME.mHandler.post(() -> {
+                    if (mIsVelaRecordingCancelled) {
+                        return;
+                    }
+                    autoStopVelaOnLimit();
+                });
+            }
         };
+    }
+
+    /**
+     * Auto-stop at the SDK recorder's hard duration cap (map #97, ticket #104).
+     * Runs the same stop path as the user pressing Stop — transcribe what was
+     * captured, then onResult settles the pane/YAPS UI — plus a user-visible
+     * notice via the existing ad-hoc toast mechanism (no new i18n resources).
+     */
+    void autoStopVelaOnLimit() {
+        showToast("Voice input stopped: " + (AudioRecorder.MAX_RECORDING_DURATION_MS / 1000)
+                + "s limit reached", false);
+        if (velaTranscriber != null) {
+            velaTranscriber.stopRecording(true);
+        }
     }
 
     public void showMainKeyboard(final LatinIME latinIME) {

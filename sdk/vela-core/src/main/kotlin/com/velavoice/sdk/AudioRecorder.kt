@@ -8,7 +8,15 @@ import com.velavoice.sdk.whisper.AudioConverter
 import com.velavoice.sdk.whisper.WhisperEngine
 import java.io.ByteArrayOutputStream
 
-open class AudioRecorder {
+open class AudioRecorder(
+    /**
+     * Hard cap on one recording session (map #97, ticket #104). A stuck
+     * session would otherwise grow the per-session PCM buffer without bound;
+     * an OOM in a BIND_INPUT_METHOD process is a user-visible typing outage.
+     * Tests inject a small cap to keep synthetic long-run tests fast.
+     */
+    private val maxRecordingDurationMs: Long = MAX_RECORDING_DURATION_MS
+) {
     private var isRecording = false
     private var audioRecord: AudioRecord? = null
     private var recordingThread: Thread? = null
@@ -44,6 +52,19 @@ open class AudioRecorder {
 
         /** Max time to wait for the transcribe thread to drain during teardown. */
         const val TRANSCRIBE_JOIN_TIMEOUT_MS = 5000L
+
+        /**
+         * Hard cap on one recording session (map #97, ticket #104). At the cap
+         * the capture thread stops accumulating and signals the IME through
+         * [VelaRecordingCallback.onDurationLimitReached]; the IME runs its
+         * normal stop path, so the recorded audio is still transcribed. 60 s of
+         * 16 kHz 16-bit mono is ~1.9 MB — small enough that a stuck session
+         * can never OOM the IME process, long enough for normal dictation.
+         */
+        const val MAX_RECORDING_DURATION_MS = 60_000L
+
+        /** PCM 16-bit mono @16 kHz: one second of audio in bytes. */
+        const val PCM_BYTES_PER_SECOND = SAMPLE_RATE * 2L
     }
 
     fun isRecording(): Boolean = isRecording
@@ -90,14 +111,36 @@ open class AudioRecorder {
             // session still owns the field — an orphaned thread from a prior
             // session can never read a replacement session's recorder.
             val sessionBuffer = recordedAudioData
+            // Hard cap (ticket #104): the duration-implied byte budget bounds
+            // the retained PCM; either the byte budget or the wall clock firing
+            // ends accumulation and signals the IME for an auto-stop.
+            val maxSessionBytes = maxRecordingDurationMs * PCM_BYTES_PER_SECOND / 1000
+            val startNanos = System.nanoTime()
             recordingThread = Thread({
                 val buffer = ShortArray(BUFFER_SIZE / 2)
+                var sessionBytes = 0L
+                var limitReached = false
                 while (isRecording && audioRecord === record) {
                     try {
                         val readResult = record.read(buffer, 0, buffer.size)
                         if (readResult > 0 && audioRecord === record) {
-                            sessionBuffer.write(AudioConverter.shortsToBytes(buffer, readResult))
-                            callback.onAmplitude(AudioConverter.rmsNormalized(buffer, readResult))
+                            // Clip the final read so the retained buffer can
+                            // never exceed the byte budget, even before the
+                            // IME's auto-stop lands.
+                            val chunk = AudioConverter.shortsToBytes(buffer, readResult)
+                            val remaining = maxSessionBytes - sessionBytes
+                            val toWrite = if (chunk.size <= remaining) chunk
+                                else chunk.copyOf(remaining.toInt().coerceAtLeast(0))
+                            if (toWrite.isNotEmpty()) {
+                                sessionBuffer.write(toWrite)
+                                sessionBytes += toWrite.size
+                                callback.onAmplitude(AudioConverter.rmsNormalized(buffer, readResult))
+                            }
+                        }
+                        val elapsedMs = (System.nanoTime() - startNanos) / 1_000_000
+                        if (sessionBytes >= maxSessionBytes || elapsedMs >= maxRecordingDurationMs) {
+                            limitReached = true
+                            break
                         }
                     } catch (e: Exception) {
                         // A blocked read() can throw when the recorder is released
@@ -105,6 +148,15 @@ open class AudioRecorder {
                         // cross-session bleed, so just exit the loop.
                         break
                     }
+                }
+                if (limitReached) {
+                    // Auto-stop signal (ticket #104), delivered on the capture
+                    // thread like onAmplitude: the IME owns the session state
+                    // machine, so it runs the normal stop path (which still
+                    // transcribes the capped audio via stop()). isRecording
+                    // stays true until that stop lands, keeping the #98 gate
+                    // transition (RECORDING -> PROCESSING -> IDLE) intact.
+                    callback.onDurationLimitReached()
                 }
             }, "VelaAudioRecorderThread")
 

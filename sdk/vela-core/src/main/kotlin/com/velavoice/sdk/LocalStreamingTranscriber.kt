@@ -267,6 +267,12 @@ class LocalStreamingTranscriber(
         while (pendingChunks.size > 1 && bufferedBytes - pendingChunks.first().size >= maxBytes) {
             bufferedBytes -= pendingChunks.removeFirst().size
         }
+        // Hard drop-oldest ceiling (ticket #104): even a pathological
+        // windowDurationMs config — or a consumer that never drains — must
+        // not let the pending queue grow past MAX_PENDING_BYTES.
+        while (pendingChunks.size > 1 && bufferedBytes > MAX_PENDING_BYTES) {
+            bufferedBytes -= pendingChunks.removeFirst().size
+        }
     }
 
     internal fun extractWindow(): ByteArray {
@@ -415,7 +421,17 @@ class LocalStreamingTranscriber(
     internal fun isSilent(audioData: ByteArray, threshold: Float): Boolean =
         AudioConverter.isSilent(audioData, threshold)
 
-    private companion object {
+    internal companion object {
         const val DEFAULT_WINDOW_BYTES = 16000 * 2 * 15
+
+        /**
+         * Hard ceiling on the pending-audio queue (map #97, ticket #104),
+         * drop-oldest. The sliding-window trim normally keeps this at one
+         * window; this absolute cap bounds a pathological windowDurationMs
+         * config or a consumer that never drains. 4 MiB ~= 131 s of 16 kHz
+         * 16-bit mono — far above any sane window, so it never fires in
+         * normal operation.
+         */
+        const val MAX_PENDING_BYTES = 4 * 1024 * 1024
     }
 }
