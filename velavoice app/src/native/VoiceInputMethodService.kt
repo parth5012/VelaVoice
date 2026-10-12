@@ -357,10 +357,7 @@ class VoiceInputMethodService : InputMethodService() {
                 // pipeline was being built — discard it (never start, never
                 // record) and release it so it owns nothing.
                 if (generation != streamingSessionGeneration) {
-                    try {
-                        pipeline.release()
-                    } catch (ignored: Exception) {
-                    }
+                    teardownVoiceEngine(pipeline = pipeline)
                     unpublished = null
                     mainHandler.post {
                         voiceRecordingPane.statusText.text = "Ready"
@@ -501,10 +498,7 @@ class VoiceInputMethodService : InputMethodService() {
                         pipeline.stop()
                     } catch (ignored: Exception) {
                     }
-                    try {
-                        pipeline.release()
-                    } catch (ignored: Exception) {
-                    }
+                    teardownVoiceEngine(pipeline = pipeline)
                     unpublished = null
                     return@post
                 }
@@ -525,10 +519,7 @@ class VoiceInputMethodService : InputMethodService() {
                                 pipeline.stop()
                             } catch (ignored: Exception) {
                             }
-                            try {
-                                pipeline.release()
-                            } catch (ignored: Exception) {
-                            }
+                            teardownVoiceEngine(pipeline = pipeline)
                             streamingPipeline = null
                         }
                         return@main
@@ -542,15 +533,10 @@ class VoiceInputMethodService : InputMethodService() {
                 android.util.Log.e("VoiceIME", "Start streaming failed", e)
                 // No leak: start() may throw after the pipeline was built but
                 // before it was published — release what this worker owns and
-                // nullify so a failed start owns nothing.
-                try {
-                    unpublished?.release()
-                } catch (ignored: Exception) {
-                }
-                try {
-                    streamingPipeline?.release()
-                } catch (ignored: Exception) {
-                }
+                // nullify so a failed start owns nothing. unpublished and
+                // streamingPipeline reference the same pipeline (or one is null),
+                // so a single teardown covers both without double-release.
+                teardownVoiceEngine(pipeline = unpublished ?: streamingPipeline)
                 streamingPipeline = null
                 streamingStartPending = false
                 mainHandler.post {
@@ -577,7 +563,7 @@ class VoiceInputMethodService : InputMethodService() {
         }
 
         streamingPipeline?.stop()
-        streamingPipeline?.release()
+        teardownVoiceEngine(pipeline = streamingPipeline)
         streamingPipeline = null
     }
 
@@ -598,7 +584,7 @@ class VoiceInputMethodService : InputMethodService() {
         streamingBuffer.setLength(0)
         streamingCommittedLength = 0
         streamingPipeline?.stop()
-        streamingPipeline?.release()
+        teardownVoiceEngine(pipeline = streamingPipeline)
         streamingPipeline = null
         voiceRecordingPane.waveformView.clear()
         showKeyboardView()
@@ -619,12 +605,37 @@ class VoiceInputMethodService : InputMethodService() {
         // pipeline instead of recording after destroy (map #130 PR #137 fix).
         invalidatePendingStreamingStart()
         timerHandler?.removeCallbacksAndMessages(null)
-        transcriber?.release()
+        teardownVoiceEngine(transcriber = transcriber, pipeline = streamingPipeline)
         transcriber = null
-        streamingPipeline?.release()
         streamingPipeline = null
         bgHandlerThread?.quitSafely()
         bgHandlerThread = null
+    }
+
+    /**
+     * Single lifetime-owner teardown routine (ticket #102): this is the ONLY
+     * place `.release()` is invoked on the SDK session objects
+     * ([VelaTranscriber], [StreamingPipeline]). All other teardown paths —
+     * cancel, discard, stale-start guards, session replacement — route through
+     * here so ownership is auditable in one place.
+     *
+     * The routine releases only; it does NOT call `stop()`, `cancelRecording()`
+     * or commit text. Those are caller-specific semantic choices and stay at
+     * the call sites so routing through this routine never silently discards
+     * a transcript.
+     */
+    private fun teardownVoiceEngine(
+        transcriber: VelaTranscriber? = null,
+        pipeline: StreamingPipeline? = null
+    ) {
+        try {
+            pipeline?.release()
+        } catch (ignored: Exception) {
+        }
+        try {
+            transcriber?.release()
+        } catch (ignored: Exception) {
+        }
     }
 
     // ──────────────────────────────────────────────
@@ -685,7 +696,11 @@ class VoiceInputMethodService : InputMethodService() {
                     .getSharedPreferences("com.velavoice.app_preferences", Context.MODE_PRIVATE)
                 val useLlm = prefs.getBoolean("useLlmCleaner", false)
 
-                // Build transcriber (includes WhisperEngine init - on background)
+                // Build transcriber (includes WhisperEngine init - on background).
+                // LIFETIME OWNER (ticket #102): VIMS is the single owner of its
+                // VelaTranscriber and StreamingPipeline lifetimes. This builder
+                // call is the ONLY construction site; teardownVoiceEngine() is the
+                // ONLY release site. No other class constructs or releases these.
                 val builder = VelaTranscriber.Builder(this@VoiceInputMethodService)
                     .whisperModel(whisperPath)
                     .language("en")
@@ -706,10 +721,7 @@ class VoiceInputMethodService : InputMethodService() {
                     // (never start, never record, never leak) and settle the
                     // gate if a stop was waiting on this build.
                     if (recordingGeneration != streamingSessionGeneration || !recordingGate.isRecording()) {
-                        try {
-                            builtTranscriber.release()
-                        } catch (ignored: Exception) {
-                        }
+                        teardownVoiceEngine(transcriber = builtTranscriber)
                         if (recordingGeneration == streamingSessionGeneration) {
                             // Stop landed in the init window: nothing was
                             // published, so there is nothing to process — settle
@@ -724,7 +736,7 @@ class VoiceInputMethodService : InputMethodService() {
                         return@main
                     }
                     // Assign to main thread reference
-                    transcriber?.release()
+                    teardownVoiceEngine(transcriber = transcriber)
                     transcriber = builtTranscriber
 
                     voiceRecordingPane.statusText.text = "Recording..."
@@ -826,7 +838,7 @@ class VoiceInputMethodService : InputMethodService() {
         // or save — never plain stopRecording which would transcribe the tail.
         // AudioRecorder.cancel() emits no callback, so no transcript/file/UI tail.
         transcriber?.cancelRecording()
-        transcriber?.release()
+        teardownVoiceEngine(transcriber = transcriber)
         transcriber = null
         voiceRecordingPane.waveformView.clear()
         showKeyboardView()

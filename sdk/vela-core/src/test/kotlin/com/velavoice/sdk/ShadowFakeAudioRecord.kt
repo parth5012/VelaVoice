@@ -61,6 +61,29 @@ class ShadowFakeAudioRecord {
         @Volatile
         var readLatch: CountDownLatch = CountDownLatch(1)
 
+        /**
+         * When set to a constructed-instance index, only reads on that AudioRecord
+         * park on [readLatch] (ticket #102: park the FIRST session's capture
+         * thread while a second session installs a replacement recorder).
+         */
+        @JvmStatic
+        @Volatile
+        var blockReadsOnInstance: Int = -1
+
+        /**
+         * Per constructed-instance identity set of threads that called read()
+         * (ticket #102: detects an abandoned capture thread reading the
+         * replacement session's AudioRecord — two readers on one recorder).
+         */
+        @JvmStatic
+        private val readersByInstance = HashMap<Int, MutableSet<Thread>>()
+
+        /** Distinct threads that ever called read() on the AudioRecord built at [instanceIndex]. */
+        @JvmStatic
+        fun threadsThatRead(instanceIndex: Int): Set<Thread> = synchronized(readersByInstance) {
+            readersByInstance[instanceIndex]?.let { HashSet(it) } ?: emptySet()
+        }
+
         /** Unblock any parked read() calls (call from @After so threads can exit). */
         @JvmStatic
         fun releaseBlockedReads() {
@@ -72,18 +95,23 @@ class ShadowFakeAudioRecord {
         fun resetHooks() {
             readResult = 0
             blockReads = false
+            blockReadsOnInstance = -1
             readLatch = CountDownLatch(1)
             readEntered = CountDownLatch(1)
             constructorCount = 0
             releaseCount = 0
             stateResult = AudioRecord.STATE_INITIALIZED
             throwOnStartRecording = false
+            synchronized(readersByInstance) { readersByInstance.clear() }
         }
 
         @JvmStatic
         @Implementation
         fun getMinBufferSize(sampleRateInHz: Int, channelConfig: Int, audioFormat: Int): Int = 4096
     }
+
+    /** 0-based index of the AudioRecord this shadow backs (constructorCount at construction). */
+    private var myInstanceIndex: Int = -1
 
     @Implementation
     fun __constructor__(
@@ -93,6 +121,7 @@ class ShadowFakeAudioRecord {
         audioFormat: Int,
         bufferSizeInBytes: Int
     ) {
+        myInstanceIndex = constructorCount
         constructorCount++
     }
 
@@ -108,7 +137,13 @@ class ShadowFakeAudioRecord {
 
     @Implementation
     fun read(audioData: ShortArray?, offsetInShorts: Int, sizeInShorts: Int): Int {
-        if (blockReads) {
+        if (myInstanceIndex >= 0) {
+            synchronized(readersByInstance) {
+                readersByInstance.getOrPut(myInstanceIndex) { HashSet() }
+                    .add(Thread.currentThread())
+            }
+        }
+        if (blockReads || myInstanceIndex == blockReadsOnInstance) {
             readEntered.countDown()
             try {
                 readLatch.await(10, TimeUnit.SECONDS)

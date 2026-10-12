@@ -301,12 +301,12 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         stopTimer();
         if (velaStreamingSession != null) {
             velaStreamingSession.abortKeepingText();
-            velaStreamingSession.release();
+            teardownVelaEngine(null, velaStreamingSession);
             velaStreamingSession = null;
         }
         if (velaTranscriber != null) {
             velaTranscriber.cancelRecording();
-            velaTranscriber.release();
+            teardownVelaEngine(velaTranscriber, null);
             velaTranscriber = null;
         }
         TextCleaner.clearCache();
@@ -326,6 +326,28 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         mCachedResolvedLlmPath = null;
         mSavedInputView = null;
         YapsUiManager.getInstance().stopActiveRecording();
+    }
+
+    /**
+     * Single lifetime-owner teardown routine (ticket #102): this is the ONLY
+     * place `.release()` is invoked on the SDK session objects
+     * ({@link VelaTranscriber}, {@link VelaStreamingSession}). All other
+     * teardown paths — cancel, discard, streaming finish, session replacement —
+     * route through here so ownership is auditable in one place.
+     *
+     * The routine releases only; it does NOT call {@code cancelRecording()} or
+     * {@code abortKeepingText()}. Those are caller-specific semantic choices
+     * (discard in-flight audio vs. keep text) and stay at the call sites so
+     * routing through this routine never silently discards a transcript.
+     */
+    private void teardownVelaEngine(@Nullable final VelaTranscriber transcriber,
+            @Nullable final VelaStreamingSession session) {
+        if (session != null) {
+            session.release();
+        }
+        if (transcriber != null) {
+            transcriber.release();
+        }
     }
 
     /** Called when a key is tapped mid-stream: finalize the composing span and tear the stream down. */
@@ -638,7 +660,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             new Thread(() -> {
                 try {
                     if (velaTranscriber != null) {
-                        velaTranscriber.release();
+                        teardownVelaEngine(velaTranscriber, null);
                         velaTranscriber = null;
                     }
                     VelaTranscriber transcriber = mTranscriberFactory.create(latinIME, prefs,
@@ -648,7 +670,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                     voicePane.post(() -> {
                         mIsVelaLoading = false;
                         if (mIsVelaRecordingCancelled) {
-                            transcriber.release();
+                            teardownVelaEngine(transcriber, null);
                             return;
                         }
                         velaTranscriber = transcriber;
@@ -712,7 +734,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         new Thread(() -> {
             try {
                 if (velaTranscriber != null) {
-                    velaTranscriber.release();
+                    teardownVelaEngine(velaTranscriber, null);
                     velaTranscriber = null;
                 }
                 VelaTranscriber transcriber = mTranscriberFactory.create(latinIME, prefs,
@@ -722,7 +744,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                 latinIME.mHandler.post(() -> {
                     mIsVelaLoading = false;
                     if (mIsVelaRecordingCancelled) {
-                        transcriber.release();
+                        teardownVelaEngine(transcriber, null);
                         return;
                     }
                     velaTranscriber = transcriber;
@@ -986,7 +1008,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         new Thread(() -> {
             try {
                 if (velaTranscriber != null) {
-                    velaTranscriber.release();
+                    teardownVelaEngine(velaTranscriber, null);
                     velaTranscriber = null;
                     mCachedVelaModelPath = null;
                     mCachedVelaLlmToggle = null;
@@ -1005,7 +1027,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                 latinIME.mHandler.post(() -> {
                     mIsVelaLoading = false;
                     if (mIsVelaRecordingCancelled) {
-                        session.release();
+                        teardownVelaEngine(null, session);
                         return;
                     }
                     velaStreamingSession = session;
@@ -1049,7 +1071,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             public void onStreamingFinished(boolean cancelled) {
                 stopTimer();
                 if (velaStreamingSession != null) {
-                    velaStreamingSession.release();
+                    teardownVelaEngine(null, velaStreamingSession);
                     velaStreamingSession = null;
                 }
                 if (isYaps) {
@@ -1066,7 +1088,13 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         };
     }
 
-    /** Shared VelaTranscriber builder (used by both Vela and Yaps modes) */
+    /**
+     * Shared VelaTranscriber builder (used by both Vela and Yaps modes).
+     * LIFETIME OWNER (ticket #102): KeyboardSwitcher is the single owner of the
+     * {@link VelaTranscriber} and {@link VelaStreamingSession} lifetimes. This
+     * method is the ONLY construction site; {@link #teardownVelaEngine} is the
+     * ONLY release site. No other class constructs or releases these objects.
+     */
     private VelaTranscriber buildVelaTranscriber(final LatinIME latinIME,
             final SharedPreferences prefs, final String modelPath, final boolean useLlm,
             final String llmModelPath, final String language, final int threads,

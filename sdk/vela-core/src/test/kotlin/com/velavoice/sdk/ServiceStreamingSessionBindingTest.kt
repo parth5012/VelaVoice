@@ -314,7 +314,7 @@ class ServiceStreamingSessionBindingTest {
         val between = start.substring(buildIdx, startCallIdx)
         assertTrue(
             "a stale start must release the pipeline it just built (no leak)",
-            between.contains("pipeline.release()")
+            between.contains("teardownVoiceEngine(pipeline = pipeline)")
         )
         assertTrue(
             "a stale start must return before starting the pipeline (never record with a stale verdict)",
@@ -364,7 +364,8 @@ class ServiceStreamingSessionBindingTest {
         val catchIdx = start.indexOf("catch (e: Exception)")
         assertTrue("startStreaming must keep its start-failure path (#132-fix: no leak)", catchIdx > 0)
         val tail = start.substring(catchIdx)
-        assertTrue("start failure must release the pipeline", tail.contains("streamingPipeline?.release()"))
+        assertTrue("start failure must release the pipeline",
+            tail.contains("teardownVoiceEngine(pipeline = unpublished ?: streamingPipeline)"))
         assertTrue("start failure must nullify the pipeline", tail.contains("streamingPipeline = null"))
         assertTrue(
             "start failure must clear the pending marker, else every later start is blocked",
@@ -713,7 +714,7 @@ class ServiceStreamingSessionBindingTest {
         )
         assertTrue(
             "a start that raced cancellation must release the pipeline it just built",
-            racedBranch.contains("pipeline.release()")
+            racedBranch.contains("teardownVoiceEngine(pipeline = pipeline)")
         )
         assertTrue(
             "a start that raced cancellation must return without touching session state",
@@ -755,7 +756,7 @@ class ServiceStreamingSessionBindingTest {
         )
         assertTrue(
             "the success post must release that raced pipeline",
-            racedBranch.contains("pipeline.release()")
+            racedBranch.contains("teardownVoiceEngine(pipeline = pipeline)")
         )
         assertTrue(
             "the success post must bail out without touching session state",

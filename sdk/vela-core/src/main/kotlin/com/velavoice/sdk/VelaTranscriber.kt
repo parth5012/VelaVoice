@@ -190,7 +190,13 @@ class VelaTranscriber internal constructor(
     private var activeStreamingTranscriber: StreamingTranscriber? = null
     private val streamingAudioCapturer = StreamingAudioCapturer()
 
+    /** Guards release() so a second call is a no-op (ticket #102: released exactly once). */
+    private val released = java.util.concurrent.atomic.AtomicBoolean(false)
+
     fun release() {
+        // Idempotent (ticket #102): the session owner may call release() from
+        // several teardown paths; only the first call frees the native engine.
+        if (!released.compareAndSet(false, true)) return
         stopStreaming()
         audioRecorder.release()
         whisperEngine.free()

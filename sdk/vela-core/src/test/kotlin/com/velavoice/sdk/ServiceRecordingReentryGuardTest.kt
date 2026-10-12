@@ -135,7 +135,7 @@ class ServiceRecordingReentryGuardTest {
         assertTrue(
             "VIMS startRecording must release a discarded built transcriber " +
                 "(no AudioRecord/engine leak on the stale path)",
-            startBody.contains("builtTranscriber.release()")
+            startBody.contains("teardownVoiceEngine(transcriber = builtTranscriber)")
         )
     }
 
