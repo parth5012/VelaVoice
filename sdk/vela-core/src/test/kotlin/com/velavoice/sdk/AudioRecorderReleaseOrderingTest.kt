@@ -311,6 +311,49 @@ class AudioRecorderReleaseOrderingTest {
         engine.free()
         assertEquals(0, engine.nativeCallsAfterFree.get())
     }
+
+    @Test
+    fun `VelaTranscriber release is idempotent - second release does not free engine again`() {
+        val engine = TestWhisperEngine()
+        val recorder = AudioRecorder()
+        val transcriber = VelaTranscriber(engine, null, recorder)
+
+        transcriber.release()
+        transcriber.release() // second release must be a no-op (ticket #102)
+
+        assertEquals("whisperEngine.free() must be called exactly once", 1, engine.freeCalls.get())
+    }
+
+    @Test
+    fun `release while recording drains capture thread before whisperEngine free`() {
+        ShadowFakeAudioRecord.readResult = 2
+
+        val engine = TestWhisperEngine()
+        val recorder = AudioRecorder()
+        val transcriber = VelaTranscriber(engine, null, recorder)
+        val callback = mock(VelaRecordingCallback::class.java)
+
+        transcriber.startRecording(callback)
+        val deadline = System.currentTimeMillis() + 3000
+        while (recordedBufferSize(recorder) == 0 && System.currentTimeMillis() < deadline) {
+            Thread.sleep(10)
+        }
+        assertTrue("capture thread should have recorded audio", recordedBufferSize(recorder) > 0)
+
+        val recordingThreadField = AudioRecorder::class.java.getDeclaredField("recordingThread")
+        recordingThreadField.isAccessible = true
+        val captureThread = recordingThreadField.get(recorder) as? Thread
+        assertNotNull("AudioRecorder must expose its capture thread for drain verification", captureThread)
+
+        transcriber.release()
+
+        assertFalse(
+            "capture thread must have exited before release() returns (drained, not abandoned)",
+            captureThread!!.isAlive
+        )
+        assertTrue("engine must be freed after release() completes", engine.isFreed)
+        assertEquals("engine.free() must be called exactly once", 1, engine.freeCalls.get())
+    }
 }
 
 private open class TestWhisperEngine : WhisperEngine(stubInit = true) {

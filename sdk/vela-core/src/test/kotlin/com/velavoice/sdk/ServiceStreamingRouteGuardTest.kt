@@ -247,7 +247,7 @@ class ServiceStreamingRouteGuardTest {
         val body = extractFunBody(vims, "startStreaming")
         assertTrue(
             "VIMS startStreaming failure path must release the pipeline (no leak when start() throws)",
-            body.contains("streamingPipeline?.release()")
+            body.contains("teardownVoiceEngine(pipeline = unpublished ?: streamingPipeline)")
         )
         assertTrue(
             "VIMS startStreaming failure path must nullify the pipeline",

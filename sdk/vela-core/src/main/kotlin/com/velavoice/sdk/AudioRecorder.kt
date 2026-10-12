@@ -12,7 +12,14 @@ open class AudioRecorder {
     private var isRecording = false
     private var audioRecord: AudioRecord? = null
     private var recordingThread: Thread? = null
-    private val recordedAudioData = ByteArrayOutputStream()
+
+    /**
+     * Per-session audio buffer (ticket #102): each start() installs a fresh
+     * instance so an orphaned capture thread from a previous session can never
+     * write into the new session's buffer (cross-session PCM bleed).
+     */
+    @Volatile
+    private var recordedAudioData = ByteArrayOutputStream()
 
     @Volatile
     private var transcribeThread: Thread? = null
@@ -56,33 +63,47 @@ open class AudioRecorder {
         currentCallback = callback
         currentScribeInput = scribeInput
         currentInitialPrompt = initialPrompt
-        recordedAudioData.reset()
+        // Fresh per-session buffer (ticket #102): never share bytes across sessions.
+        recordedAudioData = ByteArrayOutputStream()
 
         try {
-            audioRecord = AudioRecord(
+            val record = AudioRecord(
                 MediaRecorder.AudioSource.MIC,
                 SAMPLE_RATE,
                 CHANNEL_CONFIG,
                 AUDIO_FORMAT,
                 BUFFER_SIZE
             )
+            audioRecord = record
 
-            if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
+            if (record.state != AudioRecord.STATE_INITIALIZED) {
                 isRecording = false
                 releaseAudioRecord()
                 callback.onError(AudioCaptureFailed("Microphone initialization failed"))
                 return
             }
 
-            audioRecord?.startRecording()
+            record.startRecording()
 
+            // Loop-local capture (ticket #102): the thread reads the AudioRecord
+            // instance it created, not the shared field, and only while this
+            // session still owns the field — an orphaned thread from a prior
+            // session can never read a replacement session's recorder.
+            val sessionBuffer = recordedAudioData
             recordingThread = Thread({
                 val buffer = ShortArray(BUFFER_SIZE / 2)
-                while (isRecording) {
-                    val readResult = audioRecord?.read(buffer, 0, buffer.size) ?: 0
-                    if (readResult > 0) {
-                        recordedAudioData.write(AudioConverter.shortsToBytes(buffer, readResult))
-                        callback.onAmplitude(AudioConverter.rmsNormalized(buffer, readResult))
+                while (isRecording && audioRecord === record) {
+                    try {
+                        val readResult = record.read(buffer, 0, buffer.size)
+                        if (readResult > 0 && audioRecord === record) {
+                            sessionBuffer.write(AudioConverter.shortsToBytes(buffer, readResult))
+                            callback.onAmplitude(AudioConverter.rmsNormalized(buffer, readResult))
+                        }
+                    } catch (e: Exception) {
+                        // A blocked read() can throw when the recorder is released
+                        // under it; the identity guard above already prevents
+                        // cross-session bleed, so just exit the loop.
+                        break
                     }
                 }
             }, "VelaAudioRecorderThread")
@@ -133,10 +154,14 @@ open class AudioRecorder {
 
     fun stop(clean: Boolean = true) {
         if (!isRecording) return
+        // Snapshot this session's buffer BEFORE flipping the flag (ticket #102):
+        // once isRecording is false a concurrent start() may reassign the
+        // recordedAudioData field, so we must not read the field after the flip.
+        val sessionBuffer = recordedAudioData
         isRecording = false
         releaseAudioRecord()
 
-        val audioBytes = recordedAudioData.toByteArray()
+        val audioBytes = sessionBuffer.toByteArray()
         val whisper = currentWhisper
         val callback = currentCallback
         // Snapshot session state before spawning: a concurrent start() may overwrite
