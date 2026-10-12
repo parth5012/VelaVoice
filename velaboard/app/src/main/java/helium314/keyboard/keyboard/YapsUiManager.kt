@@ -40,6 +40,11 @@ class YapsUiManager private constructor() {
         }
     }
 
+    /** Explicit pane lifecycle (map #97, ticket #103). */
+    enum class State { HIDDEN, SHOWN, RECORDING, PROCESSING }
+
+    private var mState = State.HIDDEN
+
     private var mLatinIME: LatinIME? = null
     private var mKeyboardSwitcher: KeyboardSwitcher? = null
     private var mSuggestionStripView: View? = null
@@ -55,8 +60,6 @@ class YapsUiManager private constructor() {
     private var mConfirmBtn: ImageButton? = null
     private var mMiddleContainer: LinearLayout? = null
 
-    private var mIsTranscribing = false
-
     private val mHandler = Handler(Looper.getMainLooper())
 
     fun init(latinIME: LatinIME, keyboardSwitcher: KeyboardSwitcher, suggestionStripView: View, keyboardViewWrapper: FrameLayout) {
@@ -65,9 +68,12 @@ class YapsUiManager private constructor() {
         this.mSuggestionStripView = suggestionStripView
         this.mKeyboardViewWrapper = keyboardViewWrapper
 
-        // Clean up any old views if re-initializing
-        removeYapsViews()
+        // Clean up any old views if re-initializing (map #97, ticket #103)
+        resetToHidden()
     }
+
+    /** Current pane state (map #97, ticket #103). */
+    fun state(): State = mState
 
     private fun isYapsActive(): Boolean {
         val prefs = Settings.getInstance().prefs ?: return false
@@ -80,20 +86,29 @@ class YapsUiManager private constructor() {
      */
     fun setupIdleState() {
         if (!isYapsActive()) {
-            removeYapsViews()
+            resetToHidden()
             return
         }
+
+        // Never reshow the idle pill over an active session (map #97, ticket #103).
+        if (mState == State.RECORDING || mState == State.PROCESSING) return
 
         val parent = mSuggestionStripView?.parent as? ViewGroup ?: return
         val context = mLatinIME ?: return
         val density = context.resources.displayMetrics.density
 
         // If pill already exists, just show it
-        if (mAutoPill != null) {
-            mAutoPill?.visibility = View.VISIBLE
-            mAutoPill?.alpha = 1f
+        val existingPill = mAutoPill
+        if (existingPill != null && existingPill.parent != null) {
+            mState = State.SHOWN
+            // A pending fade-out end action must not hide the pill again afterwards.
+            existingPill.animate().cancel()
+            existingPill.visibility = View.VISIBLE
+            existingPill.alpha = 1f
             return
         }
+        // The previous pill was detached (or never attached): build a fresh one.
+        mAutoPill = null
 
         // Create the AUTO Pill Trigger Button
         mAutoPill = LinearLayout(context).apply {
@@ -162,31 +177,41 @@ class YapsUiManager private constructor() {
 
         // Add to parent FrameLayout so it overlays on top
         parent.addView(mAutoPill)
+        mState = State.SHOWN
     }
 
     /**
      * Called when active recording/transcription begins.
      * Replaces standard toolbar with morphing recording controls and dims alphanumeric key grid.
+     * Returns false when the show guards (map #97, ticket #103) refuse the session:
+     * yaps style off, no bound input view, or no live voice engine to record into.
      */
-    fun startActiveRecording(activeLanguage: String) {
-        if (!isYapsActive()) return
-        val context = mLatinIME ?: return
+    fun startActiveRecording(activeLanguage: String): Boolean {
+        if (!isYapsActive()) return false
+        val context = mLatinIME ?: return false
+        val parent = mSuggestionStripView?.parent as? ViewGroup ?: return false
+        // Show guards (map #97, ticket #103): never open a recording toolbar without a
+        // connected input view or a live engine — callers ignore the return value, so the
+        // guards must leave no pane views behind on refusal.
+        if (!context.isInputViewShown()) return false
+        if (mKeyboardSwitcher?.isVelaEngineAlive() != true) return false
+
         val density = context.resources.displayMetrics.density
-        val parent = mSuggestionStripView?.parent as? ViewGroup ?: return
-
-
 
         // 2. Hide "AUTO" Pill trigger button
         mAutoPill?.animate()?.alpha(0f)?.setDuration(150)?.withEndAction {
-            mAutoPill?.visibility = View.GONE
+            if (mState == State.RECORDING) mAutoPill?.visibility = View.GONE
         }?.start()
 
         // 3. Hide standard Suggestion Strip View
         mSuggestionStripView?.animate()?.alpha(0f)?.setDuration(150)?.withEndAction {
-            mSuggestionStripView?.visibility = View.INVISIBLE
+            if (mState == State.RECORDING || mState == State.PROCESSING)
+                mSuggestionStripView?.visibility = View.INVISIBLE
         }?.start()
 
-        // 4. Create and Show Active Recording Toolbar
+        // Forget a toolbar that is no longer attached, then create and show the
+        // Active Recording Toolbar.
+        if (mActiveToolbar?.parent == null) mActiveToolbar = null
         if (mActiveToolbar == null) {
             mActiveToolbar = LinearLayout(context).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -260,9 +285,10 @@ class YapsUiManager private constructor() {
                     setImageDrawable(checkDrawable)
 
                     setOnClickListener {
-                        mIsTranscribing = true
-                        showTranscribingState()
-                        mKeyboardSwitcher?.confirmVelaRecording()
+                        if (mState == State.RECORDING) {
+                            showTranscribingState()
+                            mKeyboardSwitcher?.confirmVelaRecording()
+                        }
                     }
                 }
                 addView(mConfirmBtn)
@@ -287,14 +313,21 @@ class YapsUiManager private constructor() {
         mActiveToolbar?.visibility = View.VISIBLE
         mActiveToolbar?.alpha = 0f
         mActiveToolbar?.animate()?.alpha(1f)?.setDuration(150)?.start()
+
+        mState = State.RECORDING
+        return true
     }
 
     /**
      * Called when user confirms recording and transcription is processing.
      * Replaces waveform with animated pulsing dots and shows "TRANSCRIBING" label.
+     * Only a recording session may transition into processing (map #97, ticket #103).
      */
     private fun showTranscribingState() {
+        if (mState != State.RECORDING) return
         val context = mLatinIME ?: return
+        mState = State.PROCESSING
+
         val density = context.resources.displayMetrics.density
         val container = mMiddleContainer ?: return
 
@@ -328,9 +361,12 @@ class YapsUiManager private constructor() {
 
     /**
      * Restores the keyboard to standard standby mode.
+     * Idempotent: stopping an idle pane is a no-op (map #97, ticket #103).
      */
     fun stopActiveRecording() {
-        mIsTranscribing = false
+        if (mState != State.RECORDING && mState != State.PROCESSING) return
+        // Standby is SHOWN (the pill comes back); without a pill the pane is hidden.
+        mState = if (mAutoPill != null) State.SHOWN else State.HIDDEN
 
         // Stop dots animation
         mTranscribingDots?.stopAnimating()
@@ -340,6 +376,11 @@ class YapsUiManager private constructor() {
         // 2. Fade out and remove Active Recording Toolbar
         mActiveToolbar?.let { toolbar ->
             toolbar.animate().alpha(0f).setDuration(150).withEndAction {
+                // A new recording or a full reset took over while fading out: that later
+                // state owns the toolbar now, so this stale action must not detach it
+                // or untrack the live view (map #97, ticket #103).
+                if (mState == State.RECORDING || mState == State.PROCESSING) return@withEndAction
+                if (mActiveToolbar !== toolbar) return@withEndAction
                 val parent = toolbar.parent as? ViewGroup
                 parent?.removeView(toolbar)
                 mActiveToolbar = null
@@ -365,30 +406,51 @@ class YapsUiManager private constructor() {
 
     fun updateLanguageText(text: String) {
         mHandler.post {
-            mLanguageText?.text = text.uppercase()
+            if (mState == State.RECORDING || mState == State.PROCESSING) {
+                mLanguageText?.text = text.uppercase()
+            }
         }
     }
 
     fun addAmplitude(normalized: Float) {
-        if (mIsTranscribing) return
+        if (mState != State.RECORDING) return
         mWaveformView?.addAmplitude(normalized)
     }
 
-    private fun removeYapsViews() {
-        val parent = mSuggestionStripView?.parent as? ViewGroup
-        mAutoPill?.let { parent?.removeView(it) }
-        mAutoPill = null
-
+    /**
+     * Full reset (map #97, ticket #103): hide the pane, detach every view from the parent
+     * it is actually attached to (an input-view recreation may have left it on the old
+     * parent), drop all view references and restore the suggestion strip. Safe to call at
+     * any time; a later [setupIdleState] rebuilds the idle pane from scratch.
+     */
+    fun resetToHidden() {
+        val pill = mAutoPill
+        val toolbar = mActiveToolbar
+        val suggestionStrip = mSuggestionStripView
+        mState = State.HIDDEN
         mTranscribingDots?.stopAnimating()
-        mActiveToolbar?.let { parent?.removeView(it) }
+
+        pill?.let { (it.parent as? ViewGroup)?.removeView(it) }
+        toolbar?.let { (it.parent as? ViewGroup)?.removeView(it) }
+
+        // Drop references first: a cancelled animation may still run its end action,
+        // which must then find nothing left to detach or untrack.
+        mAutoPill = null
         mActiveToolbar = null
         mWaveformView = null
         mLanguageText = null
         mTranscribingDots = null
         mConfirmBtn = null
         mMiddleContainer = null
-        mIsTranscribing = false
 
+        pill?.animate()?.cancel()
+        toolbar?.animate()?.cancel()
+        suggestionStrip?.animate()?.cancel()
+
+        suggestionStrip?.let {
+            it.visibility = View.VISIBLE
+            it.alpha = 1f
+        }
     }
 }
 
