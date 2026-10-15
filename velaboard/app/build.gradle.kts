@@ -57,8 +57,8 @@ android {
         applicationId = "helium314.keyboard"
         minSdk = 24
         targetSdk = 35
-        versionCode = 4006
-        versionName = "4.0"
+        versionCode = 4007
+        versionName = "4.1"
 
         // Inject Google Drive credentials from .env into BuildConfig
         buildConfigField("String", "GOOGLE_DRIVE_CLIENT_ID", escapeBuildConfig(envConfig["GOOGLE_CLIENT_ID"] ?: ""))
