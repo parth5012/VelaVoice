@@ -184,7 +184,7 @@ class ServiceStreamingSessionBindingTest {
             onFinal.contains("if (sessionId != streamingSessionId) return@post")
         )
         val guardIdx = onFinal.indexOf("if (sessionId != streamingSessionId) return@post")
-        for (effect in listOf("insertStreamingText(cleaned, true)", "TranscriptionStorage.save")) {
+        for (effect in listOf("insertStreamingFinal(cleaned)", "TranscriptionStorage.save")) {
             val idx = onFinal.indexOf(effect)
             assertTrue("VAS onFinal must still own '$effect'", idx >= 0)
             assertTrue(

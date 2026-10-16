@@ -153,8 +153,9 @@ class ServiceStreamingRouteGuardTest {
             vas.contains("cleanStreamingFinalText")
         )
         assertTrue(
-            "VAS final write must keep the StreamingFieldComposer baseline semantics",
-            vas.contains("finalWriteText")
+            "VAS final write must replace the trailing partial via the shared committer " +
+                "(commitFinal over the owned range, map #105 #107)",
+            vas.contains("commitFinal")
         )
     }
 
@@ -174,27 +175,34 @@ class ServiceStreamingRouteGuardTest {
     // ── Map #132-fix: duplication + leak guards (red on buggy form) ──
 
     @Test
-    fun `VAS streaming final uses composer baseline with SET_TEXT uniformly, never clipboard paste`() {
+    fun `VAS streaming inserts use the shared committer with SET_TEXT uniformly, never clipboard paste`() {
         val (vas, _) = serviceSources()
-        val body = codeOnly(extractFunBody(vas, "insertStreamingText"))
+        val partial = codeOnly(extractFunBody(vas, "insertStreamingPartial"))
         assertTrue(
-            "VAS streaming final must compose via StreamingFieldComposer.finalWriteText (baseline+final)",
-            body.contains("finalWriteText")
+            "VAS streaming partials must replace via the shared committer (owned range)",
+            partial.contains("textCommitter.applyPartial")
         )
+        val final = codeOnly(extractFunBody(vas, "insertStreamingFinal"))
         assertTrue(
-            "VAS streaming final must write via ACTION_SET_TEXT uniformly",
-            body.contains("ACTION_SET_TEXT")
+            "VAS streaming final must replace via the shared committer (owned range)",
+            final.contains("textCommitter.commitFinal")
         )
-        assertNoMatch(
-            Regex("ACTION_PASTE"),
-            body,
-            "VAS streaming insert must never ACTION_PASTE on top of streamed partials (baseline+final via SET_TEXT only)"
-        )
-        assertNoMatch(
-            Regex("ClipboardManager|setPrimaryClip|ClipData"),
-            body,
-            "VAS streaming insert must never touch the clipboard (duplicates partials, leaks text)"
-        )
+        for ((name, body) in listOf("insertStreamingPartial" to partial, "insertStreamingFinal" to final)) {
+            assertTrue(
+                "VAS $name must write via ACTION_SET_TEXT uniformly",
+                body.contains("ACTION_SET_TEXT")
+            )
+            assertNoMatch(
+                Regex("ACTION_PASTE"),
+                body,
+                "VAS $name must never ACTION_PASTE on top of streamed partials (committer + SET_TEXT only)"
+            )
+            assertNoMatch(
+                Regex("ClipboardManager|setPrimaryClip|ClipData"),
+                body,
+                "VAS $name must never touch the clipboard (duplicates partials, leaks text)"
+            )
+        }
     }
 
     @Test

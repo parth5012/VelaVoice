@@ -140,8 +140,12 @@ class ServiceQuarantinePr138BindingTest {
             "VIMS batch generation guard must run BEFORE the save (never persist a dead session's transcript)",
             guardIdx < saveIdx
         )
-        val commitIdx = tail.indexOf("commitText")
-        assertTrue("VIMS batch onResult must still own its commit", commitIdx >= 0)
+        val commitIdx = tail.indexOf("insertTranscribedText")
+        assertTrue(
+            "VIMS batch onResult must still own its commit (via the single owner " +
+                "insertTranscribedText, map #105 #107)",
+            commitIdx >= 0
+        )
         assertTrue(
             "VIMS batch generation guard must run BEFORE the commit (never commit a dead session's text)",
             guardIdx < commitIdx
