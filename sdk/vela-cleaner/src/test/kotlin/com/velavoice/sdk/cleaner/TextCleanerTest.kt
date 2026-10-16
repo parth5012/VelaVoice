@@ -443,4 +443,126 @@ class TextCleanerTest {
         assertNotSame("After clearCache, getOrCreate should create a fresh instance", cleaner1, cleaner2)
         TextCleaner.clearCache()
     }
+
+    // ── Ticket #110 (map #105): filler correctness + Scribe prompt-leak guard ──
+
+    @Test
+    fun `cleanRuleBased preserves words containing filler substrings`() {
+        val cleaner = TextCleaner(CleanerConfig())
+        assertEquals("church", cleaner.cleanRuleBased("church"))
+        assertEquals("likely", cleaner.cleanRuleBased("likely"))
+        assertEquals(
+            "I go to church and likely hum along",
+            cleaner.cleanRuleBased("I go to church and likely hum along")
+        )
+    }
+
+    @Test
+    fun `cleanRuleBased strips leading fillers and normalizes whitespace`() {
+        val cleaner = TextCleaner(CleanerConfig())
+        assertEquals("I went", cleaner.cleanRuleBased("um, uh I went"))
+    }
+
+    /** Returns a scripted reply so prompt-echo / blank / overlong paths are testable. */
+    private class ScriptedTextCleaner(config: CleanerConfig, var scriptedReply: String?) :
+        TextCleaner(config) {
+        val generateCalls = mutableListOf<String>()
+        override fun generate(prompt: String): String? {
+            generateCalls.add(prompt)
+            return scriptedReply
+        }
+    }
+
+    /** Returns the prompt itself, simulating a model parroting the prompt template. */
+    private class PromptEchoTextCleaner(config: CleanerConfig) : TextCleaner(config) {
+        val generateCalls = mutableListOf<String>()
+        override fun generate(prompt: String): String? {
+            generateCalls.add(prompt)
+            return prompt
+        }
+    }
+
+    @Test
+    fun `clean falls back to pre-LLM text when LLM echoes the prompt`() {
+        val cleaner = PromptEchoTextCleaner(CleanerConfig(useLlm = true))
+        cleaner.forceLlmInitializedForTesting()
+
+        val result = cleaner.clean("um hello world", privacySensitive = false)
+
+        assertEquals("hello world", result)
+    }
+
+    @Test
+    fun `clean falls back when LLM output carries prompt framing`() {
+        val cleaner = ScriptedTextCleaner(
+            CleanerConfig(useLlm = true),
+            "<|begin_of_text|><|start_header_id|>system<|end_header_id|> hello world"
+        )
+        cleaner.forceLlmInitializedForTesting()
+
+        val result = cleaner.clean("um hello world", privacySensitive = false)
+
+        assertEquals("hello world", result)
+    }
+
+    @Test
+    fun `clean falls back when LLM output carries Raw input prefix`() {
+        val cleaner = ScriptedTextCleaner(
+            CleanerConfig(useLlm = true),
+            "Raw input: hello world"
+        )
+        cleaner.forceLlmInitializedForTesting()
+
+        val result = cleaner.clean("um hello world", privacySensitive = false)
+
+        assertEquals("hello world", result)
+    }
+
+    @Test
+    fun `clean falls back when LLM returns blank`() {
+        val cleaner = ScriptedTextCleaner(CleanerConfig(useLlm = true), "   ")
+        cleaner.forceLlmInitializedForTesting()
+
+        val result = cleaner.clean("um hello world", privacySensitive = false)
+
+        assertEquals("hello world", result)
+    }
+
+    @Test
+    fun `clean falls back when LLM output is absurdly long`() {
+        val cleaner = ScriptedTextCleaner(CleanerConfig(useLlm = true), "x".repeat(20000))
+        cleaner.forceLlmInitializedForTesting()
+
+        val result = cleaner.clean("um hello world", privacySensitive = false)
+
+        assertEquals("hello world", result)
+    }
+
+    @Test
+    fun `clean accepts a well-formed LLM rewrite`() {
+        val cleaner = ScriptedTextCleaner(CleanerConfig(useLlm = true), "Hello world.")
+        cleaner.forceLlmInitializedForTesting()
+
+        val result = cleaner.clean("um hello world", privacySensitive = false)
+
+        assertEquals("Hello world.", result)
+    }
+
+    @Test
+    fun `clean strips fillers before the LLM call`() {
+        val cleaner = ScriptedTextCleaner(CleanerConfig(useLlm = true), "Hello world.")
+        cleaner.forceLlmInitializedForTesting()
+
+        cleaner.clean("um hello world", privacySensitive = false)
+
+        val prompt = cleaner.generateCalls.single()
+        assertTrue(
+            "LLM prompt must carry filler-stripped text, was: $prompt",
+            prompt.contains("Raw input: hello world")
+        )
+        assertFalse(
+            "fillers must not consume LLM context budget, was: $prompt",
+            prompt.contains("Raw input: um")
+        )
+    }
 }
