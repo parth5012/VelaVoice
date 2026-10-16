@@ -30,6 +30,7 @@ import com.velavoice.sdk.StreamingPipeline
 import com.velavoice.sdk.PrivacyGuard
 import com.velavoice.sdk.RecordingSessionGate
 import com.velavoice.sdk.ScribeInput
+import com.velavoice.sdk.sanitizeForInsertion
 import com.velavoice.sdk.shouldCommitTranscript
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
@@ -616,8 +617,11 @@ class VoiceInputMethodService : InputMethodService() {
      * gate, so every path agrees on what "nothing heard" means.
      */
     private fun insertTranscribedText(text: String) {
-        if (!shouldCommitTranscript(text)) return
-        currentInputConnection?.commitText(text, 1)
+        // Shared insert boundary (map #105 ticket #109): sanitize the
+        // transcript before commit; sanitized-to-blank stays a no-op (#106).
+        val clean = sanitizeForInsertion(text)
+        if (!shouldCommitTranscript(clean)) return
+        currentInputConnection?.commitText(clean, 1)
     }
 
     /**

@@ -46,6 +46,10 @@ import com.velavoice.sdk.VelaException
 import com.velavoice.sdk.StreamingPipeline
 import com.velavoice.sdk.PrivacyGuard
 import com.velavoice.sdk.TextCommitter
+import com.velavoice.sdk.InsertionTarget
+import com.velavoice.sdk.sanitizeForInsertion
+import com.velavoice.sdk.shouldCommitTranscript
+import com.velavoice.sdk.shouldInsertIntoTarget
 import com.velavoice.sdk.AudioRecorder
 
 class VoiceAccessibilityService : AccessibilityService() {
@@ -324,6 +328,16 @@ class VoiceAccessibilityService : AccessibilityService() {
     @Volatile
     private var sessionPrivacySensitive = false
 
+    /**
+     * Node identity captured when a session starts (map #105 ticket #109).
+     * [AccessibilityNodeInfo] handles go stale when focus moves, so every
+     * insert re-resolves the target and compares it against this snapshot —
+     * a known start that no longer matches is a clean no-op, never text
+     * sprayed into a different app's field.
+     */
+    @Volatile
+    private var sessionTarget: InsertionTarget? = null
+
     private fun refreshSessionPrivacySensitive() {
         sessionPrivacySensitive = PrivacyGuard.isSensitiveAccessibilityNode(
             findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
@@ -438,6 +452,7 @@ class VoiceAccessibilityService : AccessibilityService() {
     private fun startRecording() {
         if (isRecording) return
         refreshSessionPrivacySensitive()
+        captureSessionTarget()
         isRecording = true
         // Generation-bound batch (map #130 PR #138 fix): the async batch
         // transcription in stopRecording() outlives the stop call, and a later
@@ -743,42 +758,66 @@ class VoiceAccessibilityService : AccessibilityService() {
     }
 
     private fun insertText(text: String, privacySensitive: Boolean) {
-        val focusNode = findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+        // Defence in depth (map #105 ticket #109): sanitize the transcript at
+        // the insert boundary — a NUL or lone surrogate must never reach the
+        // field. Sanitized-to-blank is a no-op (shared #106 gate).
+        val clean = sanitizeForInsertion(text)
+        if (!shouldCommitTranscript(clean)) return
+        // Re-validate the target immediately before acting: a stale or
+        // moved target is a clean no-op (resolveFreshInsertionTarget).
+        val targetNode = resolveFreshInsertionTarget() ?: return
         if (privacySensitive) {
             // Never place dictated text on the clipboard. Dispatch ACTION_SET_TEXT —
             // assigning .text would only mutate this local node wrapper, not the app.
-            val targetNode = focusNode ?: rootInActiveWindow?.let { findEditableNode(it) }
-            if (targetNode != null) {
-                try {
-                    val existing = targetNode.text?.toString() ?: ""
-                    val arguments = Bundle()
-                    arguments.putCharSequence(
-                        AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
-                        existing + text
-                    )
-                    if (!targetNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)) {
-                        Log.w("VoiceAccessibility", "ACTION_SET_TEXT refused by target app")
-                    }
-                } catch (e: Exception) {
-                    // Password fields may refuse accessibility writes; never fall back to
-                    // the clipboard for sensitive text.
-                    Log.e("VoiceAccessibility", "Direct insert refused: ${e.javaClass.simpleName}")
+            // Explicit splice-replace semantics: existing content is preserved
+            // and the transcript appended, never a blind whole-field replace.
+            if (!nodeSupportsAction(targetNode, AccessibilityNodeInfo.ACTION_SET_TEXT)) {
+                Log.w("VoiceAccessibility", "ACTION_SET_TEXT unsupported by target app")
+                return
+            }
+            try {
+                val existing = targetNode.text?.toString() ?: ""
+                val arguments = Bundle()
+                arguments.putCharSequence(
+                    AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+                    existing + clean
+                )
+                if (!targetNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)) {
+                    Log.w("VoiceAccessibility", "ACTION_SET_TEXT refused by target app")
                 }
+            } catch (e: Exception) {
+                // Password fields may refuse accessibility writes; never fall back to
+                // the clipboard for sensitive text.
+                Log.e("VoiceAccessibility", "Direct insert refused: ${e.javaClass.simpleName}")
             }
             return
         }
+        // Cursor-insert path (ACTION_PASTE) for non-sensitive batch text.
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val clip = ClipData.newPlainText("transcription", text)
+        val clip = ClipData.newPlainText("transcription", clean)
         clipboard.setPrimaryClip(clip)
 
-        if (focusNode != null) {
-            focusNode.performAction(AccessibilityNodeInfo.ACTION_PASTE)
-        } else {
-            val rootNode = rootInActiveWindow
-            if (rootNode != null) {
-                val editableNode = findEditableNode(rootNode)
-                editableNode?.performAction(AccessibilityNodeInfo.ACTION_PASTE)
+        if (nodeSupportsAction(targetNode, AccessibilityNodeInfo.ACTION_PASTE)) {
+            if (!targetNode.performAction(AccessibilityNodeInfo.ACTION_PASTE)) {
+                Log.w("VoiceAccessibility", "ACTION_PASTE refused by target app")
             }
+        } else if (nodeSupportsAction(targetNode, AccessibilityNodeInfo.ACTION_SET_TEXT)) {
+            // Fallback with explicit splice-replace semantics (existing + transcript).
+            try {
+                val existing = targetNode.text?.toString() ?: ""
+                val arguments = Bundle()
+                arguments.putCharSequence(
+                    AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+                    existing + clean
+                )
+                if (!targetNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)) {
+                    Log.w("VoiceAccessibility", "ACTION_SET_TEXT refused by target app")
+                }
+            } catch (e: Exception) {
+                Log.e("VoiceAccessibility", "Direct insert refused: ${e.javaClass.simpleName}")
+            }
+        } else {
+            Log.w("VoiceAccessibility", "Target supports neither PASTE nor SET_TEXT; dropping write")
         }
     }
 
@@ -793,6 +832,60 @@ class VoiceAccessibilityService : AccessibilityService() {
             if (result != null) return result
         }
         return null
+    }
+
+    /**
+     * Insertion-target identity helpers (map #105 ticket #109).
+     *
+     * API note: there is no ACTION_INSERT_TEXT on AccessibilityNodeInfo —
+     * ACTION_SET_TEXT (1 << 21, the largest action) is the only direct-write
+     * action. The service therefore prefers cursor-insert semantics
+     * (ACTION_PASTE, non-sensitive batch text only — sensitive text never
+     * touches the clipboard) and dispatches ACTION_SET_TEXT solely with
+     * explicit splice-replace semantics owned by the shared [TextCommitter]
+     * span (streaming paths + sensitive batch), never as a blind whole-field
+     * replace. Support is verified via the node's action list before acting.
+     */
+    private fun insertionTargetOf(node: AccessibilityNodeInfo): InsertionTarget =
+        InsertionTarget(
+            windowId = node.windowId,
+            viewIdResourceName = node.viewIdResourceName,
+            packageName = node.packageName?.toString().orEmpty()
+        )
+
+    /** Snapshot the focused field's node id when a session starts. */
+    private fun captureSessionTarget() {
+        sessionTarget = try {
+            findFocus(AccessibilityNodeInfo.FOCUS_INPUT)?.let { insertionTargetOf(it) }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun nodeSupportsAction(node: AccessibilityNodeInfo, action: Int): Boolean =
+        node.actionList?.any { it.id == action } == true
+
+    /**
+     * Re-resolve and re-validate the insertion target immediately before
+     * acting (map #105 ticket #109): fresh focus lookup (never a cached
+     * handle), [AccessibilityNodeInfo.refresh] freshness, still editable,
+     * and node-id equality against the session-start snapshot. Any failure
+     * is a clean no-op (null) — stale/disappeared nodes never receive text.
+     */
+    private fun resolveFreshInsertionTarget(): AccessibilityNodeInfo? {
+        val target = try {
+            findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+                ?: rootInActiveWindow?.let { findEditableNode(it) }
+        } catch (e: Exception) {
+            null
+        } ?: return null
+        if (!try { target.refresh() } catch (e: Exception) { false }) return null
+        if (!target.isEditable) return null
+        if (!shouldInsertIntoTarget(sessionTarget, insertionTargetOf(target))) {
+            Log.w("VoiceAccessibility", "Insertion target changed mid-capture; dropping write")
+            return null
+        }
+        return target
     }
 
     private fun findDatabaseFile(context: Context): File? {
@@ -1060,6 +1153,7 @@ class VoiceAccessibilityService : AccessibilityService() {
         if (isStreaming) return
         loadStreamingPreferences()
         refreshSessionPrivacySensitive()
+        captureSessionTarget()
         streamingCancelled = false
         streamingSessionId++
 
@@ -1311,13 +1405,19 @@ class VoiceAccessibilityService : AccessibilityService() {
      * mid-stream, and a stale node handle must never receive the text.
      */
     private fun insertStreamingPartial(marker: RevisionMarker) {
-        // Revalidate focus on every write: FOCUS_INPUT now, editable fallback
-        // next. No cached node is ever written.
-        val targetNode = findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
-            ?: rootInActiveWindow?.let { findEditableNode(it) }
-            ?: return
+        // Revalidate the target immediately before acting: FOCUS_INPUT now,
+        // editable fallback next, freshness + session node-id check inside.
+        // No cached node is ever written; stale/disappeared targets no-op.
+        val targetNode = resolveFreshInsertionTarget() ?: return
+        if (!nodeSupportsAction(targetNode, AccessibilityNodeInfo.ACTION_SET_TEXT)) {
+            Log.w("VoiceAccessibility", "ACTION_SET_TEXT unsupported by target app")
+            return
+        }
         val currentText = targetNode.text?.toString() ?: ""
-        val composed = textCommitter.applyPartial(marker, currentText)
+        // Sanitize the marker text BEFORE composing so the committer's owned
+        // span tracks exactly what reaches the field (map #105 ticket #109).
+        val cleanMarker = marker.copy(text = sanitizeForInsertion(marker.text))
+        val composed = textCommitter.applyPartial(cleanMarker, currentText)
         // Stale/duplicate revision: the committer returns the field unchanged.
         if (composed == currentText) return
         val arguments = Bundle()
@@ -1339,15 +1439,19 @@ class VoiceAccessibilityService : AccessibilityService() {
      * gate (the field is returned unchanged and no write is dispatched).
      */
     private fun insertStreamingFinal(text: String) {
-        // Same per-write focus revalidation as the partial path.
-        val targetNode = findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
-            ?: rootInActiveWindow?.let { findEditableNode(it) }
-            ?: return
+        // Same per-write target revalidation as the partial path.
+        val targetNode = resolveFreshInsertionTarget() ?: return
+        if (!nodeSupportsAction(targetNode, AccessibilityNodeInfo.ACTION_SET_TEXT)) {
+            Log.w("VoiceAccessibility", "ACTION_SET_TEXT unsupported by target app")
+            return
+        }
         // Capture the pre-streaming baseline on the FIRST write: interim
         // partials rewrite the field, so a later final must not treat that
         // partial content as pre-existing text (OCR duplication finding).
         val currentText = targetNode.text?.toString() ?: ""
-        val composed = textCommitter.commitFinal(text, currentText)
+        // Sanitize at the insert boundary (map #105 ticket #109); a
+        // sanitized-to-blank final no-ops via the committer's #106 gate.
+        val composed = textCommitter.commitFinal(sanitizeForInsertion(text), currentText)
         if (composed == currentText) return
         try {
             val arguments = Bundle()
