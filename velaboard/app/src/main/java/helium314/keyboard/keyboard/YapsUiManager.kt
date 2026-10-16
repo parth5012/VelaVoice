@@ -456,8 +456,13 @@ class YapsUiManager private constructor() {
 
 /**
  * Custom waveform visualizer with smooth animations matching Yaps specs.
+ *
+ * Churn contract (map #105 ticket #112): [paint] is a field initialized once and
+ * [onDraw] allocates nothing; the smoothing loop reschedules only from inside
+ * [onDraw] and only while shown, so a hidden/detached view starves it by design.
+ * [addAmplitude] schedules nothing while hidden, and detach drops queued frames.
  */
-class YapsWaveformView @JvmOverloads constructor(
+open class YapsWaveformView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
@@ -477,7 +482,27 @@ class YapsWaveformView @JvmOverloads constructor(
         System.arraycopy(targetHeights, 1, targetHeights, 0, numBars - 1)
         val scaled = (amp * amplitudeMultiplier).coerceAtMost(1f)
         targetHeights[numBars - 1] = scaled * height.toFloat()
+        if (!isShown) return
         invalidate()
+    }
+
+    override fun onVisibilityChanged(changedView: View, visibility: Int) {
+        super.onVisibilityChanged(changedView, visibility)
+        // NOTE (ticket #112): no removeCallbacks() here on purpose. The smoothing
+        // loop reschedules via postInvalidateDelayed (a ViewRoot message, not a
+        // Handler runnable), so there is no token to cancel — and removeCallbacks
+        // cannot reach it. The loop dies deterministically instead: the isShown
+        // guard below refuses to reschedule while hidden, and a hidden view never
+        // reaches onDraw through framework traversal anyway. Re-show kicks one
+        // frame to resume smoothing if bars are still converging.
+        if (isShown) {
+            invalidate()
+        }
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        // Detach drops queued framework invalidates; the isShown guard covers the rest.
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -512,7 +537,10 @@ class YapsWaveformView @JvmOverloads constructor(
             }
         }
         if (needsRedraw) {
-            postInvalidateDelayed(16) // ~60fps smooth render
+            // Smoothing loop (ticket #112): reschedules only while shown — a
+            // hidden/detached view never reaches onDraw, so the loop starves
+            // instead of churning hidden traversals.
+            if (isShown) postInvalidateDelayed(16) // ~60fps smooth render
         }
     }
 }
@@ -520,8 +548,15 @@ class YapsWaveformView @JvmOverloads constructor(
 /**
  * Custom animated pulsing dots to indicate transcription is processing.
  * Three dots pulse with staggered delays, cycling continuously.
+ *
+ * Churn contract (map #105 ticket #112): [paint] is a field initialized once and
+ * [onDraw] allocates nothing; the pulse loop reschedules only while animating AND
+ * shown. [startAnimating] is idempotent (no stacked chains); [stopAnimating] kills
+ * the loop via the animating flag (at most one already-queued frame still fires,
+ * and it draws nothing and re-posts nothing), and hide/detach starve it through
+ * the same guards plus framework traversal skipping.
  */
-class TranscribingDotsView @JvmOverloads constructor(
+open class TranscribingDotsView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
@@ -537,13 +572,34 @@ class TranscribingDotsView @JvmOverloads constructor(
     }
 
     fun startAnimating() {
+        if (animating) return
         animating = true
         animStartTime = System.currentTimeMillis()
+        if (!isShown) return
         postInvalidateDelayed(16)
     }
 
     fun stopAnimating() {
+        // The pulse loop reschedules from inside onDraw only while animating, so
+        // clearing the flag kills the loop deterministically: at most one already-
+        // queued frame still fires, and its onDraw early-returns without re-posting.
+        // (No removeCallbacks: the loop uses postInvalidateDelayed — a ViewRoot
+        // message with no cancellable token. See onVisibilityChanged note above.)
         animating = false
+    }
+
+    override fun onVisibilityChanged(changedView: View, visibility: Int) {
+        super.onVisibilityChanged(changedView, visibility)
+        // Same mechanism note as YapsWaveformView: guards (animating && isShown in
+        // onDraw) stop the loop; re-show kicks one frame to resume mid-animation.
+        if (isShown && animating) {
+            invalidate()
+        }
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        // Detach drops queued framework invalidates; the onDraw guards cover the rest.
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -570,6 +626,7 @@ class TranscribingDotsView @JvmOverloads constructor(
             canvas.drawCircle(cx, cy, dotRadii[i], paint)
         }
 
-        postInvalidateDelayed(50)
+        // Pulse loop (ticket #112): reschedules only while animating AND shown.
+        if (animating && isShown) postInvalidateDelayed(50)
     }
 }
