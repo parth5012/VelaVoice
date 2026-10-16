@@ -1,6 +1,19 @@
 package com.velavoice.sdk
 
 /**
+ * Commit gate for final transcripts (map #105 ticket #106): an empty or
+ * failed transcription must be a no-op — committing `""` over the field
+ * would silently clear an in-progress composition the user already typed.
+ *
+ * Blank (whitespace-only) counts as empty: `isNotEmpty()` passes `"   "`,
+ * so the gate uses [isNullOrBlank]. Null (failed transcription with no
+ * text at all) never commits. Single gate shared by the batch `onResult`
+ * path and the streaming `stopStreaming`/`onFinal` path so every commit
+ * site agrees on what "nothing heard" means.
+ */
+fun shouldCommitTranscript(transcript: String?): Boolean = !transcript.isNullOrBlank()
+
+/**
  * Computes ACTION_SET_TEXT payloads for streaming insertion into a target field
  * (map #72, OCR finding session a7d7065a).
  *

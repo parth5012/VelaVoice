@@ -29,6 +29,7 @@ import com.velavoice.sdk.StreamingPipeline
 import com.velavoice.sdk.PrivacyGuard
 import com.velavoice.sdk.RecordingSessionGate
 import com.velavoice.sdk.ScribeInput
+import com.velavoice.sdk.shouldCommitTranscript
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -424,7 +425,13 @@ class VoiceInputMethodService : InputMethodService() {
                             // remaining buffer to the InputConnection — onFinal
                             // must NOT commit again (double commit). Only
                             // status, privacy-gated save, keyboard restore.
-                            voiceRecordingPane.statusText.text = "Done"
+                            // A blank final is a no-op (map #105 ticket #106):
+                            // brief 'nothing heard' affordance, no save — same
+                            // gate as the batch path, so both agree on what
+                            // "nothing heard" means.
+                            val heardAnything = shouldCommitTranscript(text)
+                            voiceRecordingPane.statusText.text =
+                                if (heardAnything) "Done" else "Nothing heard"
                             isStreaming.set(false)
                             // Auto-save — never persist transcripts of privacy-sensitive fields.
                             // Gate on the verdict captured at onFinal for this session
@@ -436,15 +443,20 @@ class VoiceInputMethodService : InputMethodService() {
                             // the committed text are already settled, insertion does not
                             // wait on storage.
                             if (sessionGeneration == streamingSessionGeneration && !sensitiveAtFinal) {
-                                TranscriptionStorage.persistAsync(Runnable {
-                                    TranscriptionStorage.save(
-                                        this@VoiceInputMethodService,
-                                        raw = text,
-                                        cleaned = text,
-                                        durationMs = 0,
-                                        privacySensitive = sensitiveAtFinal
-                                    )
-                                })
+                                // Blank final is a no-op (map #105 ticket #106): never
+                                // persist "nothing heard" — nested inside the privacy
+                                // gate so its shape stays intact (#137).
+                                if (heardAnything) {
+                                    TranscriptionStorage.persistAsync(Runnable {
+                                        TranscriptionStorage.save(
+                                            this@VoiceInputMethodService,
+                                            raw = text,
+                                            cleaned = text,
+                                            durationMs = 0,
+                                            privacySensitive = sensitiveAtFinal
+                                        )
+                                    })
+                                }
                             }
                             showKeyboardView()
                         }
@@ -550,13 +562,16 @@ class VoiceInputMethodService : InputMethodService() {
         if (!isStreaming.get()) return
         isStreaming.set(false)
 
-        // Commit remaining text
+        // Commit remaining text (single commit site for streaming: onFinal
+        // below must NOT commit again). Blank remainder is a no-op (map #105
+        // ticket #106) — routed through the shared gate so streaming agrees
+        // with batch on what "nothing heard" means.
         val ic = currentInputConnection
         if (ic != null) {
             ic.finishComposingText()
             if (streamingBuffer.length > streamingCommittedLength) {
                 val remaining = streamingBuffer.substring(streamingCommittedLength).trim()
-                if (remaining.isNotEmpty()) {
+                if (shouldCommitTranscript(remaining)) {
                     ic.commitText(remaining + " ", 1)
                 }
             }
@@ -761,9 +776,18 @@ class VoiceInputMethodService : InputMethodService() {
                             if (recordingGeneration != streamingSessionGeneration) return
                             recordingGate.finish()
                             timerHandler?.removeCallbacksAndMessages(null)
-                            voiceRecordingPane.statusText.text = "Done"
                             val finalTranscript = result.cleanedTranscript
-                            // Auto-save — never persist transcripts of privacy-sensitive fields.
+                            // Empty/blank transcript is a no-op (map #105 ticket
+                            // #106): committing "" would clear an in-progress
+                            // composition the user already typed. State still
+                            // returns to IDLE (gate finished above); the pane
+                            // shows a brief 'nothing heard' affordance instead
+                            // of "Done", and nothing is committed or saved.
+                            val heardAnything = shouldCommitTranscript(finalTranscript)
+                            voiceRecordingPane.statusText.text =
+                                if (heardAnything) "Done" else "Nothing heard"
+                            // Auto-save — never persist transcripts of privacy-sensitive fields,
+                            // and never persist a blank transcript (no-op above).
                             // Read the volatile flip snapshot (not the frozen start local) so a
                             // mid-session flip-to-sensitive blocks the save (map #130 ticket #133 fix).
                             if (!sessionStartedPrivacySensitive) {
@@ -773,20 +797,25 @@ class VoiceInputMethodService : InputMethodService() {
                                 // otherwise stall the IME. The commit below is independent
                                 // of whether the save succeeds.
                                 val sensitiveAtResult = sessionStartedPrivacySensitive
-                                TranscriptionStorage.persistAsync(Runnable {
-                                    TranscriptionStorage.save(
-                                        this@VoiceInputMethodService,
-                                        raw = result.rawTranscript,
-                                        cleaned = result.cleanedTranscript,
-                                        durationMs = result.durationMs,
-                                        audioBytes = result.audioBytes,
-                                        privacySensitive = sensitiveAtResult
-                                    )
-                                })
+                                // Blank transcript is a no-op (map #105 ticket #106):
+                                // never persist "nothing heard" — nested inside the
+                                // privacy gate so its shape stays intact (#133).
+                                if (heardAnything) {
+                                    TranscriptionStorage.persistAsync(Runnable {
+                                        TranscriptionStorage.save(
+                                            this@VoiceInputMethodService,
+                                            raw = result.rawTranscript,
+                                            cleaned = result.cleanedTranscript,
+                                            durationMs = result.durationMs,
+                                            audioBytes = result.audioBytes,
+                                            privacySensitive = sensitiveAtResult
+                                        )
+                                    })
+                                }
                             }
                             voiceRecordingPane.post {
                                 val ic = currentInputConnection
-                                if (ic != null && finalTranscript.isNotEmpty()) {
+                                if (ic != null && heardAnything) {
                                     ic.commitText(finalTranscript, 1)
                                 }
                                 showKeyboardView()
