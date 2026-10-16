@@ -77,6 +77,15 @@ class StreamingPipeline internal constructor(
      */
     private var totalDroppedChars = 0
     private var isSessionLocal = true
+    /**
+     * Revision sequence for markers this pipeline emits or forwards
+     * (map #105 ticket #108). Forwarded markers keep the emitter's id when
+     * stamped (and pull the sequence past it); legacy unstamped markers and
+     * pipeline-owned commits take the next id — so downstream always sees a
+     * monotonically increasing sequence. Guarded by [stateLock], reset in
+     * [start].
+     */
+    internal var nextRevisionId = 1L
 
     /** The configuration derived from [Builder]; used by [start] when no explicit config is given. */
     fun config(): StreamConfig = defaultStreamConfig
@@ -215,6 +224,7 @@ class StreamingPipeline internal constructor(
         this.committedText = ""
         this.currentSegmentStart = 0
         this.totalDroppedChars = 0
+        this.nextRevisionId = 1L
         this.lastCommitTime = System.currentTimeMillis()
         this.lastActivityTime = System.currentTimeMillis()
         this.uploadRefusalReported.set(false)
@@ -419,6 +429,23 @@ class StreamingPipeline internal constructor(
         currentSegmentStart -= dropTo
     }
 
+    /**
+     * Revision id for one forwarded/emitted marker (map #105 ticket #108).
+     * Enforces pipeline-level monotonicity: a stamped marker at or ahead of
+     * the sequence keeps its emitter id and pulls the sequence past it; a
+     * stale stamped marker (behind after an interleaved pipeline commit) or
+     * an unstamped legacy marker takes the next id, so downstream never sees
+     * a valid partial go backwards and drop as a stale duplicate.
+     * Must be called under [stateLock].
+     */
+    private fun takeOrStampLocked(marker: RevisionMarker): RevisionMarker {
+        if (marker.revisionId > 0 && marker.revisionId >= nextRevisionId) {
+            nextRevisionId = marker.revisionId + 1
+            return marker
+        }
+        return marker.copy(revisionId = nextRevisionId++)
+    }
+
     private fun commitRemaining() {
         commitSegment(now = 0L, updateCommitTime = false)
     }
@@ -432,26 +459,33 @@ class StreamingPipeline internal constructor(
      * carries the ABSOLUTE full-output range (relative offset + totalDroppedChars).
      */
     private fun commitSegment(now: Long, updateCommitTime: Boolean) {
-        synchronized(stateLock) {
+        // Stamp under lock, deliver outside (same pattern as
+        // createTranscriberCallback): holding the UI callback under stateLock
+        // risks deadlock on re-entry, and delivery order after a race resolves
+        // as a safe stale-drop downstream (text already in committedText).
+        val toEmit: RevisionMarker? = synchronized(stateLock) {
             val snapshot = committedText
             val start = currentSegmentStart
+            currentSegmentStart = snapshot.length
+            if (updateCommitTime) lastCommitTime = now
             if (start >= snapshot.length) {
-                if (updateCommitTime) lastCommitTime = now
-                return
-            }
-
-            val segmentText = snapshot.substring(start)
-            if (segmentText.isNotBlank()) {
-                callback?.onRevisionMarker(
+                null
+            } else {
+                val segmentText = snapshot.substring(start)
+                if (segmentText.isNotBlank()) {
                     RevisionMarker(
                         type = "commit",
                         text = segmentText.trim(),
-                        range = (totalDroppedChars + start) until (totalDroppedChars + snapshot.length)
+                        range = (totalDroppedChars + start) until (totalDroppedChars + snapshot.length),
+                        revisionId = nextRevisionId++
                     )
-                )
+                } else {
+                    null
+                }
             }
-            currentSegmentStart = snapshot.length
-            if (updateCommitTime) lastCommitTime = now
+        }
+        if (toEmit != null) {
+            callback?.onRevisionMarker(toEmit)
         }
     }
 
@@ -461,14 +495,16 @@ class StreamingPipeline internal constructor(
                 when (marker.type) {
                     "partial" -> {
                         // Append to committed text buffer
-                        synchronized(stateLock) {
+                        val stamped = synchronized(stateLock) {
                             committedText += marker.text + " "
                             trimCommittedTextLocked()
+                            takeOrStampLocked(marker)
                         }
-                        callback?.onRevisionMarker(marker)
+                        callback?.onRevisionMarker(stamped)
                     }
                     "commit" -> {
-                        callback?.onRevisionMarker(marker)
+                        val stamped = synchronized(stateLock) { takeOrStampLocked(marker) }
+                        callback?.onRevisionMarker(stamped)
                     }
                 }
             }
