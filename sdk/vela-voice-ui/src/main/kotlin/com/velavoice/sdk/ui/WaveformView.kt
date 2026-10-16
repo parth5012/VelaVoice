@@ -10,7 +10,26 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
 
-class WaveformView @JvmOverloads constructor(
+/**
+ * Live amplitude waveform (map #105 ticket #112 churn contract):
+ *
+ * - [paint] is a field initialized once; [onDraw] allocates nothing per frame.
+ * - The hot path ([addAmplitude], driven per mic-capture chunk) only schedules a
+ *   redraw while the view is actually shown ([isShown]: visible, attached, and all
+ *   ancestors visible). Amplitudes posted from a torn-down session (pane GONE after
+ *   `showKeyboardView`, or in-flight `post {}` runnables racing a detach) are still
+ *   stored but never schedule hidden redraws — hidden invalidate count == 0.
+ * - The per-session amplitude list IS the cached waveform data (audit correction:
+ *   this view holds no precomputed `Bitmap`, so there is nothing to `recycle()`).
+ *   [clear] drops it; it is idempotent, so session-end call sites cannot double-free.
+ *
+ * Design note: runnables posted from outside (`waveformView.post { addAmplitude }`
+ * by the IME mic callback) cannot be enumerated through the public `View` API, so
+ * detach does not attempt to cancel them — the [isShown] gate already strips their
+ * only harmful effect (scheduling hidden redraws), and the stored value is capped
+ * with the rest of the list.
+ */
+open class WaveformView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
@@ -63,16 +82,41 @@ class WaveformView @JvmOverloads constructor(
             invalidate()
         }
 
+    /** Set once the view has ever been attached: distinguishes a live pane torn
+     * down mid-session (late mic posts must be dropped) from a view that was
+     * never attached (unit-test / pre-attach staging, stores normally). */
+    private var wasAttached = false
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        wasAttached = true
+    }
+
     fun addAmplitude(amp: Float) {
+        // A pane detached mid-session is dead: drop late mic posts entirely
+        // (removeCallbacks is best-effort — a runnable that already escaped
+        // still lands here). Never-attached views store normally.
+        if (wasAttached && !isAttachedToWindow) return
         amplitudes.add(amp.coerceIn(0f, 1f))
         if (amplitudes.size > maxBarCount) {
             amplitudes.removeAt(0)
         }
-        invalidate()
+        requestRedraw()
     }
 
     fun clear() {
         amplitudes.clear()
+        invalidate()
+    }
+
+    /**
+     * Redraw only when the pane can actually be seen (ticket #112): a hidden view
+     * stores the amplitude but schedules nothing. Rare one-shot paths ([clear],
+     * property setters) still invalidate unconditionally so a re-shown pane can
+     * never display stale bars.
+     */
+    private fun requestRedraw() {
+        if (!isShown) return
         invalidate()
     }
 
