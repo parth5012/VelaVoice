@@ -87,6 +87,25 @@ class StreamingPipeline internal constructor(
      */
     internal var nextRevisionId = 1L
 
+    /**
+     * Adaptive stop threshold (map #105 ticket #111): rolling noise floor +
+     * minimum hold time. Recreated in [start] from the session's configured
+     * base so a loud room raises the bar (mid-word dips hold) and a quiet
+     * room settles near the base (silence trips). See [AdaptiveVad] for the
+     * named constants and their rationale.
+     */
+    internal var adaptiveVad = AdaptiveVad()
+
+    /**
+     * Last partial forwarded to the UI (map #105 ticket #111): an identical
+     * consecutive redelivery (same text, same range) is dropped before it can
+     * append to [committedText] or touch the UI. Stale *ids* already drop
+     * downstream (#108); this covers same-text redeliveries carrying a fresh
+     * id. Guarded by [stateLock], reset in [start].
+     */
+    private var lastForwardedPartialText: String? = null
+    private var lastForwardedPartialRange: IntRange? = null
+
     /** The configuration derived from [Builder]; used by [start] when no explicit config is given. */
     fun config(): StreamConfig = defaultStreamConfig
 
@@ -225,6 +244,9 @@ class StreamingPipeline internal constructor(
         this.currentSegmentStart = 0
         this.totalDroppedChars = 0
         this.nextRevisionId = 1L
+        this.adaptiveVad = AdaptiveVad(resolved.vadThreshold)
+        this.lastForwardedPartialText = null
+        this.lastForwardedPartialRange = null
         this.lastCommitTime = System.currentTimeMillis()
         this.lastActivityTime = System.currentTimeMillis()
         this.uploadRefusalReported.set(false)
@@ -341,13 +363,16 @@ class StreamingPipeline internal constructor(
 
                         // VAD-based commit boundary detection
                         val now = System.currentTimeMillis()
+                        adaptiveVad.observe(normalized, now)
                         if (now - lastVadCheck > 100) {
                             checkCommitBoundary(normalized, now)
                             lastVadCheck = now
                         }
 
-                        // Update activity time if above threshold
-                        if (normalized > (streamConfig.vadThreshold)) {
+                        // Update activity time against the ADAPTIVE threshold
+                        // (map #105 ticket #111): the fixed base never trips
+                        // quiet rooms and trips noisy ones mid-word.
+                        if (normalized > adaptiveVad.effectiveThreshold()) {
                             lastActivityTime = now
                         }
                     }
@@ -402,9 +427,20 @@ class StreamingPipeline internal constructor(
     /** True when a VAD pause or the max segment time requires committing the tail. */
     internal fun shouldCommit(amplitude: Float, now: Long): Boolean {
         val timeSinceLastCommit = now - lastCommitTime
-        val timeSinceLastActivity = now - lastActivityTime
-        return (timeSinceLastActivity > VAD_PAUSE_MS && amplitude < streamConfig.vadThreshold) ||
+        // Adaptive stop (map #105 ticket #111): rolling noise floor plus
+        // minimum hold via AdaptiveVad — quiet rooms trip, noisy rooms hold
+        // mid-word dips. VAD_PAUSE_MS stays as the legacy fixed-hold value
+        // the adaptive STOP_HOLD_MS mirrors.
+        return adaptiveVad.shouldStop(amplitude, now, lastActivityTime) ||
             timeSinceLastCommit > MAX_SEGMENT_MS
+    }
+
+    /** Test hook: reset the partial-dedup state without a mic (see start()). */
+    internal fun resetPartialDedupForTest() {
+        synchronized(stateLock) {
+            lastForwardedPartialText = null
+            lastForwardedPartialRange = null
+        }
     }
 
     internal fun checkCommitBoundary(amplitude: Float, now: Long) {
@@ -494,13 +530,27 @@ class StreamingPipeline internal constructor(
             override fun onRevisionMarker(marker: RevisionMarker) {
                 when (marker.type) {
                     "partial" -> {
-                        // Append to committed text buffer
+                        // Identical-consecutive dedup (map #105 ticket #111):
+                        // a redelivery of exactly the last forwarded partial
+                        // (same text, same range) appends nothing and touches
+                        // no UI — dropped before it can churn committedText or
+                        // burn a revision id. Distinct text always flows.
                         val stamped = synchronized(stateLock) {
-                            committedText += marker.text + " "
-                            trimCommittedTextLocked()
-                            takeOrStampLocked(marker)
+                            if (marker.text == lastForwardedPartialText &&
+                                marker.range == lastForwardedPartialRange
+                            ) {
+                                null
+                            } else {
+                                committedText += marker.text + " "
+                                trimCommittedTextLocked()
+                                lastForwardedPartialText = marker.text
+                                lastForwardedPartialRange = marker.range
+                                takeOrStampLocked(marker)
+                            }
                         }
-                        callback?.onRevisionMarker(stamped)
+                        if (stamped != null) {
+                            callback?.onRevisionMarker(stamped)
+                        }
                     }
                     "commit" -> {
                         val stamped = synchronized(stateLock) { takeOrStampLocked(marker) }

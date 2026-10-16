@@ -40,6 +40,26 @@ class CloudStreamingTranscriber : StreamingTranscriber {
      */
     internal var nextRevisionId = 1L
 
+    /**
+     * Reconnect attempt count for the current session (map #105 ticket #111).
+     * Incremented on every connection failure, reset in [start] and by
+     * [resetReconnectForTest]. When it passes [StreamingBackoff.MAX_ATTEMPTS]
+     * the failure surfaces as a user-visible [callback.onError] instead of
+     * silence; before that the reconnect is spaced by [StreamingBackoff]
+     * (exponential + jitter) so a hard-down network never hot-loops inside
+     * the IME process.
+     */
+    internal var reconnectAttempts = 0
+    /**
+     * Monotonic session epoch: bumped in [start]/[stop]/[release] so a
+     * reconnect timer armed by a dead session can tell it is stale and exit
+     * instead of opening a socket for a newer session.
+     */
+    private var sessionGen = 0
+    /** Injectable reconnect scheduler (tests capture delays, prod uses a timer). */
+    internal var scheduleReconnectForTest: ((delayMs: Long, task: () -> Unit) -> Unit)? = null
+    private var retryScheduler: java.util.concurrent.ScheduledExecutorService? = null
+
     private val client = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(0, TimeUnit.MILLISECONDS) // No timeout for streaming
@@ -49,11 +69,13 @@ class CloudStreamingTranscriber : StreamingTranscriber {
 
     override fun start(config: StreamConfig) {
         if (isRunning.get()) return
+        sessionGen++
         this.streamConfig = config
         committedLength = 0
         partialText = ""
         lastCommittedText = ""
         nextRevisionId = 1L
+        reconnectAttempts = 0
 
         if (config.apiKey.isBlank()) {
             callback?.onError(VelaError("API key required for cloud streaming"))
@@ -90,6 +112,7 @@ class CloudStreamingTranscriber : StreamingTranscriber {
 
     override fun stop() {
         if (!isRunning.get()) return
+        sessionGen++
 
         try {
             // Commit the audio buffer
@@ -117,8 +140,15 @@ class CloudStreamingTranscriber : StreamingTranscriber {
 
     override fun release() {
         isRunning.set(false)
+        sessionGen++
         webSocket?.close(1000, "Released")
         webSocket = null
+        try {
+            retryScheduler?.shutdownNow()
+        } catch (e: Exception) {
+            Log.e("CloudStreamingTranscriber", "Error shutting down retry scheduler", e)
+        }
+        retryScheduler = null
         try {
             client.dispatcher.executorService.shutdown()
             client.connectionPool.evictAll()
@@ -156,15 +186,90 @@ class CloudStreamingTranscriber : StreamingTranscriber {
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 Log.d("CloudStreamingTranscriber", "WebSocket closed: $code $reason")
-                isRunning.set(false)
+                // Normal teardown (stop()/release() already cleared isRunning,
+                // or the server closed cleanly) is final; an abnormal close
+                // mid-session is a connection failure and retries with backoff.
+                if (code != 1000 && isRunning.get()) {
+                    handleConnectionFailure(RuntimeException("WebSocket closed: $code"))
+                } else {
+                    isRunning.set(false)
+                }
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 Log.e("CloudStreamingTranscriber", "WebSocket failure", t)
-                isRunning.set(false)
-                callback?.onError(VelaError("WebSocket error: ${t.message}"))
+                handleConnectionFailure(t)
             }
         }
+    }
+
+    /**
+     * Connection-failure path (map #105 ticket #111): back off exponentially
+     * with jitter up to [StreamingBackoff.MAX_ATTEMPTS], then surface a
+     * user-visible error instead of silence. The session stays alive
+     * ([isRunning] true) across retries so buffered audio is not dropped;
+     * only exhaustion (or an explicit stop/release) ends it.
+     */
+    internal fun handleConnectionFailure(t: Throwable) {
+        reconnectAttempts++
+        if (!StreamingBackoff.shouldRetry(reconnectAttempts)) {
+            isRunning.set(false)
+            callback?.onError(
+                VelaError("Cloud streaming unavailable after ${StreamingBackoff.MAX_ATTEMPTS} attempts: ${t.message}")
+            )
+            return
+        }
+        val delayMs = StreamingBackoff.delayForAttempt(reconnectAttempts, kotlin.random.Random.Default)
+        val gen = sessionGen
+        val reconnect = {
+            if (gen == sessionGen && isRunning.get()) {
+                reconnectNow()
+            }
+        }
+        val scheduled = scheduleReconnectForTest
+        if (scheduled != null) {
+            scheduled(delayMs, reconnect)
+        } else {
+            val scheduler = synchronized(this) {
+                var s = retryScheduler
+                if (s == null || s.isShutdown) {
+                    s = java.util.concurrent.Executors.newSingleThreadScheduledExecutor()
+                    retryScheduler = s
+                }
+                s!!
+            }
+            try {
+                scheduler.schedule({ reconnect() }, delayMs, java.util.concurrent.TimeUnit.MILLISECONDS)
+            } catch (e: Exception) {
+                Log.e("CloudStreamingTranscriber", "Failed to schedule reconnect", e)
+            }
+        }
+    }
+
+    /** Re-open the socket for the current session config (backoff retry). */
+    private fun reconnectNow() {
+        val config = streamConfig ?: return
+        try {
+            val endpoint = buildEndpoint(config)
+            val request = Request.Builder()
+                .url(endpoint)
+                .addHeader("Authorization", "Bearer ${config.apiKey}")
+                .addHeader("OpenAI-Beta", "realtime=v1")
+                .build()
+            webSocket = client.newWebSocket(request, createWebSocketListener())
+            Log.d("CloudStreamingTranscriber", "Reconnecting (attempt $reconnectAttempts)")
+        } catch (e: Exception) {
+            Log.e("CloudStreamingTranscriber", "Reconnect failed", e)
+            handleConnectionFailure(e)
+        }
+    }
+
+    /** Test hook: run the failure path without a socket (see [handleConnectionFailure]). */
+    internal fun handleConnectionFailureForTest(t: Throwable) = handleConnectionFailure(t)
+
+    /** Test hook: reset the attempt count as [start] does. */
+    internal fun resetReconnectForTest() {
+        reconnectAttempts = 0
     }
 
     private fun sendSessionConfig() {

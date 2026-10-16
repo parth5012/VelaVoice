@@ -250,6 +250,15 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         }
     }
 
+    /**
+     * True while a Vela engine/transcriber or streaming session is being built
+     * on a background thread (map #105 ticket #111). This is NOT write-only:
+     * it drives real UI — {@link #isVelaSessionActive()} (pane show guard) and
+     * {@link #isVelaEngineAlive()} both read it, and every setter site pairs
+     * it with a loading label ("Loading voice model..." / "Connecting to..."
+     * / "Loading...") on the pane status text until the session posts
+     * "Recording...". Cleared on every terminal path (ready, error, cancel).
+     */
     private boolean mIsVelaLoading = false;
     private int mRecordingSeconds = 0;
     private Handler mTimerHandler = null;
