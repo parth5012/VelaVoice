@@ -190,6 +190,8 @@ class YapsUiManager private constructor() {
                 rightMargin = (12 * density).toInt()
             }
 
+            // Icon bars + AUTO label misread without this (#115).
+            contentDescription = context.getString(R.string.yaps_voice_pill_desc)
             setOnClickListener {
                 // Trigger voice input action directly
                 mLatinIME?.onCodeInput(KeyCode.VOICE_INPUT, 0, 0, false)
@@ -244,6 +246,7 @@ class YapsUiManager private constructor() {
 
                 // Cancel Button (X icon)
                 val cancelBtn = ImageButton(context).apply {
+                    id = View.generateViewId()
                     layoutParams = LinearLayout.LayoutParams(
                         (36 * density).toInt(),
                         (36 * density).toInt()
@@ -252,6 +255,8 @@ class YapsUiManager private constructor() {
                     val cancelDrawable = ContextCompat.getDrawable(context, android.R.drawable.ic_menu_close_clear_cancel)
                     cancelDrawable?.let { DrawableCompat.setTint(it, Color.parseColor("#CCCCCC")) }
                     setImageDrawable(cancelDrawable)
+                    // Icon-only button is silent to TalkBack without this (#115).
+                    contentDescription = context.getString(R.string.yaps_voice_cancel_desc)
                     setOnClickListener {
                         // cancelVelaRecording already calls stopActiveRecording() internally
                         mKeyboardSwitcher?.cancelVelaRecording()
@@ -277,6 +282,8 @@ class YapsUiManager private constructor() {
 
                     // Live Waveform Visualizer
                     mWaveformView = YapsWaveformView(context).apply {
+                        // Decorative visualizer: state announced via toolbar + label (#115).
+                        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
                             (20 * density).toInt()
@@ -290,6 +297,7 @@ class YapsUiManager private constructor() {
 
                 // Confirm / Insert Action Button (checkmark)
                 mConfirmBtn = ImageButton(context).apply {
+                    id = View.generateViewId()
                     layoutParams = LinearLayout.LayoutParams(
                         (36 * density).toInt(),
                         (36 * density).toInt()
@@ -307,6 +315,8 @@ class YapsUiManager private constructor() {
                     val checkDrawable = ContextCompat.getDrawable(context, android.R.drawable.checkbox_on_background)
                     checkDrawable?.let { DrawableCompat.setTint(it, Color.WHITE) }
                     setImageDrawable(checkDrawable)
+                    // Icon-only button is silent to TalkBack without this (#115).
+                    contentDescription = context.getString(R.string.yaps_voice_confirm_desc)
 
                     setOnClickListener {
                         if (mState == State.RECORDING) {
@@ -316,6 +326,9 @@ class YapsUiManager private constructor() {
                     }
                 }
                 addView(mConfirmBtn)
+
+                // Switch-access chain (#115): cancel -> confirm.
+                cancelBtn.nextFocusForwardId = mConfirmBtn!!.id
             }
 
             val viewHeight = mSuggestionStripView?.height ?: 0
@@ -340,6 +353,8 @@ class YapsUiManager private constructor() {
         mActiveToolbar?.animate()?.alpha(1f)?.setDuration(150)?.start()
 
         mState = State.RECORDING
+        // Announce the state change for screen readers (#115).
+        mActiveToolbar?.announceForAccessibility(context.getString(R.string.yaps_voice_recording_started))
         return true
     }
 
@@ -361,7 +376,8 @@ class YapsUiManager private constructor() {
         mWaveformView = null
 
         // Update language label
-        mLanguageText?.text = "TRANSCRIBING"
+        mLanguageText?.text = context.getString(R.string.yaps_voice_transcribing)
+        mLanguageText?.contentDescription = context.getString(R.string.yaps_voice_transcribing)
         mLanguageText?.setTextColor(Color.parseColor("#62f9ee"))
 
         // Disable confirm button with greyed appearance
@@ -371,6 +387,8 @@ class YapsUiManager private constructor() {
         // Create and add animated dots
         if (mTranscribingDots == null) {
             mTranscribingDots = TranscribingDotsView(context).apply {
+                // Pulsing progress indicator: spoken name (#115).
+                contentDescription = context.getString(R.string.yaps_voice_processing_desc)
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     (20 * density).toInt()

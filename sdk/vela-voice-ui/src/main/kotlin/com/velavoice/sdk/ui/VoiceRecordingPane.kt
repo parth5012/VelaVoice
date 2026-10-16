@@ -49,7 +49,9 @@ class VoiceRecordingPane(context: Context) : LinearLayout(context) {
         }
 
         statusText = TextView(context).apply {
-            text = "Listening..."
+            text = resources.getString(R.string.vela_voice_status_listening)
+            contentDescription = text
+            accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
             textSize = 13f
             typeface = sansSerifLight
             setTextColor(colors.mainText)
@@ -72,6 +74,8 @@ class VoiceRecordingPane(context: Context) : LinearLayout(context) {
 
         // --- Waveform (taller for more pronounced amplitude visualization) ---
         waveformView = WaveformView(context).apply {
+            // Decorative: amplitude visuals are noise for screen readers (ticket #115).
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
             layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, (100 * density).toInt()).apply {
                 topMargin = (8 * density).toInt()
                 bottomMargin = (8 * density).toInt()
@@ -109,17 +113,39 @@ class VoiceRecordingPane(context: Context) : LinearLayout(context) {
             layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
         }
 
-        stopCleanButton = makeActionButton("Stop Clean", colors.stopClean, colors.buttonText, density, sansSerifMedium) {
+        stopCleanButton = makeActionButton(
+            resources.getString(R.string.vela_voice_stop_clean),
+            colors.stopClean, colors.buttonText, density, sansSerifMedium
+        ) {
             onStopCleanListener?.invoke()
+        }.also {
+            it.id = View.generateViewId()
+            it.contentDescription = resources.getString(R.string.vela_voice_cd_stop_clean)
         }
 
-        stopRawButton = makeActionButton("Stop Raw", colors.stopRaw, colors.buttonText, density, sansSerifMedium) {
+        stopRawButton = makeActionButton(
+            resources.getString(R.string.vela_voice_stop_raw),
+            colors.stopRaw, colors.buttonText, density, sansSerifMedium
+        ) {
             onStopRawListener?.invoke()
+        }.also {
+            it.id = View.generateViewId()
+            it.contentDescription = resources.getString(R.string.vela_voice_cd_stop_raw)
         }
 
-        cancelButton = makeActionButton("Cancel", colors.cancel, colors.buttonText, density, sansSerifMedium) {
+        cancelButton = makeActionButton(
+            resources.getString(R.string.vela_voice_cancel),
+            colors.cancel, colors.buttonText, density, sansSerifMedium
+        ) {
             onCancelListener?.invoke()
+        }.also {
+            it.id = View.generateViewId()
+            it.contentDescription = resources.getString(R.string.vela_voice_cd_cancel)
         }
+
+        // Deterministic focus order: Stop Clean -> Stop Raw -> Cancel (ticket #115).
+        stopCleanButton.nextFocusForwardId = stopRawButton.id
+        stopRawButton.nextFocusForwardId = cancelButton.id
 
         buttonContainer.addView(stopCleanButton)
         buttonContainer.addView(stopRawButton)
@@ -154,6 +180,30 @@ class VoiceRecordingPane(context: Context) : LinearLayout(context) {
     fun hideTimer() {
         mainHandler.post {
             timerText.visibility = View.GONE
+        }
+    }
+
+    /**
+     * Resource-backed status transition (ticket #115): resolves [status]
+     * through `strings.xml`, mirrors it as the spoken description and
+     * announces the change once for screen readers.
+     */
+    fun setStatus(status: VoiceStatus) {
+        setStatusText(context.getString(status.stringResId), announce = true)
+    }
+
+    /**
+     * Dynamic status text (engine errors, live partials). Silent by default so
+     * per-tick streaming updates never spam the screen reader; pass
+     * `announce = true` for one-shot spoken delivery.
+     */
+    fun setStatusText(text: String, announce: Boolean = false) {
+        mainHandler.post {
+            statusText.text = text
+            statusText.contentDescription = text
+            if (announce) {
+                statusText.announceForAccessibility(text)
+            }
         }
     }
 

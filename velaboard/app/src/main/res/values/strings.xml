@@ -369,6 +369,14 @@
     <string name="voice_streaming_mode_instant">Instant</string>
     <string name="voice_streaming_mode_streamed">Streamed</string>
     <string name="voice_streaming_missing_api_key">No OpenAI API key set for cloud streaming, using instant mode</string>
+    <!-- Yaps voice-pane accessibility (map #105 ticket #115): spoken
+         descriptions for icon-only controls, state label and announcements -->
+    <string name="yaps_voice_pill_desc">Start voice input</string>
+    <string name="yaps_voice_cancel_desc">Cancel voice recording</string>
+    <string name="yaps_voice_confirm_desc">Confirm and insert transcription</string>
+    <string name="yaps_voice_processing_desc">Processing voice input</string>
+    <string name="yaps_voice_transcribing">TRANSCRIBING</string>
+    <string name="yaps_voice_recording_started">Voice recording started</string>
     <string name="voice_streaming_privacy_no_local">Cloud streaming is disabled in this field and no local model is available</string>
     <string name="voice_gemini_api_key_title">Gemini API Key</string>
     <string name="voice_gemini_api_key_summary">Free tier API key from Google AI Studio</string>

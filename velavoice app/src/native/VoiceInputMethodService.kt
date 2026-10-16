@@ -24,6 +24,7 @@ import com.velavoice.sdk.VelaTranscriber
 import com.velavoice.sdk.cleaner.DictionaryKeywords
 import com.velavoice.sdk.cleaner.PersonalDictionary
 import com.velavoice.sdk.ui.VoiceRecordingPane
+import com.velavoice.sdk.ui.VoiceStatus
 import com.velavoice.sdk.StreamingTranscriptionCallback
 import com.velavoice.sdk.RevisionMarker
 import com.velavoice.sdk.TextCommitter
@@ -193,6 +194,8 @@ class VoiceInputMethodService : InputMethodService() {
                 (56 * density).toInt()
             )
             styleButton(this, "🎤 Tap to Speak", stopCleanColor, stopCleanTextColor, density, sansSerifMedium)
+            // Emoji label alone misreads in TalkBack (map #105 ticket #115).
+            contentDescription = context.getString(com.velavoice.sdk.ui.R.string.vela_voice_tap_to_speak)
             setPadding((32 * density).toInt(), 0, (32 * density).toInt(), 0)
             setOnClickListener {
                 showVoicePane()
@@ -361,7 +364,7 @@ class VoiceInputMethodService : InputMethodService() {
         }
 
         voiceRecordingPane.resetDisplay()
-        voiceRecordingPane.statusText.text = "Streaming..."
+        voiceRecordingPane.setStatus(VoiceStatus.STREAMING)
 
         val handler = bgHandler
         if (handler == null) {
@@ -382,7 +385,7 @@ class VoiceInputMethodService : InputMethodService() {
                 if (whisperPath == null) {
                     invalidatePendingStreamingStart()
                     mainHandler.post {
-                        voiceRecordingPane.statusText.text = "No whisper model found."
+                        voiceRecordingPane.setStatus(VoiceStatus.NO_MODEL)
                     }
                     return@post
                 }
@@ -405,7 +408,7 @@ class VoiceInputMethodService : InputMethodService() {
                     teardownVoiceEngine(pipeline = pipeline)
                     unpublished = null
                     mainHandler.post {
-                        voiceRecordingPane.statusText.text = "Ready"
+                        voiceRecordingPane.setStatus(VoiceStatus.READY)
                     }
                     return@post
                 }
@@ -434,7 +437,11 @@ class VoiceInputMethodService : InputMethodService() {
                                         ic.setComposingText(streamingBuffer.substring(start), 1)
                                         streamingShownLength = streamingBuffer.length
                                     }
-                                    voiceRecordingPane.statusText.text = marker.text
+                                    // Live partial: silent text update (map #105 ticket
+                                    // #115) — announcing every tick would spam
+                                    // TalkBack; the DONE/NOTHING_HEARD state
+                                    // change announces instead.
+                                    voiceRecordingPane.setStatusText(marker.text, announce = false)
                                 }
                                 "commit" -> {
                                     // Finalize everything buffered: the composing span shown
@@ -481,8 +488,9 @@ class VoiceInputMethodService : InputMethodService() {
                             // gate as the batch path, so both agree on what
                             // "nothing heard" means.
                             val heardAnything = shouldCommitTranscript(text)
-                            voiceRecordingPane.statusText.text =
-                                if (heardAnything) "Done" else "Nothing heard"
+                            voiceRecordingPane.setStatus(
+                                if (heardAnything) VoiceStatus.DONE else VoiceStatus.NOTHING_HEARD
+                            )
                             isStreaming.set(false)
                             // Auto-save — never persist transcripts of privacy-sensitive fields.
                             // Gate on the verdict captured at onFinal for this session
@@ -519,7 +527,7 @@ class VoiceInputMethodService : InputMethodService() {
                         if (generation != streamingSessionGeneration) return
                         mainHandler.post main@{
                             if (generation != streamingSessionGeneration) return@main
-                            voiceRecordingPane.statusText.text = error.message
+                            voiceRecordingPane.setStatusText(error.message)
                             isStreaming.set(false)
                         }
                     }
@@ -607,7 +615,7 @@ class VoiceInputMethodService : InputMethodService() {
                 streamingPipeline = null
                 streamingStartPending = false
                 mainHandler.post {
-                    voiceRecordingPane.statusText.text = "Streaming init error"
+                    voiceRecordingPane.setStatus(VoiceStatus.STREAMING_ERROR)
                 }
             }
         }
@@ -764,7 +772,7 @@ class VoiceInputMethodService : InputMethodService() {
         // AudioRecord over the live one.
         if (!recordingGate.tryStart()) return
         voiceRecordingPane.resetDisplay()
-        voiceRecordingPane.statusText.text = "Initializing..."
+        voiceRecordingPane.setStatus(VoiceStatus.INITIALIZING)
         val sessionPrivacySensitive = isSessionPrivacySensitive()
         sessionStartedPrivacySensitive = sessionPrivacySensitive
         // Generation-bound batch (map #130 PR #138 fix): AudioRecorder.stop()
@@ -785,7 +793,7 @@ class VoiceInputMethodService : InputMethodService() {
                         recordingGate.reset()
                     }
                     mainHandler.post {
-                        voiceRecordingPane.statusText.text = "No whisper model found. Download one first."
+                        voiceRecordingPane.setStatus(VoiceStatus.NO_MODEL_DOWNLOAD)
                     }
                     return@post
                 }
@@ -830,7 +838,7 @@ class VoiceInputMethodService : InputMethodService() {
                             // PROCESSING, and put the keyboard back.
                             recordingGate.finish()
                             mainHandler.post {
-                                voiceRecordingPane.statusText.text = "Ready"
+                                voiceRecordingPane.setStatus(VoiceStatus.READY)
                                 showKeyboardView()
                             }
                         }
@@ -840,7 +848,7 @@ class VoiceInputMethodService : InputMethodService() {
                     teardownVoiceEngine(transcriber = transcriber)
                     transcriber = builtTranscriber
 
-                    voiceRecordingPane.statusText.text = "Recording..."
+                    voiceRecordingPane.setStatus(VoiceStatus.RECORDING)
                     voiceRecordingPane.hideTimer()
 
                     recordingSeconds = 0
@@ -874,8 +882,9 @@ class VoiceInputMethodService : InputMethodService() {
                             // shows a brief 'nothing heard' affordance instead
                             // of "Done", and nothing is committed or saved.
                             val heardAnything = shouldCommitTranscript(finalTranscript)
-                            voiceRecordingPane.statusText.text =
-                                if (heardAnything) "Done" else "Nothing heard"
+                            voiceRecordingPane.setStatus(
+                                if (heardAnything) VoiceStatus.DONE else VoiceStatus.NOTHING_HEARD
+                            )
                             // Auto-save — never persist transcripts of privacy-sensitive fields,
                             // and never persist a blank transcript (no-op above).
                             // Read the volatile flip snapshot (not the frozen start local) so a
@@ -914,9 +923,7 @@ class VoiceInputMethodService : InputMethodService() {
                         override fun onError(error: VelaException) {
                             recordingGate.finish()
                             timerHandler?.removeCallbacksAndMessages(null)
-                            voiceRecordingPane.statusText.post {
-                                voiceRecordingPane.statusText.text = error.message
-                            }
+                            voiceRecordingPane.setStatusText(error.message)
                         }
 
                         override fun onDurationLimitReached() {
@@ -929,7 +936,7 @@ class VoiceInputMethodService : InputMethodService() {
                             mainHandler.post {
                                 if (recordingGeneration != streamingSessionGeneration) return@post
                                 stopRecording(runCleaner = true)
-                                voiceRecordingPane.statusText.text = "Time limit reached"
+                                voiceRecordingPane.setStatus(VoiceStatus.TIME_LIMIT)
                             }
                         }
                     }, ScribeInput(privacySensitive = sessionPrivacySensitive))
@@ -940,7 +947,7 @@ class VoiceInputMethodService : InputMethodService() {
                     recordingGate.reset()
                 }
                 mainHandler.post {
-                    voiceRecordingPane.statusText.text = "Initialization error"
+                    voiceRecordingPane.setStatus(VoiceStatus.INIT_ERROR)
                 }
             }
         }
@@ -952,7 +959,7 @@ class VoiceInputMethodService : InputMethodService() {
         // show a phantom Processing state.
         if (!recordingGate.tryStop()) return
         timerHandler?.removeCallbacksAndMessages(null)
-        voiceRecordingPane.statusText.text = "Processing..."
+        voiceRecordingPane.setStatus(VoiceStatus.PROCESSING)
         transcriber?.stopRecording(clean = runCleaner)
     }
 
