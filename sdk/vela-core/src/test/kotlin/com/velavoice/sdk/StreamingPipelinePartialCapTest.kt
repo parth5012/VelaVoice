@@ -36,10 +36,13 @@ class StreamingPipelinePartialCapTest {
         pipeline.lastCommitTime = now
         pipeline.lastActivityTime = now
 
-        val partial = "y".repeat(100)
+        val partialBase = "y".repeat(96)
         // 1000 partials * 100 chars = 100_000 chars of transcript (~5 minutes
-        // of speech), far above the 4096-char cap.
+        // of speech), far above the 4096-char cap. Each partial carries its
+        // index so consecutive markers are distinct: the #111 identical-partial
+        // dedup must not collapse a genuinely advancing transcript.
         for (i in 0 until 1000) {
+            val partial = partialBase + "%04d".format(i)
             transcriberCallback.onRevisionMarker(RevisionMarker("partial", partial, 0 until partial.length))
             if (i % 50 == 49) {
                 // Capture-thread equivalent: MAX_SEGMENT_MS forces a segment
@@ -95,8 +98,10 @@ class StreamingPipelinePartialCapTest {
         val vimsBuffer = StringBuilder()
         var streamingCommittedLength = 0
 
-        val partial = "y".repeat(100)
+        val partialBase = "y".repeat(96)
         for (i in 0 until 1000) {
+            // Distinct per index (see above): advancing speech, not a redelivery.
+            val partial = partialBase + "%04d".format(i)
             vimsBuffer.append(partial).append(' ')
             transcriberCallback.onRevisionMarker(RevisionMarker("partial", partial, 0 until partial.length))
             if (i % 50 == 49) {
