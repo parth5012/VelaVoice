@@ -27,6 +27,7 @@ import android.media.MediaRecorder
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.util.Log
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -51,6 +52,7 @@ import com.velavoice.sdk.sanitizeForInsertion
 import com.velavoice.sdk.shouldCommitTranscript
 import com.velavoice.sdk.shouldInsertIntoTarget
 import com.velavoice.sdk.AudioRecorder
+import com.velavoice.sdk.AmplitudeCoalescer
 
 class VoiceAccessibilityService : AccessibilityService() {
     private var windowManager: WindowManager? = null
@@ -60,6 +62,28 @@ class VoiceAccessibilityService : AccessibilityService() {
     private var audioRecord: AudioRecord? = null
     private var recordingThread: Thread? = null
     private val recordedAudioData = ByteArrayOutputStream()
+
+    /**
+     * Amplitude meter throttle (map #105 ticket #113): the batch capture loop
+     * and the streaming callback fire per read buffer (~50/s); each used to
+     * allocate a `post {}` runnable on the main thread. The coalescer keeps
+     * the latest sample and grants at most one post per 66 ms (~15 Hz);
+     * offers while the pane is hidden grant nothing.
+     */
+    private val amplitudeCoalescer = AmplitudeCoalescer()
+    /**
+     * Pane visibility mirror for the capture thread (main-thread writes,
+     * volatile read). Set alongside every `controlPane.visibility` change.
+     */
+    @Volatile
+    private var controlPaneVisible = false
+    /**
+     * The SINGLE amplitude runnable (ticket #113): drains the latest
+     * coalesced sample; at most one instance is ever queued ([pending] guard).
+     */
+    private val amplitudeRunnable = Runnable {
+        amplitudeCoalescer.poll(SystemClock.uptimeMillis())?.let { waveformView.addAmplitude(it) }
+    }
 
     private lateinit var statusText: TextView
     private lateinit var waveformView: WaveformView
@@ -392,6 +416,7 @@ class VoiceAccessibilityService : AccessibilityService() {
         Handler(Looper.getMainLooper()).post {
             statusText.text = "Ready"
             controlPane.visibility = View.GONE
+            controlPaneVisible = false
             val density = resources.displayMetrics.density
             val micColor = Color.parseColor("#a6e3a1")
             micButton.background = createCapsuleDrawable(micColor, 100f * density)
@@ -418,6 +443,7 @@ class VoiceAccessibilityService : AccessibilityService() {
         Handler(Looper.getMainLooper()).post {
             statusText.text = "Ready"
             controlPane.visibility = View.GONE
+            controlPaneVisible = false
             val density = resources.displayMetrics.density
             val micColor = Color.parseColor("#a6e3a1")
             micButton.background = createCapsuleDrawable(micColor, 100f * density)
@@ -463,6 +489,10 @@ class VoiceAccessibilityService : AccessibilityService() {
         waveformView.clear()
 
         controlPane.visibility = View.VISIBLE
+        // New meter session (ticket #113): first bar posts immediately and
+        // hidden-drop lifts.
+        amplitudeCoalescer.reset()
+        controlPaneVisible = true
         statusText.text = "Recording..."
 
         val density = resources.displayMetrics.density
@@ -503,8 +533,10 @@ class VoiceAccessibilityService : AccessibilityService() {
 
                         val rmss = sqrt(sum / readResult)
                         val normalized = (rmss / 32768.0f).toFloat()
-                        waveformView.post {
-                            waveformView.addAmplitude(normalized)
+                        // Coalesced meter (ticket #113): single shared runnable
+                        // at ~15 Hz, dropped while hidden.
+                        if (amplitudeCoalescer.offer(normalized, SystemClock.uptimeMillis(), controlPaneVisible)) {
+                            waveformView.post(amplitudeRunnable)
                         }
                     }
                 }
@@ -749,6 +781,7 @@ class VoiceAccessibilityService : AccessibilityService() {
                 statusText.text = "Ready"
             }
             controlPane.visibility = View.GONE
+            controlPaneVisible = false
 
             val density = resources.displayMetrics.density
             val micColor = Color.parseColor("#a6e3a1")
@@ -1199,6 +1232,10 @@ class VoiceAccessibilityService : AccessibilityService() {
         streamingPipeline = pipeline
 
         controlPane.visibility = View.VISIBLE
+        // New meter session (ticket #113): first bar posts immediately and
+        // hidden-drop lifts.
+        amplitudeCoalescer.reset()
+        controlPaneVisible = true
         statusText.text = "Streaming..."
     }
 
@@ -1216,6 +1253,7 @@ class VoiceAccessibilityService : AccessibilityService() {
         Handler(Looper.getMainLooper()).post {
             statusText.text = "Ready"
             controlPane.visibility = View.GONE
+            controlPaneVisible = false
             val density = resources.displayMetrics.density
             val micColor = Color.parseColor("#a6e3a1")
             micButton.background = createCapsuleDrawable(micColor, 100f * density)
@@ -1297,7 +1335,11 @@ class VoiceAccessibilityService : AccessibilityService() {
             }
 
             override fun onAmplitude(normalized: Float) {
-                waveformView.post { waveformView.addAmplitude(normalized) }
+                // Coalesced meter (ticket #113): single shared runnable at
+                // ~15 Hz, dropped while hidden.
+                if (amplitudeCoalescer.offer(normalized, SystemClock.uptimeMillis(), controlPaneVisible)) {
+                    waveformView.post(amplitudeRunnable)
+                }
             }
         }
     }

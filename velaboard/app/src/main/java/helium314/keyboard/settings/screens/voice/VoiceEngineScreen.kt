@@ -20,6 +20,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -45,6 +46,18 @@ fun VoiceEngineScreen(onClickBack: () -> Unit) {
     val prefs = LocalContext.current.prefs()
     val context = LocalContext.current
 
+    // Hoisted engine mode (ticket #113): read once, held as state. The old
+    // code re-read prefs on every recomposition and rebuilt every Setting
+    // below; now only the keyed per-mode section rebuilds, on mode change.
+    var mode by remember {
+        mutableStateOf(
+            resolveTranscriptionMode(
+                { key -> prefs.getString(key, null) },
+                Defaults.PREF_VELA_TRANSCRIPTION_MODE
+            )
+        )
+    }
+
     SearchSettingsScreen(
         onClickBack = onClickBack,
         title = "Transcription Engine",
@@ -63,7 +76,13 @@ fun VoiceEngineScreen(onClickBack: () -> Unit) {
                         modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
                     )
 
-                    TranscriptionModeSelector(prefs)
+                    TranscriptionModeSelector(
+                        currentMode = mode,
+                        onModeChange = {
+                            prefs.edit { putString(Settings.PREF_VELA_TRANSCRIPTION_MODE, it) }
+                            mode = it
+                        }
+                    )
 
                     Text(
                         text = stringResource(R.string.voice_streaming_mode_title),
@@ -78,8 +97,11 @@ fun VoiceEngineScreen(onClickBack: () -> Unit) {
                     )
         StreamingModeSelector(prefs)
 
-        val mode = prefs.getString(Settings.PREF_VELA_TRANSCRIPTION_MODE, Defaults.PREF_VELA_TRANSCRIPTION_MODE)
-            ?: Defaults.PREF_VELA_TRANSCRIPTION_MODE
+        // Keyed per-mode section (ticket #113): rebuilt only when `mode`
+        // changes, never on unrelated recompositions. Shared keys stay
+        // stable across switches (see engineSettingKeysForMode).
+        val engineKeys = remember(mode) { engineSettingKeysForMode(mode) }
+        key(engineKeys) {
         if (mode == "gemini") {
             Setting(context, Settings.PREF_VELA_GEMINI_API_KEY, R.string.voice_gemini_api_key_title, R.string.voice_gemini_api_key_summary) {
                 PasswordTextInputPreference(setting = it, apiKey = VelaApiKey.GEMINI)
@@ -118,6 +140,7 @@ fun VoiceEngineScreen(onClickBack: () -> Unit) {
                 TextInputPreference(setting = it, default = Defaults.PREF_VELA_CUSTOM_ENDPOINT)
             }.Preference()
         }
+        }
 
                     Spacer(Modifier.height(32.dp))
                 }
@@ -127,10 +150,10 @@ fun VoiceEngineScreen(onClickBack: () -> Unit) {
 }
 
 @Composable
-private fun TranscriptionModeSelector(prefs: android.content.SharedPreferences) {
-    var currentMode by remember { mutableStateOf(
-        prefs.getString(Settings.PREF_VELA_TRANSCRIPTION_MODE, Defaults.PREF_VELA_TRANSCRIPTION_MODE) ?: "local"
-    ) }
+private fun TranscriptionModeSelector(
+    currentMode: String,
+    onModeChange: (String) -> Unit
+) {
     val modes = listOf(
         "local" to "On-Device (Offline)",
         "gemini" to "Google Gemini 3.5",
@@ -148,10 +171,7 @@ private fun TranscriptionModeSelector(prefs: android.content.SharedPreferences) 
         modes.forEach { (value, label) ->
             FilterChip(
                 selected = currentMode == value,
-                onClick = {
-                    prefs.edit { putString(Settings.PREF_VELA_TRANSCRIPTION_MODE, value) }
-                    currentMode = value
-                },
+                onClick = { onModeChange(value) },
                 label = { Text(label, style = MaterialTheme.typography.bodySmall) },
                 modifier = Modifier.weight(1f)
             )
