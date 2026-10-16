@@ -23,6 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -220,75 +221,12 @@ fun VoiceSyncScreen(onClickBack: () -> Unit) {
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Spacer(Modifier.height(8.dp))
+                                // Keyed rows (ticket #113): an append or sync flip
+                                // recomposes only the affected row (see
+                                // diffTranscriptionHistory), never the whole list.
                                 recentTranscriptions.forEach { item ->
-                                    Card(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 4.dp),
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                                        )
-                                    ) {
-                                        Column(Modifier.padding(8.dp)) {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(
-                                                    text = if (item.createdAt.isNotEmpty()) item.createdAt else item.fileName.replace(".json", "").replace("_", " "),
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = MaterialTheme.colorScheme.onSurface
-                                                )
-                                                Card(
-                                                    colors = CardDefaults.cardColors(
-                                                        containerColor = if (item.isSynced)
-                                                            Color(0xFF00504B)
-                                                        else
-                                                            Color(0xFF3C1800)
-                                                    )
-                                                ) {
-                                                    Text(
-                                                        text = if (item.isSynced) "Synced" else "Local Only",
-                                                        style = MaterialTheme.typography.bodySmall,
-                                                        color = Color.White,
-                                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                                    )
-                                                }
-                                            }
-                                            Spacer(Modifier.height(4.dp))
-                                            Text(
-                                                text = "Raw Text:",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.primary,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                            Text(
-                                                text = item.raw,
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.onSurface
-                                            )
-                                            if (item.cleaned.isNotEmpty() && item.cleaned != item.raw) {
-                                                Spacer(Modifier.height(4.dp))
-                                                Text(
-                                                    text = "Cleaned Text:",
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = MaterialTheme.colorScheme.secondary,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                                Text(
-                                                    text = item.cleaned,
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    color = MaterialTheme.colorScheme.primary
-                                                )
-                                            }
-                                            Spacer(Modifier.height(4.dp))
-                                            Text(
-                                                text = "Duration: ${Math.round(item.durationMs / 1000f)}s | File: ${item.fileName}",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
+                                    key(transcriptionHistoryKey(item)) {
+                                        TranscriptionHistoryCard(item = item)
                                     }
                                 }
                             }
@@ -300,4 +238,81 @@ fun VoiceSyncScreen(onClickBack: () -> Unit) {
             }
         }
     )
+}
+
+/**
+ * One transcription history row (ticket #113): extracted so keyed composition
+ * scopes recomposition to the inserted/changed row instead of the whole list.
+ */
+@Composable
+private fun TranscriptionHistoryCard(item: TranscriptionLogItem) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        )
+    ) {
+        Column(Modifier.padding(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (item.createdAt.isNotEmpty()) item.createdAt else item.fileName.replace(".json", "").replace("_", " "),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (item.isSynced)
+                            Color(0xFF00504B)
+                        else
+                            Color(0xFF3C1800)
+                    )
+                ) {
+                    Text(
+                        text = if (item.isSynced) "Synced" else "Local Only",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Raw Text:",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = item.raw,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (item.cleaned.isNotEmpty() && item.cleaned != item.raw) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "Cleaned Text:",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = item.cleaned,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Duration: ${Math.round(item.durationMs / 1000f)}s | File: ${item.fileName}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
 }

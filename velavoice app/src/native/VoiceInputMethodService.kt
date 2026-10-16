@@ -9,12 +9,14 @@ import android.inputmethodservice.InputMethodService
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
+import android.os.SystemClock
 import android.view.Gravity
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.LinearLayout
 import com.velavoice.sdk.AudioRecorder
+import com.velavoice.sdk.AmplitudeCoalescer
 import com.velavoice.sdk.TranscriptionResult
 import com.velavoice.sdk.VelaException
 import com.velavoice.sdk.VelaRecordingCallback
@@ -58,6 +60,32 @@ class VoiceInputMethodService : InputMethodService() {
     private var recordingSeconds = 0
     private var timerHandler: Handler? = null
     private val recordingGate = RecordingSessionGate()
+
+    /**
+     * Amplitude meter throttle (map #105 ticket #113): the mic callbacks fire
+     * per read buffer (~50/s); without this each one allocates a `post {}`
+     * runnable on the main thread. The coalescer keeps the latest sample and
+     * grants at most one post per 66 ms (~15 Hz); offers while the pane is
+     * hidden grant nothing. The VAD path is unaffected — `adaptiveVad.observe`
+     * still runs per tick inside the pipeline (#111).
+     */
+    private val amplitudeCoalescer = AmplitudeCoalescer()
+    /**
+     * Pane visibility for the capture thread (main-thread writes, volatile
+     * read): `View.isShown` must not be read off-main, so show/hide maintain
+     * this mirror instead. Hidden offers are dropped before any post.
+     */
+    @Volatile
+    private var voicePaneVisible = false
+    /**
+     * The SINGLE amplitude runnable (ticket #113): the only object ever posted
+     * for the meter — it drains the latest coalesced sample. The [pending]
+     * guard inside the coalescer guarantees at most one instance is queued.
+     */
+    private val amplitudeRunnable = Runnable {
+        val wave = voiceRecordingPane.waveformView
+        amplitudeCoalescer.poll(SystemClock.uptimeMillis())?.let { wave.addAmplitude(it) }
+    }
 
     // Streaming state
     private val isStreaming = AtomicBoolean(false)
@@ -500,8 +528,10 @@ class VoiceInputMethodService : InputMethodService() {
                         // Generation-bound (map #130 PR #137 TOCTOU fix): a stale
                         // pipeline must not draw into the newer session's meter.
                         if (generation != streamingSessionGeneration) return
-                        voiceRecordingPane.waveformView.post {
-                            voiceRecordingPane.waveformView.addAmplitude(normalized)
+                        // Coalesced meter (ticket #113): at most one shared
+                        // runnable per 66 ms, nothing while hidden.
+                        if (amplitudeCoalescer.offer(normalized, SystemClock.uptimeMillis(), voicePaneVisible)) {
+                            voiceRecordingPane.waveformView.post(amplitudeRunnable)
                         }
                     }
                 })
@@ -709,11 +739,18 @@ class VoiceInputMethodService : InputMethodService() {
     private fun showVoicePane() {
         keyboardView.visibility = View.GONE
         voiceRecordingPane.visibility = View.VISIBLE
+        // New meter session: the first bar posts immediately (no stale
+        // throttle from the previous session) and hidden-drop lifts.
+        amplitudeCoalescer.reset()
+        voicePaneVisible = true
     }
 
     private fun showKeyboardView() {
         voiceRecordingPane.visibility = View.GONE
         keyboardView.visibility = View.VISIBLE
+        // Pane gone: capture-thread offers drop before any main-thread post
+        // (the view's own isShown gate from #112 stays as second defence).
+        voicePaneVisible = false
     }
 
     // ──────────────────────────────────────────────
@@ -811,8 +848,12 @@ class VoiceInputMethodService : InputMethodService() {
 
                     builtTranscriber.startRecording(object : VelaRecordingCallback {
                         override fun onAmplitude(normalized: Float) {
-                            voiceRecordingPane.waveformView.post {
-                                voiceRecordingPane.waveformView.addAmplitude(normalized)
+                            // Coalesced meter (ticket #113): at most one shared
+                            // runnable per 66 ms, nothing while hidden. The VAD
+                            // path is untouched (per-tick observe lives in the
+                            // capture pipeline, #111).
+                            if (amplitudeCoalescer.offer(normalized, SystemClock.uptimeMillis(), voicePaneVisible)) {
+                                voiceRecordingPane.waveformView.post(amplitudeRunnable)
                             }
                         }
 
