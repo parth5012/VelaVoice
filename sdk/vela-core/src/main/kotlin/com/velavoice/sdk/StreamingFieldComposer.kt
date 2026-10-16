@@ -26,6 +26,30 @@ fun shouldCommitTranscript(transcript: String?): Boolean = !transcript.isNullOrB
 class StreamingFieldComposer {
 
     private var baseline: String? = null
+    /**
+     * Field offsets `[ownedStart, ownedEnd)` currently owned by the streaming
+     * session (map #105 ticket #108): the span the last partial wrote and the
+     * next partial/final may replace. Text the user typed outside this span is
+     * never touched — replace splices prefix + new text + suffix.
+     */
+    private var ownedStart: Int = 0
+    private var ownedEnd: Int = 0
+    private var hasOwned: Boolean = false
+    /**
+     * Transcript end offset owned by the last applied marker, in the marker's
+     * own full-output coordinates. A marker starting at or past this offset
+     * opens a new segment (appended at the owned end); one starting before it
+     * re-emits the same segment (replaces the owned span).
+     */
+    private var ownedTranscriptEnd: Int = 0
+    /**
+     * Highest revision id applied so far. Stale duplicates and out-of-order
+     * redeliveries (`revisionId <= lastRevisionId`) are ignored; unstamped
+     * legacy markers (`revisionId == 0`) always apply. Retained by
+     * [discardOwnedRange] so late markers from a cancelled session stay
+     * ignored; cleared by [reset] for the next session.
+     */
+    private var lastRevisionId: Long = 0
 
     /** Observe the field's current text before a streaming write (first value wins). */
     fun observe(currentFieldText: String) {
@@ -42,8 +66,99 @@ class StreamingFieldComposer {
         return baseline.orEmpty() + finalText
     }
 
+    /**
+     * Apply a partial marker to the field, replacing only the owned span
+     * (map #105 ticket #108). Returns the text to write to the field.
+     *
+     * - Stale markers (`0 < revisionId <= last applied`) return
+     *   [currentFieldText] unchanged: a new partial supersedes only its own
+     *   prior text, never an older or duplicate delivery.
+     * - Otherwise the owned span is spliced out and [marker.text] spliced in;
+     *   everything the user typed outside the span (before or after it)
+     *   survives verbatim.
+     * - A marker starting at/past the previously owned transcript end opens a
+     *   new segment appended at the owned end (delta chains); one starting
+     *   before it re-emits the same segment (the owned span is replaced).
+     * - Empty-text partials are a no-op.
+     */
+    fun applyPartial(marker: RevisionMarker, currentFieldText: String): String {
+        observe(currentFieldText)
+        if (marker.text.isEmpty()) return currentFieldText
+        if (marker.revisionId > 0 && marker.revisionId <= lastRevisionId) return currentFieldText
+        val base = baseline.orEmpty()
+
+        val start = ownedStart.coerceIn(0, currentFieldText.length)
+        val end = ownedEnd.coerceIn(start, currentFieldText.length)
+        val anchor: Int
+        val newSegment = !hasOwned || marker.range.first >= ownedTranscriptEnd
+        if (!hasOwned) {
+            anchor = (base.length + marker.range.first).coerceIn(base.length, currentFieldText.length)
+        } else if (newSegment) {
+            // New segment: continue after what this session already owns.
+            anchor = end
+        } else {
+            // Same segment re-emitted: replace the owned span.
+            anchor = start
+        }
+        val prefix = currentFieldText.substring(0, anchor)
+        val suffix = currentFieldText.substring(if (!hasOwned) anchor else end)
+        val composed = prefix + marker.text + suffix
+
+        ownedStart = anchor
+        ownedEnd = anchor + marker.text.length
+        ownedTranscriptEnd = if (newSegment) {
+            maxOf(ownedTranscriptEnd, marker.range.last + 1)
+        } else {
+            // Re-emission defines the owned span exactly (covers shrink
+            // corrections, where the new end precedes the old one).
+            marker.range.last + 1
+        }
+        hasOwned = true
+        if (marker.revisionId > 0) lastRevisionId = marker.revisionId
+        return composed
+    }
+
+    /**
+     * Commit the final transcript, replacing only the owned span so user-typed
+     * text outside it survives (map #105 ticket #108). With no owned span this
+     * falls back to [finalWriteText] (baseline + final). A blank final is a
+     * no-op per the shared [shouldCommitTranscript] gate (map #105 ticket
+     * #106): "nothing heard" must never clear the field.
+     */
+    fun commitFinal(finalText: String, currentFieldText: String): String {
+        if (!shouldCommitTranscript(finalText)) return currentFieldText
+        if (!hasOwned) return finalWriteText(currentFieldText, finalText)
+        observe(currentFieldText)
+        val start = ownedStart.coerceIn(0, currentFieldText.length)
+        val end = ownedEnd.coerceIn(start, currentFieldText.length)
+        val composed = currentFieldText.substring(0, start) + finalText +
+            currentFieldText.substring(end)
+        ownedStart = start
+        ownedEnd = start + finalText.length
+        hasOwned = false
+        return composed
+    }
+
+    /** True while this session owns a revisable span in the field. */
+    fun hasOwnedRange(): Boolean = hasOwned
+
+    /**
+     * Cancel path (map #105 ticket #108, coordinate with 5.1's cancel): forget
+     * the owned span without touching the field — emits no write, so whatever
+     * the user typed stays exactly as it is. [lastRevisionId] is retained so
+     * late markers from the dead session are still ignored as stale.
+     */
+    fun discardOwnedRange() {
+        ownedStart = 0
+        ownedEnd = 0
+        ownedTranscriptEnd = 0
+        hasOwned = false
+    }
+
     /** Forget the baseline so the next streaming session captures its own. */
     fun reset() {
         baseline = null
+        discardOwnedRange()
+        lastRevisionId = 0
     }
 }

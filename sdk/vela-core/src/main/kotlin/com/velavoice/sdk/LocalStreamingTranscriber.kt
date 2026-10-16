@@ -51,6 +51,12 @@ class LocalStreamingTranscriber(
     private var lastCommittedText = ""
     private var partialText = ""
     internal var committedLength = 0
+    /**
+     * Revision sequence for emitted markers (map #105 ticket #108): every
+     * partial/commit emission takes the next id so the committer can tell a
+     * superseding partial from a stale duplicate. Reset in [start].
+     */
+    internal var nextRevisionId = 1L
 
     // Chunk timing
     internal var chunkSamples = 0
@@ -114,6 +120,7 @@ class LocalStreamingTranscriber(
         committedLength = 0
         lastCommittedText = ""
         partialText = ""
+        nextRevisionId = 1L
 
         // Clear buffer
         synchronized(bufferLock) {
@@ -301,7 +308,7 @@ class LocalStreamingTranscriber(
         return all.copyOfRange(all.size - windowBytes, all.size)
     }
 
-    private fun handleTranscriptionResult(newText: String) {
+    internal fun handleTranscriptionResult(newText: String) {
         if (newText.isBlank()) return
 
         val newTextTrimmed = newText.trim()
@@ -329,7 +336,8 @@ class LocalStreamingTranscriber(
             RevisionMarker(
                 type = "partial",
                 text = text,
-                range = startIdx until endIdx
+                range = startIdx until endIdx,
+                revisionId = nextRevisionId++
             )
         )
         partialText = text
@@ -380,7 +388,8 @@ class LocalStreamingTranscriber(
                 RevisionMarker(
                     type = "commit",
                     text = partialText,
-                    range = (committedLength - partialText.length).coerceAtLeast(0) until committedLength
+                    range = (committedLength - partialText.length).coerceAtLeast(0) until committedLength,
+                    revisionId = nextRevisionId++
                 )
             )
         }

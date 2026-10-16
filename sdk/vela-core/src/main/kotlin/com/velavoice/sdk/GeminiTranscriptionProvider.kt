@@ -344,7 +344,7 @@ class GeminiTranscriptionProvider(
             try {
                 val transcript = transcribe(pcmAudio, key, effectiveModel)
                 callback?.onRevisionMarker(
-                    RevisionMarker("commit", transcript, 0 until transcript.length)
+                    RevisionMarker("commit", transcript, 0 until transcript.length, 1)
                 )
                 callback?.onFinal(transcript)
             } catch (ve: VelaException) {

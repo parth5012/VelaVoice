@@ -5,11 +5,17 @@ package com.velavoice.sdk
  * - [type]: "partial" for revisable text, "commit" for finalized text
  * - [text]: the transcription text for this segment
  * - [range]: the character range within the full output that this text occupies
+ * - [revisionId]: monotonically increasing id within the emitting session
+ *   (map #105 ticket #108). A new partial supersedes only the text owned by
+ *   its own prior revision: the committer replaces exactly the owned range,
+ *   so user-typed text outside it survives. `0` means legacy/unstamped
+ *   (always applied, never used for ordering).
  */
 data class RevisionMarker(
     val type: String,  // "partial" or "commit"
     val text: String,
-    val range: IntRange
+    val range: IntRange,
+    val revisionId: Long = 0
 )
 
 /**

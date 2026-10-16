@@ -33,6 +33,12 @@ class CloudStreamingTranscriber : StreamingTranscriber {
     internal var committedLength = 0
     internal var partialText = ""
     private var lastCommittedText = ""
+    /**
+     * Revision sequence for emitted markers (map #105 ticket #108): every
+     * partial/commit emission takes the next id so the committer can tell a
+     * superseding partial from a stale duplicate. Reset in [start].
+     */
+    internal var nextRevisionId = 1L
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -47,6 +53,7 @@ class CloudStreamingTranscriber : StreamingTranscriber {
         committedLength = 0
         partialText = ""
         lastCommittedText = ""
+        nextRevisionId = 1L
 
         if (config.apiKey.isBlank()) {
             callback?.onError(VelaError("API key required for cloud streaming"))
@@ -233,7 +240,8 @@ class CloudStreamingTranscriber : StreamingTranscriber {
         val marker = RevisionMarker(
             type = "partial",
             text = delta,
-            range = startIdx until endIdx
+            range = startIdx until endIdx,
+            revisionId = nextRevisionId++
         )
         partialText += delta
         callback?.onRevisionMarker(marker)
@@ -246,7 +254,8 @@ class CloudStreamingTranscriber : StreamingTranscriber {
             val commitMarker = RevisionMarker(
                 type = "commit",
                 text = segment,
-                range = committedLength until (committedLength + segment.length)
+                range = committedLength until (committedLength + segment.length),
+                revisionId = nextRevisionId++
             )
             callback?.onRevisionMarker(commitMarker)
             committedLength += segment.length
