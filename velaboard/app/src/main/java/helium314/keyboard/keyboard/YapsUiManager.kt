@@ -58,9 +58,30 @@ class YapsUiManager private constructor() {
     private var mDimOverlay: View? = null
     private var mTranscribingDots: TranscribingDotsView? = null
     private var mConfirmBtn: ImageButton? = null
+    private var mCancelBtn: ImageButton? = null
     private var mMiddleContainer: LinearLayout? = null
 
     private val mHandler = Handler(Looper.getMainLooper())
+
+    /**
+     * Cancel-before-start (map #105 ticket #114): one animator per property —
+     * starting a new fade on a view first cancels the in-flight one, so a rapid
+     * toggle can never leave two animators racing on one property. Cancelling
+     * also fires the stale withEndAction, which the state guards already
+     * neutralize (a later state owns the view now).
+     */
+    private fun cancelFade(view: View?) {
+        view?.animate()?.cancel()
+    }
+
+    /**
+     * Matched removal for the audited click-listener surface (map #105 ticket
+     * #114): pill trigger + toolbar cancel/confirm buttons. Called only when a
+     * view is actually detached, so a reused toolbar keeps working listeners.
+     */
+    private fun clearClickListeners(vararg views: View?) {
+        views.forEach { it?.setOnClickListener(null) }
+    }
 
     fun init(latinIME: LatinIME, keyboardSwitcher: KeyboardSwitcher, suggestionStripView: View, keyboardViewWrapper: FrameLayout) {
         this.mLatinIME = latinIME
@@ -199,11 +220,13 @@ class YapsUiManager private constructor() {
         val density = context.resources.displayMetrics.density
 
         // 2. Hide "AUTO" Pill trigger button
+        cancelFade(mAutoPill)
         mAutoPill?.animate()?.alpha(0f)?.setDuration(150)?.withEndAction {
             if (mState == State.RECORDING) mAutoPill?.visibility = View.GONE
         }?.start()
 
         // 3. Hide standard Suggestion Strip View
+        cancelFade(mSuggestionStripView)
         mSuggestionStripView?.animate()?.alpha(0f)?.setDuration(150)?.withEndAction {
             if (mState == State.RECORDING || mState == State.PROCESSING)
                 mSuggestionStripView?.visibility = View.INVISIBLE
@@ -234,6 +257,7 @@ class YapsUiManager private constructor() {
                         mKeyboardSwitcher?.cancelVelaRecording()
                     }
                 }
+                mCancelBtn = cancelBtn
                 addView(cancelBtn)
 
                 // Middle Container for visualizer & language indicator
@@ -312,6 +336,7 @@ class YapsUiManager private constructor() {
 
         mActiveToolbar?.visibility = View.VISIBLE
         mActiveToolbar?.alpha = 0f
+        cancelFade(mActiveToolbar)
         mActiveToolbar?.animate()?.alpha(1f)?.setDuration(150)?.start()
 
         mState = State.RECORDING
@@ -375,6 +400,7 @@ class YapsUiManager private constructor() {
 
         // 2. Fade out and remove Active Recording Toolbar
         mActiveToolbar?.let { toolbar ->
+            cancelFade(toolbar)
             toolbar.animate().alpha(0f).setDuration(150).withEndAction {
                 // A new recording or a full reset took over while fading out: that later
                 // state owns the toolbar now, so this stale action must not detach it
@@ -383,11 +409,15 @@ class YapsUiManager private constructor() {
                 if (mActiveToolbar !== toolbar) return@withEndAction
                 val parent = toolbar.parent as? ViewGroup
                 parent?.removeView(toolbar)
+                // Detach is real: drop the toolbar button listeners so the recycled
+                // view cannot hold the IME context (map #105 ticket #114).
+                clearClickListeners(mCancelBtn, mConfirmBtn)
                 mActiveToolbar = null
                 mWaveformView = null
                 mLanguageText = null
                 mTranscribingDots = null
                 mConfirmBtn = null
+                mCancelBtn = null
                 mMiddleContainer = null
             }.start()
         }
@@ -395,11 +425,13 @@ class YapsUiManager private constructor() {
         // 3. Restore Suggestion Strip and AUTO Pill
         mSuggestionStripView?.let { strip ->
             strip.visibility = View.VISIBLE
+            cancelFade(strip)
             strip.animate().alpha(1f).setDuration(150).start()
         }
 
         mAutoPill?.let { pill ->
             pill.visibility = View.VISIBLE
+            cancelFade(pill)
             pill.animate().alpha(1f).setDuration(150).start()
         }
     }
@@ -433,6 +465,10 @@ class YapsUiManager private constructor() {
         pill?.let { (it.parent as? ViewGroup)?.removeView(it) }
         toolbar?.let { (it.parent as? ViewGroup)?.removeView(it) }
 
+        // Both detached views are dead: drop their click listeners so the recycled
+        // views cannot hold the IME context (map #105 ticket #114).
+        clearClickListeners(pill, mCancelBtn, mConfirmBtn)
+
         // Drop references first: a cancelled animation may still run its end action,
         // which must then find nothing left to detach or untrack.
         mAutoPill = null
@@ -441,6 +477,7 @@ class YapsUiManager private constructor() {
         mLanguageText = null
         mTranscribingDots = null
         mConfirmBtn = null
+        mCancelBtn = null
         mMiddleContainer = null
 
         pill?.animate()?.cancel()

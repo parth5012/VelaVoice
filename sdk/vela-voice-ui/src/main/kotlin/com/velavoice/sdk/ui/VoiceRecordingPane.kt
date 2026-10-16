@@ -168,6 +168,27 @@ class VoiceRecordingPane(context: Context) : LinearLayout(context) {
         }
     }
 
+    /**
+     * Matched teardown for every listener/handler registration above (map #105
+     * ticket #114): drops pending handler runnables, clears button click
+     * listeners and listener lambdas so a recycled pane can neither fire into
+     * a dead session nor hold the IME context alive.
+     */
+    fun release() {
+        mainHandler.removeCallbacksAndMessages(null)
+        stopCleanButton.setOnClickListener(null)
+        stopRawButton.setOnClickListener(null)
+        cancelButton.setOnClickListener(null)
+        onStopCleanListener = null
+        onStopRawListener = null
+        onCancelListener = null
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        release()
+    }
+
     /** Resolved theme palette (Catppuccin-inspired) for the recording pane. */
     private data class VelaColors(
         val baseBg: Int,
