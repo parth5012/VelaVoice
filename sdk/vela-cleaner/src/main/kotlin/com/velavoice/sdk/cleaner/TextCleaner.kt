@@ -125,6 +125,15 @@ open class TextCleaner(@Volatile internal var config: CleanerConfig) : AutoClose
      * password/PII fields: only local rule-based cleanup runs, so sensitive text never leaves
      * the device. It is a REQUIRED parameter on purpose — there is no privacy-off default
      * overload, so every call site must classify the text explicitly (ticket #76).
+     *
+     * Deterministic behaviour (map #105 ticket #110):
+     * - without an initialized model, cleaned = filler-stripped rule-based text;
+     * - with an initialized model, cleaned = LLM(filler-stripped text), validated via
+     *   [sanitizeLlmOutput] (prompt-echo / blank / overlong output falls back to the
+     *   filler-stripped text).
+     * Filler removal is word-boundary, whitespace-normalizing, and always runs BEFORE the
+     * LLM call so fillers never consume context budget. Whether filler removal is on by
+     * default is undecided (product call) — no default was flipped here.
      */
     fun clean(
         text: String,
@@ -152,7 +161,7 @@ open class TextCleaner(@Volatile internal var config: CleanerConfig) : AutoClose
             } else {
                 formatStandardCleanupPrompt(regexCleaned)
             }
-            return generate(prompt) ?: regexCleaned
+            return sanitizeLlmOutput(generate(prompt), regexCleaned)
         }
 
         return regexCleaned
@@ -187,6 +196,29 @@ open class TextCleaner(@Volatile internal var config: CleanerConfig) : AutoClose
         cleaned = cleaned.replace(Regex("\\s+"), " ").trim()
 
         return cleaned
+    }
+
+    /**
+     * Validates raw LLM output (map #105 ticket #110). A failed or misbehaving model can
+     * parrot the prompt template (or its framing/prefix) instead of rewritten text; that
+     * prompt text must never surface in user-visible output. Returns [fallback] (the
+     * filler-stripped pre-LLM text) when [raw] is null, blank, starts with prompt framing,
+     * contains the system-prompt body, or exceeds [MAX_LLM_OUTPUT_CHARS]. Otherwise returns
+     * the trimmed model output. An empty [fallback] stays empty so the shared #106
+     * no-op gate downstream keeps working.
+     */
+    internal fun sanitizeLlmOutput(raw: String?, fallback: String): String {
+        if (raw == null) return fallback
+        val out = raw.trim()
+        if (out.isEmpty()) return fallback
+        for (prefix in PROMPT_ECHO_PREFIXES) {
+            if (out.startsWith(prefix)) return fallback
+        }
+        for (marker in PROMPT_ECHO_MARKERS) {
+            if (out.contains(marker)) return fallback
+        }
+        if (out.length > MAX_LLM_OUTPUT_CHARS) return fallback
+        return out
     }
 
     /**
@@ -304,6 +336,27 @@ open class TextCleaner(@Volatile internal var config: CleanerConfig) : AutoClose
     companion object {
         const val PROFESSIONAL_INSTRUCTION =
             "Rewrite the input to be formal, professional, polite, and grammatically perfect. Retain the core meaning."
+
+        /**
+         * Absolute ceiling for accepted LLM output (map #105 ticket #110). Anything longer
+         * is treated as runaway generation and falls back to the pre-LLM text.
+         */
+        const val MAX_LLM_OUTPUT_CHARS = 4000
+
+        /** Output starting with one of these leaked prompt framing instead of rewritten text. */
+        private val PROMPT_ECHO_PREFIXES = listOf(
+            "<|begin_of_text|>",
+            "<|start_header_id|>",
+            "<|eot_id|>",
+            "<|end_header_id|>",
+            "Raw input:"
+        )
+
+        /** Output containing one of these repeated the system prompt instead of rewriting. */
+        private val PROMPT_ECHO_MARKERS = listOf(
+            "You are Scribe",
+            "You are a text cleaning assistant"
+        )
 
         private val modelCache = java.util.concurrent.ConcurrentHashMap<String, TextCleaner>()
 
