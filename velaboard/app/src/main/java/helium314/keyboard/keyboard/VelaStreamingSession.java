@@ -30,8 +30,9 @@ import helium314.keyboard.settings.TranscriptionStorage;
  *
  * Owns a {@link StreamingPipeline} and drives the editor through a composing-span state machine:
  * partial revisions extend the current composing span, commit revisions finalize it and open a
- * fresh one, and onFinal finalizes everything. The SDK's RevisionMarker.range is unreliable, so
- * only marker.text is used and all offsets are tracked here.
+ * fresh one, and onFinal finalizes everything. Marker ranges are absolute full-output offsets
+ * and revision ids are monotonic within the emitting session (map #105 ticket #108), so stale
+ * or redelivered markers are ignored by revision id instead of reaching the editor twice.
  *
  * StreamingPipeline bypasses the SDK's TextCleaner, so the cleanup parity that the instant path
  * gets for free (fillers, personal dictionary, Scribe, LLM) is applied here on the final pass:
@@ -99,6 +100,12 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
     private boolean mFinished = false;
     private boolean mCancelled = false;
     private boolean mReleased = false;
+    /**
+     * Highest marker revision applied so far (map #105 tickets #107/#108).
+     * Stale duplicates and out-of-order redeliveries are ignored before they
+     * can extend the composing span a second time.
+     */
+    private long mLastRevisionId = 0;
     private long mStartTimeMs = 0;
 
     private final StringBuilder mRevealed = new StringBuilder();
@@ -260,8 +267,17 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
     public void onRevisionMarker(final RevisionMarker marker) {
         final String type = marker.getType();
         final String text = marker.getText();
+        final long revisionId = marker.getRevisionId();
         mLatinIME.mHandler.post(() -> {
             if (mFinished || mCancelled) return;
+            // Single-owner dedup (map #105 tickets #107/#108): a redelivered
+            // or out-of-order marker must never extend the composing span a
+            // second time. Unstamped legacy markers (id 0) always apply.
+            if (revisionId > 0 && revisionId <= mLastRevisionId) {
+                Log.d(TAG, "ignoring stale revision " + revisionId);
+                return;
+            }
+            if (revisionId > 0) mLastRevisionId = revisionId;
             if ("partial".equals(type)) {
                 Log.d(TAG, "partial revision, +" + (text == null ? 0 : text.length()) + " chars");
                 appendDelta(text);
@@ -442,10 +458,19 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
         }
         connection.beginBatchEdit();
         connection.deleteTextBeforeCursor(raw.length());
-        connection.commitText(cleaned, 1);
+        commitCleanedText(connection, cleaned);
         connection.endBatchEdit();
         mCommitted.setLength(0);
         mCommitted.append(cleaned);
+    }
+
+    /**
+     * Sole editor-commit owner for this session (map #105 ticket #107): the
+     * only place cleaned text is committed to the editor, so the finalize
+     * swap can never double-insert.
+     */
+    private void commitCleanedText(final RichInputConnection connection, final String cleaned) {
+        connection.commitText(cleaned, 1);
     }
 
     /**
@@ -476,7 +501,7 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
         }
         connection.beginBatchEdit();
         connection.deleteTextBeforeCursor(prefix.length());
-        connection.commitText(cleaned, 1);
+        commitCleanedText(connection, cleaned);
         connection.endBatchEdit();
         mCommitted.setLength(0);
         mCommitted.append(cleaned);

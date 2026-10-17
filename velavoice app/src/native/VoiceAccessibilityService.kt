@@ -45,7 +45,7 @@ import com.velavoice.sdk.StreamConfig
 import com.velavoice.sdk.VelaException
 import com.velavoice.sdk.StreamingPipeline
 import com.velavoice.sdk.PrivacyGuard
-import com.velavoice.sdk.StreamingFieldComposer
+import com.velavoice.sdk.TextCommitter
 import com.velavoice.sdk.AudioRecorder
 
 class VoiceAccessibilityService : AccessibilityService() {
@@ -94,9 +94,13 @@ class VoiceAccessibilityService : AccessibilityService() {
     private var streamingMode = "instant"
     private var transcriptionMode = "local"
     private var streamingPipeline: StreamingPipeline? = null
-    private val streamingBuffer = StringBuilder()
-    private val streamingComposer = StreamingFieldComposer()
-    private var streamingCommittedLength = 0
+    /**
+     * Single commit-text owner (map #105 ticket #107): the SAME [TextCommitter]
+     * type the IME path holds. Streaming partials replace their owned span
+     * and finals replace the trailing partial (#108 revision ranges), so text
+     * inserted while a field is focused can never double-insert.
+     */
+    private val textCommitter = TextCommitter()
     // Single-thread executor for the streaming final TextCleaner pass (no
     // thread churn: one background thread, no new deps beyond java.util.concurrent).
     private val streamingCleanupExecutor = Executors.newSingleThreadExecutor()
@@ -391,9 +395,9 @@ class VoiceAccessibilityService : AccessibilityService() {
         isStreaming = false
         streamingCancelled = true
         streamingSessionId++
-        streamingBuffer.setLength(0)
-        streamingComposer.reset()
-        streamingCommittedLength = 0
+        // Forget the owned span without touching the field (map #105 ticket
+        // #107 cancel path): late markers from the dead session stay stale.
+        textCommitter.discardOwnedRange()
         streamingPipeline?.stop()
         streamingPipeline?.release()
         streamingPipeline = null
@@ -1066,9 +1070,7 @@ class VoiceAccessibilityService : AccessibilityService() {
         }
 
         isStreaming = true
-        streamingBuffer.setLength(0)
-        streamingComposer.reset()
-        streamingCommittedLength = 0
+        textCommitter.reset()
 
         val whisperPath = getWhisperModelPath(this@VoiceAccessibilityService)
         if (whisperPath == null) {
@@ -1133,14 +1135,16 @@ class VoiceAccessibilityService : AccessibilityService() {
                 Handler(Looper.getMainLooper()).post {
                     when (marker.type) {
                         "partial" -> {
-                            // Update buffer with partial text
-                            updateStreamingBuffer(marker.text, marker.range)
+                            // Live partial insert through the shared committer:
+                            // replaces the owned span, never appends.
+                            insertStreamingPartial(marker)
                             statusText.text = marker.text
                         }
                         "commit" -> {
-                            // Commit text to input field
-                            insertStreamingText(marker.text, false)
-                            streamingCommittedLength = marker.range.last
+                            // No field rewrite: the segment is already visible
+                            // via the partial inserts above, and the final
+                            // commitFinal() replaces the owned span exactly
+                            // once. Rewriting here would re-append it.
                         }
                     }
                 }
@@ -1175,7 +1179,7 @@ class VoiceAccessibilityService : AccessibilityService() {
                         // during the background clean — recheck cancelled on main
                         // before insert/save so the aborted tail stays discarded.
                         if (!streamingCancelled && cleaned.isNotBlank()) {
-                            insertStreamingText(cleaned, true)
+                            insertStreamingFinal(cleaned)
                         }
                         // Auto-save — never persist sensitive-field transcripts.
                         // Gate on the verdict captured at onFinal, not the live flag.
@@ -1299,51 +1303,63 @@ class VoiceAccessibilityService : AccessibilityService() {
         }
     }
 
-    private fun updateStreamingBuffer(text: String, range: IntRange) {
-        // Ensure buffer is large enough
-        if (streamingBuffer.length < range.last) {
-            streamingBuffer.setLength(range.last)
+    /**
+     * Streaming partial insert through the shared committer (map #105 ticket
+     * #107): a re-emitted partial replaces its own owned span instead of
+     * appending a duplicate, and user-typed text outside the span survives.
+     * The target node is re-resolved on every write — focus may have moved
+     * mid-stream, and a stale node handle must never receive the text.
+     */
+    private fun insertStreamingPartial(marker: RevisionMarker) {
+        // Revalidate focus on every write: FOCUS_INPUT now, editable fallback
+        // next. No cached node is ever written.
+        val targetNode = findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+            ?: rootInActiveWindow?.let { findEditableNode(it) }
+            ?: return
+        val currentText = targetNode.text?.toString() ?: ""
+        val composed = textCommitter.applyPartial(marker, currentText)
+        // Stale/duplicate revision: the committer returns the field unchanged.
+        if (composed == currentText) return
+        val arguments = Bundle()
+        arguments.putCharSequence(
+            AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+            composed
+        )
+        if (!targetNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)) {
+            Log.w("VoiceAccessibility", "ACTION_SET_TEXT refused by target app")
         }
-        streamingBuffer.replace(range.first, range.last, text)
     }
 
-    private fun insertStreamingText(text: String, isFinal: Boolean) {
-        val focusNode = findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
-        val targetNode = focusNode ?: rootInActiveWindow?.let { findEditableNode(it) }
-
-        if (targetNode != null) {
-            // Capture the pre-streaming baseline on the FIRST write: interim commits
-            // rewrite the field with partials, so a later final insert must not treat
-            // that partial content as pre-existing text (OCR duplication finding).
-            val currentText = targetNode.text?.toString() ?: ""
-            streamingComposer.observe(currentText)
-            if (isFinal) {
-                // Final (sensitive or not): baseline + cleaned final via
-                // ACTION_SET_TEXT uniformly — never current + final, never
-                // clipboard paste on top of streamed partials (which
-                // duplicates everything already streamed). Never touches the
-                // clipboard, so sensitive text stays off it too.
-                try {
-                    val arguments = Bundle()
-                    arguments.putCharSequence(
-                        AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
-                        streamingComposer.finalWriteText(currentText, text)
-                    )
-                    if (!targetNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)) {
-                        Log.w("VoiceAccessibility", "ACTION_SET_TEXT refused by target app")
-                    }
-                } catch (e: Exception) {
-                    Log.e("VoiceAccessibility", "Direct insert refused: ${e.javaClass.simpleName}")
-                }
-            } else {
-                // Partial text: use ACTION_SET_TEXT for composing
-                val arguments = Bundle()
-                arguments.putCharSequence(
-                    AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
-                    streamingBuffer.toString()
-                )
-                targetNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
+    /**
+     * Streaming final insert through the shared committer (map #105 ticket
+     * #107): replaces only the owned span — never current + final, never a
+     * clipboard paste on top of streamed partials (which duplicates everything
+     * already streamed). Never touches the clipboard, so sensitive text stays
+     * off it too. Blank finals are a no-op via the committer's shared #106
+     * gate (the field is returned unchanged and no write is dispatched).
+     */
+    private fun insertStreamingFinal(text: String) {
+        // Same per-write focus revalidation as the partial path.
+        val targetNode = findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+            ?: rootInActiveWindow?.let { findEditableNode(it) }
+            ?: return
+        // Capture the pre-streaming baseline on the FIRST write: interim
+        // partials rewrite the field, so a later final must not treat that
+        // partial content as pre-existing text (OCR duplication finding).
+        val currentText = targetNode.text?.toString() ?: ""
+        val composed = textCommitter.commitFinal(text, currentText)
+        if (composed == currentText) return
+        try {
+            val arguments = Bundle()
+            arguments.putCharSequence(
+                AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+                composed
+            )
+            if (!targetNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)) {
+                Log.w("VoiceAccessibility", "ACTION_SET_TEXT refused by target app")
             }
+        } catch (e: Exception) {
+            Log.e("VoiceAccessibility", "Direct insert refused: ${e.javaClass.simpleName}")
         }
     }
 

@@ -24,6 +24,7 @@ import com.velavoice.sdk.cleaner.PersonalDictionary
 import com.velavoice.sdk.ui.VoiceRecordingPane
 import com.velavoice.sdk.StreamingTranscriptionCallback
 import com.velavoice.sdk.RevisionMarker
+import com.velavoice.sdk.TextCommitter
 import com.velavoice.sdk.StreamConfig
 import com.velavoice.sdk.StreamingPipeline
 import com.velavoice.sdk.PrivacyGuard
@@ -68,6 +69,20 @@ class VoiceInputMethodService : InputMethodService() {
     private var streamingPipeline: StreamingPipeline? = null
     private val streamingBuffer = StringBuilder()
     private var streamingCommittedLength = 0
+    /**
+     * Single commit-text owner (map #105 ticket #107): [textCommitter] tracks
+     * the owned revision span (#108) so streaming finals replace the trailing
+     * partial instead of appending a duplicate. All InputConnection.commitText
+     * calls route through [insertTranscribedText].
+     */
+    private val textCommitter = TextCommitter()
+    /**
+     * Buffer length actually rendered via setComposingText (map #105 ticket
+     * #107). stopStreaming() finishes the composing span — which commits the
+     * shown text — so only the never-shown tail may still need a commit;
+     * without this, finishing plus re-committing the shown text duplicates it.
+     */
+    private var streamingShownLength = 0
     /**
      * Privacy verdict captured when the current voice session started
      * (map #130 ticket #133, mirrors keyboard #78 snapshot). Rechecks may
@@ -380,21 +395,28 @@ class VoiceInputMethodService : InputMethodService() {
                             if (generation != streamingSessionGeneration) return@main
                             when (marker.type) {
                                 "partial" -> {
-                                    updateStreamingBuffer(marker.text, marker.range)
-                                    // Show partial text as composing (gray/italic via spans)
+                                    updateStreamingBuffer(marker)
+                                    // Show only the uncommitted tail as composing: the committed
+                                    // prefix is already finalized in the editor, and re-setting
+                                    // the whole buffer as composing would duplicate it.
                                     val ic = currentInputConnection
                                     if (ic != null) {
-                                        val text = streamingBuffer.toString()
-                                        ic.setComposingText(text, 1)
+                                        val start = streamingCommittedLength.coerceIn(0, streamingBuffer.length)
+                                        ic.setComposingText(streamingBuffer.substring(start), 1)
+                                        streamingShownLength = streamingBuffer.length
                                     }
                                     voiceRecordingPane.statusText.text = marker.text
                                 }
                                 "commit" -> {
-                                    // Commit text
+                                    // Finalize everything buffered: the composing span shown
+                                    // above becomes committed text in the editor. Lengths are
+                                    // buffer coordinates (not marker ranges) so trimmed commit
+                                    // text cannot rewind them.
                                     val ic = currentInputConnection
                                     if (ic != null) {
                                         ic.finishComposingText()
-                                        streamingCommittedLength = marker.range.last
+                                        streamingCommittedLength = streamingBuffer.length
+                                        streamingShownLength = streamingBuffer.length
                                     }
                                 }
                             }
@@ -540,6 +562,8 @@ class VoiceInputMethodService : InputMethodService() {
                     streamingStartPending = false
                     streamingBuffer.setLength(0)
                     streamingCommittedLength = 0
+                    streamingShownLength = 0
+                    textCommitter.reset()
                 }
             } catch (e: Exception) {
                 android.util.Log.e("VoiceIME", "Start streaming failed", e)
@@ -562,24 +586,38 @@ class VoiceInputMethodService : InputMethodService() {
         if (!isStreaming.get()) return
         isStreaming.set(false)
 
-        // Commit remaining text (single commit site for streaming: onFinal
-        // below must NOT commit again). Blank remainder is a no-op (map #105
-        // ticket #106) — routed through the shared gate so streaming agrees
-        // with batch on what "nothing heard" means.
+        // Single-commit site for streaming (onFinal below must NOT commit
+        // again). finishComposingText commits the shown composing span, so
+        // only the never-shown tail (e.g. partials that arrived with no input
+        // connection) still needs a commit — re-committing shown text would
+        // duplicate it. Blank remainder is a no-op via insertTranscribedText's
+        // shared gate (map #105 ticket #106).
         val ic = currentInputConnection
         if (ic != null) {
             ic.finishComposingText()
+            streamingCommittedLength = maxOf(streamingCommittedLength, streamingShownLength)
             if (streamingBuffer.length > streamingCommittedLength) {
                 val remaining = streamingBuffer.substring(streamingCommittedLength).trim()
-                if (shouldCommitTranscript(remaining)) {
-                    ic.commitText(remaining + " ", 1)
-                }
+                insertTranscribedText("$remaining ")
+                streamingCommittedLength = streamingBuffer.length
             }
         }
 
         streamingPipeline?.stop()
         teardownVoiceEngine(pipeline = streamingPipeline)
         streamingPipeline = null
+    }
+
+    /**
+     * Sole commit-text owner for this service (map #105 ticket #107): the ONLY
+     * InputConnection.commitText call site. The streaming stop path and the
+     * batch onResult path both route through here, so partial/final/batch
+     * text cannot double-insert. Blank input is a no-op via the shared #106
+     * gate, so every path agrees on what "nothing heard" means.
+     */
+    private fun insertTranscribedText(text: String) {
+        if (!shouldCommitTranscript(text)) return
+        currentInputConnection?.commitText(text, 1)
     }
 
     /**
@@ -598,6 +636,8 @@ class VoiceInputMethodService : InputMethodService() {
         invalidatePendingStreamingStart()
         streamingBuffer.setLength(0)
         streamingCommittedLength = 0
+        streamingShownLength = 0
+        textCommitter.discardOwnedRange()
         streamingPipeline?.stop()
         teardownVoiceEngine(pipeline = streamingPipeline)
         streamingPipeline = null
@@ -605,11 +645,16 @@ class VoiceInputMethodService : InputMethodService() {
         showKeyboardView()
     }
 
-    private fun updateStreamingBuffer(text: String, range: IntRange) {
-        if (streamingBuffer.length < range.last) {
-            streamingBuffer.setLength(range.last)
-        }
-        streamingBuffer.replace(range.first, range.last, text)
+    /**
+     * Buffer the latest streaming revision through the shared committer (map
+     * #105 ticket #107): a re-emitted partial replaces its own owned span
+     * instead of appending a duplicate, stale/duplicate revisions are ignored
+     * by id, and the NUL-padding raw replace is gone.
+     */
+    private fun updateStreamingBuffer(marker: RevisionMarker) {
+        val composed = textCommitter.applyPartial(marker, streamingBuffer.toString())
+        streamingBuffer.setLength(0)
+        streamingBuffer.append(composed)
     }
 
     override fun onDestroy() {
@@ -814,9 +859,8 @@ class VoiceInputMethodService : InputMethodService() {
                                 }
                             }
                             voiceRecordingPane.post {
-                                val ic = currentInputConnection
-                                if (ic != null && heardAnything) {
-                                    ic.commitText(finalTranscript, 1)
+                                if (heardAnything) {
+                                    insertTranscribedText(finalTranscript)
                                 }
                                 showKeyboardView()
                             }
