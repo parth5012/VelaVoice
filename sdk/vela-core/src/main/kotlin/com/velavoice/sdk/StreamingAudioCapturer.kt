@@ -57,21 +57,28 @@ class StreamingAudioCapturer {
                 )
 
                 try {
+                    // Hotfix: a `return@Thread` from inside synchronized(...)
+                    // compiles to a monitor-held return, which Android 15's
+                    // strict verifier rejects (VerifyError at class load,
+                    // crashing the whole IME on debug builds; R8 masked it in
+                    // release 4.1). The decision is captured in a local and
+                    // acted on after the block has exited instead.
+                    var installRecord = true
                     synchronized(audioRecordLock) {
                         // A stop() between our isActive check and this lock may
-                        // have bumped the epoch; if so, release and exit without
-                        // installing the recorder (ticket #102).
+                        // have bumped the epoch; if so, do not install the
+                        // recorder (ticket #102).
                         if (epoch != sessionEpoch) {
-                            record.release()
-                            return@Thread
-                        }
-                        audioRecord = record
-                        if (record.state == AudioRecord.STATE_INITIALIZED) {
-                            record.startRecording()
+                            installRecord = false
+                        } else {
+                            audioRecord = record
+                            if (record.state == AudioRecord.STATE_INITIALIZED) {
+                                record.startRecording()
+                            }
                         }
                     }
 
-                    if (record.state == AudioRecord.STATE_INITIALIZED) {
+                    if (installRecord && record.state == AudioRecord.STATE_INITIALIZED) {
                         val buffer = ShortArray(bufferSize / 2)
                         while (isActive && epoch == sessionEpoch) {
                             val read = record.read(buffer, 0, buffer.size)
