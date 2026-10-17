@@ -32,6 +32,13 @@ android {
         jvmTarget = "17"
     }
 
+    // Robolectric must load this library's strings.xml (ticket #115 a11y/i18n tests).
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
+
     publishing {
         singleVariant("release") {
             withSourcesJar()

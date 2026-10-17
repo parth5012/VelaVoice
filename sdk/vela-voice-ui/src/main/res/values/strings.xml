@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Voice-pane user-visible strings (map #105 ticket #115). Every label, status
+  and spoken description in VoiceRecordingPane resolves through these keys so
+  the pane is translatable. Statuses are set via VoiceStatus.setStatus(), never
+  as inline literals (locked by VoicePaneA11yTest + VimsStatusStringsTest).
+-->
+<resources>
+  <!-- Action button labels -->
+  <string name="vela_voice_stop_clean">Stop Clean</string>
+  <string name="vela_voice_stop_raw">Stop Raw</string>
+  <string name="vela_voice_cancel">Cancel</string>
+  <string name="vela_voice_tap_to_speak">Tap to speak</string>
+
+  <!-- Spoken descriptions (TalkBack / switch access) -->
+  <string name="vela_voice_cd_stop_clean">Stop and clean up transcription</string>
+  <string name="vela_voice_cd_stop_raw">Stop and keep raw transcription</string>
+  <string name="vela_voice_cd_cancel">Cancel voice recording</string>
+
+  <!-- Pane state statuses (announced on change) -->
+  <string name="vela_voice_status_listening">Listening…</string>
+  <string name="vela_voice_status_initializing">Initializing…</string>
+  <string name="vela_voice_status_recording">Recording…</string>
+  <string name="vela_voice_status_streaming">Streaming…</string>
+  <string name="vela_voice_status_processing">Processing…</string>
+  <string name="vela_voice_status_done">Done</string>
+  <string name="vela_voice_status_nothing_heard">Nothing heard</string>
+  <string name="vela_voice_status_ready">Ready</string>
+  <string name="vela_voice_status_time_limit">Time limit reached</string>
+  <string name="vela_voice_status_no_model">No whisper model found.</string>
+  <string name="vela_voice_status_no_model_download">No whisper model found. Download one first.</string>
+  <string name="vela_voice_status_init_error">Initialization error</string>
+  <string name="vela_voice_status_streaming_error">Streaming init error</string>
+</resources>
