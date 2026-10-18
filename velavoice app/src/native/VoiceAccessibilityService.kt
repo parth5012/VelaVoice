@@ -730,7 +730,14 @@ class VoiceAccessibilityService : AccessibilityService() {
                 insertText(finalTranscript, sensitiveAtStop)
                 statusText.text = "Ready"
             }
-            if (isEmpty) {
+            if (errorMessage != null) {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    if (sessionIdAtStop == streamingSessionId) {
+                        controlPane.visibility = View.GONE
+                        statusText.text = "Ready"
+                    }
+                }, 2000)
+            } else if (isEmpty) {
                 Handler(Looper.getMainLooper()).postDelayed({
                     if (sessionIdAtStop == streamingSessionId) {
                         controlPane.visibility = View.GONE
