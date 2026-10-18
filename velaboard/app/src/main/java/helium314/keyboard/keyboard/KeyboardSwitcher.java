@@ -1350,7 +1350,9 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                 if (mIsVelaRecordingCancelled) {
                     return;
                 }
-                if (!privacySensitive) {
+                final String text = result.getCleanedTranscript();
+                final boolean empty = text == null || text.trim().isEmpty();
+                if (!empty && !privacySensitive) {
                     // Encode + WAV/JSON writes run on the persistence executor,
                     // never inline on this main-looper callback (map #97 #100):
                     // the commit below is independent of whether the save succeeds.
@@ -1364,9 +1366,6 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                     ));
                 }
                 latinIME.mHandler.post(() -> {
-                    if (!mIsVelaRecordingCancelled) {
-                        latinIME.onTextInput(result.getCleanedTranscript());
-                    }
                     if (isYaps) {
                         // YAPS mode: stopActiveRecording restores the keyboard UI by
                         // removing the dim overlay, toolbar, and restoring suggestion strip.
@@ -1376,6 +1375,13 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                         YapsUiManager.getInstance().stopActiveRecording();
                     } else {
                         showMainKeyboard(latinIME);
+                    }
+                    if (!mIsVelaRecordingCancelled) {
+                        if (empty) {
+                            showToast("Nothing heard", true);
+                        } else {
+                            latinIME.onTextInput(text);
+                        }
                     }
                 });
             }
@@ -1818,6 +1824,13 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
 
     // Displays a toast-like message with the provided text for a specified duration.
     private void showFakeToast(final String text, final int timeMillis) {
+        if (mFakeToastView == null) {
+            final int toastLength = timeMillis <= 2000 ? Toast.LENGTH_SHORT : Toast.LENGTH_LONG;
+            final Toast toast = Toast.makeText(mLatinIME, text, toastLength);
+            toast.setGravity(Gravity.CENTER, 0, 0);
+            toast.show();
+            return;
+        }
         if (mFakeToastView.getVisibility() == View.VISIBLE) return;
 
         final Drawable appIcon = mFakeToastView.getCompoundDrawables()[0];

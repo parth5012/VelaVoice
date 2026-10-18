@@ -424,7 +424,12 @@ class VoiceInputMethodService : InputMethodService() {
                             // remaining buffer to the InputConnection — onFinal
                             // must NOT commit again (double commit). Only
                             // status, privacy-gated save, keyboard restore.
-                            voiceRecordingPane.statusText.text = "Done"
+                            val isEmpty = text.trim().isEmpty()
+                            if (isEmpty) {
+                                voiceRecordingPane.statusText.text = "Nothing heard"
+                            } else {
+                                voiceRecordingPane.statusText.text = "Done"
+                            }
                             isStreaming.set(false)
                             // Auto-save — never persist transcripts of privacy-sensitive fields.
                             // Gate on the verdict captured at onFinal for this session
@@ -436,17 +441,27 @@ class VoiceInputMethodService : InputMethodService() {
                             // the committed text are already settled, insertion does not
                             // wait on storage.
                             if (sessionGeneration == streamingSessionGeneration && !sensitiveAtFinal) {
-                                TranscriptionStorage.persistAsync(Runnable {
-                                    TranscriptionStorage.save(
-                                        this@VoiceInputMethodService,
-                                        raw = text,
-                                        cleaned = text,
-                                        durationMs = 0,
-                                        privacySensitive = sensitiveAtFinal
-                                    )
-                                })
+                                if (!isEmpty) {
+                                    TranscriptionStorage.persistAsync(Runnable {
+                                        TranscriptionStorage.save(
+                                            this@VoiceInputMethodService,
+                                            raw = text,
+                                            cleaned = text,
+                                            durationMs = 0,
+                                            privacySensitive = sensitiveAtFinal
+                                        )
+                                    })
+                                }
                             }
-                            showKeyboardView()
+                            if (isEmpty) {
+                                voiceRecordingPane.postDelayed({
+                                    if (sessionGeneration == streamingSessionGeneration) {
+                                        showKeyboardView()
+                                    }
+                                }, 1000)
+                            } else {
+                                showKeyboardView()
+                            }
                         }
                     }
 
@@ -761,35 +776,50 @@ class VoiceInputMethodService : InputMethodService() {
                             if (recordingGeneration != streamingSessionGeneration) return
                             recordingGate.finish()
                             timerHandler?.removeCallbacksAndMessages(null)
-                            voiceRecordingPane.statusText.text = "Done"
                             val finalTranscript = result.cleanedTranscript
+                            val isEmpty = finalTranscript.trim().isEmpty()
+                            if (isEmpty) {
+                                voiceRecordingPane.statusText.text = "Nothing heard"
+                            } else {
+                                voiceRecordingPane.statusText.text = "Done"
+                            }
                             // Auto-save — never persist transcripts of privacy-sensitive fields.
                             // Read the volatile flip snapshot (not the frozen start local) so a
                             // mid-session flip-to-sensitive blocks the save (map #130 ticket #133 fix).
                             if (!sessionStartedPrivacySensitive) {
-                                // Verdict captured with the gate: the task runs later on the
-                                // persistence executor, never inline on this main-looper
-                                // callback (map #97 #100) — encode + WAV/JSON writes would
-                                // otherwise stall the IME. The commit below is independent
-                                // of whether the save succeeds.
-                                val sensitiveAtResult = sessionStartedPrivacySensitive
-                                TranscriptionStorage.persistAsync(Runnable {
-                                    TranscriptionStorage.save(
-                                        this@VoiceInputMethodService,
-                                        raw = result.rawTranscript,
-                                        cleaned = result.cleanedTranscript,
-                                        durationMs = result.durationMs,
-                                        audioBytes = result.audioBytes,
-                                        privacySensitive = sensitiveAtResult
-                                    )
-                                })
-                            }
-                            voiceRecordingPane.post {
-                                val ic = currentInputConnection
-                                if (ic != null && finalTranscript.isNotEmpty()) {
-                                    ic.commitText(finalTranscript, 1)
+                                if (!isEmpty) {
+                                    // Verdict captured with the gate: the task runs later on the
+                                    // persistence executor, never inline on this main-looper
+                                    // callback (map #97 #100) — encode + WAV/JSON writes would
+                                    // otherwise stall the IME. The commit below is independent
+                                    // of whether the save succeeds.
+                                    val sensitiveAtResult = sessionStartedPrivacySensitive
+                                    TranscriptionStorage.persistAsync(Runnable {
+                                        TranscriptionStorage.save(
+                                            this@VoiceInputMethodService,
+                                            raw = result.rawTranscript,
+                                            cleaned = result.cleanedTranscript,
+                                            durationMs = result.durationMs,
+                                            audioBytes = result.audioBytes,
+                                            privacySensitive = sensitiveAtResult
+                                        )
+                                    })
                                 }
-                                showKeyboardView()
+                            }
+                            if (isEmpty) {
+                                voiceRecordingPane.postDelayed({
+                                    if (recordingGeneration == streamingSessionGeneration) {
+                                        showKeyboardView()
+                                    }
+                                }, 1000)
+                            } else {
+                                voiceRecordingPane.post {
+                                    val ic = currentInputConnection
+                                    if (ic != null) {
+                                        ic.commitText(finalTranscript, 1)
+                                    }
+                                    showKeyboardView()
+                                }
                             }
                         }
 

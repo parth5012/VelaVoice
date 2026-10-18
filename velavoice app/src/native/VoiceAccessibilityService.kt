@@ -703,9 +703,10 @@ class VoiceAccessibilityService : AccessibilityService() {
         // while this transcription ran — never save or insert a dead session's
         // transcript under the new one. Fail-closed: discard.
         if (sessionIdAtStop != streamingSessionId) return@Thread
+        val isEmpty = finalTranscript.trim().isEmpty()
         // Auto-save — never persist transcripts of privacy-sensitive fields.
         // Gate on the verdict captured at stop, not the live flag.
-        if (!sensitiveAtStop && rawTranscript.isNotEmpty()) {
+        if (!sensitiveAtStop && !isEmpty && rawTranscript.isNotEmpty()) {
             val durationMs = ((audioBytes.size / 2) / 16L)
             TranscriptionStorage.save(
                 this@VoiceAccessibilityService,
@@ -723,13 +724,22 @@ class VoiceAccessibilityService : AccessibilityService() {
             if (sessionIdAtStop != streamingSessionId) return@post
             if (errorMessage != null) {
                 statusText.text = errorMessage
+            } else if (isEmpty) {
+                statusText.text = "Nothing heard"
             } else {
-                if (finalTranscript.isNotEmpty()) {
-                    insertText(finalTranscript, sensitiveAtStop)
-                }
+                insertText(finalTranscript, sensitiveAtStop)
                 statusText.text = "Ready"
             }
-            controlPane.visibility = View.GONE
+            if (isEmpty) {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    if (sessionIdAtStop == streamingSessionId) {
+                        controlPane.visibility = View.GONE
+                        statusText.text = "Ready"
+                    }
+                }, 1000)
+            } else {
+                controlPane.visibility = View.GONE
+            }
 
             val density = resources.displayMetrics.density
             val micColor = Color.parseColor("#a6e3a1")
