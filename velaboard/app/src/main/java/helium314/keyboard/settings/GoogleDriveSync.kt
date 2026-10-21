@@ -89,6 +89,13 @@ object GoogleDriveSync {
      * logged as counts only.
      */
     fun syncToDrive(context: Context, prefs: SharedPreferences): SyncResult {
+        // Airgap gate (ticket #158): Drive upload is a network feature and must
+        // refuse when the kill-switch is on. Checked before any credential or
+        // network touch, fail-closed.
+        if (helium314.keyboard.voice.AirgapGate.isAirgapped(prefs)) {
+            return SyncResult(0, 0, 0, "${helium314.keyboard.voice.AirgapGate.MESSAGE} — Google Drive sync refused.")
+        }
+
         val clientId = getClientId(prefs)
         val clientSecret = getClientSecret(prefs)
         val refreshToken = getRefreshToken(prefs)

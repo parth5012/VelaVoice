@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -83,6 +84,37 @@ fun VoiceEngineScreen(onClickBack: () -> Unit) {
                             mode = it
                         }
                     )
+
+                    // Airgap killswitch row (ticket #158): sitting next to the
+                    // transcription-mode selector. Summarizes what still works
+                    // when airgapped, per the ticket's locked constraints.
+                    var airgap by remember {
+                        mutableStateOf(prefs.getBoolean(Settings.PREF_VELA_AIRGAP, Defaults.PREF_VELA_AIRGAP))
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Air-gap mode",
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            Text(
+                                text = "Block all network: cloud transcription and Drive sync are refused (local Whisper keeps working).",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = airgap,
+                            onCheckedChange = { v ->
+                                prefs.edit { putBoolean(Settings.PREF_VELA_AIRGAP, v) }
+                                airgap = v
+                            }
+                        )
+                    }
 
                     Text(
                         text = stringResource(R.string.voice_streaming_mode_title),

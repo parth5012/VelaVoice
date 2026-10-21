@@ -22,6 +22,7 @@ import com.velavoice.sdk.cleaner.TextCleaner;
 import helium314.keyboard.settings.TranscriptionStorage;
 import helium314.keyboard.latin.settings.VelaApiKey;
 import helium314.keyboard.latin.settings.VelaApiKeyStore;
+import helium314.keyboard.voice.AirgapGate;
 
 import kotlin.Pair;
 
@@ -575,10 +576,23 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         final String uiStyle = prefs.getString(Settings.PREF_VELA_UI_STYLE, Defaults.PREF_VELA_UI_STYLE);
         final boolean isYaps = "yaps".equals(uiStyle);
 
-        final String streamingMode = prefs.getString(Settings.PREF_VELA_STREAMING_MODE,
+        String streamingMode = prefs.getString(Settings.PREF_VELA_STREAMING_MODE,
             helium314.keyboard.latin.settings.Defaults.PREF_VELA_STREAMING_MODE);
-        final String transcriptionMode = prefs.getString(Settings.PREF_VELA_TRANSCRIPTION_MODE,
+        String transcriptionMode = prefs.getString(Settings.PREF_VELA_TRANSCRIPTION_MODE,
                 helium314.keyboard.latin.settings.Defaults.PREF_VELA_TRANSCRIPTION_MODE);
+
+        // Airgap gate (ticket #158): when the kill-switch is on, cloud modes
+        // (gemini/groq/openai/custom) and streamed cloud sessions refuse; the
+        // recording falls back cleanly to local Whisper (toast + no crash, no
+        // silent hang). Prefs are re-read on every recording start, so toggling
+        // airgap applies immediately without a keyboard restart.
+        if (AirgapGate.INSTANCE.isAirgapped(prefs) && !"local".equals(transcriptionMode)) {
+            showToast(helium314.keyboard.voice.AirgapGate.MESSAGE
+                + " — using local model instead.", false);
+            transcriptionMode = "local";
+            streamingMode = "instant";
+        }
+
         final boolean wantsCloud = !"local".equals(transcriptionMode);
         if (("streamed".equals(streamingMode) || wantsCloud)
                 && startVelaStreaming(latinIME, prefs, modelPath, language, threads, isYaps)) {
@@ -618,6 +632,13 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             FrameLayout.LayoutParams.MATCH_PARENT,
             maxHeightPx,
             Gravity.BOTTOM));
+        // Airgap shield chip (ticket #158): cyan = on-device only, amber = cloud enabled.
+        final FrameLayout.LayoutParams shieldLp = new FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+            Gravity.TOP | Gravity.END);
+        final int chipMargin = (int)(8 * density);
+        shieldLp.setMargins(0, chipMargin, chipMargin, 0);
+        wrapper.addView(createAirgapShieldChip(latinIME, prefs), shieldLp);
         latinIME.setInputView(wrapper);
 
         voicePane.getStopCleanButton().setEnabled(false);
@@ -816,6 +837,13 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         final boolean privacySensitive = isPrivacySensitiveEditor(latinIME.getCurrentInputEditorInfo());
 
         boolean wantsCloud = !"local".equals(transcriptionMode);
+        // Fail-safe airgap gate (ticket #158): showVelaVoicePaneInternal already
+        // forces local mode when airgapped, but this builder re-reads prefs so a
+        // future extra call site can never bypass the kill-switch. Cloud upload
+        // is refused; the local streaming pipeline still works.
+        if (AirgapGate.INSTANCE.isAirgapped(prefs) && wantsCloud) {
+            wantsCloud = false;
+        }
         if (wantsCloud && privacySensitive) {
             if (!modelAvailable) {
                 showToast(latinIME.getString(R.string.voice_streaming_privacy_no_local), false);
@@ -953,6 +981,13 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             FrameLayout.LayoutParams.MATCH_PARENT,
             maxHeightPx,
             Gravity.BOTTOM));
+        // Airgap shield chip (ticket #158): cyan = on-device only, amber = cloud enabled.
+        final FrameLayout.LayoutParams shieldLp = new FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+            Gravity.TOP | Gravity.END);
+        final int chipMargin = (int)(8 * density);
+        shieldLp.setMargins(0, chipMargin, chipMargin, 0);
+        wrapper.addView(createAirgapShieldChip(latinIME, prefs), shieldLp);
         latinIME.setInputView(wrapper);
 
         voicePane.getStopCleanButton().setEnabled(false);
@@ -1145,6 +1180,31 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         builder.personalDictionary(buildPersonalDictionary(prefs));
         builder.dictionaryKeywords(buildDictionaryKeywords(prefs));
         return builder.build();
+    }
+
+    /**
+     * Airgap shield chip (ticket #158): small status pill overlaid on the voice
+     * recording wrapper. Cyan = airgap ON (on-device only), amber = cloud modes
+     * enabled. Reads prefs fresh at every recording start, so toggling airgap
+     * updates the shield immediately without a keyboard restart.
+     */
+    static TextView createAirgapShieldChip(final Context context, final SharedPreferences prefs) {
+        final boolean airgapped = AirgapGate.INSTANCE.isAirgapped(prefs);
+        final TextView chip = new TextView(context);
+        chip.setText(airgapped ? "ON-DEVICE ONLY" : "CLOUD ENABLED");
+        final int accent = airgapped ? 0xFF00BCD4 /* cyan */ : 0xFFFFB300 /* amber */;
+        chip.setTextColor(accent);
+        chip.setTextSize(10f);
+        chip.setPadding(Math.round(8 * context.getResources().getDisplayMetrics().density),
+                Math.round(3 * context.getResources().getDisplayMetrics().density),
+                Math.round(8 * context.getResources().getDisplayMetrics().density),
+                Math.round(3 * context.getResources().getDisplayMetrics().density));
+        final android.graphics.drawable.GradientDrawable bg =
+                new android.graphics.drawable.GradientDrawable();
+        bg.setColor((accent & 0x00FFFFFF) | 0x2E000000); // ~18% alpha accent tint
+        bg.setCornerRadius(999f);
+        chip.setBackground(bg);
+        return chip;
     }
 
     /**
