@@ -217,4 +217,5 @@ object Defaults {
     const val PREF_VELA_SCRIBE_ENABLED = false
     const val PREF_VELA_SCRIBE_STYLE = "Professional"
     const val PREF_VELA_SCRIBE_CONTEXT_FALLBACK = true
+    const val PREF_VELA_AIRGAP = false
 }
