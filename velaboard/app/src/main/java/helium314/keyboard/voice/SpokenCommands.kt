@@ -44,37 +44,60 @@ object SpokenCommands {
         "percent" to "%"
     )
 
-    // Emoji commands (#163 extension).
+    // Emoji commands (#163 extension): the spoken form is always
+    // "<name> emoji" — the bare name alone is NOT a command ("fire" stays
+    // literal; only "fire emoji" produces 🔥). Curated ~40-name v1 set.
     private val EMOJI: Map<String, String> = linkedMapOf(
         "thumbs up" to "\uD83D\uDC4D",
         "thumbs down" to "\uD83D\uDC4E",
         "smiley face" to "\uD83D\uDE0A",
         "smiley" to "\uD83D\uDE0A",
         "smile" to "\uD83D\uDE0A",
+        "grin" to "\uD83D\uDE04",
         "laughing" to "\uD83D\uDE02",
         "lol" to "\uD83D\uDE02",
-        "heart" to "\u2764\uFE0F",
-        "red heart" to "\u2764\uFE0F",
+        "joy" to "\uD83D\uDE02",
+        "rofl" to "\uD83E\uDD23",
+        "wink" to "\uD83D\uDE09",
         "sad face" to "\uD83D\uDE22",
         "sad" to "\uD83D\uDE22",
-        "wink" to "\uD83D\uDE09",
+        "sob" to "\uD83D\uDE2D",
+        "heart" to "\u2764\uFE0F",
+        "red heart" to "\u2764\uFE0F",
+        "broken heart" to "\uD83D\uDC94",
         "thinking" to "\uD83E\uDD14",
         "fire" to "\uD83D\uDD25",
         "clap" to "\uD83D\uDC4F",
+        "raising hands" to "\uD83D\uDE4C",
         "ok hand" to "\uD83D\uDC4C",
         "wave" to "\uD83D\uDC4B",
         "pray" to "\uD83D\uDE4F",
         "rocket" to "\uD83D\uDE80",
         "star" to "\u2B50",
+        "party" to "\uD83C\uDF89",
+        "tada" to "\uD83C\uDF89",
+        "balloon" to "\uD83C\uDF88",
+        "sparkles" to "\u2728",
         "check mark" to "\u2705",
-        "cross mark" to "\u274C"
+        "cross mark" to "\u274C",
+        "warning" to "\u26A0\uFE0F",
+        "high voltage" to "\u26A1",
+        "eyes" to "\uD83D\uDC40",
+        "skull" to "\uD83D\uDC80",
+        "100" to "\uD83D\uDCAF",
+        "poop" to "\uD83D\uDCA9",
+        "cake" to "\uD83C\uDF82",
+        "pizza" to "\uD83C\uDF55"
     )
+
+    /** Spoken phrase forms of the emoji commands: "<name> emoji". */
+    private val EMOJI_PHRASES: Set<String> by lazy { EMOJI.keys.map { "$it emoji" }.toSet() }
 
     private val EDIT_COMMANDS = setOf("scratch that", "delete last word", "delete last sentence")
 
     /** All command phrases, longest first for greedy matching. */
     private val ALL_PHRASES: List<String> by lazy {
-        (PUNCTUATION.keys + EMOJI.keys + EDIT_COMMANDS).sortedByDescending { it.length }
+        (PUNCTUATION.keys + EMOJI_PHRASES + EDIT_COMMANDS).sortedByDescending { it.length }
     }
 
     fun applySpokenCommands(rawText: String): String {
@@ -88,8 +111,10 @@ object SpokenCommands {
                 val (cmd, consumed) = phrase
                 when {
                     cmd in EDIT_COMMANDS -> applyEdit(cmd, sb)
-                    cmd in EMOJI -> appendEmoji(sb, EMOJI[cmd]!!)
-                    else -> appendPunct(sb, PUNCTUATION[cmd]!!)
+                    cmd.endsWith(" emoji") && cmd.removeSuffix(" emoji") in EMOJI ->
+                        appendEmoji(sb, EMOJI[cmd.removeSuffix(" emoji")]!!)
+                    else -> PUNCTUATION[cmd]?.let { appendPunct(sb, it) }
+                        ?: appendWord(sb, cmd) // defensive: unknown phrase, keep literal
                 }
                 i += consumed
             } else {
