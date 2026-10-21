@@ -23,6 +23,7 @@ import java.util.concurrent.TimeoutException;
 import helium314.keyboard.latin.LatinIME;
 import helium314.keyboard.latin.RichInputConnection;
 import helium314.keyboard.latin.utils.Log;
+import helium314.keyboard.voice.SpokenCommands;
 import helium314.keyboard.settings.TranscriptionStorage;
 
 /**
@@ -336,8 +337,10 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
             finishSegment();
             swapMode = SWAP_COMMITTED;
         }
-        final String raw = swapMode == SWAP_COMPOSING
+        final String raw0 = swapMode == SWAP_COMPOSING
             ? mComposing.toString() : mCommitted.toString();
+        // Spoken commands (punctuation/edit) apply to raw ASR text before the SDK cleaner.
+        final String raw = SpokenCommands.INSTANCE.applySpokenCommands(raw0);
 
         if (mCleanupSpec == null || raw.trim().isEmpty()) {
             completeFinalize(swapMode, raw, null);
