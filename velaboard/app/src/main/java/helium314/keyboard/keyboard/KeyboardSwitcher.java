@@ -23,6 +23,7 @@ import helium314.keyboard.settings.TranscriptionStorage;
 import helium314.keyboard.latin.settings.VelaApiKey;
 import helium314.keyboard.latin.settings.VelaApiKeyStore;
 import helium314.keyboard.voice.AirgapGate;
+import helium314.keyboard.voice.WaveformFeed;
 
 import kotlin.Pair;
 
@@ -1120,12 +1121,18 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     private VelaStreamingSession.Listener buildStreamingListener(final LatinIME latinIME,
             @Nullable final VoiceRecordingPane voicePane, final boolean isYaps) {
         return new VelaStreamingSession.Listener() {
+            // Waveform feed (ticket #160): EMA + rate gate, fresh per streaming session.
+            private final WaveformFeed waveFeed = new WaveformFeed();
+
             @Override
             public void onStreamingAmplitude(float normalized) {
+                final Float smoothed = waveFeed.feed(normalized, android.os.SystemClock.elapsedRealtime());
+                if (smoothed == null) return;
+                final float value = smoothed;
                 if (isYaps) {
-                    YapsUiManager.getInstance().addAmplitude(normalized);
+                    YapsUiManager.getInstance().addAmplitude(value);
                 } else if (voicePane != null && voicePane.getWaveformView() != null) {
-                    voicePane.getWaveformView().addAmplitude(normalized);
+                    voicePane.getWaveformView().addAmplitude(value);
                 }
             }
 
@@ -1400,15 +1407,22 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     VelaRecordingCallback buildVelaCallbacks(final LatinIME latinIME,
             @Nullable final VoiceRecordingPane voicePane, final boolean isYaps,
             final boolean privacySensitive) {
+        // Waveform feed (ticket #160): EMA smoothing + ~30fps rate gate, fresh
+        // per callback build (i.e. per recording session), fed by the existing
+        // recorder amplitude callbacks — no second recorder, no haptics.
+        final WaveformFeed waveFeed = new WaveformFeed();
         return new VelaRecordingCallback() {
             @Override
             public void onAmplitude(float normalized) {
                 if (mIsVelaRecordingCancelled) return;
+                final Float smoothed = waveFeed.feed(normalized, android.os.SystemClock.elapsedRealtime());
+                if (smoothed == null) return;
+                final float value = smoothed;
                 latinIME.mHandler.post(() -> {
                     if (isYaps) {
-                        YapsUiManager.getInstance().addAmplitude(normalized);
+                        YapsUiManager.getInstance().addAmplitude(value);
                     } else if (voicePane != null && voicePane.getWaveformView() != null) {
-                        voicePane.getWaveformView().addAmplitude(normalized);
+                        voicePane.getWaveformView().addAmplitude(value);
                     }
                 });
             }
