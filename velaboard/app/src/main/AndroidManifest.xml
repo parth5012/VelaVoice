@@ -91,6 +91,17 @@ SPDX-License-Identifier: Apache-2.0 AND GPL-3.0-only
             </intent-filter>
         </activity>
 
+    <activity android:name="helium314.keyboard.share.ShareTranscribeActivity"
+        android:label="VelaBoard Share Transcribe"
+        android:theme="@style/platformActivityTheme"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.intent.action.SEND" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <data android:mimeType="audio/*" />
+        </intent-filter>
+    </activity>
+
     <activity android:name="helium314.keyboard.keyboard.emoji.EmojiSearchActivity" android:exported="false"
         android:theme="@style/TransparentActivityTheme" android:excludeFromRecents="true" android:noHistory="true"
         android:windowSoftInputMode="adjustResize|stateAlwaysVisible" android:configChanges="orientation|screenSize"/>
