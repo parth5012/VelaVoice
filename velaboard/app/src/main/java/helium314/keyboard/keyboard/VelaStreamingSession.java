@@ -340,7 +340,9 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
         final String raw0 = swapMode == SWAP_COMPOSING
             ? mComposing.toString() : mCommitted.toString();
         // Spoken commands (punctuation/edit) apply to raw ASR text before the SDK cleaner.
-        final String raw = SpokenCommands.INSTANCE.applySpokenCommands(raw0);
+        final android.content.SharedPreferences _prefs = helium314.keyboard.latin.settings.Settings.getInstance().getPrefs();
+        final boolean _spokenOn = _prefs.getBoolean(helium314.keyboard.latin.settings.Settings.PREF_SPOKEN_COMMANDS, helium314.keyboard.latin.settings.Defaults.PREF_SPOKEN_COMMANDS);
+        final String raw = _spokenOn ? SpokenCommands.INSTANCE.applySpokenCommands(raw0) : raw0;
 
         if (mCleanupSpec == null || raw.trim().isEmpty()) {
             completeFinalize(swapMode, raw, null);

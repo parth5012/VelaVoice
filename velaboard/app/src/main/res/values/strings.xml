@@ -362,6 +362,8 @@
     <string name="voice_threads_summary">CPU threads for inference (default 4)</string>
     <string name="voice_custom_fillers_title">Custom Filler Words</string>
     <string name="voice_custom_fillers_summary">Comma-separated filler words to remove (e.g. um,uh,like)</string>
+    <string name="voice_spoken_commands_title">Spoken Commands</string>
+    <string name="voice_spoken_commands_summary">Apply spoken punctuation and edit commands (e.g. period, new line) to dictation</string>
     <string name="voice_transcription_mode_title">Transcription Engine</string>
     <string name="voice_transcription_mode_summary">Choose on-device or API-based transcription</string>
     <string name="voice_streaming_mode_title">Streaming Mode</string>

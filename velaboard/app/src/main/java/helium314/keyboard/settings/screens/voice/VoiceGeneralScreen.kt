@@ -21,6 +21,7 @@ import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.utils.prefs
 import helium314.keyboard.settings.SearchSettingsScreen
 import helium314.keyboard.settings.Setting
+import helium314.keyboard.settings.preferences.SwitchPreference
 import helium314.keyboard.settings.preferences.TextInputPreference
 
 @Composable
@@ -49,6 +50,10 @@ fun VoiceGeneralScreen(onClickBack: () -> Unit) {
 
                     Setting(context, Settings.PREF_VELA_CUSTOM_FILLERS, R.string.voice_custom_fillers_title, R.string.voice_custom_fillers_summary) {
                         TextInputPreference(setting = it, default = Defaults.PREF_VELA_CUSTOM_FILLERS)
+                    }
+
+                    Setting(context, Settings.PREF_SPOKEN_COMMANDS, R.string.voice_spoken_commands_title, R.string.voice_spoken_commands_summary) {
+                        SwitchPreference(it, Defaults.PREF_SPOKEN_COMMANDS)
                     }
 
                     Spacer(Modifier.height(32.dp))
