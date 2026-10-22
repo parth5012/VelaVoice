@@ -58,9 +58,23 @@ class SpokenCommandsTest {
     }
 
     @Test fun emojiExtension() {
-        assertEquals("hi \uD83D\uDE0A", SpokenCommands.applySpokenCommands("hi smiley").trim())
-        // ensure thumbs up maps
-        assertEquals("\uD83D\uDC4D", SpokenCommands.applySpokenCommands("thumbs up"))
+        // "<name> emoji" phrase form produces the mapped emoji (#163)
+        assertEquals("great \uD83D\uDD25 great", SpokenCommands.applySpokenCommands("great fire emoji great").trim())
+        assertEquals("hi \uD83D\uDE0A", SpokenCommands.applySpokenCommands("hi smiley emoji").trim())
+        assertEquals("\uD83D\uDC4D", SpokenCommands.applySpokenCommands("thumbs up emoji").trim())
+        assertEquals("\u2764\uFE0F", SpokenCommands.applySpokenCommands("red heart emoji").trim())
+        assertEquals("\uD83D\uDCAF nice", SpokenCommands.applySpokenCommands("100 emoji nice").trim())
+    }
+
+    @Test fun bareEmojiNameIsNotACommand() {
+        // ticket #163: the bare name alone must stay literal
+        assertEquals("fire", SpokenCommands.applySpokenCommands("fire"))
+        assertEquals("give me a big thumbs up", SpokenCommands.applySpokenCommands("give me a big thumbs up"))
+        assertEquals("love heart", SpokenCommands.applySpokenCommands("love heart"))
+        // "emoji" alone is not a command either
+        assertEquals("nice emoji", SpokenCommands.applySpokenCommands("nice emoji"))
+        // word-boundary safe: "periodic" must not match "period"
+        assertEquals("periodic", SpokenCommands.applySpokenCommands("periodic"))
     }
 
     @Test fun editSingleWordInput() {
