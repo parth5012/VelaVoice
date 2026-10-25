@@ -23,6 +23,7 @@ data class WhisperConfig private constructor(
     val numThreads: Int,
     val allowedModelRoots: List<File>,
     val expectedHash: String?,
+    val translate: Boolean,
     @Suppress("UNUSED_PARAMETER") private val marker: Boolean
 ) {
     constructor(
@@ -30,13 +31,15 @@ data class WhisperConfig private constructor(
         language: String = DEFAULT_LANGUAGE,
         numThreads: Int = DEFAULT_THREADS,
         allowedModelRoots: List<File> = emptyList(),
-        expectedHash: String? = null
+        expectedHash: String? = null,
+        translate: Boolean = false
     ) : this(
         modelPath = modelPath,
         language = language,
         numThreads = clampThreads(numThreads),
         allowedModelRoots = allowedModelRoots,
         expectedHash = expectedHash,
+        translate = translate,
         marker = true
     )
 

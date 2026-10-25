@@ -82,9 +82,10 @@ class LocalStreamingTranscriber(
         // WhisperConfig is the fallback when the caller left fields blank.
         val modelPath = config.modelPath.ifBlank { this.config.modelPath }
         engineConfig = WhisperConfig(
-            modelPath = modelPath,
+            modelPath = config.modelPath.ifBlank { this.config.modelPath },
             language = config.language.ifBlank { this.config.language },
-            numThreads = if (config.numThreads > 0) config.numThreads else this.config.numThreads
+            numThreads = if (config.numThreads > 0) config.numThreads else this.config.numThreads,
+            translate = config.translate || this.config.translate
         )
 
         if (modelPath.isBlank() || !File(modelPath).exists()) {

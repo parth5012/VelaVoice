@@ -76,7 +76,9 @@ data class StreamConfig(
     /** True when the current session is dictating into a privacy-sensitive editor. */
     val privacySensitive: Boolean = false,
     /** Explicit opt-in required before any audio may be uploaded to a cloud API. */
-    val consentToUpload: Boolean = false
+    val consentToUpload: Boolean = false,
+    /** When true, Whisper translates source language to English. */
+    val translate: Boolean = false
 ) {
     /** Single predicate for the cloud-upload contract documented on [StreamConfig]. */
     fun allowsCloudUpload(): Boolean = consentToUpload && !privacySensitive

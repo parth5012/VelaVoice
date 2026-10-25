@@ -402,7 +402,8 @@ private class WhisperEngineErrorHarness(
         floatAudio: FloatArray,
         language: String,
         threads: Int,
-        initialPrompt: String?
+        initialPrompt: String?,
+        translate: Boolean
     ): String? {
         if (transcribeError != null) throw transcribeError
         if (transcribeReturnsNull) return null
@@ -447,7 +448,8 @@ private class WhisperEngineHarness(
         floatAudio: FloatArray,
         language: String,
         threads: Int,
-        initialPrompt: String?
+        initialPrompt: String?,
+        translate: Boolean
     ): String? {
         capturedLanguage = language
         capturedThreads = threads

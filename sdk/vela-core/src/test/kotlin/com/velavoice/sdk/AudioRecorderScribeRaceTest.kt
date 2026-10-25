@@ -57,7 +57,7 @@ class AudioRecorderScribeRaceTest {
             transcribeStarted.countDown()
             releaseTranscribe.await(5, TimeUnit.SECONDS)
             "raw secret transcript"
-        }.`when`(whisper).transcribe(anyArg(ByteArray::class.java), isNull())
+        }.`when`(whisper).transcribe(anyArg(ByteArray::class.java), isNull(), ArgumentMatchers.anyBoolean())
 
         doAnswer { inv ->
             capturedPrivacy.set(inv.getArgument(6))
