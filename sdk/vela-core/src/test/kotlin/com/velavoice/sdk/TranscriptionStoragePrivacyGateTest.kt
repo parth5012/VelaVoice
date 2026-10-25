@@ -293,7 +293,8 @@ class TranscriptionStoragePrivacyGateTest {
             "KeyboardSwitcher.java",
             "VelaStreamingSession.java",
             "VoiceInputMethodService.kt",
-            "VoiceAccessibilityService.kt"
+            "VoiceAccessibilityService.kt",
+            "ShareTranscribeActivity.kt"
         )
         val actual = mutableSetOf<String>()
         listOf(
