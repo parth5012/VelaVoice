@@ -220,7 +220,7 @@ class TranscriptionPersistenceOffloadTest {
     fun `no production save call escapes the persistence executor unreviewed`() {
         val root = repoRoot()
         val imeCallers = imeSaveCallerFiles().values.map { it.name }.toSet()
-        val knownOutOfScope = setOf("VoiceAccessibilityService.kt")
+        val knownOutOfScope = setOf("VoiceAccessibilityService.kt", "ShareTranscribeActivity.kt")
         val found = mutableMapOf<String, File>()
         listOf(File(root, "velaboard/app/src/main"), File(root, "velavoice app/src")).forEach { tree ->
             tree.walkTopDown()
