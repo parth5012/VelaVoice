@@ -26,6 +26,10 @@ data class WhisperConfig private constructor(
     val translate: Boolean,
     @Suppress("UNUSED_PARAMETER") private val marker: Boolean
 ) {
+    // @JvmOverloads preserves the pre-#173 JVM constructor signatures
+    // (…,String) and shorter prefixes so existing compiled callers keep
+    // linking (#207 review round).
+    @JvmOverloads
     constructor(
         modelPath: String,
         language: String = DEFAULT_LANGUAGE,

@@ -301,7 +301,10 @@ class StreamingPipeline internal constructor(
             apiKey = config.apiKey.ifBlank { d.apiKey },
             endpoint = config.endpoint.ifBlank { d.endpoint },
             model = config.model.ifBlank { d.model },
-            translate = config.translate || d.translate
+            // Session value wins so an explicit translate=false can override a
+            // builder-level true (same session-first rule as in
+            // LocalStreamingTranscriber; #207 review round).
+            translate = config.translate
         )
     }
 

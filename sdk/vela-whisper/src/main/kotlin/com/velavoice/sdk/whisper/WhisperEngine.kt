@@ -105,6 +105,14 @@ open class WhisperEngine protected constructor(
 
     // -- public API ---------------------------------------------------------
 
+    /**
+     * Explicit [translate] argument overrides the engine config in either
+     * direction: the default derives from [WhisperConfig.translate], but a
+     * caller passing `translate = false` on a translate-enabled config gets a
+     * non-translated result (#207 review round). @JvmOverloads preserves the
+     * pre-#173 one- and two-argument JVM signatures for binary compatibility.
+     */
+    @JvmOverloads
     fun transcribe(audioBytes: ByteArray, initialPrompt: String? = null, translate: Boolean = config?.translate ?: false): String {
         if (audioBytes.isEmpty()) return ""
 
@@ -116,14 +124,13 @@ open class WhisperEngine protected constructor(
             val lang = config?.language ?: WhisperConfig.DEFAULT_LANGUAGE
             require(WhisperConfig.isValidLanguage(lang)) { "Invalid language: $lang" }
             val threads = WhisperConfig.clampThreads(config?.numThreads ?: WhisperConfig.DEFAULT_THREADS)
-            val effectiveTranslate = translate || (config?.translate ?: false)
             val floatAudio = AudioConverter.convertPcmToFloat(audioBytes)
             return doNativeTranscribe(
                 ptr, floatAudio,
                 lang,
                 threads,
                 initialPrompt,
-                effectiveTranslate
+                translate
             ) ?: throw RuntimeException("Error during native transcription")
         }
     }
@@ -174,7 +181,7 @@ open class WhisperEngine protected constructor(
         language: String,
         threads: Int,
         initialPrompt: String?,
-        translate: Boolean = false
+        translate: Boolean
     ): String? {
         val bytes = nativeTranscribe(ptr, floatAudio, language, threads, initialPrompt, translate) ?: return null
         return String(bytes, Charsets.UTF_8)
