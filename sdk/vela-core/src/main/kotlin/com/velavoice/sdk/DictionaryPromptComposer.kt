@@ -27,10 +27,9 @@ class DictionaryPromptComposer(private val maxLength: Int = DEFAULT_MAX_LENGTH) 
             // account for ", " separator
             val added = if (chosen.isEmpty()) entry.length else entry.length + 2
             if (length + added > maxLength) {
-                // If nothing chosen yet, still try to fit a truncated single entry? Spec: cap string.
-                if (chosen.isEmpty() && entry.length <= maxLength) {
-                    chosen.add(entry)
-                }
+                // An entry that can never fit on its own is simply skipped so
+                // later, smaller entries still get their chance (#207 review).
+                if (entry.length > maxLength) continue
                 break
             }
             chosen.add(entry)

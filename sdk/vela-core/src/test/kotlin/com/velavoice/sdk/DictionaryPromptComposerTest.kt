@@ -35,9 +35,10 @@ class DictionaryPromptComposerTest {
     @Test
     fun lengthCap() {
         val long = "A".repeat(900)
+        // "A".repeat(900) can never fit under the cap — it is skipped, and the
+        // next, smaller entry is still composed (#207 review round).
         val result = DictionaryPromptComposer(10).compose(listOf(long, "Bob"))
-        // first entry truncated? Actually long exceeds cap; since chosen empty and entry.length>maxLength, break -> null
-        assertNull(result)
+        assertEquals("Bob", result)
     }
 
     @Test
