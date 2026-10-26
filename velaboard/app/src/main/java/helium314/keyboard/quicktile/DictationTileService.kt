@@ -47,14 +47,34 @@ class DictationTileService : TileService() {
         super.onClick()
         val session = activeSession
         if (session != null) {
-            session.stopRecording()
+            try {
+                session.stopRecording()
+            } catch (e: Throwable) {
+                Companion.activeSession = null
+                toast(applicationContext, "Dictation session lost: ${e.message ?: e.javaClass.simpleName}")
+                refreshTile()
+            }
         } else {
             startRecording()
         }
     }
 
     private fun startRecording() {
+        // Hardened start path (#207 smoke bug): any SDK/engine initialization
+        // error on the tile surface must surface as a toast instead of killing
+        // the hosting process (which also runs the IME).
         val appContext = applicationContext
+        try {
+            startRecordingInner(appContext)
+        } catch (e: Throwable) {
+            Companion.activeSession?.release()
+            Companion.activeSession = null
+            refreshTile()
+            toastLong(appContext, "Dictation unavailable: ${e.message ?: e.javaClass.simpleName}")
+        }
+    }
+
+    private fun startRecordingInner(appContext: Context) {
         val modelPath = resolveModelPath(appContext)
         if (modelPath == null) {
             toastLong(appContext, "Local Whisper model missing. Open Vela settings to download.")
