@@ -157,6 +157,7 @@ class StreamingPipeline internal constructor(
         private var privacySensitive: Boolean = false
         private var consentToUpload: Boolean = false
         private var allowCustomEndpoint: Boolean = false
+        private var translate: Boolean = false
 
         fun whisperModelPath(path: String) = apply { this.whisperModelPath = path }
         fun apiKey(key: String) = apply { this.apiKey = key }
@@ -174,6 +175,7 @@ class StreamingPipeline internal constructor(
         fun vadThreshold(threshold: Float) = apply { this.vadThreshold = threshold }
         fun privacySensitive(sensitive: Boolean) = apply { this.privacySensitive = sensitive }
         fun consentToUpload(consent: Boolean) = apply { this.consentToUpload = consent }
+        fun translate(enabled: Boolean) = apply { this.translate = enabled }
 
         fun build(): StreamingPipeline {
             validateEndpointScheme(endpoint)
@@ -191,11 +193,12 @@ class StreamingPipeline internal constructor(
                 useVad = useVad,
                 vadThreshold = vadThreshold,
                 privacySensitive = privacySensitive,
-                consentToUpload = consentToUpload
+                consentToUpload = consentToUpload,
+                translate = translate
             )
 
             val localTranscriber = if (whisperModelPath.isNotBlank()) {
-                LocalStreamingTranscriber(WhisperConfig(whisperModelPath, language, numThreads))
+                LocalStreamingTranscriber(WhisperConfig(whisperModelPath, language, numThreads, translate = translate))
             } else null
 
         val cloudTranscriber: StreamingTranscriber? = TranscriberFactory.createCloud(
@@ -297,7 +300,11 @@ class StreamingPipeline internal constructor(
             numThreads = if (config.numThreads > 0) config.numThreads else d.numThreads,
             apiKey = config.apiKey.ifBlank { d.apiKey },
             endpoint = config.endpoint.ifBlank { d.endpoint },
-            model = config.model.ifBlank { d.model }
+            model = config.model.ifBlank { d.model },
+            // Session value wins so an explicit translate=false can override a
+            // builder-level true (same session-first rule as in
+            // LocalStreamingTranscriber; #207 review round).
+            translate = config.translate
         )
     }
 

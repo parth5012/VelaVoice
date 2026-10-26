@@ -317,7 +317,8 @@ private class StopTestWhisperEngine : WhisperEngine(stubInit = true) {
         floatAudio: FloatArray,
         language: String,
         threads: Int,
-        initialPrompt: String?
+        initialPrompt: String?,
+        translate: Boolean
     ): String {
         nativeTranscribeCalls.incrementAndGet()
         if (isFreed) {

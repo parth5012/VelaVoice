@@ -23,20 +23,27 @@ data class WhisperConfig private constructor(
     val numThreads: Int,
     val allowedModelRoots: List<File>,
     val expectedHash: String?,
+    val translate: Boolean,
     @Suppress("UNUSED_PARAMETER") private val marker: Boolean
 ) {
+    // @JvmOverloads preserves the pre-#173 JVM constructor signatures
+    // (…,String) and shorter prefixes so existing compiled callers keep
+    // linking (#207 review round).
+    @JvmOverloads
     constructor(
         modelPath: String,
         language: String = DEFAULT_LANGUAGE,
         numThreads: Int = DEFAULT_THREADS,
         allowedModelRoots: List<File> = emptyList(),
-        expectedHash: String? = null
+        expectedHash: String? = null,
+        translate: Boolean = false
     ) : this(
         modelPath = modelPath,
         language = language,
         numThreads = clampThreads(numThreads),
         allowedModelRoots = allowedModelRoots,
         expectedHash = expectedHash,
+        translate = translate,
         marker = true
     )
 

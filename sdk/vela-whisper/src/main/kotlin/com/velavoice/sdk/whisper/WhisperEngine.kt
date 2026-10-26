@@ -105,7 +105,15 @@ open class WhisperEngine protected constructor(
 
     // -- public API ---------------------------------------------------------
 
-    fun transcribe(audioBytes: ByteArray, initialPrompt: String? = null): String {
+    /**
+     * Explicit [translate] argument overrides the engine config in either
+     * direction: the default derives from [WhisperConfig.translate], but a
+     * caller passing `translate = false` on a translate-enabled config gets a
+     * non-translated result (#207 review round). @JvmOverloads preserves the
+     * pre-#173 one- and two-argument JVM signatures for binary compatibility.
+     */
+    @JvmOverloads
+    fun transcribe(audioBytes: ByteArray, initialPrompt: String? = null, translate: Boolean = config?.translate ?: false): String {
         if (audioBytes.isEmpty()) return ""
 
         lock.withLock {
@@ -121,7 +129,8 @@ open class WhisperEngine protected constructor(
                 ptr, floatAudio,
                 lang,
                 threads,
-                initialPrompt
+                initialPrompt,
+                translate
             ) ?: throw RuntimeException("Error during native transcription")
         }
     }
@@ -171,9 +180,10 @@ open class WhisperEngine protected constructor(
         floatAudio: FloatArray,
         language: String,
         threads: Int,
-        initialPrompt: String?
+        initialPrompt: String?,
+        translate: Boolean
     ): String? {
-        val bytes = nativeTranscribe(ptr, floatAudio, language, threads, initialPrompt) ?: return null
+        val bytes = nativeTranscribe(ptr, floatAudio, language, threads, initialPrompt, translate) ?: return null
         return String(bytes, Charsets.UTF_8)
     }
 
@@ -185,7 +195,8 @@ open class WhisperEngine protected constructor(
     private external fun nativeInit(modelPath: String): Long
     private external fun nativeTranscribe(
         contextPtr: Long, audioData: FloatArray,
-        language: String, threads: Int, initialPrompt: String?
+        language: String, threads: Int, initialPrompt: String?,
+        translate: Boolean
     ): ByteArray?
     private external fun nativeCancel(contextPtr: Long)
     private external fun nativeFree(contextPtr: Long)

@@ -80,11 +80,16 @@ class LocalStreamingTranscriber(
 
         // Single source of truth: the StreamConfig wins, the constructor
         // WhisperConfig is the fallback when the caller left fields blank.
+        // translate has no "unset" marker (false is the default), so the
+        // session value wins as-is — an explicit translate=false overrides a
+        // translate-enabled constructor config (session-first convention
+        // matching other fields; #207 review round).
         val modelPath = config.modelPath.ifBlank { this.config.modelPath }
         engineConfig = WhisperConfig(
             modelPath = modelPath,
             language = config.language.ifBlank { this.config.language },
-            numThreads = if (config.numThreads > 0) config.numThreads else this.config.numThreads
+            numThreads = if (config.numThreads > 0) config.numThreads else this.config.numThreads,
+            translate = config.translate
         )
 
         if (modelPath.isBlank() || !File(modelPath).exists()) {

@@ -77,7 +77,8 @@ class AudioRecorderDurationCapTest {
             floatAudio: FloatArray,
             language: String,
             threads: Int,
-            initialPrompt: String?
+            initialPrompt: String?,
+            translate: Boolean
         ): String = "stub transcript"
         override fun doNativeFree(ptr: Long) {}
         override fun doNativeCancel(ptr: Long) {}

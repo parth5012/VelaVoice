@@ -55,6 +55,16 @@ SPDX-License-Identifier: Apache-2.0 AND GPL-3.0-only
                     android:resource="@xml/spellchecker" />
         </service>
 
+        <service android:name="helium314.keyboard.quicktile.DictationTileService"
+                 android:label="@string/dictation_tile_label"
+                 android:icon="@mipmap/ic_launcher"
+                 android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+                 android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
         <!-- Activities -->
         <activity android:name="helium314.keyboard.settings.SettingsActivity"
                 android:theme="@style/platformActivityTheme"

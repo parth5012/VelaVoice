@@ -56,7 +56,7 @@ class AudioRecorderReentrantLifecycleTest {
     private fun newRecorder(): Triple<AudioRecorder, WhisperEngine, VelaRecordingCallback> {
         val recorder = AudioRecorder()
         val whisper = mock(WhisperEngine::class.java)
-        doReturn("ok").`when`(whisper).transcribe(anyArg(ByteArray::class.java), isNull())
+        doReturn("ok").`when`(whisper).transcribe(anyArg(ByteArray::class.java), isNull(), ArgumentMatchers.anyBoolean())
         val callback = mock(VelaRecordingCallback::class.java)
         return Triple(recorder, whisper, callback)
     }

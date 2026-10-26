@@ -112,7 +112,7 @@ Java_com_velavoice_sdk_whisper_WhisperEngine_nativeCancel(JNIEnv *env, jobject t
 // nativeTranscribe
 // ---------------------------------------------------------------------------
 JNIEXPORT jbyteArray JNICALL
-Java_com_velavoice_sdk_whisper_WhisperEngine_nativeTranscribe(JNIEnv *env, jobject thiz, jlong context_ptr, jfloatArray audio_data, jstring language, jint threads, jstring initial_prompt) {
+Java_com_velavoice_sdk_whisper_WhisperEngine_nativeTranscribe(JNIEnv *env, jobject thiz, jlong context_ptr, jfloatArray audio_data, jstring language, jint threads, jstring initial_prompt, jboolean translate) {
     if (context_ptr == 0) {
         throwJavaException(env, "Whisper context is null (already freed or never initialised)");
         return nullptr;
@@ -186,7 +186,7 @@ Java_com_velavoice_sdk_whisper_WhisperEngine_nativeTranscribe(JNIEnv *env, jobje
     params.print_progress = false;
     params.print_timestamps = false;
     params.print_special = false;
-    params.translate = false;
+    params.translate = (translate == JNI_TRUE);
     params.language = effective_lang;
     params.n_threads = clamped_threads;
     params.initial_prompt = prompt;

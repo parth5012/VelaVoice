@@ -362,6 +362,7 @@
     <string name="voice_language_summary">Language code for transcription (e.g. en, fr, de)</string>
     <string name="voice_threads_title">Thread Count</string>
     <string name="voice_threads_summary">CPU threads for inference (default 4)</string>
+    <string name="dictation_tile_label">Vela Dictate</string>
     <string name="voice_custom_fillers_title">Custom Filler Words</string>
     <string name="voice_custom_fillers_summary">Comma-separated filler words to remove (e.g. um,uh,like)</string>
     <string name="voice_spoken_commands_title">Spoken Commands</string>
