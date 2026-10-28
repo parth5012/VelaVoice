@@ -40,10 +40,16 @@ class StreamingPipelinePartialCapTest {
         // 1000 partials * 100 chars = 100_000 chars of transcript (~5 minutes
         // of speech), far above the 4096-char cap. Each partial carries its
         // index so consecutive markers are distinct: the #111 identical-partial
-        // dedup must not collapse a genuinely advancing transcript.
+        // dedup must not collapse a genuinely advancing transcript. Owned
+        // ranges advance with the index (#217): a delta-chain partial extends
+        // the full output, whereas a re-owned overlapping span would fold as a
+        // rolling hypothesis replacing the uncommitted tail instead.
         for (i in 0 until 1000) {
             val partial = partialBase + "%04d".format(i)
-            transcriberCallback.onRevisionMarker(RevisionMarker("partial", partial, 0 until partial.length))
+            val start = i * (partial.length + 1)
+            transcriberCallback.onRevisionMarker(
+                RevisionMarker("partial", partial, start until start + partial.length)
+            )
             if (i % 50 == 49) {
                 // Capture-thread equivalent: MAX_SEGMENT_MS forces a segment
                 // commit so the consumed prefix becomes droppable.
@@ -101,9 +107,14 @@ class StreamingPipelinePartialCapTest {
         val partialBase = "y".repeat(96)
         for (i in 0 until 1000) {
             // Distinct per index (see above): advancing speech, not a redelivery.
+            // Owned ranges advance too (#217): each partial extends the full
+            // output the vimsBuffer below mirrors.
             val partial = partialBase + "%04d".format(i)
+            val start = i * (partial.length + 1)
             vimsBuffer.append(partial).append(' ')
-            transcriberCallback.onRevisionMarker(RevisionMarker("partial", partial, 0 until partial.length))
+            transcriberCallback.onRevisionMarker(
+                RevisionMarker("partial", partial, start until start + partial.length)
+            )
             if (i % 50 == 49) {
                 now += 9_000L
                 pipeline.lastActivityTime = now
