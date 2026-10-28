@@ -142,12 +142,13 @@ object SpokenCommands {
     private val ALL_PHRASES_SET: Set<String> by lazy { ALL_PHRASES.toSet() }
 
     private fun appendWord(sb: StringBuilder, word: String) {
-        if (sb.isNotEmpty() && !sb.last().isWhitespace() && sb.last() != '\n') {
+        // F39 (map #208 ticket #219): a trailing newline is already a complete
+        // separator — the next word is appended directly after it ("new line
+        // hello" -> "\nhello"), matching the locked "a new line b" -> "a\nb"
+        // contract from ticket #148. No extra space is inserted after a line
+        // break; words after non-whitespace get the normal joining space.
+        if (sb.isNotEmpty() && !sb.last().isWhitespace()) {
             sb.append(' ')
-        }
-        // if previous ends with newline, still add space? keep newline then space
-        if (sb.isNotEmpty() && sb.last() == '\n') {
-            // allow space after newline for readability? keep no extra
         }
         sb.append(word)
     }

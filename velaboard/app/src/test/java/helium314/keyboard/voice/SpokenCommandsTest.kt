@@ -32,6 +32,16 @@ class SpokenCommandsTest {
         assertEquals("a\n\nb", SpokenCommands.applySpokenCommands("a new paragraph b"))
     }
 
+    @Test fun wordAfterNewLineIsSeparatedByTheLineBreakOnly() {
+        // F39 (map #208 ticket #219): the newline IS the separator — the word
+        // after it must be appended directly after the line break, never glued
+        // to preceding text and never padded with a leading space.
+        assertEquals("\nhello", SpokenCommands.applySpokenCommands("new line hello"))
+        assertEquals("hello\nworld", SpokenCommands.applySpokenCommands("hello new line world"))
+        assertEquals("hello\nworld foo", SpokenCommands.applySpokenCommands("hello new line world foo"))
+        assertEquals("hello\n\nworld", SpokenCommands.applySpokenCommands("hello new paragraph world"))
+    }
+
     @Test fun consecutiveCommands() {
         assertEquals("a..", SpokenCommands.applySpokenCommands("a period period"))
     }
