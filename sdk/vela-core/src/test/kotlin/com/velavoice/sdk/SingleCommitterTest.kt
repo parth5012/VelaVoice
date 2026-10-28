@@ -106,4 +106,51 @@ class SingleCommitterTest {
         assertFalse("owned range must be gone after cancel", committer.hasOwnedRange())
         assertEquals("cancel must not rewrite the field", beforeCancel, field)
     }
+
+    @Test
+    fun `streamed delta windows plus full-text final render exactly one copy`() {
+        // Finding F02: the real LocalStreamingTranscriber shape — each window
+        // emits ONLY its new portion as a new segment (delta chain), while
+        // onFinal delivers the FULL accumulated transcript. The final must
+        // replace the whole session range, not just the last delta's span.
+        val committer = TextCommitter()
+
+        var field = ""
+        field = committer.applyPartial(RevisionMarker("partial", "hello", 0 until 5, 1), field)
+        field = committer.applyPartial(RevisionMarker("partial", "world", 5 until 10, 2), field)
+        field = committer.applyPartial(RevisionMarker("partial", "foo", 10 until 13, 3), field)
+
+        field = committer.commitFinal("hello world foo", field)
+
+        assertEquals("hello world foo", field)
+        assertEquals(
+            "prior deltas must not survive next to the final",
+            1,
+            field.split("hello").size - 1
+        )
+        assertEquals(
+            "final text must appear exactly once (no partial + final duplication)",
+            1,
+            field.split("world").size - 1
+        )
+    }
+
+    @Test
+    fun `user-typed text typed mid-delta-chain survives the final`() {
+        // Same delta-chain shape with user text typed between windows: the
+        // final replaces the whole session span, so text typed outside it
+        // (before or after) must survive verbatim.
+        val committer = TextCommitter()
+
+        var field = "Notes: "
+        field = committer.applyPartial(RevisionMarker("partial", "hello", 0 until 5, 1), field)
+        field += "!!"
+        field = committer.applyPartial(RevisionMarker("partial", "world", 5 until 10, 2), field)
+        field = committer.applyPartial(RevisionMarker("partial", "foo", 10 until 13, 3), field)
+
+        field = committer.commitFinal("hello world foo", field)
+
+        assertEquals("Notes: hello world foo!!", field)
+        assertTrue("user-typed characters must be preserved", field.contains("!!"))
+    }
 }
