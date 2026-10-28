@@ -233,6 +233,55 @@ class VelaStreamingSessionTest {
         Mockito.verify(connection).finishComposingText()
     }
 
+    // ---------- review round (PR #256): commit paths keep the joining separator ----------
+
+    @Test
+    fun `commit after a committed segment keeps the joining space`() {
+        val session = newSession()
+        commit(session, "Hello", 1)
+        idleAll()
+        commit(session, "world", 2)
+        idleAll()
+
+        assertEquals(" world", lastRenderedComposing(),
+            "the joining separator appended by appendDelta must reach the editor " +
+                "when a commit lands after an already-committed segment")
+        assertEquals("Hello world", readField(session, "mCommitted"),
+            "the committed model must record the joined text, not glue the words")
+    }
+
+    @Test
+    fun `commit correction after a streamed partial keeps the joining space`() {
+        val session = newSession()
+        commit(session, "Hello", 1)
+        idleAll()
+        partial(session, "world", 2)
+        idleAll()
+        commit(session, "world!", 3)
+        idleAll()
+
+        assertEquals(" world!", lastRenderedComposing(),
+            "the editor must show the corrected text with its joining space, not glue it")
+        assertEquals("Hello world!", readField(session, "mCommitted"),
+            "the committed model must record the joined correction")
+    }
+
+    @Test
+    fun `finalize applies a spoken-commands-only change without a cleaner`() {
+        val session = newSession() // no CleanupSpec: the finalize swap must still run
+        partial(session, "hello world period", 1)
+        idleAll()
+        editorText = "hello world period"
+        invokePrivate(session, "finalizeSession")
+        awaitFinished(session)
+
+        assertEquals("hello world.", lastRenderedComposing(),
+            "when the cleaner is absent but spoken commands changed the raw text, " +
+                "the swap must still replace the editor content")
+        assertEquals("hello world.", readField(session, "mCommitted"),
+            "the committed model must reflect the spoken-command output")
+    }
+
     // ---------- F04: finalize verifies the editor against the spoken-cleaned raw ----------
 
     @Test

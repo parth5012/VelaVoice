@@ -297,12 +297,15 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
                 if (text != null && !text.isEmpty()) {
                     if (mComposing.length() == 0) {
                         if (!alreadyEndsWith(text)) {
-                            appendDelta(text);
+                            final boolean spaceAdded = appendDelta(text);
                             // Reveal through the typing pipeline so mRevealed and
                             // mCommitted track the committed text (same bookkeeping
                             // as the onFinal path); applyComposing() alone would
                             // leave the model empty while the editor shows text.
-                            queueTyping(mComposing.length() - text.length());
+                            // Review round (PR #256): queue from before the joining
+                            // separator too, or the space never reaches the editor
+                            // ("Helloworld").
+                            queueTyping(mComposing.length() - text.length() - (spaceAdded ? 1 : 0));
                             flushTyping();
                         }
                     } else if (!mBatchFallback && !alreadyEndsWith(text)) {
@@ -312,10 +315,17 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
                         // commit text and reveal it, so server-side corrections in
                         // the final segment reach the editor instead of being
                         // silently dropped.
+                        // Review round (PR #256): the streamed partial may have
+                        // added a joining separator space; a corrected commit text
+                        // has none. Keep it, or the editor renders glued words
+                        // ("Helloworld!").
+                        final boolean keepSpace = mComposing.charAt(0) == ' '
+                            && !Character.isWhitespace(text.charAt(0));
                         mComposing.setLength(0);
+                        if (keepSpace) mComposing.append(' ');
                         mComposing.append(text);
                         mRevealed.setLength(0);
-                        mRevealed.append(text);
+                        mRevealed.append(mComposing);
                         applyComposingRevealed();
                     }
                 }
@@ -437,7 +447,13 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
 
     private void applySwap(final int swapMode, final String raw0, final String raw,
             final String cleaned) {
-        final boolean unchanged = cleaned.equals(raw);
+        // Review round (PR #256): SWAP_COMPOSING/SWAP_COMMITTED replace the
+        // editor span holding raw0, so the swap must run whenever the final
+        // text differs from raw0 — even when the cleaner returned the
+        // spoken-command raw unchanged (cleaned == raw != raw0). The batch
+        // fallback still compares against raw: applyFallback splices by raw
+        // offsets.
+        final boolean unchanged = cleaned.equals(swapMode == SWAP_FALLBACK ? raw : raw0);
         switch (swapMode) {
         case SWAP_COMPOSING:
             if (unchanged) {
