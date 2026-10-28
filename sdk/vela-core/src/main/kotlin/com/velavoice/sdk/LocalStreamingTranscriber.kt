@@ -5,6 +5,7 @@ import com.velavoice.sdk.whisper.AudioConverter
 import com.velavoice.sdk.whisper.WhisperConfig
 import com.velavoice.sdk.whisper.WhisperEngine
 import java.io.File
+import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
@@ -353,6 +354,13 @@ class LocalStreamingTranscriber(
     /**
      * Find the length of overlapping text between the previous result and new result.
      * Uses suffix-prefix matching for deduplication.
+     *
+     * F27 (map #208 ticket #218): whisper re-emits windows with different
+     * casing/punctuation ('Hello world.' vs 'hello world...'), so after the
+     * exact fast paths the suffix-prefix match runs case/punctuation-
+     * insensitively at word level while still returning a character offset
+     * into the ORIGINAL current string, so callers can substring the new
+     * portion out of it unchanged.
      */
     internal fun findOverlapLength(previous: String, current: String): Int {
         if (previous.isEmpty() || current.isEmpty()) return 0
@@ -363,19 +371,50 @@ class LocalStreamingTranscriber(
             return previous.length
         }
 
-        // Find longest suffix of previous that is a prefix of current
-        val words = previous.split(" ")
-        val currentWords = current.split(" ")
+        // Find longest suffix of previous that is a prefix of current,
+        // matching words with case/punctuation normalized away.
+        val prevNorm = previous.split(' ').map { normalizeOverlapWord(it) }.filter { it.isNotEmpty() }
+        if (prevNorm.isEmpty()) return 0
+
+        // Current tokens with their end offsets in the original string, so a
+        // word-level match maps back to an exact substring boundary.
+        data class CurrToken(val normalized: String, val endExclusive: Int)
+        val currTokens = ArrayList<CurrToken>()
+        var idx = 0
+        while (idx < current.length) {
+            if (current[idx] == ' ') {
+                idx++
+                continue
+            }
+            val start = idx
+            while (idx < current.length && current[idx] != ' ') idx++
+            val normalized = normalizeOverlapWord(current.substring(start, idx))
+            if (normalized.isNotEmpty()) currTokens.add(CurrToken(normalized, idx))
+        }
+        if (currTokens.isEmpty()) return 0
 
         var maxOverlap = 0
-        for (i in 1..minOf(words.size, currentWords.size)) {
-            val suffix = words.takeLast(i).joinToString(" ")
-            if (current.startsWith(suffix)) {
-                maxOverlap = suffix.length
+        val maxWords = minOf(prevNorm.size, currTokens.size)
+        for (i in 1..maxWords) {
+            var matched = true
+            for (j in 1..i) {
+                if (prevNorm[prevNorm.size - i + j - 1] != currTokens[j - 1].normalized) {
+                    matched = false
+                    break
+                }
             }
+            if (matched) maxOverlap = currTokens[i - 1].endExclusive
         }
         return maxOverlap
     }
+
+    /**
+     * Normalizes a word for overlap matching (F27): case-folded, with
+     * punctuation stripped from the edges and body (apostrophes kept so
+     * contractions survive).
+     */
+    private fun normalizeOverlapWord(word: String): String =
+        word.lowercase(Locale.ROOT).filter { it.isLetterOrDigit() || it == '\'' }
 
     private fun flushRemaining() {
         val remaining = extractAll()

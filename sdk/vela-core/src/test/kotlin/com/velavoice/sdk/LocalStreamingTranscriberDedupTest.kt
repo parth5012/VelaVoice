@@ -94,4 +94,42 @@ class LocalStreamingTranscriberDedupTest {
         // => 0
         assertEquals(0, transcriber.findOverlapLength("abcd", "cdef"))
     }
+
+    @Test
+    fun `findOverlapLength case and punctuation insensitive full overlap (F27)`() {
+        // F27 (map #208): whisper re-emits the growing window with different
+        // casing/punctuation. The overlap must still be detected and the
+        // returned offset must point into the ORIGINAL current string.
+        assertEquals(
+            "hello world...".length,
+            transcriber.findOverlapLength("Hello world.", "hello world...")
+        )
+    }
+
+    @Test
+    fun `findOverlapLength case insensitive partial overlap returns original offset (F27)`() {
+        // Only the casing differs; the new portion 'foo' starts after 'world'
+        // in the ORIGINAL current string (offset 11).
+        assertEquals(11, transcriber.findOverlapLength("Hello world", "hello world foo"))
+    }
+
+    @Test
+    fun `re-emitted window with different casing punctuation emits no duplicate segment (F27)`() {
+        val markers = mutableListOf<RevisionMarker>()
+        transcriber.setCallback(object : StreamingTranscriptionCallback {
+            override fun onRevisionMarker(marker: RevisionMarker) { markers.add(marker) }
+            override fun onFinal(text: String) {}
+            override fun onError(error: VelaException) {}
+            override fun onAmplitude(normalized: Float) {}
+        })
+
+        transcriber.handleTranscriptionResult("Hello world.")
+        transcriber.handleTranscriptionResult("hello world...")
+
+        assertEquals(
+            "re-emitted window with changed casing/punctuation must not emit a second segment",
+            1,
+            markers.size
+        )
+    }
 }
