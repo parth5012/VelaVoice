@@ -36,6 +36,17 @@ class StreamingFieldComposer {
     private var ownedEnd: Int = 0
     private var hasOwned: Boolean = false
     /**
+     * Field offset where this session's FIRST owned span began. Delta-chain
+     * producers (map #105 ticket #108, finding F02) emit each window's new
+     * portion as a new segment, so [ownedStart] tracks only the LAST delta
+     * while the transcribers' final delivers the FULL accumulated transcript.
+     * `commitFinal` therefore replaces `[sessionOwnedStart, ownedEnd)` — the
+     * whole session range — so prior deltas are never duplicated next to the
+     * final. Single-segment (re-emitted) sessions have
+     * `sessionOwnedStart == ownedStart`, unchanged behavior.
+     */
+    private var sessionOwnedStart: Int = 0
+    /**
      * Transcript end offset owned by the last applied marker, in the marker's
      * own full-output coordinates. A marker starting at or past this offset
      * opens a new segment (appended at the owned end); one starting before it
@@ -93,6 +104,9 @@ class StreamingFieldComposer {
         val newSegment = !hasOwned || marker.range.first >= ownedTranscriptEnd
         if (!hasOwned) {
             anchor = (base.length + marker.range.first).coerceIn(base.length, currentFieldText.length)
+            // First write of the session: everything this session composes
+            // from here on is owned from this offset (finding F02).
+            sessionOwnedStart = anchor
         } else if (newSegment) {
             // New segment: continue after what this session already owns.
             anchor = end
@@ -119,17 +133,21 @@ class StreamingFieldComposer {
     }
 
     /**
-     * Commit the final transcript, replacing only the owned span so user-typed
-     * text outside it survives (map #105 ticket #108). With no owned span this
-     * falls back to [finalWriteText] (baseline + final). A blank final is a
-     * no-op per the shared [shouldCommitTranscript] gate (map #105 ticket
-     * #106): "nothing heard" must never clear the field.
+     * Commit the final transcript, replacing the whole session span so
+     * user-typed text outside it survives (map #105 ticket #108). The span
+     * starts at [sessionOwnedStart] — the session's first write — not just the
+     * last partial: delta-chain finals deliver the FULL accumulated transcript,
+     * and replacing only the last delta's span would duplicate every prior
+     * delta (finding F02). With no owned span this falls back to
+     * [finalWriteText] (baseline + final). A blank final is a no-op per the
+     * shared [shouldCommitTranscript] gate (map #105 ticket #106): "nothing
+     * heard" must never clear the field.
      */
     fun commitFinal(finalText: String, currentFieldText: String): String {
         if (!shouldCommitTranscript(finalText)) return currentFieldText
         if (!hasOwned) return finalWriteText(currentFieldText, finalText)
         observe(currentFieldText)
-        val start = ownedStart.coerceIn(0, currentFieldText.length)
+        val start = sessionOwnedStart.coerceIn(0, currentFieldText.length)
         val end = ownedEnd.coerceIn(start, currentFieldText.length)
         val composed = currentFieldText.substring(0, start) + finalText +
             currentFieldText.substring(end)
@@ -152,6 +170,7 @@ class StreamingFieldComposer {
         ownedStart = 0
         ownedEnd = 0
         ownedTranscriptEnd = 0
+        sessionOwnedStart = 0
         hasOwned = false
     }
 
