@@ -122,6 +122,41 @@ class StreamingPipelineCommitTest {
     }
 
     @Test
+    fun `growing rolling partials commit as ONE copy of the final text (F19)`() {
+        val pipeline = StreamingPipeline.Builder(context).build()
+        val markers = mutableListOf<RevisionMarker>()
+        pipeline.setCallback(object : StreamingTranscriptionCallback {
+            override fun onRevisionMarker(marker: RevisionMarker) { markers.add(marker) }
+            override fun onFinal(text: String) {}
+            override fun onError(error: VelaException) {}
+            override fun onAmplitude(normalized: Float) {}
+        })
+        val transcriberCallback = pipeline.createTranscriberCallback()
+
+        // Rolling hypotheses: each partial re-owns the span from the segment
+        // start (ticket #217 / F19). They must REPLACE the uncommitted tail,
+        // never stack as 'H He Hel Hello '.
+        transcriberCallback.onRevisionMarker(RevisionMarker("partial", "H", 0 until 1))
+        transcriberCallback.onRevisionMarker(RevisionMarker("partial", "He", 0 until 2))
+        transcriberCallback.onRevisionMarker(RevisionMarker("partial", "Hel", 0 until 3))
+        transcriberCallback.onRevisionMarker(RevisionMarker("partial", "Hello", 0 until 5))
+
+        assertEquals("rolling partials must not stack in the bookkeeping buffer", "Hello ", pipeline.committedText)
+
+        // Advance time so VAD pause threshold is exceeded
+        val now = System.currentTimeMillis() + 10_000L
+        pipeline.lastCommitTime = now - 10_000L
+        pipeline.lastActivityTime = now - 10_000L
+        pipeline.currentSegmentStart = 0
+
+        pipeline.checkCommitBoundary(0.001f, now)
+
+        val commits = markers.filter { it.type == "commit" }
+        assertEquals("expected exactly one commit marker", 1, commits.size)
+        assertEquals("growing partials must commit ONE copy of the final text", "Hello", commits[0].text)
+    }
+
+    @Test
     fun `partial markers accumulate into committedText via callback`() {
         val pipeline = StreamingPipeline.Builder(context).build()
         val transcriberCallback = pipeline.createTranscriberCallback()

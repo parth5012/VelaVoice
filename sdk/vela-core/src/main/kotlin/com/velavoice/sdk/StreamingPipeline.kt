@@ -473,6 +473,47 @@ class StreamingPipeline internal constructor(
     }
 
     /**
+     * Folds one partial marker into the uncommitted tail of [committedText]
+     * (everything at/after [currentSegmentStart]) according to the owned-range
+     * contract (StreamingTranscriber.kt:7): the marker's [RevisionMarker.range]
+     * is the character span the partial owns in the FULL output, made tail-
+     * relative here via [totalDroppedChars].
+     *
+     * Ticket #217 (F19): a rolling hypothesis re-owns a span that overlaps the
+     * tail — it must REPLACE that span, so growing partials 'H','He','Hel',
+     * 'Hello' never stack into 'H He Hel Hello '. A delta-chain partial owns
+     * fresh space at/past the tail end and appends. A span entirely behind the
+     * tail start is stale (already committed past) and folds nothing. The
+     * committed prefix `[0, currentSegmentStart)` is never touched — partials
+     * never extend committed history; only commitSegment / authoritative
+     * commit markers advance it.
+     * Must be called under [stateLock].
+     */
+    private fun foldPartialIntoTailLocked(marker: RevisionMarker) {
+        val tailStart = currentSegmentStart.coerceAtMost(committedText.length)
+        val tail = committedText.substring(tailStart)
+        val absTailStart = totalDroppedChars + tailStart
+        // Fully stale span: the tail starts past this partial's owned end.
+        if (marker.range.last + 1 - absTailStart <= 0) return
+        val relStart = (marker.range.first - absTailStart).coerceAtLeast(0)
+        val relEnd = (marker.range.last + 1 - absTailStart).coerceAtMost(tail.length)
+        val folded = when {
+            // Delta-chain partial: owns fresh space at/past the tail end —
+            // append (space-joined, same convention as the pre-#217 buffer).
+            relStart >= tail.length -> {
+                val join = if (tail.isEmpty() || tail.endsWith(" ") || marker.text.startsWith(" ")) "" else " "
+                tail + join + marker.text + " "
+            }
+            // Rolling hypothesis reaching/past the tail end: replace its span
+            // and drop the stale remainder after it.
+            relEnd >= tail.length -> tail.substring(0, relStart) + marker.text + " "
+            // Mid-span revision: splice the new text inside the tail.
+            else -> tail.substring(0, relStart) + marker.text + tail.substring(relEnd)
+        }
+        committedText = committedText.substring(0, tailStart) + folded
+    }
+
+    /**
      * Revision id for one forwarded/emitted marker (map #105 ticket #108).
      * Enforces pipeline-level monotonicity: a stamped marker at or ahead of
      * the sequence keeps its emitter id and pulls the sequence past it; a
@@ -548,7 +589,11 @@ class StreamingPipeline internal constructor(
                             ) {
                                 null
                             } else {
-                                committedText += marker.text + " "
+                                // Ticket #217 (F19): fold the partial into the
+                                // uncommitted tail by its owned range instead
+                                // of blindly appending — a rolling hypothesis
+                                // must REPLACE the tail, not stack prefixes.
+                                foldPartialIntoTailLocked(marker)
                                 trimCommittedTextLocked()
                                 lastForwardedPartialText = marker.text
                                 lastForwardedPartialRange = marker.range
