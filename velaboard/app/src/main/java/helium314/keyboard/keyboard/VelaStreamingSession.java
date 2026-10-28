@@ -143,6 +143,7 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
         }
     };
 
+    private String mPendingRaw0 = null;
     private String mPendingRaw = null;
     private int mPendingSwapMode = SWAP_COMMITTED;
 
@@ -151,7 +152,9 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
         public void run() {
             if (mFinalizeCompleted) return;
             Log.w(TAG, "cleanup watchdog fired, finalizing with raw streamed text");
-            completeFinalize(mPendingSwapMode, mPendingRaw == null ? "" : mPendingRaw, null);
+            completeFinalize(mPendingSwapMode,
+                mPendingRaw0 == null ? "" : mPendingRaw0,
+                mPendingRaw == null ? "" : mPendingRaw, null);
         }
     };
 
@@ -281,15 +284,50 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
             if (revisionId > 0) mLastRevisionId = revisionId;
             if ("partial".equals(type)) {
                 Log.d(TAG, "partial revision, +" + (text == null ? 0 : text.length()) + " chars");
-                appendDelta(text);
-                queueTyping(mComposing.length() - text.length());
+                // F05 (map #208 ticket #215, contract #214): queue typing from
+                // BEFORE the joining separator so the space appendDelta inserted
+                // is typed into the editor too — otherwise joined words render
+                // glued ("helloworld") and the finalize swap fails to match.
+                final boolean spaceAdded = appendDelta(text);
+                final int deltaLen = text == null ? 0 : text.length();
+                queueTyping(mComposing.length() - deltaLen - (spaceAdded ? 1 : 0));
             } else if ("commit".equals(type)) {
                 Log.d(TAG, "commit revision, " + (text == null ? 0 : text.length()) + " chars");
                 flushTyping();
-                if (mComposing.length() == 0 && text != null && !text.isEmpty()
-                        && !alreadyEndsWith(text)) {
-                    appendDelta(text);
-                    applyComposing();
+                if (text != null && !text.isEmpty()) {
+                    if (mComposing.length() == 0) {
+                        if (!alreadyEndsWith(text)) {
+                            final boolean spaceAdded = appendDelta(text);
+                            // Reveal through the typing pipeline so mRevealed and
+                            // mCommitted track the committed text (same bookkeeping
+                            // as the onFinal path); applyComposing() alone would
+                            // leave the model empty while the editor shows text.
+                            // Review round (PR #256): queue from before the joining
+                            // separator too, or the space never reaches the editor
+                            // ("Helloworld").
+                            queueTyping(mComposing.length() - text.length() - (spaceAdded ? 1 : 0));
+                            flushTyping();
+                        }
+                    } else if (!mBatchFallback && !alreadyEndsWith(text)) {
+                        // F28 (map #208 ticket #215, contract #214): the commit
+                        // marker is the exclusive owner of the final segment text.
+                        // REPLACE the streamed composing span with the authoritative
+                        // commit text and reveal it, so server-side corrections in
+                        // the final segment reach the editor instead of being
+                        // silently dropped.
+                        // Review round (PR #256): the streamed partial may have
+                        // added a joining separator space; a corrected commit text
+                        // has none. Keep it, or the editor renders glued words
+                        // ("Helloworld!").
+                        final boolean keepSpace = mComposing.charAt(0) == ' '
+                            && !Character.isWhitespace(text.charAt(0));
+                        mComposing.setLength(0);
+                        if (keepSpace) mComposing.append(' ');
+                        mComposing.append(text);
+                        mRevealed.setLength(0);
+                        mRevealed.append(mComposing);
+                        applyComposingRevealed();
+                    }
                 }
                 finishSegment();
             }
@@ -345,15 +383,16 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
         final String raw = _spokenOn ? SpokenCommands.INSTANCE.applySpokenCommands(raw0) : raw0;
 
         if (mCleanupSpec == null || raw.trim().isEmpty()) {
-            completeFinalize(swapMode, raw, null);
+            completeFinalize(swapMode, raw0, raw, null);
             return;
         }
+        mPendingRaw0 = raw0;
         mPendingRaw = raw;
         mPendingSwapMode = swapMode;
         mLatinIME.mHandler.postDelayed(mCleanupTimeout, CLEANUP_TIMEOUT_MS + 2000);
         new Thread(() -> {
             final String cleaned = runCleanup(raw);
-            mLatinIME.mHandler.post(() -> completeFinalize(swapMode, raw, cleaned));
+            mLatinIME.mHandler.post(() -> completeFinalize(swapMode, raw0, raw, cleaned));
         }, "vela-cleanup").start();
     }
 
@@ -382,7 +421,8 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
         }
     }
 
-    private void completeFinalize(final int swapMode, final String raw, final String cleanedOrNull) {
+    private void completeFinalize(final int swapMode, final String raw0, final String raw,
+            final String cleanedOrNull) {
         if (mFinalizeCompleted) return;
         mFinalizeCompleted = true;
         mLatinIME.mHandler.removeCallbacks(mCleanupTimeout);
@@ -390,7 +430,7 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
         final String cleaned = cleanedOrNull == null || cleanedOrNull.trim().isEmpty()
             ? raw : cleanedOrNull;
         try {
-            applySwap(swapMode, raw, cleaned);
+            applySwap(swapMode, raw0, raw, cleaned);
         } catch (final Exception e) {
             Log.e(TAG, "failed to apply cleaned text, keeping raw text", e);
         }
@@ -405,19 +445,26 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
         markFinished(false);
     }
 
-    private void applySwap(final int swapMode, final String raw, final String cleaned) {
-        final boolean unchanged = cleaned.equals(raw);
+    private void applySwap(final int swapMode, final String raw0, final String raw,
+            final String cleaned) {
+        // Review round (PR #256): SWAP_COMPOSING/SWAP_COMMITTED replace the
+        // editor span holding raw0, so the swap must run whenever the final
+        // text differs from raw0 — even when the cleaner returned the
+        // spoken-command raw unchanged (cleaned == raw != raw0). The batch
+        // fallback still compares against raw: applyFallback splices by raw
+        // offsets.
+        final boolean unchanged = cleaned.equals(swapMode == SWAP_FALLBACK ? raw : raw0);
         switch (swapMode) {
         case SWAP_COMPOSING:
             if (unchanged) {
                 finishSegment();
             } else {
-                swapComposingSpan(raw, cleaned);
+                swapComposingSpan(raw0, cleaned);
             }
             break;
         case SWAP_COMMITTED:
             if (!unchanged) {
-                swapCommittedText(raw, cleaned);
+                swapCommittedText(raw0, cleaned);
             }
             break;
         default:
@@ -430,10 +477,13 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
      * The whole streamed output is still one open composing span, so the cleaned text can replace
      * it atomically without any cursor arithmetic.
      */
-    private void swapComposingSpan(final String raw, final String cleaned) {
+    private void swapComposingSpan(final String raw0, final String cleaned) {
         final RichInputConnection connection = mLatinIME.getRichInputConnection();
         if (connection == null) return;
-        if (!textBeforeCursorMatches(connection, raw)) {
+        // F04 (map #208 ticket #215, contract #214): verify against raw0 — the
+        // actual editor buffer content — not the spoken-command-cleaned raw,
+        // which differs whenever a spoken command changed the text.
+        if (!textBeforeCursorMatches(connection, raw0)) {
             Log.w(TAG, "composing span no longer matches the streamed text, keeping raw text");
             finishSegment();
             return;
@@ -454,15 +504,18 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
      * Earlier segments were already finalized, so the swap needs a destructive delete. Only do it
      * when the text before the cursor is still exactly what this session inserted.
      */
-    private void swapCommittedText(final String raw, final String cleaned) {
+    private void swapCommittedText(final String raw0, final String cleaned) {
         final RichInputConnection connection = mLatinIME.getRichInputConnection();
         if (connection == null) return;
-        if (!textBeforeCursorMatches(connection, raw)) {
+        // F04 (map #208 ticket #215, contract #214): verify against raw0 and
+        // delete raw0.length() — the editor holds raw0, while raw (spoken-command
+        // cleaned) can differ in both content and length.
+        if (!textBeforeCursorMatches(connection, raw0)) {
             Log.w(TAG, "editor content changed under us, keeping raw streamed text");
             return;
         }
         connection.beginBatchEdit();
-        connection.deleteTextBeforeCursor(raw.length());
+        connection.deleteTextBeforeCursor(raw0.length());
         commitCleanedText(connection, cleaned);
         connection.endBatchEdit();
         mCommitted.setLength(0);
@@ -529,12 +582,18 @@ public final class VelaStreamingSession implements StreamingTranscriptionCallbac
         mListener.onStreamingFinished(cancelled);
     }
 
-    private void appendDelta(final String delta) {
-        if (delta == null || delta.isEmpty()) return;
-        if (needsSeparator(delta.charAt(0))) {
+    /**
+     * Appends a delta, inserting a joining separator when needed. Returns whether
+     * a separator space was added (F05: the typing start index must cover it).
+     */
+    private boolean appendDelta(final String delta) {
+        if (delta == null || delta.isEmpty()) return false;
+        final boolean spaceAdded = needsSeparator(delta.charAt(0));
+        if (spaceAdded) {
             mComposing.append(' ');
         }
         mComposing.append(delta);
+        return spaceAdded;
     }
 
     private void queueTyping(final int fromComposingStart) {
