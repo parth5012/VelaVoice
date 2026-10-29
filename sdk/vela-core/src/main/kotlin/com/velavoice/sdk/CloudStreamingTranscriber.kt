@@ -34,6 +34,18 @@ class CloudStreamingTranscriber : StreamingTranscriber {
     internal var partialText = ""
     private var lastCommittedText = ""
     /**
+     * Terminal signal (ticket #221, F15; grilling #220): armed ONLY by an
+     * explicit user stop — [stop] arms it before sending the trailing buffer
+     * commit, and [start] clears it for a fresh session. While unarmed, every
+     * server `transcription.completed` is an intermediate Server-VAD turn and
+     * emits a commit marker only (no session teardown). Once armed, the
+     * completion that follows the stop commit also carries the single
+     * terminal [StreamingTranscriptionCallback.onFinal]. A server-initiated
+     * socket close is an abort/recovery path, never a session end.
+     */
+    @Volatile
+    internal var terminalStopRequested = false
+    /**
      * Revision sequence for emitted markers (map #105 ticket #108): every
      * partial/commit emission takes the next id so the committer can tell a
      * superseding partial from a stale duplicate. Reset in [start].
@@ -76,6 +88,7 @@ class CloudStreamingTranscriber : StreamingTranscriber {
         lastCommittedText = ""
         nextRevisionId = 1L
         reconnectAttempts = 0
+        terminalStopRequested = false
 
         if (config.apiKey.isBlank()) {
             callback?.onError(VelaError("API key required for cloud streaming"))
@@ -113,6 +126,10 @@ class CloudStreamingTranscriber : StreamingTranscriber {
     override fun stop() {
         if (!isRunning.get()) return
         sessionGen++
+        // Explicit stop (grilling #220): the ONLY path that arms the terminal
+        // signal. The commit sent below triggers the server's trailing
+        // transcription.completed, which then carries the terminal onFinal.
+        armTerminalStop()
 
         try {
             // Commit the audio buffer
@@ -272,6 +289,15 @@ class CloudStreamingTranscriber : StreamingTranscriber {
         reconnectAttempts = 0
     }
 
+    /**
+     * Arm the terminal signal exactly as [stop] does (see the
+     * [terminalStopRequested] contract). Internal so the unit tests can
+     * simulate an explicit user stop without a live socket.
+     */
+    internal fun armTerminalStop() {
+        terminalStopRequested = true
+    }
+
     private fun sendSessionConfig() {
         val sessionConfig = JSONObject().apply {
             put("type", "session.update")
@@ -368,7 +394,14 @@ class CloudStreamingTranscriber : StreamingTranscriber {
         }
         partialText = ""
 
-        // Emit final
-        callback?.onFinal(transcript)
+        // Terminal signal — explicit stop only (ticket #221, F15; grilling
+        // #220): an intermediate Server-VAD utterance end is a commit marker,
+        // never a session teardown. The downstream pipeline treats onFinal as
+        // terminal, so emitting it here would kill recording at the first
+        // natural pause. The final is reserved for the completion that
+        // follows the user's explicit stop ([armTerminalStop]/[stop]).
+        if (terminalStopRequested) {
+            callback?.onFinal(transcript)
+        }
     }
 }
