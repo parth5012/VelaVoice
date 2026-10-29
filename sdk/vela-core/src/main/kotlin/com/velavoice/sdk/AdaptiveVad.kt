@@ -101,16 +101,19 @@ class AdaptiveVad(
         (noiseFloor + FLOOR_MARGIN).coerceIn(maxOf(MIN_THRESHOLD, base), MAX_THRESHOLD)
 
     /**
-     * True when a stop should fire: [amplitude] under the effective threshold
+     * True when a stop should fire: speech was seen at least once (cold-start
+     * guard, grilling #220 term 3), [amplitude] under the effective threshold
      * continuously since [lastActivityTime] for at least [STOP_HOLD_MS], and
-     * (when speech was ever seen) at least [MIN_SPEECH_HOLD_MS] after it.
+     * at least [MIN_SPEECH_HOLD_MS] after the last speech.
      */
     fun shouldStop(amplitude: Float, nowMs: Long, lastActivityTime: Long): Boolean {
+        // Cold start (F33, ticket #221; grilling #220): no commit boundary
+        // before the first detected speech. Session-start silence never arms
+        // the stop, wherever lastActivityTime is initialized from.
+        if (!everSawSpeech) return false
         if (amplitude >= effectiveThreshold()) return false
         if (nowMs - lastActivityTime < STOP_HOLD_MS) return false
-        if (everSawSpeech && nowMs - lastSpeechTimeMs < MIN_SPEECH_HOLD_MS) return false
-        // Cold start (no speech yet): still require the stop hold so a quiet
-        // room trips but a single quiet tick does not.
+        if (nowMs - lastSpeechTimeMs < MIN_SPEECH_HOLD_MS) return false
         return true
     }
 

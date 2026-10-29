@@ -24,6 +24,14 @@ class AdaptiveVadTest {
         // Effective threshold stays near the base in quiet air.
         val eff = vad.effectiveThreshold()
         assertTrue("quiet effective threshold near base, was $eff", eff <= 0.03f)
+        // Cold start (F33, ticket #221): before any speech, silence never
+        // trips the stop — no commit boundary is armed.
+        assertFalse(
+            vad.shouldStop(amplitude = 0.002f, nowMs = now + 700L, lastActivityTime = now - 700L)
+        )
+        // A burst of speech (above the effective threshold) arms the stop.
+        now += 100L
+        vad.observe(0.1f, now)
         // Sustained silence past the stop hold trips.
         assertTrue(vad.shouldStop(amplitude = 0.002f, nowMs = now + 700L, lastActivityTime = now - 700L))
     }
