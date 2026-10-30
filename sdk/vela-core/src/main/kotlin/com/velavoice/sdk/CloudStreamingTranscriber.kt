@@ -28,7 +28,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 class CloudStreamingTranscriber : StreamingTranscriber {
     private var callback: StreamingTranscriptionCallback? = null
     private var streamConfig: StreamConfig? = null
-    private var webSocket: WebSocket? = null
+    /** Internal for tests (map #209 #225): tests inject a mock socket and drive stop/outside-delayed-close semantics directly. */
+    internal var webSocket: WebSocket? = null
     private val isRunning = AtomicBoolean(false)
     internal var committedLength = 0
     internal var partialText = ""
@@ -65,12 +66,28 @@ class CloudStreamingTranscriber : StreamingTranscriber {
     /**
      * Monotonic session epoch: bumped in [start]/[stop]/[release] so a
      * reconnect timer armed by a dead session can tell it is stale and exit
-     * instead of opening a socket for a newer session.
+     * instead of opening a socket for a newer session. Internal for tests
+     * (map #209 #225): the delayed-close red test simulates a restart by
+     * bumping the epoch directly.
      */
-    private var sessionGen = 0
+    internal var sessionGen = 0
+    /**
+     * Test-only hook (map #209 #225): arm/clear [isRunning] without [start] so
+     * unit tests can exercise stop/release semantics on a mock socket.
+     */
+    internal var isRunningInternalForTest: Boolean
+        get() = isRunning.get()
+        set(value) { isRunning.set(value) }
     /** Injectable reconnect scheduler (tests capture delays, prod uses a timer). */
     internal var scheduleReconnectForTest: ((delayMs: Long, task: () -> Unit) -> Unit)? = null
     private var retryScheduler: java.util.concurrent.ScheduledExecutorService? = null
+    /**
+     * Injectable delayed-close scheduler for [stop]'s completion close
+     * (map #209 ticket #225): tests capture the task and run it manually to
+     * simulate the 2 s window; production uses a single-thread scheduler.
+     */
+    internal var scheduleCloseForTest: ((delayMs: Long, task: () -> Unit) -> Unit)? = null
+    private var closeScheduler: java.util.concurrent.ScheduledExecutorService? = null
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -131,24 +148,62 @@ class CloudStreamingTranscriber : StreamingTranscriber {
         // transcription.completed, which then carries the terminal onFinal.
         armTerminalStop()
 
+        // F29 (map #209 ticket #225): capture THIS session's socket and epoch
+        // locally. The old `Thread { sleep(2000); webSocket?.close(...) }` read
+        // the shared field 2 s later, so stop + restart inside the window
+        // closed the NEW session's socket.
+        val socket = webSocket
+        val gen = sessionGen
         try {
             // Commit the audio buffer
             val commitEvent = JSONObject().apply {
                 put("type", "input_audio_buffer.commit")
             }
-            webSocket?.send(commitEvent.toString())
+            socket?.send(commitEvent.toString())
 
-            // Send session close after a short delay
-            Thread({
-                Thread.sleep(2000)
-                webSocket?.close(1000, "Session complete")
-            }).start()
+            // Send session close after a short delay, guarded by identity:
+            // it only fires while this is still the current session's socket.
+            if (socket != null) {
+                scheduleClose(2000L) {
+                    if (gen == sessionGen && webSocket === socket) {
+                        socket.close(1000, "Session complete")
+                    }
+                }
+            }
         } catch (e: Exception) {
             Log.e("CloudStreamingTranscriber", "Error stopping", e)
-            webSocket?.close(1000, "Stopped")
+            socket?.close(1000, "Stopped")
         }
 
         isRunning.set(false)
+    }
+
+    /**
+     * Scheduler for [stop]'s delayed completion close (map #209 ticket #225).
+     * Mirrors [handleConnectionFailure]'s reconnect-scheduler shape:
+     * [scheduleCloseForTest] captures the task in unit tests, production uses
+     * a single-thread scheduler that [release] shuts down with pending tasks
+     * cancelled so a torn-down session can never fire its close afterwards.
+     */
+    private fun scheduleClose(delayMs: Long, task: () -> Unit) {
+        val schedulable = scheduleCloseForTest
+        if (schedulable != null) {
+            schedulable(delayMs, task)
+            return
+        }
+        val scheduler = synchronized(this) {
+            var s = closeScheduler
+            if (s == null || s.isShutdown) {
+                s = java.util.concurrent.Executors.newSingleThreadScheduledExecutor()
+                closeScheduler = s
+            }
+            s!!
+        }
+        try {
+            scheduler.schedule(task, delayMs, java.util.concurrent.TimeUnit.MILLISECONDS)
+        } catch (e: Exception) {
+            Log.e("CloudStreamingTranscriber", "Failed to schedule close", e)
+        }
     }
 
     override fun setCallback(callback: StreamingTranscriptionCallback) {
@@ -166,6 +221,16 @@ class CloudStreamingTranscriber : StreamingTranscriber {
             Log.e("CloudStreamingTranscriber", "Error shutting down retry scheduler", e)
         }
         retryScheduler = null
+        // F29 (#225): drop any pending delayed close from a just-stopped
+        // session — release() must not leave a scheduled close that outlives
+        // the transcriber (and sessionGen bump above already makes the
+        // captured task's identity guard a no-op belt-and-suspenders).
+        try {
+            closeScheduler?.shutdownNow()
+        } catch (e: Exception) {
+            Log.e("CloudStreamingTranscriber", "Error shutting down close scheduler", e)
+        }
+        closeScheduler = null
         try {
             client.dispatcher.executorService.shutdown()
             client.connectionPool.evictAll()
