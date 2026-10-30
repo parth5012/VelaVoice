@@ -560,6 +560,14 @@ class VoiceInputMethodService : InputMethodService() {
                             if (generation != streamingSessionGeneration) return@main
                             voiceRecordingPane.setStatusText(error.message)
                             isStreaming.set(false)
+                            // #223 (F06): the error path must FULLY tear down like
+                            // cancelStreaming() — stop capture, release the
+                            // pipeline, restore the keyboard. Only flipping
+                            // isStreaming left the mic open and the pane stuck: a
+                            // later cancelStreaming() hit its early-return because
+                            // both isStreaming and streamingStartPending were
+                            // false, so the pane could never recover.
+                            teardownStreamingSession()
                         }
                     }
 
@@ -703,6 +711,22 @@ class VoiceInputMethodService : InputMethodService() {
     private fun cancelStreaming() {
         if (!isStreaming.get() && !streamingStartPending) return
         isStreaming.set(false)
+        // Shared streaming teardown (map #209 ticket #223): abort semantics
+        // live in one place so the error path cannot drift from the cancel
+        // path — both discard the buffered tail and release the engine.
+        teardownStreamingSession()
+    }
+
+    /**
+     * Abort streaming and discard everything the session produced without
+     * commit, save or composing-tail (map #209 ticket #223). Runs the full
+     * cancelStreaming teardown family: raises [streamingCancelled] so any
+     * trailing onFinal/onRevisionMarker commits/persists nothing, discards the
+     * buffer and owned ranges, stops capture and releases the streaming
+     * pipeline, then restores the keyboard. Callers must have already flipped
+     * [isStreaming] to false so a second cancel/stop cannot double-teardown.
+     */
+    private fun teardownStreamingSession() {
         streamingCancelled = true
         // Abort a queued-but-unstarted pipeline too (map #130 PR #137 fix):
         // isStreaming is still false while startStreaming() builds.

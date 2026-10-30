@@ -330,9 +330,18 @@ class ServiceStreamingSessionBindingTest {
             "cancelStreaming must run when only a start is pending: if (!isStreaming.get() && !streamingStartPending) return",
             cancel.contains("if (!isStreaming.get() && !streamingStartPending) return")
         )
+        // #223 refactor: the discard/invalidation family lives in the shared
+        // teardownStreamingSession(); cancelStreaming dispatches it (and the
+        // error path reuses the same helper, so errors cannot drift from
+        // cancel).
+        val sharedTeardown = codeOnly(extractFunBody(vims, "teardownStreamingSession"))
         assertTrue(
-            "cancelStreaming must invalidate the queued start",
-            cancel.contains("invalidatePendingStreamingStart()")
+            "cancelStreaming must dispatch the shared streaming teardown",
+            cancel.contains("teardownStreamingSession()")
+        )
+        assertTrue(
+            "shared streaming teardown must invalidate the queued start",
+            sharedTeardown.contains("invalidatePendingStreamingStart()")
         )
         val invalidate = codeOnly(extractFunBody(vims, "invalidatePendingStreamingStart"))
         assertTrue(
