@@ -103,6 +103,14 @@ class GeminiTranscriptionProvider(
     private var callback: StreamingTranscriptionCallback? = null
     private var streamConfig: StreamConfig? = null
     private val isRunning = AtomicBoolean(false)
+    /**
+     * Session torn-down flag (map #209 ticket #226, F31): set by [release],
+     * cleared by [start]. [stop]'s queued transcription task checks it before
+     * dispatching ANY callback, so a stale onFinal/onError can never land in
+     * a torn-down pipeline; start() resets it so release→start remains a
+     * working restart lifecycle.
+     */
+    private val released = AtomicBoolean(false)
     private val audioBuffer = ByteArrayOutputStream()
     private val bufferLock = Any()
 
@@ -279,7 +287,29 @@ class GeminiTranscriptionProvider(
                         "Gemini rate limit exceeded. Free tier limit is 15 requests/minute. Please wait a moment."
                     )
                 }
-                400, 403 -> {
+                400 -> {
+                    // F31 (#226): a 400 is a malformed/invalid REQUEST, not an
+                    // auth failure — every 400 used to be misreported as a bad
+                    // API key. Keep only the short, provider-authored error
+                    // message (scrubbed per map #72/ticket #79 rules).
+                    val providerError = try {
+                        val body = res.body?.string().orEmpty()
+                        if (body.isNotEmpty()) {
+                            JSONObject(body).optJSONObject("error")?.optString("message")
+                                ?.takeIf { it.isNotBlank() }
+                                ?.take(200)
+                        } else {
+                            null
+                        }
+                    } catch (e: Exception) {
+                        null
+                    }
+                    throw VelaException.Network(
+                        "Gemini rejected the request (400): "
+                            + (providerError ?: "invalid or unsupported request")
+                    )
+                }
+                403 -> {
                     throw VelaException.Network("Invalid Gemini API key or unauthorized access.")
                 }
                 else -> {
@@ -310,6 +340,7 @@ class GeminiTranscriptionProvider(
     override fun start(config: StreamConfig) {
         if (isRunning.get()) return
         this.streamConfig = config
+        released.set(false)
         synchronized(bufferLock) {
             audioBuffer.reset()
         }
@@ -341,16 +372,23 @@ class GeminiTranscriptionProvider(
         val effectiveModel = streamConfig?.model?.takeIf { it.isNotBlank() && it != "gpt-live-transcribe" } ?: this.model
         val key = streamConfig?.apiKey.orEmpty()
         executor.execute {
+            // F31 (#226): release() may have completed while this queued task
+            // waited on the executor — discard everything (no wasted HTTP
+            // call either) so no stale callback reaches a torn-down pipeline.
+            if (released.get()) return@execute
             try {
                 val transcript = transcribe(pcmAudio, key, effectiveModel)
+                // Re-checked AFTER the network hop: release() may have won
+                // while transcribe() was in flight.
+                if (released.get()) return@execute
                 callback?.onRevisionMarker(
                     RevisionMarker("commit", transcript, 0 until transcript.length, 1)
                 )
                 callback?.onFinal(transcript)
             } catch (ve: VelaException) {
-                callback?.onError(ve)
+                if (!released.get()) callback?.onError(ve)
             } catch (t: Throwable) {
-                callback?.onError(
+                if (!released.get()) callback?.onError(
                     VelaException.Network("Gemini transcription failed: ${t.message}", t)
                 )
             }
@@ -363,6 +401,10 @@ class GeminiTranscriptionProvider(
 
     override fun release() {
         isRunning.set(false)
+        // F31 (#226): mark the session torn-down so a transcribe already
+        // queued on the executor is discarded instead of firing stale
+        // callbacks after release. start() clears this to support restart.
+        released.set(true)
         synchronized(bufferLock) {
             audioBuffer.reset()
         }
