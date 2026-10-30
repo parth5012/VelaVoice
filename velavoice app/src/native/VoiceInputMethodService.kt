@@ -216,9 +216,23 @@ class VoiceInputMethodService : InputMethodService() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT
             )
-            onStopCleanListener = { stopRecording(runCleaner = true) }
-            onStopRawListener = { stopRecording(runCleaner = false) }
-            onCancelListener = { cancelRecording() }
+            onStopCleanListener = {
+                // #222 routing (F01): startStreaming() never claims the batch
+                // gate, so subscription gating by recordingGate.tryStop() is a
+                // no-op in streamed mode and left the mic running. Route an
+                // active streamed session to stopStreaming() (same path
+                // onFinishInput uses), batch sessions to the gated stop.
+                if (isStreaming.get()) stopStreaming() else stopRecording(runCleaner = true)
+            }
+            onStopRawListener = {
+                if (isStreaming.get()) stopStreaming() else stopRecording(runCleaner = false)
+            }
+            onCancelListener = {
+                // Same routing for Cancel: cover a queued-but-unstarted
+                // pipeline too (streamingStartPending, map #130 PR #137),
+                // batch otherwise.
+                if (isStreaming.get() || streamingStartPending) cancelStreaming() else cancelRecording()
+            }
         }
 
         rootLayout.addView(keyboardView)
