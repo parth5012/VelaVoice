@@ -222,10 +222,27 @@ class VoiceInputMethodService : InputMethodService() {
                 // no-op in streamed mode and left the mic running. Route an
                 // active streamed session to stopStreaming() (same path
                 // onFinishInput uses), batch sessions to the gated stop.
-                if (isStreaming.get()) stopStreaming() else stopRecording(runCleaner = true)
+                // CodeRabbit #262 review (Major): a QUEUED-but-unstarted start
+                // (streamingStartPending) must abort too — dropping it into
+                // stopRecording() is a batch no-op (gate IDLE) and the pending
+                // pipeline went on to START after the user pressed Stop.
+                if (isStreaming.get()) {
+                    stopStreaming()
+                } else if (streamingStartPending) {
+                    cancelStreaming()
+                } else {
+                    stopRecording(runCleaner = true)
+                }
             }
             onStopRawListener = {
-                if (isStreaming.get()) stopStreaming() else stopRecording(runCleaner = false)
+                // Same pending-start abort as the clean Stop (CodeRabbit #262).
+                if (isStreaming.get()) {
+                    stopStreaming()
+                } else if (streamingStartPending) {
+                    cancelStreaming()
+                } else {
+                    stopRecording(runCleaner = false)
+                }
             }
             onCancelListener = {
                 // Same routing for Cancel: cover a queued-but-unstarted
