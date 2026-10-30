@@ -1084,14 +1084,30 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                     mCachedVelaCustomFillers = null;
                 }
                 final StreamingPipeline pipeline = builder.build();
+                // F22 (#224): the ready-post and the listener must both key on
+                // THIS session's identity — a synchronous start failure (the
+                // session marked itself finished before the ready-post ran)
+                // must not publish a dead session, and a stale callback must
+                // not tear down a newer one.
+                final java.util.concurrent.atomic.AtomicReference<VelaStreamingSession>
+                        selfRef = new java.util.concurrent.atomic.AtomicReference<>();
                 final VelaStreamingSession session = new VelaStreamingSession(latinIME, pipeline,
                     pipelineMode, privacySensitive, cleanupSpec,
-                    buildStreamingListener(latinIME, voicePane, isYaps));
+                    buildStreamingListener(latinIME, voicePane, isYaps, selfRef));
+                selfRef.set(session);
                 session.start();
 
                 latinIME.mHandler.post(() -> {
                     mIsVelaLoading = false;
                     if (mIsVelaRecordingCancelled) {
+                        teardownVelaEngine(null, session);
+                        return;
+                    }
+                    // F22 (#224): sync start failure delivered onError before
+                    // this ready-post — never publish an already-finished
+                    // session (that re-enabled Stop, showed "Recording...",
+                    // and started the 1 Hz timer on a detached dead pipeline).
+                    if (!session.isActive()) {
                         teardownVelaEngine(null, session);
                         return;
                     }
@@ -1121,7 +1137,8 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     }
 
     private VelaStreamingSession.Listener buildStreamingListener(final LatinIME latinIME,
-            @Nullable final VoiceRecordingPane voicePane, final boolean isYaps) {
+            @Nullable final VoiceRecordingPane voicePane, final boolean isYaps,
+            final java.util.concurrent.atomic.AtomicReference<VelaStreamingSession> selfRef) {
         return new VelaStreamingSession.Listener() {
             // Waveform feed (ticket #160): EMA + rate gate, fresh per streaming session.
             private final WaveformFeed waveFeed = new WaveformFeed();
@@ -1141,14 +1158,18 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             @Override
             public void onStreamingFinished(boolean cancelled) {
                 stopTimer();
-                if (velaStreamingSession != null) {
+                // F22 (#224): identity teardown — a stale session's finish
+                // callback must never release a newer session's engine, nor
+                // restore the UI over its recording. Guard covers the engine
+                // teardown AND the restore.
+                if (velaStreamingSession != null && velaStreamingSession == selfRef.get()) {
                     teardownVelaEngine(null, velaStreamingSession);
                     velaStreamingSession = null;
-                }
-                if (isYaps) {
-                    YapsUiManager.getInstance().stopActiveRecording();
-                } else {
-                    showMainKeyboard(latinIME);
+                    if (isYaps) {
+                        YapsUiManager.getInstance().stopActiveRecording();
+                    } else {
+                        showMainKeyboard(latinIME);
+                    }
                 }
             }
 
