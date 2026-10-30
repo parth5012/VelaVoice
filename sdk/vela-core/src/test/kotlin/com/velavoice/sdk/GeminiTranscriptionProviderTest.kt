@@ -283,7 +283,18 @@ class GeminiTranscriptionProviderTest {
             provider400.transcribe(ByteArray(160), "bad-key")
             fail("Expected VelaException.Network on 400")
         } catch (e: VelaException.Network) {
-            assertTrue(e.message?.contains("Invalid Gemini API key or unauthorized access.") == true)
+            // #226 (F31): a 400 is a malformed request, not an auth failure —
+            // it must surface the provider-authored error, not the key message.
+            val msg = e.message.orEmpty()
+            assertTrue(
+                "400 must not claim an API-key problem: $msg",
+                !msg.contains("Invalid Gemini API key")
+            )
+            assertTrue(
+                "400 must carry the provider-authored error: $msg",
+                msg.contains("Gemini rejected the request") &&
+                    msg.contains("API key not valid")
+            )
         }
 
         val mock403 = createMockClient(
