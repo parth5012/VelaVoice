@@ -123,11 +123,49 @@ class ServicePaneStopRoutingTest {
                     "stopStreaming() — stopRecording()'s recordingGate.tryStop() " +
                     "is a no-op while the gate is IDLE (startStreaming never claims " +
                     "it), which kept the mic open when the user pressed Stop (#222)",
-                body.second.contains("if (isStreaming.get()) stopStreaming()")
+                body.second.contains("isStreaming.get()") && body.second.contains("stopStreaming()")
             )
             assertTrue(
                 "VIMS $body.first must still run the batch path when not streaming",
                 body.second.contains("stopRecording(")
+            )
+        }
+    }
+
+    @Test
+    fun `VIMS pane Stop routes a queued streaming start to cancelStreaming not the batch gate`() {
+        // CodeRabbit review finding on #262 (Major): with streamingStartPending
+        // (queued pipeline build) and isStreaming still false, both Stop
+        // listeners fell through to stopRecording() — the gated batch path —
+        // whose gate is IDLE in streamed mode, so the queued pipeline went on
+        // to START recording after the user pressed Stop.
+        val vims = codeOnly(serviceSource("VoiceInputMethodService.kt"))
+        val wiring = codeOnly(extractPaneWiring(vims))
+        val stopClean = codeOnly(listenerBody(wiring, "onStopCleanListener"))
+        val stopRaw = codeOnly(listenerBody(wiring, "onStopRawListener"))
+        for (listener in listOf("onStopCleanListener" to stopClean, "onStopRawListener" to stopRaw)) {
+            assertTrue(
+                "VIMS ${listener.first} must route an active streamed session to stopStreaming() (#222)",
+                listener.second.contains("isStreaming.get()")
+            )
+            assertTrue(
+                "VIMS ${listener.first} must handle a queued-but-unstarted start " +
+                    "(streamingStartPending) — dropping it into stopRecording()'s " +
+                    "batch gate lets the pending pipeline start after Stop",
+                listener.second.contains("streamingStartPending")
+            )
+            assertTrue(
+                "VIMS ${listener.first} must abort the queued start through the " +
+                    "streaming path (cancelStreaming: abort queued start + restore keyboard)",
+                listener.second.contains("cancelStreaming()")
+            )
+            // Order: active-session, pending-start, then batch fallback —
+            // pending must be caught BEFORE the batch branch.
+            val pendingIdx = listener.second.indexOf("streamingStartPending")
+            val batchIdx = listener.second.indexOf("stopRecording(")
+            assertTrue(
+                "VIMS ${listener.first}: the pending-start branch must come before the batch stopRecording fallback",
+                pendingIdx in 0 until batchIdx
             )
         }
     }
