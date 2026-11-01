@@ -58,6 +58,13 @@ class VoiceAccessibilityService : AccessibilityService() {
     private var windowManager: WindowManager? = null
     private var floatingLayout: FrameLayout? = null
 
+    /**
+     * Capture-loop guard (`while (isRecording)`, written from main thread,
+     * read by the capture thread). Volatile so the stop is always observed
+     * promptly (F14, ticket #229). Plain guard could never observe stop →
+     * mic leak + full join timeouts.
+     */
+    @Volatile
     private var isRecording = false
     private var audioRecord: AudioRecord? = null
     private var recordingThread: Thread? = null
