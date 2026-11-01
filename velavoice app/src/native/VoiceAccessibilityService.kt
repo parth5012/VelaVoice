@@ -568,7 +568,10 @@ class VoiceAccessibilityService : AccessibilityService() {
             audioRecord?.stop()
             audioRecord?.release()
             audioRecord = null
-            recordingThread?.join()
+            // F11 (ticket #230): the normal stop path must be bounded like
+            // cancelRecording — an unbounded main-thread join wedges the
+            // service whenever the capture thread stalls in native read().
+            recordingThread?.join(AudioRecorder.CANCEL_JOIN_TIMEOUT_MS)
             recordingThread = null
         } catch (e: Exception) {
             e.printStackTrace()
