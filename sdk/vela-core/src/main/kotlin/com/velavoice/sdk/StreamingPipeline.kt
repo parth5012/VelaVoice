@@ -46,7 +46,15 @@ class StreamingPipeline internal constructor(
 ) {
     private var streamConfig: StreamConfig = defaultStreamConfig
     private var callback: StreamingTranscriptionCallback? = null
+    /**
+     * Rider (ticket #230, map #210 decision #2): [audioRecord] and
+     * [recordingThread] are written from the caller thread (start/stop) and
+     * read on the capture thread during teardown — volatile so a stop always
+     * observes the session's record/thread identity.
+     */
+    @Volatile
     private var audioRecord: AudioRecord? = null
+    @Volatile
     private var recordingThread: Thread? = null
     private val isRecording = AtomicBoolean(false)
     private val stateLock = Any()
@@ -421,11 +429,30 @@ class StreamingPipeline internal constructor(
 
     private fun stopAudioCapture() {
         try {
-            recordingThread?.join(2000)
-            recordingThread = null
-            audioRecord?.stop()
-            audioRecord?.release()
+            // F34 (ticket #230): stop/release the AudioRecord BEFORE joining —
+            // a capture thread blocked in native read() cannot exit while the
+            // record runs, so a join-first teardown burns its whole timeout on
+            // the caller (often main). Releasing aborts the blocked read.
+            val record = audioRecord
             audioRecord = null
+            record?.stop()
+            record?.release()
+            // Bounded + interrupted (F34): same ANR budget as
+            // AudioRecorder.CANCEL_JOIN_TIMEOUT_MS; interrupt a thread parked
+            // past the release so the join cannot outlive its timeout.
+            // F21: never join the CURRENT thread — the duration-limit callback
+            // fires on the capture thread, and a synchronous stop from there
+            // can only join itself.
+            val thread = recordingThread
+            recordingThread = null
+            if (thread !== Thread.currentThread()) {
+                thread?.interrupt()
+                try {
+                    thread?.join(AudioRecorder.CANCEL_JOIN_TIMEOUT_MS)
+                } catch (e: InterruptedException) {
+                    Thread.currentThread().interrupt()
+                }
+            }
         } catch (e: Exception) {
             Log.e("StreamingPipeline", "Error stopping audio", e)
         }

@@ -203,8 +203,14 @@ open class AudioRecorder(
         }
         // Bounded join: a capture thread parked in a blocking read() must not
         // wedge the (often main/UI) thread calling cancel()/stop() — ANR risk.
+        // F21 (ticket #230): never join the CURRENT thread — the duration-limit
+        // callback fires ON the capture thread (#104) and a synchronous stop
+        // from that callback would join itself, which can never complete and
+        // burns the full timeout. The thread exits its own loop via the flag.
         try {
-            recordingThread?.join(CANCEL_JOIN_TIMEOUT_MS)
+            if (recordingThread !== Thread.currentThread()) {
+                recordingThread?.join(CANCEL_JOIN_TIMEOUT_MS)
+            }
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
         }

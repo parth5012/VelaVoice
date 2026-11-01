@@ -113,7 +113,20 @@ class DictationTileService : TileService() {
             override fun onDurationLimitReached() {
                 // AudioRecorder contract (#104): at the cap the recorder stops
                 // collecting and the caller must stop so transcription runs.
-                activeSession?.stopRecording()
+                // F21 (ticket #230): the signal fires ON the capture thread —
+                // stopRecording → releaseAudioRecord joins the capture thread,
+                // so running it synchronously here would make the thread join
+                // itself. Post to the main handler (same pattern as the IME's
+                // duration-limit handler-hop in VoiceInputMethodService).
+                handler.post {
+                    try {
+                        activeSession?.stopRecording()
+                    } catch (e: Throwable) {
+                        Companion.activeSession = null
+                        toast(applicationContext, "Dictation session lost: ${e.message ?: e.javaClass.simpleName}")
+                        refreshTile()
+                    }
+                }
             }
         })
     }
