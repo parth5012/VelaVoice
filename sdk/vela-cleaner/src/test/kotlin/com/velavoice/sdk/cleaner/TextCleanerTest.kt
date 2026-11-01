@@ -8,6 +8,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 @RunWith(RobolectricTestRunner::class)
 class TextCleanerTest {
@@ -442,6 +445,82 @@ class TextCleanerTest {
         val cleaner2 = TextCleaner.getOrCreate(CleanerConfig(useLlm = true, llmModelPath = path))
         assertNotSame("After clearCache, getOrCreate should create a fresh instance", cleaner1, cleaner2)
         TextCleaner.clearCache()
+    }
+
+    // ── Ticket #228 (map #210, F09): close-vs-clean concurrency guard ──────
+    // close()/clearCache() must never free the native ONNX model while a
+    // clean()/generate() is in flight: a native free-under-use is an
+    // uncatchable crash. The contract: close() marks the cleaner closed and
+    // returns immediately, but defers the native release until the in-flight
+    // clean()'s lease is released.
+
+    /** Blocking subclass: parks inside generate() so a concurrent close() can race it. */
+    private class BlockingTextCleaner(config: CleanerConfig) : TextCleaner(config) {
+        val generateStarted = CountDownLatch(1)
+        val generateMayFinish = CountDownLatch(1)
+        override fun generate(prompt: String): String? {
+            generateStarted.countDown()
+            generateMayFinish.await(10, TimeUnit.SECONDS)
+            return "LLM-RESULT"
+        }
+    }
+
+    @Test
+    fun `close during in-flight clean defers native release until the clean returns`() {
+        val cleaner = BlockingTextCleaner(CleanerConfig(useLlm = true))
+        cleaner.forceLlmInitializedForTesting()
+        val nativeReleases = AtomicInteger(0)
+        cleaner.llmReleaseListener = { nativeReleases.incrementAndGet() }
+
+        val resultBox = arrayOfNulls<String>(1)
+        val worker = Thread {
+            resultBox[0] = cleaner.clean("um hello world", privacySensitive = false)
+        }
+        worker.start()
+        assertTrue(
+            "generate must start before close() is called",
+            cleaner.generateStarted.await(10, TimeUnit.SECONDS)
+        )
+
+        // close() must not block on the in-flight generation and must NOT free the
+        // native model while clean() still holds its generation lease.
+        cleaner.close()
+        assertTrue("close() must mark the cleaner closed immediately", cleaner.isClosed())
+        assertEquals(
+            "native release must be deferred while an in-flight clean() holds the lease",
+            0, nativeReleases.get()
+        )
+
+        cleaner.generateMayFinish.countDown()
+        worker.join(10_000)
+        assertFalse("clean() must return after generate finishes", worker.isAlive)
+        assertEquals("in-flight clean must still produce its LLM result", "LLM-RESULT", resultBox[0])
+
+        // The deferred native release must fire exactly once, after the lease released.
+        assertEquals(
+            "deferred close must free native resources exactly once after the clean returns",
+            1, nativeReleases.get()
+        )
+
+        // A subsequent clean() on the closed cleaner must bail safely (rule-based),
+        // never reaching generate() against freed native resources.
+        assertEquals("hello", cleaner.clean("um hello", privacySensitive = false))
+        assertEquals("no extra native release", 1, nativeReleases.get())
+    }
+
+    @Test
+    fun `clean on an already-closed cleaner returns rule-based and never calls generate`() {
+        val cleaner = BlockingTextCleaner(CleanerConfig(useLlm = true))
+        cleaner.forceLlmInitializedForTesting()
+        val nativeReleases = AtomicInteger(0)
+        cleaner.llmReleaseListener = { nativeReleases.incrementAndGet() }
+        cleaner.close()
+        assertEquals(1, nativeReleases.get())
+
+        val result = cleaner.clean("um hello world", privacySensitive = false)
+
+        assertEquals("closed cleaner must fall back to rule-based cleanup", "hello world", result)
+        assertEquals("close is idempotent: exactly one native release", 1, nativeReleases.get())
     }
 
     // ── Ticket #110 (map #105): filler correctness + Scribe prompt-leak guard ──
