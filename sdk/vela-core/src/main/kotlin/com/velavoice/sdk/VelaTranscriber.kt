@@ -187,6 +187,7 @@ class VelaTranscriber internal constructor(
         activeStreamingTranscriber = null
     }
 
+    @Volatile
     private var activeStreamingTranscriber: StreamingTranscriber? = null
     private val streamingAudioCapturer = StreamingAudioCapturer()
 
