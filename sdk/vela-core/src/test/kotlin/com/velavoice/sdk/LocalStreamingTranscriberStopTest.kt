@@ -267,6 +267,61 @@ class LocalStreamingTranscriberStopTest {
     }
 
     @Test
+    fun `rapid stop then start does not free the new session engine (F26)`() {
+        val modelFile = createTempModelFile()
+        val engine1 = SlowFreeStopTestWhisperEngine()
+        val engine2 = StopTestWhisperEngine()
+        val engines = mutableListOf(engine1, engine2)
+
+        val transcriber = LocalStreamingTranscriber(
+            WhisperConfig(modelFile.absolutePath, "en", 4)
+        ) { engines.removeAt(0) }
+
+        val streamConfig = StreamConfig(
+            chunkDurationMs = 100,
+            windowDurationMs = 200,
+            overlapMs = 50,
+            useVad = false,
+            modelPath = modelFile.absolutePath
+        )
+
+        // Session 1
+        transcriber.start(streamConfig)
+        transcriber.emit(createPcmChunk(3200))
+        transcriber.stop()
+
+        // Wait until teardown has entered (and blocked on) free()
+        assertTrue(
+            "session-1 teardown must reach free()",
+            engine1.freeStarted.await(5, TimeUnit.SECONDS)
+        )
+
+        // Session 2 starts while session-1 teardown's free() is still blocked.
+        // start() joins teardown for 1s (times out) then proceeds.
+        transcriber.start(streamConfig)
+        assertTrue("session 2 must be running", transcriber.isRunning)
+
+        // Release the blocked free() so session-1 teardown can finish
+        engine1.freeRelease.countDown()
+        assertTrue(
+            "session-1 teardown must complete once free() unblocks",
+            engine1.freeDone.await(5, TimeUnit.SECONDS)
+        )
+
+        // F26 contract: session 1's engine freed, session 2's engine untouched.
+        assertTrue("session 1 engine must be freed", engine1.isFreed)
+        assertFalse(
+            "session 2 engine must NOT be freed by session-1 teardown",
+            engine2.isFreed
+        )
+        assertTrue("session 2 must still be running", transcriber.isRunning)
+
+        transcriber.stop()
+        assertTrue(transcriber.awaitTeardown(5000))
+        assertTrue("session 2 engine freed after its own stop", engine2.isFreed)
+    }
+
+    @Test
     fun `subsequent start after stop drains prior teardown cleanly`() {
         val modelFile = createTempModelFile()
         val engine1 = StopTestWhisperEngine()
@@ -298,6 +353,50 @@ class LocalStreamingTranscriberStopTest {
         transcriber.stop()
         assertTrue(transcriber.awaitTeardown(5000))
         assertTrue("Session 2 engine must be freed after stop", engine2.isFreed)
+    }
+}
+
+private class SlowFreeStopTestWhisperEngine : WhisperEngine(stubInit = true) {
+    val nativeTranscribeCalls = AtomicInteger(0)
+    val nativeCallsAfterFree = AtomicInteger(0)
+    val freeCalls = AtomicInteger(0)
+    @Volatile var isFreed = false
+    var onTranscribe: (() -> Unit)? = null
+
+    val freeStarted = CountDownLatch(1)
+    val freeRelease = CountDownLatch(1)
+    val freeDone = CountDownLatch(1)
+
+    init {
+        setContextPtrForTest(0x1234_5678L)
+    }
+
+    override fun doNativeTranscribe(
+        ptr: Long,
+        floatAudio: FloatArray,
+        language: String,
+        threads: Int,
+        initialPrompt: String?,
+        translate: Boolean
+    ): String {
+        nativeTranscribeCalls.incrementAndGet()
+        if (isFreed) {
+            nativeCallsAfterFree.incrementAndGet()
+        }
+        onTranscribe?.invoke()
+        return "transcription result"
+    }
+
+    override fun doNativeFree(ptr: Long) {
+        freeStarted.countDown()
+        freeRelease.await(5, TimeUnit.SECONDS)
+        freeCalls.incrementAndGet()
+        isFreed = true
+        freeDone.countDown()
+    }
+
+    override fun doNativeCancel(ptr: Long) {
+        // no-op
     }
 }
 

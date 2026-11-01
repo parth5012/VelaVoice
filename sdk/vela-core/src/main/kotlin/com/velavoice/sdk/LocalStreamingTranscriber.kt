@@ -26,8 +26,13 @@ class LocalStreamingTranscriber(
     private val config: WhisperConfig,
     private val engineFactory: (WhisperConfig) -> WhisperEngine = { WhisperEngine(it) }
 ) : StreamingTranscriber {
+    @Volatile
     private var engine: WhisperEngine? = null
     private var engineConfig: WhisperConfig = config
+    // Rider (map #210 decision #2): session generation counter so a teardown
+    // that outlives a rapid stop->start can never free/clear a NEW session's
+    // engine or buffer (F26, ticket #231).
+    private val sessionGen = AtomicLong(0)
     @Volatile
     internal var isRunning = false
     private var callback: StreamingTranscriptionCallback? = null
@@ -98,6 +103,10 @@ class LocalStreamingTranscriber(
             return
         }
 
+        // New session: bump the generation so any in-flight teardown from the
+        // previous session can tell it no longer owns the shared state (F26).
+        sessionGen.incrementAndGet()
+
         engine = try {
             engineFactory(engineConfig)
         } catch (e: Throwable) {
@@ -156,6 +165,16 @@ class LocalStreamingTranscriber(
         val thread = processingThread
         thread?.interrupt()
 
+        // F26 (ticket #231): capture the engine/buffer ownership for THIS
+        // session at stop() time. A rapid stop->start can let a new session
+        // overwrite the shared `engine` field (and clear the buffer) while this
+        // teardown is still blocked on a slow free(); if teardown later reads
+        // the shared field it would free the NEW session's engine and wipe its
+        // buffer. Free only the captured engine, and only null/clear shared
+        // state when no newer session has started (sessionGen unchanged).
+        val stoppedGen = sessionGen.get()
+        val engineToFree = engine
+
         val td = Thread({
             // Join until the processing thread is actually dead: no timeout-then-free path
             if (thread != null) {
@@ -169,16 +188,20 @@ class LocalStreamingTranscriber(
             }
 
             try {
-                engine?.free()
+                engineToFree?.free()
             } catch (e: Throwable) {
                 Log.e("LocalStreamingTranscriber", "Error freeing engine", e)
             } finally {
-                engine = null
-                processingThread = null
-                synchronized(bufferLock) {
-                    pendingChunks.clear()
-                    bufferedBytes = 0
+                if (sessionGen.get() == stoppedGen) {
+                    engine = null
+                    processingThread = null
+                    synchronized(bufferLock) {
+                        pendingChunks.clear()
+                        bufferedBytes = 0
+                    }
                 }
+                // else: a newer session took over the shared state — leave it
+                // intact; only the captured engineToFree was freed above.
             }
 
             Log.d("LocalStreamingTranscriber", "Streaming stopped")
