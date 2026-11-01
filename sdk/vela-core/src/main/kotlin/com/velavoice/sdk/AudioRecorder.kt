@@ -17,6 +17,13 @@ open class AudioRecorder(
      */
     private val maxRecordingDurationMs: Long = MAX_RECORDING_DURATION_MS
 ) {
+    /**
+     * Capture-loop guard (`while (isRecording ...)`) read on the capture
+     * thread, written from start/stop/cancel/release threads. Volatile so
+     * the stop is always observed promptly (F14, ticket #229). Plain guard
+     * hid the stop from the capture thread → mic leak + full join timeouts.
+     */
+    @Volatile
     private var isRecording = false
     private var audioRecord: AudioRecord? = null
     private var recordingThread: Thread? = null
