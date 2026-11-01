@@ -22,10 +22,25 @@ import java.io.File
  * - genai_config.json presence/sanity checked before native init.
  */
 open class TextCleaner(@Volatile internal var config: CleanerConfig) : AutoCloseable {
-    private var isLlmInitialized = false
+    // @Volatile (map #210 decision #2, rides ticket #228): set on the background
+    // construction thread (initLlm) and read from the vela-cleanup thread in clean().
+    @Volatile private var isLlmInitialized = false
     private var model: Model? = null
     private var tokenizer: Tokenizer? = null
     @Volatile private var isClosed = false
+
+    /**
+     * Close-vs-clean coordination (map #210 F09, ticket #228): a native ONNX
+     * model freed while [generate] is running is an uncatchable use-after-free.
+     * [clean] holds a lease (in-flight count) for the whole LLM branch;
+     * [close] never frees native resources while a lease is outstanding, it
+     * defers the release to the lease holder's finally block. This lock guards
+     * only the counters and the isClosed transition — it is NEVER held across
+     * a blocking generate() call.
+     */
+    private val lifecycleLock = java.util.concurrent.locks.ReentrantLock()
+    private var generationLeases = 0
+    private var closeDeferred = false
 
     init {
         val modelPath = config.llmModelPath
@@ -95,16 +110,61 @@ open class TextCleaner(@Volatile internal var config: CleanerConfig) : AutoClose
     }
 
     override fun close() {
-        if (isClosed) return
-        isClosed = true
-        val path = config.llmModelPath
-        if (!path.isNullOrBlank()) {
-            modelCache.remove(path, this)
+        lifecycleLock.lock()
+        try {
+            if (isClosed) return
+            isClosed = true
+            val path = config.llmModelPath
+            if (!path.isNullOrBlank()) {
+                modelCache.remove(path, this)
+            }
+            // F09 (ticket #228): if a clean() lease is outstanding, defer the native
+            // release — generate() may be using the model/tokenizer right now. The
+            // lease holder performs closeLlm() in its finally block (releaseLease()).
+            if (generationLeases > 0) {
+                closeDeferred = true
+                return
+            }
+        } finally {
+            lifecycleLock.unlock()
+        }
+        closeLlm()
+    }
+
+    /**
+     * Acquires a generation lease for the duration of the LLM branch of [clean].
+     * Fails (returns false) when this cleaner is closed — the caller then falls
+     * back to rule-based cleanup instead of touching freed native resources.
+     */
+    private fun acquireGenerationLease(): Boolean {
+        lifecycleLock.lock()
+        try {
+            if (isClosed) return false
+            generationLeases++
+            return true
+        } finally {
+            lifecycleLock.unlock()
+        }
+    }
+
+    /**
+     * Releases a generation lease. If [close] arrived while the lease was held,
+     * the deferred native release runs here (lease count is zero at this point
+     * under the lock, so no new generate() can race the free).
+     */
+    private fun releaseGenerationLease() {
+        lifecycleLock.lock()
+        try {
+            generationLeases--
+            if (generationLeases > 0 || !closeDeferred) return
+        } finally {
+            lifecycleLock.unlock()
         }
         closeLlm()
     }
 
     private fun closeLlm() {
+        llmReleaseListener?.invoke()
         runCatching { tokenizer?.close() }
         runCatching { model?.close() }
         tokenizer = null
@@ -113,6 +173,14 @@ open class TextCleaner(@Volatile internal var config: CleanerConfig) : AutoClose
     }
 
     fun isClosed(): Boolean = isClosed
+
+    /**
+     * Visible-for-testing harness (map #210 ticket #228): invoked right before the
+     * native ONNX model/tokenizer are freed in [closeLlm]. Lets concurrency tests
+     * observe exactly WHEN the native release happens relative to an in-flight
+     * [generate], without instantiating a real model.
+     */
+    internal var llmReleaseListener: (() -> Unit)? = null
 
     /**
      * Clean and optionally Scribe-rewrite [text]. Context and metadata are passed from the IME.
@@ -147,21 +215,28 @@ open class TextCleaner(@Volatile internal var config: CleanerConfig) : AutoClose
         // Step 1: Rule-based pre-processor (Regex) run first
         val regexCleaned = cleanRuleBased(text)
 
-        // Step 2: LLM requested and initialized AND the field is not privacy-sensitive
-        if (config.useLlm && isLlmInitialized && !privacySensitive) {
-            val prompt = if (config.scribeEnabled) {
-                formatScribePrompt(
-                    rawInput = regexCleaned,
-                    style = overrideStyle ?: config.defaultScribeStyle,
-                    contextBefore = contextBefore,
-                    contextAfter = contextAfter,
-                    appName = appName,
-                    inputType = inputType
-                )
-            } else {
-                formatStandardCleanupPrompt(regexCleaned)
+        // Step 2: LLM requested and initialized AND the field is not privacy-sensitive.
+        // The generation lease (F09 / ticket #228) keeps close()/clearCache() from
+        // freeing the ONNX model while generate() runs; if the cleaner is already
+        // (or just got) closed, bail safely to the rule-based result.
+        if (config.useLlm && isLlmInitialized && !privacySensitive && acquireGenerationLease()) {
+            try {
+                val prompt = if (config.scribeEnabled) {
+                    formatScribePrompt(
+                        rawInput = regexCleaned,
+                        style = overrideStyle ?: config.defaultScribeStyle,
+                        contextBefore = contextBefore,
+                        contextAfter = contextAfter,
+                        appName = appName,
+                        inputType = inputType
+                    )
+                } else {
+                    formatStandardCleanupPrompt(regexCleaned)
+                }
+                return sanitizeLlmOutput(generate(prompt), regexCleaned)
+            } finally {
+                releaseGenerationLease()
             }
-            return sanitizeLlmOutput(generate(prompt), regexCleaned)
         }
 
         return regexCleaned
@@ -387,6 +462,13 @@ open class TextCleaner(@Volatile internal var config: CleanerConfig) : AutoClose
         /**
          * Clears all cached [TextCleaner] instances, invoking [close] on each to free
          * native ONNX sessions and tokenizers.
+         *
+         * F09 (map #210 ticket #228): safe to call while a cleanup future is outstanding
+         * (e.g. KeyboardSwitcher.releaseVelaTranscriber() on the IME main thread).
+         * [TextCleaner.close] defers the native release when a [clean] lease is held,
+         * so the ONNX model is freed only after the in-flight generate() completes —
+         * never under a running generation. Cache eviction is immediate and close()
+         * returns without blocking.
          */
         @JvmStatic
         fun clearCache() {

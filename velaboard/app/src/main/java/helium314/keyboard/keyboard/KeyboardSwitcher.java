@@ -323,6 +323,10 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             teardownVelaEngine(velaTranscriber, null);
             velaTranscriber = null;
         }
+        // Ticket #228 (F09): clearCache() is lease-aware — close() on a TextCleaner
+        // defers the native ONNX release while an in-flight clean()/generate() is
+        // still running on the vela-cleanup thread, so this main-thread call can
+        // never free the model under a running generation.
         TextCleaner.clearCache();
         mCachedVelaModelPath = null;
         mCachedVelaLlmToggle = null;
