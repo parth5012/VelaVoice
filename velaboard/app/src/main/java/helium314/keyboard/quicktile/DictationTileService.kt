@@ -18,7 +18,7 @@ import helium314.keyboard.latin.utils.prefs
 import helium314.keyboard.settings.ModelDownloadHelper
 import java.io.File
 
-class DictationTileService : TileService() {
+open class DictationTileService : TileService() {
 
     private val handler = Handler(Looper.getMainLooper())
 

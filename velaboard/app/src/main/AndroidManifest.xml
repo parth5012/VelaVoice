@@ -65,6 +65,11 @@ SPDX-License-Identifier: Apache-2.0 AND GPL-3.0-only
             </intent-filter>
         </service>
 
+        <!-- Backward compatibility alias for legacy tile component from v4.1 (#176) -->
+        <service android:name="helium314.keyboard.latin.quicktile.DictationTileService"
+                 android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+                 android:exported="true" />
+
         <!-- Activities -->
         <activity android:name="helium314.keyboard.settings.SettingsActivity"
                 android:theme="@style/platformActivityTheme"
