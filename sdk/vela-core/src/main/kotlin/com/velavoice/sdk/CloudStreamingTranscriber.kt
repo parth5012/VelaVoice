@@ -29,6 +29,7 @@ class CloudStreamingTranscriber : StreamingTranscriber {
     private var callback: StreamingTranscriptionCallback? = null
     private var streamConfig: StreamConfig? = null
     /** Internal for tests (map #209 #225): tests inject a mock socket and drive stop/outside-delayed-close semantics directly. */
+    @Volatile
     internal var webSocket: WebSocket? = null
     private val isRunning = AtomicBoolean(false)
     internal var committedLength = 0
@@ -70,6 +71,7 @@ class CloudStreamingTranscriber : StreamingTranscriber {
      * (map #209 #225): the delayed-close red test simulates a restart by
      * bumping the epoch directly.
      */
+    @Volatile
     internal var sessionGen = 0
     /**
      * Test-only hook (map #209 #225): arm/clear [isRunning] without [start] so
