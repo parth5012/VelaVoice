@@ -2,19 +2,10 @@ package com.velavoice.sdk
 
 import android.content.ClipData
 import android.content.ClipboardManager
-import android.os.Build
 
 /**
- * Execute a clipboard paste action while guaranteeing that prior clipboard
- * content is restored (or cleared if previously empty) when done (Finding F12).
- *
- * This prevents transcript text inserted via ACTION_PASTE from permanently
- * clobbering the user's prior clipboard (such as copied passwords, URLs, or notes)
- * or lingering indefinitely as readable plain text on the system clipboard.
- */
-/**
  * Check if the primary clip can be safely read from the clipboard manager.
- * Returns false when restricted (e.g. background service without focus).
+ * Returns false when restricted (e.g. background service without focus) or empty.
  */
 fun canReadPrimaryClip(clipboard: ClipboardManager?): Boolean {
     if (clipboard == null) return false
@@ -27,47 +18,39 @@ fun canReadPrimaryClip(clipboard: ClipboardManager?): Boolean {
 
 /**
  * Execute a clipboard paste action while guaranteeing that prior clipboard
- * content is restored (or cleared if previously confirmed empty) when done (Finding F12).
+ * content is restored when done (Finding F12).
  *
  * This prevents transcript text inserted via ACTION_PASTE from permanently
  * clobbering the user's prior clipboard (such as copied passwords, URLs, or notes)
  * or lingering indefinitely as readable plain text on the system clipboard.
+ *
+ * If the prior clip cannot be verified/read (e.g. background service restrictions),
+ * this helper refuses to clobber or clear the clipboard and returns false.
  */
 inline fun performWithClipboardRestore(
     clipboard: ClipboardManager,
     tempClip: ClipData,
     pasteAction: () -> Unit
-) {
-    var readSuccess = false
+): Boolean {
     val priorClip: ClipData? = try {
-        if (clipboard.hasPrimaryClip()) {
-            val clip = clipboard.primaryClip
-            readSuccess = true
-            clip
-        } else {
-            readSuccess = true
-            null
-        }
+        if (clipboard.hasPrimaryClip()) clipboard.primaryClip else null
     } catch (e: Exception) {
-        readSuccess = false
         null
+    }
+
+    if (priorClip == null) {
+        // A restricted read or null clip must NOT be treated as confirmed emptiness.
+        // Never clear the clipboard; do not proceed with clipboard clobbering if we cannot restore.
+        return false
     }
 
     clipboard.setPrimaryClip(tempClip)
     try {
         pasteAction()
+        return true
     } finally {
         try {
-            if (priorClip != null) {
-                clipboard.setPrimaryClip(priorClip)
-            } else if (readSuccess) {
-                // Only clear if reading the clipboard succeeded and confirmed it was empty
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    clipboard.clearPrimaryClip()
-                } else {
-                    clipboard.setPrimaryClip(ClipData.newPlainText("", ""))
-                }
-            }
+            clipboard.setPrimaryClip(priorClip)
         } catch (e: Exception) {
             // Best effort restore
         }

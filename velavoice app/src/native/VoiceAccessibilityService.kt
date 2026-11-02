@@ -861,6 +861,10 @@ class VoiceAccessibilityService : AccessibilityService() {
                 Log.e("VoiceAccessibility", "Direct insert refused: ${e.javaClass.simpleName}")
             }
         } else if (nodeSupportsAction(targetNode, AccessibilityNodeInfo.ACTION_PASTE)) {
+            if (!canSafelyPreserveClip) {
+                Log.w("VoiceAccessibility", "Target supports only PASTE but clipboard cannot be safely preserved; dropping write to protect user clipboard")
+                return
+            }
             val clip = ClipData.newPlainText("transcription", clean)
             performWithClipboardRestore(clipboard, clip) {
                 if (!targetNode.performAction(AccessibilityNodeInfo.ACTION_PASTE)) {
