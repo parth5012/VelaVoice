@@ -70,31 +70,37 @@ class VasClipboardRestoreTest {
     }
 
     @Test
-    fun `clipboard cleared when previously empty`() {
+    fun `performWithClipboardRestore refuses to paste when prior clip is null or restricted`() {
         val context = RuntimeEnvironment.getApplication()
         val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         cm.clearPrimaryClip()
 
         val tempClip = ClipData.newPlainText("transcription", "Temporary transcript")
-        performWithClipboardRestore(cm, tempClip) {
-            assertEquals("Temporary transcript", cm.primaryClip?.getItemAt(0)?.text?.toString())
+        var pasteExecuted = false
+        val executed = performWithClipboardRestore(cm, tempClip) {
+            pasteExecuted = true
         }
 
-        val hasClip = try {
-            cm.hasPrimaryClip() && (cm.primaryClip?.itemCount ?: 0) > 0
-        } catch (e: Exception) {
-            false
-        }
-        assertFalse("Clipboard should be cleared when previously empty", hasClip)
+        assertFalse("Must refuse to paste if prior clip is null or unverified", executed)
+        assertFalse("Paste action must not be executed", pasteExecuted)
+        assertFalse("Clipboard must not be clobbered or set to tempClip", cm.hasPrimaryClip() && cm.primaryClip != null)
     }
 
     @Test
-    fun `VAS insertText uses performWithClipboardRestore`() {
+    fun `VAS insertText gates paste on safe clipboard preservation`() {
         val root = findRepoRoot()
         val vasFile = File(root, "velavoice app/src/native/VoiceAccessibilityService.kt")
         assertTrue("VoiceAccessibilityService.kt must exist", vasFile.isFile)
         val vasSource = vasFile.readText()
 
+        assertTrue(
+            "VAS must check canSafelyPreserveClip",
+            vasSource.contains("canSafelyPreserveClip")
+        )
+        assertTrue(
+            "VAS must drop write on paste-only node when clip cannot be safely preserved",
+            vasSource.contains("Target supports only PASTE but clipboard cannot be safely preserved")
+        )
         assertTrue(
             "VAS must import or use performWithClipboardRestore",
             vasSource.contains("performWithClipboardRestore")
