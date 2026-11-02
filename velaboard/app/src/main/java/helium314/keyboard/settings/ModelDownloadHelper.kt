@@ -4,9 +4,7 @@ package helium314.keyboard.settings
 import android.content.Context
 import android.content.SharedPreferences
 import android.net.Uri
-import android.os.Environment
 import android.provider.DocumentsContract
-import android.provider.MediaStore
 import android.provider.OpenableColumns
 import androidx.core.content.edit
 import helium314.keyboard.latin.settings.Defaults
@@ -61,6 +59,13 @@ object ModelDownloadHelper {
     }
 
     /**
+     * Maps the picker-level model name ("whisper"/"llm") to the canonical model id
+     * stored by the main Vela Voice app (com.velavoice.app) in models.db.
+     */
+    internal fun sharedModelIdFor(model: String): String =
+        if (model == "whisper") "whisper-tiny-en" else "cleaner-llama-3b"
+
+    /**
      * Returns the current download status for a model by checking
      * both the legacy shared storage path, the modern app-private path, and the shared Vela Voice app storage.
      */
@@ -106,7 +111,7 @@ object ModelDownloadHelper {
                 File(otherContext.filesDir, "SQLite/$dbName"),
                 File(otherContext.filesDir, "databases/$dbName")
             )
-            val modelId = if (model == "whisper") "whisper-tiny-en" else "cleaner-llama-1b"
+            val modelId = sharedModelIdFor(model)
 
             for (dbFile in dbPaths) {
                 if (dbFile != null && dbFile.exists()) {
@@ -226,11 +231,17 @@ object ModelDownloadHelper {
     }
 
     /**
-     * Imports a model by pointing at a file the user selected. When the file is
-     * reachable at a real filesystem path (legacy external-storage access) the
-     * preference simply points at it — no copy. On scoped-storage devices the file
-     * is copied into the app-private working location so transcription can open it.
-     * Returns the active path, or null on failure.
+     * Imports a model from a file the user selected via the picker.
+     *
+     * Ticket #242 (F20): the imported file is ALWAYS copied into the app-private
+     * working location ([context.filesDir]-backed), never referenced in place.
+     * Resolved external paths (/storage/emulated/0/...) fail WhisperEngine's
+     * ModelIntegrity.isInsideAllowedRoots containment check on Android 10+
+     * (SecurityException: 'Model path outside allowed storage roots'). The copy
+     * is streamed in chunks into a `.part` temp file and atomically renamed on
+     * success; enforced under ModelIntegrity.MAX_MODEL_BYTES. On any failure the
+     * preferences are left untouched and null is returned.
+     * Returns the active app-private path, or null on failure.
      */
     suspend fun importModel(
         context: Context,
@@ -243,14 +254,9 @@ object ModelDownloadHelper {
             "llm" -> Settings.PREF_VELA_LLM_MODEL_PATH
             else -> return@withContext null
         }
-        val directPath = resolveContentPath(context, uri)
-        val activePath = if (directPath != null) {
-            directPath
-        } else {
-            val destFile = getResolvedDownloadPath(context, model)
-                ?: return@withContext null
-            copyUriToFile(context, uri, destFile)?.absolutePath
-        }
+        val destFile = getResolvedDownloadPath(context, model)
+            ?: return@withContext null
+        val activePath = copyUriToWorkingCopy(context, uri, destFile)?.absolutePath
         if (activePath != null) {
             prefs.edit {
                 putString(statusKey, activePath)
@@ -383,87 +389,45 @@ object ModelDownloadHelper {
         }
     }
 
-    /** Best-effort maps a picked content/document URI to a real filesystem path. */
-    private fun resolveContentPath(context: Context, uri: Uri): String? {
-        return try {
-            val path = when {
-                uri.scheme?.equals("file", true) == true -> uri.path
-                uri.authority == "com.android.externalstorage.documents" ->
-                    resolveExternalStoragePath(uri)
-                uri.authority == "com.android.providers.downloads.documents" ->
-                    resolveDownloadsPath(context, uri)
-                uri.authority == "com.android.providers.media.documents" ->
-                    resolveMediaPath(context, uri)
-                else -> querySingleColumn(context, uri, MediaStore.MediaColumns.DATA)
-            }
-            if (path != null && File(path).isFile) path else null
-        } catch (e: Exception) {
-            android.util.Log.w("ModelDownloadHelper", "resolveContentPath failed: ${e.message}")
-            null
-        }
-    }
-
-    private fun resolveExternalStoragePath(uri: Uri): String? {
-        val docId = DocumentsContract.getDocumentId(uri)
-        val split = docId.split(":")
-        if (split.isEmpty()) return null
-        val root = split[0]
-        val rel = split.drop(1).joinToString("/")
-        val base = if (root.equals("primary", true)) {
-            Environment.getExternalStorageDirectory()
-        } else {
-            // Secondary volume (SD card), usually mounted under /storage/<root>
-            val sd = File(File.separator + "storage", root)
-            if (sd.exists()) sd else return null
-        }
-        return File(base, rel).absolutePath
-    }
-
-    private fun resolveDownloadsPath(context: Context, uri: Uri): String? {
-        // DownloadsProvider document IDs (e.g. "msf:1234") carry no filename, so use DISPLAY_NAME
-        val name = querySingleColumn(context, uri, OpenableColumns.DISPLAY_NAME)
-            ?: uri.lastPathSegment?.substringAfterLast(":")
-        if (name.isNullOrEmpty()) return null
-        val downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        return File(downloads, name).absolutePath
-    }
-
-    private fun resolveMediaPath(context: Context, uri: Uri): String? {
-        // Older devices may expose _data directly
-        val data = querySingleColumn(context, uri, MediaStore.MediaColumns.DATA)
-        if (data != null && File(data).isFile) return data
-        // API 29+: use RELATIVE_PATH + DISPLAY_NAME to reconstruct the real location
-        val relative = querySingleColumn(context, uri, MediaStore.MediaColumns.RELATIVE_PATH)
-        val name = querySingleColumn(context, uri, MediaStore.MediaColumns.DISPLAY_NAME)
-        if (relative != null && name != null) {
-            val base = Environment.getExternalStorageDirectory()
-            val candidate = File(base, relative.trimStart('/') + name)
-            if (candidate.isFile) return candidate.absolutePath
-        }
-        return null
-    }
-
-    private fun querySingleColumn(context: Context, uri: Uri, column: String): String? {
-        return try {
-            context.contentResolver.query(uri, arrayOf(column), null, null, null)?.use { cursor ->
-                if (cursor.moveToFirst()) cursor.getString(0) else null
-            }
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun copyUriToFile(context: Context, uri: Uri, destFile: File): File? {
-        return try {
+    /**
+     * Streams [uri]'s content into [destFile] via a `.part` temp file with a
+     * model-size cap (ModelIntegrity.MAX_MODEL_BYTES) and an atomic
+     * `.part` → target rename, mirroring downloadToFile's failure handling.
+     * Returns [destFile] on success, null if the provider can't be read, the
+     * file exceeds the cap, or any error occurs — never a partial working copy.
+     */
+    private fun copyUriToWorkingCopy(context: Context, uri: Uri, destFile: File): File? {
+        val partFile = File(destFile.parentFile, destFile.name + ".part")
+        try {
             destFile.parentFile?.mkdirs()
             val input = context.contentResolver.openInputStream(uri) ?: return null
-            input.use { i ->
-                FileOutputStream(destFile).use { o -> i.copyTo(o) }
+            input.use { stream ->
+                FileOutputStream(partFile).use { output ->
+                    val buffer = ByteArray(8192)
+                    var totalRead = 0L
+                    while (true) {
+                        val bytesRead = stream.read(buffer)
+                        if (bytesRead == -1) break
+                        totalRead += bytesRead
+                        if (totalRead > ModelIntegrity.MAX_MODEL_BYTES) return null
+                        output.write(buffer, 0, bytesRead)
+                    }
+                    output.flush()
+                }
             }
-            destFile
+            // Atomic rename: .part → target (falls back to copy-on-rename failures)
+            if (!partFile.renameTo(destFile)) {
+                partFile.copyTo(destFile, overwrite = true)
+            }
+            return destFile
         } catch (e: Exception) {
-            android.util.Log.w("ModelDownloadHelper", "copyUriToFile failed: ${e.message}")
-            null
+            android.util.Log.w("ModelDownloadHelper", "copyUriToWorkingCopy failed: ${e.message}")
+            return null
+        } finally {
+            // Always clean up any leftover .part file
+            if (partFile.exists()) {
+                partFile.delete()
+            }
         }
     }
 

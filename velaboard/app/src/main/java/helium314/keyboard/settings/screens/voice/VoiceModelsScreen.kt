@@ -123,7 +123,7 @@ fun VoiceModelsScreen(onClickBack: () -> Unit) {
                 if (path != null) {
                     whisperPath = path
                     whisperStatus = "completed"
-                    whisperNote = "Imported - points at the selected file"
+                    whisperNote = "Imported - private working copy saved"
                 } else {
                     whisperStatus = "failed"
                     whisperNote = "Import failed"
@@ -141,7 +141,7 @@ fun VoiceModelsScreen(onClickBack: () -> Unit) {
                 if (path != null) {
                     llmPath = path
                     llmStatus = "completed"
-                    llmNote = "Imported - points at the selected file"
+                    llmNote = "Imported - private working copy saved"
                 } else {
                     llmStatus = "failed"
                     llmNote = "Import failed"
