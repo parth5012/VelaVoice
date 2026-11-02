@@ -74,11 +74,18 @@ class BackendProxyDriveSyncTest {
     }
 
     @Test
-    fun zeroOAuthMaterialInPrefs() {
+    fun legacyOAuthPreferencesAreIgnored() {
         val p = prefs()
-        // Ensure no legacy OAuth preference keys are referenced or required
-        assertFalse(p.contains("drive_client_secret"))
-        assertFalse(p.contains("drive_refresh_token"))
+        p.edit {
+            putString("drive_client_id", "stale-client-id")
+            putString("drive_client_secret", "stale-client-secret")
+            putString("drive_refresh_token", "stale-refresh-token")
+        }
+
+        // Even with legacy OAuth keys present, GoogleDriveSync uses backend proxy architecture
+        assertEquals("https://cron.velavoice.internal/save-recommendation", GoogleDriveSync.getEndpoint(p))
+        assertEquals("vela-static-app-key-bearer", GoogleDriveSync.getAppKey(p))
+        assertTrue(GoogleDriveSync.isConfigured(p))
     }
 
     @Test

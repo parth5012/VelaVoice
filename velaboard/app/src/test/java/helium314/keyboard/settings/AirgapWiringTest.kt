@@ -42,7 +42,7 @@ class AirgapWiringTest {
             ApplicationProvider.getApplicationContext(), prefs())
         assertTrue(!result.message.contains("refused"),
             "when airgap is off, sync is not refused by airgap gate, got: ${result.message}")
-        assertTrue(result.message.contains("No new transcriptions to sync") || result.uploaded >= 0,
+        assertTrue(result.message.contains("No new transcriptions to sync"),
             "reaches storage scan without airgap refusal, got: ${result.message}")
     }
 
