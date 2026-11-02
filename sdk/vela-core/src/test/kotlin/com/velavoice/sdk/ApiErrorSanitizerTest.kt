@@ -38,6 +38,16 @@ class ApiErrorSanitizerTest {
     }
 
     @Test
+    fun `rejects unicode separators and format controls`() {
+        val dirty = "Error\u2028Line\u202Ereversed"
+        val sanitized = sanitizeApiErrorBody(dirty)
+
+        assertTrue("Line separator \\u2028 must be collapsed to space", !sanitized.contains('\u2028'))
+        assertTrue("Format control \\u202E must be stripped", !sanitized.contains('\u202E'))
+        assertEquals("Error Linereversed", sanitized)
+    }
+
+    @Test
     fun `handles null or blank error body`() {
         assertEquals("Unknown error", sanitizeApiErrorBody(null))
         assertEquals("Unknown error", sanitizeApiErrorBody(""))
