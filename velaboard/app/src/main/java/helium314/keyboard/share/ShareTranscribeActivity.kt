@@ -143,14 +143,20 @@ class ShareTranscribeActivity : ComponentActivity() {
     }
 
     private fun save(text: String) {
-        TranscriptionStorage.save(
-            context = this,
-            raw = text,
-            cleaned = text,
-            durationMs = 0L,
-            audioBytes = null,
-            privacySensitive = false
-        )
+        // Locked map #212 contract (F18 follow-up): persist on the dedicated
+        // single-threaded persistence executor instead of inline on the main
+        // thread, like the IME call sites do (fire-and-forget; failures are
+        // contained by the executor's catch).
+        TranscriptionStorage.persistAsync {
+            TranscriptionStorage.save(
+                context = this,
+                raw = text,
+                cleaned = text,
+                durationMs = 0L,
+                audioBytes = null,
+                privacySensitive = false
+            )
+        }
     }
 
     private fun decodeToPcm(context: Context, uri: Uri): ByteArray {
