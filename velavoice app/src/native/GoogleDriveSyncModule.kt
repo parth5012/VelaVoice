@@ -273,7 +273,8 @@ class GoogleDriveSyncModule(reactContext: ReactApplicationContext) :
                 val errorReader = conn.errorStream?.bufferedReader(Charsets.UTF_8)
                 val errorMsg = errorReader?.readText() ?: "HTTP $responseCode"
                 errorReader?.close()
-                android.util.Log.e("GoogleDriveSync", "Backend proxy upload failed: $errorMsg")
+                val sanitizedMsg = com.velavoice.sdk.sanitizeApiErrorBody(errorMsg)
+                android.util.Log.e("GoogleDriveSync", "Backend proxy upload failed: $sanitizedMsg")
                 false
             }
         } catch (e: Exception) {

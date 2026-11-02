@@ -179,7 +179,8 @@ object GoogleDriveSync {
                 val errorReader = conn.errorStream?.bufferedReader(Charsets.UTF_8)
                 val errorMsg = errorReader?.readText() ?: "HTTP $responseCode"
                 errorReader?.close()
-                android.util.Log.e(TAG, "Backend proxy upload failed for ${file.name}: $errorMsg")
+                val sanitizedMsg = com.velavoice.sdk.sanitizeApiErrorBody(errorMsg)
+                android.util.Log.e(TAG, "Backend proxy upload failed for ${file.name}: $sanitizedMsg")
                 false
             }
         } catch (e: Exception) {

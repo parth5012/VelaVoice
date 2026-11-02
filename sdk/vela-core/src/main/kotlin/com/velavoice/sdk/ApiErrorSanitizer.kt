@@ -18,18 +18,21 @@ fun sanitizeApiErrorBody(raw: String?, maxLength: Int = MAX_API_ERROR_LENGTH): S
 
     for (c in raw) {
         if (sb.length >= cap) break
-        // Check if character is printable:
-        // Printable ASCII is 0x20 (' ') through 0x7E ('~').
-        // Non-ASCII Unicode characters above 0x7F are allowed if not ISO control characters.
-        if (c in ' '..'~' || (c > '\u007F' && !Character.isISOControl(c))) {
-            sb.append(c)
-            lastWasSpace = (c == ' ')
-        } else if (Character.isISOControl(c) || Character.isWhitespace(c)) {
-            // Collapse whitespace/newlines/control characters to a single space if not already trailing space
+        // 1. Whitespace and line/paragraph separators (e.g. \u2028, \u2029) collapse to space
+        if (Character.isWhitespace(c) || Character.isSpaceChar(c)) {
             if (!lastWasSpace && sb.isNotEmpty()) {
                 sb.append(' ')
                 lastWasSpace = true
             }
+        }
+        // 2. Reject ISO control characters and Unicode format controls (e.g. \u202E bidirectional override)
+        else if (Character.isISOControl(c) || Character.getType(c) == Character.FORMAT.toInt()) {
+            // Drop control/format character
+        }
+        // 3. Accept printable ASCII (' '..'~') and printable Unicode
+        else if (c in ' '..'~' || c > '\u007F') {
+            sb.append(c)
+            lastWasSpace = false
         }
     }
 
