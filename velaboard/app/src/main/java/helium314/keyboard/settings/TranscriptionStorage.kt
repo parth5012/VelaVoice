@@ -6,10 +6,11 @@ import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Auto-saves transcription (raw, cleaned) text pairs and their audio recordings
@@ -25,6 +26,11 @@ import java.util.concurrent.Executors
  *   YYYY-MM-DD_HH-mm-ss_<ts>.json   — text pair (raw + cleaned + verdict)
  *   YYYY-MM-DD_HH-mm-ss_<ts>.wav    — 16-bit 16 kHz mono WAV recording (optional)
  *   YYYY-MM-DD_HH-mm-ss_<ts>.json.synced — sidecar sync marker (shared dir only)
+ *
+ * The `_ts` suffix is a monotonic epoch-microseconds ordering key (unique per
+ * save, see [TranscriptionStorage.orderKeyMicros]) — not a user-visible
+ * timestamp; the truthful UTC stamp is the JSON `createdAt` field (map #212
+ * ticket #240).
  */
 object TranscriptionStorage {
 
@@ -35,8 +41,39 @@ object TranscriptionStorage {
     private const val BITS_PER_SAMPLE = 16
     private const val NUM_CHANNELS = 1
 
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US)
-    private val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+    // Locked timestamp contract (map #212 ticket #240, finding F18): persisted
+    // transcript timestamps are true UTC. java.time formatters are immutable,
+    // so static formatters are thread-safe for concurrent saves — the old
+    // shared mutable SimpleDateFormat pair could corrupt or throw under
+    // concurrent format(), and isoFormat hardcoded 'Z' while never setting a
+    // UTC zone, writing local wall-clock time as if it were UTC. The trailing
+    // 'Z' is now truthful; the local clock is a read/display-time concern
+    // only. Records written before this fix stay as-is (approximate) — no
+    // migration.
+    private val fileStampFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
+        .withZone(ZoneOffset.UTC)
+    private val isoFormat: DateTimeFormatter = DateTimeFormatter.ISO_INSTANT
+
+    /**
+     * Monotonic uniqueness clamp on the persisted ordering key (map #212
+     * ticket #240): parallel callers can issue saves faster than the
+     * millisecond wall clock advances, and two saves whose base names
+     * collide would silently overwrite each other's transcript file. The
+     * ordering key is epoch-microseconds taken from the [Instant], re-issued
+     * strictly greater than the last issued one whenever the clock repeats.
+     * This sub-millisecond component exists for file-name uniqueness/order
+     * only — the persisted `createdAt` value stays the truthful ISO_INSTANT
+     * stamp with no precision invention.
+     */
+    private val lastIssuedOrderKey = AtomicLong()
+    private fun orderKeyMicros(now: Instant): Long {
+        var candidate = now.toEpochMilli() * 1000 + now.nano / 1000
+        while (true) {
+            val last = lastIssuedOrderKey.get()
+            if (candidate <= last) candidate = last + 1
+            if (lastIssuedOrderKey.compareAndSet(last, candidate)) return candidate
+        }
+    }
 
     /**
      * Dedicated single-thread executor for encode/write work (map #97 ticket
@@ -113,8 +150,8 @@ object TranscriptionStorage {
             val dir = getTranscriptionsDir(context)
             if (!dir.exists()) dir.mkdirs()
 
-            val now = Date()
-            val baseName = "${dateFormat.format(now)}_${now.time}"
+            val now = Instant.now()
+            val baseName = "${fileStampFormat.format(now)}_${orderKeyMicros(now)}"
 
             // Save audio WAV if provided
             if (audioBytes != null) {
@@ -161,8 +198,8 @@ object TranscriptionStorage {
             val dir = getQuarantineDir(context)
             if (!dir.exists()) dir.mkdirs()
 
-            val now = Date()
-            val baseName = "${dateFormat.format(now)}_${now.time}"
+            val now = Instant.now()
+            val baseName = "${fileStampFormat.format(now)}_${orderKeyMicros(now)}"
 
             if (audioBytes != null) {
                 saveWav(File(dir, "$baseName.wav"), audioBytes)
