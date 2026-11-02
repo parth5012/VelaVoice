@@ -67,7 +67,7 @@ object TranscriptionStorage {
      */
     private val lastIssuedOrderKey = AtomicLong()
     private fun orderKeyMicros(now: Instant): Long {
-        var candidate = now.toEpochMilli() * 1000 + now.nano / 1000
+        var candidate = now.epochSecond * 1_000_000L + now.nano / 1000
         while (true) {
             val last = lastIssuedOrderKey.get()
             if (candidate <= last) candidate = last + 1

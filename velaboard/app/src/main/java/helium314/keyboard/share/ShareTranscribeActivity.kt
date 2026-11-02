@@ -147,9 +147,10 @@ class ShareTranscribeActivity : ComponentActivity() {
         // single-threaded persistence executor instead of inline on the main
         // thread, like the IME call sites do (fire-and-forget; failures are
         // contained by the executor's catch).
+        val appContext = applicationContext
         TranscriptionStorage.persistAsync {
             TranscriptionStorage.save(
-                context = this,
+                context = appContext,
                 raw = text,
                 cleaned = text,
                 durationMs = 0L,
