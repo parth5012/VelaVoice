@@ -52,6 +52,7 @@ import com.velavoice.sdk.sanitizeForInsertion
 import com.velavoice.sdk.shouldCommitTranscript
 import com.velavoice.sdk.shouldInsertIntoTarget
 import com.velavoice.sdk.performWithClipboardRestore
+import com.velavoice.sdk.sanitizeApiErrorBody
 import com.velavoice.sdk.AudioRecorder
 import com.velavoice.sdk.AmplitudeCoalescer
 
@@ -1179,9 +1180,10 @@ class VoiceAccessibilityService : AccessibilityService() {
             return json.optString("text", "")
         } else {
             val errorReader = conn.errorStream?.bufferedReader()
-            val errorMsg = errorReader?.readText() ?: "Unknown error"
+            val rawError = errorReader?.readText() ?: "Unknown error"
             errorReader?.close()
-            throw Exception("API Error $responseCode: $errorMsg")
+            val sanitized = sanitizeApiErrorBody(rawError)
+            throw Exception("API Error $responseCode: $sanitized")
         }
     }
 
