@@ -80,9 +80,6 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_VELA_SCRIBE_CONTEXT_FALLBACK = "vela_scribe_context_fallback";
     public static final String PREF_VELA_SCRIBE_APP_PREFIX = "vela_scribe_app_";
     public static final String PREF_VELA_AIRGAP = "airgap_killswitch";
-    public static final String PREF_DRIVE_CLIENT_ID = "drive_client_id";
-    public static final String PREF_DRIVE_CLIENT_SECRET = "drive_client_secret";
-    public static final String PREF_DRIVE_REFRESH_TOKEN = "drive_refresh_token";
     public static final String PREF_DRIVE_LAST_SYNC_TIME = "drive_last_sync_time";
     public static final String PREF_DRIVE_UNSYNCED_COUNT = "drive_unsynced_count";
     public static final String PREF_ICON_STYLE = "icon_style";
