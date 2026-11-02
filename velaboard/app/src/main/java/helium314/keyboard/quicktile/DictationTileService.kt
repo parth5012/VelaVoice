@@ -97,17 +97,20 @@ class DictationTileService : TileService() {
         t.startRecording(object : VelaRecordingCallback {
             override fun onAmplitude(normalized: Float) {}
             override fun onResult(result: TranscriptionResult) {
-                Companion.activeSession?.release()
-                Companion.activeSession = null
-                val text = result.cleanedTranscript.ifBlank { result.rawTranscript }
-                copyToClipboard(appContext, text)
-                toast(appContext, "Copied to clipboard")
+                handleResult(
+                    session = t,
+                    result = result,
+                    onCopy = { copyToClipboard(appContext, it) },
+                    onToast = { toast(appContext, it) }
+                )
                 refreshTile()
             }
             override fun onError(error: VelaException) {
-                Companion.activeSession?.release()
-                Companion.activeSession = null
-                toast(appContext, error.message ?: "Error")
+                handleError(
+                    session = t,
+                    error = error,
+                    onToast = { toast(appContext, it) }
+                )
                 refreshTile()
             }
             override fun onDurationLimitReached() {
@@ -120,9 +123,17 @@ class DictationTileService : TileService() {
                 // duration-limit handler-hop in VoiceInputMethodService).
                 handler.post {
                     try {
-                        activeSession?.stopRecording()
+                        synchronized(Companion) {
+                            if (activeSession === t) {
+                                t.stopRecording()
+                            }
+                        }
                     } catch (e: Throwable) {
-                        Companion.activeSession = null
+                        synchronized(Companion) {
+                            if (Companion.activeSession === t) {
+                                Companion.activeSession = null
+                            }
+                        }
                         toast(applicationContext, "Dictation session lost: ${e.message ?: e.javaClass.simpleName}")
                         refreshTile()
                     }
@@ -165,6 +176,43 @@ class DictationTileService : TileService() {
 
     companion object {
         @Volatile
-        private var activeSession: VelaTranscriber? = null
+        var activeSession: VelaTranscriber? = null
+            internal set
+
+        internal fun handleResult(
+            session: VelaTranscriber,
+            result: TranscriptionResult,
+            onCopy: (String) -> Unit,
+            onToast: (String) -> Unit
+        ) {
+            synchronized(this) {
+                if (activeSession === session) {
+                    activeSession = null
+                }
+            }
+            session.release()
+            val text = result.cleanedTranscript.ifBlank { result.rawTranscript }
+            if (text.isNotBlank()) {
+                onCopy(text)
+                onToast("Copied to clipboard")
+            }
+        }
+
+        internal fun handleError(
+            session: VelaTranscriber,
+            error: VelaException,
+            onToast: (String) -> Unit
+        ) {
+            synchronized(this) {
+                if (activeSession === session) {
+                    activeSession = null
+                }
+            }
+            session.release()
+            val msg = error.message ?: "Error"
+            if (msg.isNotBlank()) {
+                onToast(msg)
+            }
+        }
     }
 }
