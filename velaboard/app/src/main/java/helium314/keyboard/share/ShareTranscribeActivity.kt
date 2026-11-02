@@ -23,9 +23,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.velavoice.sdk.VelaTranscriber
-import helium314.keyboard.latin.settings.Defaults
-import helium314.keyboard.latin.settings.Settings
-import helium314.keyboard.settings.ModelDownloadHelper
 import helium314.keyboard.settings.TranscriptionStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -33,7 +30,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 
 class ShareTranscribeActivity : ComponentActivity() {
 
@@ -106,14 +102,7 @@ class ShareTranscribeActivity : ComponentActivity() {
         scope.cancel()
     }
 
-    private fun resolveModelPath(): String? {
-        val prefs = getSharedPreferences("vela", Context.MODE_PRIVATE)
-        val shared = ModelDownloadHelper.getSharedModelPath(this, "whisper")
-        if (shared != null) return shared
-        val legacy = prefs.getString(Settings.PREF_VELA_MODEL_PATH, Defaults.PREF_VELA_MODEL_PATH)
-        if (!legacy.isNullOrBlank() && File(legacy).exists()) return legacy
-        return null
-    }
+    private fun resolveModelPath() = ShareModelResolver.resolve(this)
 
     private fun transcribe(modelPath: String, pcm: ByteArray): String {
         val transcriber = VelaTranscriber.Builder(this)
@@ -160,10 +149,10 @@ class ShareTranscribeActivity : ComponentActivity() {
         }
     }
 
-    private fun decodeToPcm(context: Context, uri: Uri): ByteArray {
-        val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: ByteArray(0)
-        return bytes
-    }
+    private fun decodeToPcm(context: Context, uri: Uri): ByteArray =
+        // F16: real decode to 16 kHz mono 16-bit PCM — whisper must not receive
+        // RIFF headers, MP3/M4A container bytes or 44.1 kHz stereo samples.
+        ShareAudioDecoder.decodeTo16kMono(context, uri)
 
     companion object {
         fun extractSharedUri(intent: Intent?): Uri? {
