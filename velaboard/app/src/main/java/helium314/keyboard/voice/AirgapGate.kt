@@ -33,9 +33,9 @@ object AirgapGate {
     /** Pure: true when airgap is enabled. */
     fun isAirgapped(airgapEnabled: Boolean): Boolean = airgapEnabled
 
-    /** Android adapter: read the pref from SharedPreferences. */
+    /** Android adapter: read the pref from SharedPreferences (delegates to canonical vela-core AirgapGate). */
     fun isAirgapped(prefs: SharedPreferences): Boolean =
-        prefs.getBoolean(Settings.PREF_VELA_AIRGAP, Defaults.PREF_VELA_AIRGAP)
+        com.velavoice.sdk.AirgapGate.isAirgapped(prefs)
 
     /**
      * Pure: returns success when network is allowed, failure (with [MESSAGE])

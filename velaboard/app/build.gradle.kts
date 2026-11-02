@@ -60,10 +60,6 @@ android {
         versionCode = 4008
         versionName = "4.3"
 
-        // Inject Google Drive credentials from .env into BuildConfig
-        buildConfigField("String", "GOOGLE_DRIVE_CLIENT_ID", escapeBuildConfig(envConfig["GOOGLE_CLIENT_ID"] ?: ""))
-        buildConfigField("String", "GOOGLE_DRIVE_CLIENT_SECRET", escapeBuildConfig(envConfig["GOOGLE_CLIENT_SECRET"] ?: ""))
-        buildConfigField("String", "GOOGLE_DRIVE_REFRESH_TOKEN", escapeBuildConfig(envConfig["GOOGLE_REFRESH_TOKEN"] ?: ""))
         ndk {
             abiFilters.clear()
             abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))

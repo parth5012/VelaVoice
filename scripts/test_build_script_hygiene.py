@@ -64,16 +64,14 @@ def run_tests():
     has_escaping_func = "escapeBuildConfig" in gradle_content or "escapeJavaString" in gradle_content
     check(has_escaping_func, "Escaping helper function defined for BuildConfig fields")
 
-    # Check for unescaped direct interpolation pattern: buildConfigField(..., "\"${envConfig[...] ?: ""}\"")
-    unescaped_pattern = re.search(r'buildConfigField\([^,]+,\s*"GOOGLE_DRIVE_[^"]+",\s*"\\"\$\{[^}]+\}\\""\)', gradle_content)
-    check(unescaped_pattern is None, "No raw unescaped string interpolation in GOOGLE_DRIVE_* buildConfigField")
+    # 4. BuildConfig field security (F08, ticket #255: zero OAuth material in app)
+    # Check that no GOOGLE_DRIVE_* secrets remain in buildConfigField
+    has_google_drive_fields = re.search(r'buildConfigField\([^,]+,\s*"GOOGLE_DRIVE_', gradle_content) is not None
+    check(not has_google_drive_fields, "No GOOGLE_DRIVE_* secrets in buildConfigField (F08 zero OAuth material)")
 
-    # Check that GOOGLE_DRIVE fields use the escaping helper
-    uses_escape_for_client_id = re.search(r'buildConfigField\([^,]+,\s*"GOOGLE_DRIVE_CLIENT_ID",\s*(escapeBuildConfig|escapeJavaString)\(', gradle_content) is not None
-    uses_escape_for_client_sec = re.search(r'buildConfigField\([^,]+,\s*"GOOGLE_DRIVE_CLIENT_SECRET",\s*(escapeBuildConfig|escapeJavaString)\(', gradle_content) is not None
-    uses_escape_for_refresh_tok = re.search(r'buildConfigField\([^,]+,\s*"GOOGLE_DRIVE_REFRESH_TOKEN",\s*(escapeBuildConfig|escapeJavaString)\(', gradle_content) is not None
-    check(uses_escape_for_client_id and uses_escape_for_client_sec and uses_escape_for_refresh_tok,
-          "All GOOGLE_DRIVE BuildConfig fields use escaping and quote-stripping helper")
+    # Check for unescaped direct interpolation pattern if buildConfigField is used: buildConfigField(..., "\"${envConfig[...] ?: ""}\"")
+    unescaped_pattern = re.search(r'buildConfigField\([^,]+,\s*"[^"]+",\s*"\\"\$\{[^}]+\}\\""\)', gradle_content)
+    check(unescaped_pattern is None, "No raw unescaped string interpolation in buildConfigField")
 
     # Check that quote stripping is performed (removeSurrounding)
     has_quote_stripping = "removeSurrounding" in gradle_content

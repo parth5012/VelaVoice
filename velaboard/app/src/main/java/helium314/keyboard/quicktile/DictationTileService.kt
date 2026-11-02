@@ -123,11 +123,10 @@ class DictationTileService : TileService() {
                 // duration-limit handler-hop in VoiceInputMethodService).
                 handler.post {
                     try {
-                        synchronized(Companion) {
-                            if (activeSession === t) {
-                                t.stopRecording()
-                            }
+                        val sessionToStop = synchronized(Companion) {
+                            if (activeSession === t) t else null
                         }
+                        sessionToStop?.stopRecording()
                     } catch (e: Throwable) {
                         synchronized(Companion) {
                             if (Companion.activeSession === t) {

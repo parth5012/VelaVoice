@@ -8,26 +8,28 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import com.velavoice.sdk.AirgapGate
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.BufferedReader
 import java.io.File
-import java.io.InputStreamReader
-import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 
 /**
  * React Native native bridge module for Google Drive synchronization.
  *
- * Architecture:
- * - Credentials (client ID, secret, refresh token) are stored in SharedPreferences,
- *   written from the React Native side (which reads them from .env).
- * - OAuth2 refresh token flow obtains short-lived access tokens.
- * - Google Drive REST API v3 is called directly (no Play Services dependency).
+ * Architecture (Finding F08, map #211 tickets #233/#235/#255):
+ * - Backend-proxy mediated Drive sync: zero OAuth material on device.
+ * - Enforces fail-closed AirgapGate contract.
+ * - Calls authenticated POST /save-recommendation endpoint with static embedded app key.
  */
 class GoogleDriveSyncModule(reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
+
+    companion object {
+        const val DEFAULT_BACKEND_ENDPOINT = "https://cron.velavoice.internal/save-recommendation"
+        const val STATIC_APP_KEY = "vela-static-app-key-bearer"
+    }
 
     private val prefs: SharedPreferences
         get() = reactApplicationContext.getSharedPreferences(
@@ -38,43 +40,24 @@ class GoogleDriveSyncModule(reactContext: ReactApplicationContext) :
     override fun getName(): String = "GoogleDriveSync"
 
     // ──────────────────────────────────────────────
-    // Preferences: credentials are set from JS side
+    // Preferences: credentials management
     // ──────────────────────────────────────────────
 
     @ReactMethod
     fun setDriveCredentials(clientId: String, clientSecret: String, refreshToken: String, promise: Promise) {
-        try {
-            prefs.edit()
-                .putString("drive_client_id", clientId)
-                .putString("drive_client_secret", clientSecret)
-                .putString("drive_refresh_token", refreshToken)
-                .apply()
-            promise.resolve(true)
-        } catch (e: Exception) {
-            promise.reject("CRED_SAVE_ERROR", e.message)
-        }
+        // Zero OAuth material on device (F08, ticket #255)
+        promise.resolve(true)
     }
 
     @ReactMethod
     fun hasDriveCredentials(promise: Promise) {
-        val has = !prefs.getString("drive_client_id", "").isNullOrBlank() &&
-                !prefs.getString("drive_client_secret", "").isNullOrBlank() &&
-                !prefs.getString("drive_refresh_token", "").isNullOrBlank()
-        promise.resolve(has)
+        // Built-in backend proxy is configured
+        promise.resolve(true)
     }
 
     @ReactMethod
     fun clearDriveCredentials(promise: Promise) {
-        try {
-            prefs.edit()
-                .remove("drive_client_id")
-                .remove("drive_client_secret")
-                .remove("drive_refresh_token")
-                .apply()
-            promise.resolve(true)
-        } catch (e: Exception) {
-            promise.reject("CRED_CLEAR_ERROR", e.message)
-        }
+        promise.resolve(true)
     }
 
     // ──────────────────────────────────────────────
@@ -102,26 +85,19 @@ class GoogleDriveSyncModule(reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun getTotalCount(promise: Promise) = getTotalTranscriptionCount(promise)
+
+    @ReactMethod
     fun getRecentTranscriptions(limit: Int, promise: Promise) {
         try {
             val context = reactApplicationContext
             val jsonArray = JSONArray()
-            // Shared dir first (newest first), then quarantined sessions as
-            // visible local-only entries (map #130 ticket #136): quarantined
-            // items carry isQuarantined=true + isSynced=false so the library
-            // renders an explicit local-only badge instead of hiding them
-            // (hiding would look like data loss). This read path never affects
-            // sync — uploads still go through getUnsyncedFiles only.
             val sharedDir = File(context.filesDir, "transcriptions")
             val sharedFiles = if (sharedDir.exists()) {
                 sharedDir.listFiles()?.filter { it.isFile && it.extension == "json" } ?: emptyList()
             } else {
                 emptyList()
             }
-            // Merge shared + quarantined, sort desc by name/date, take the
-            // limit slice (ticket #136 fix): quarantined sessions stay visible
-            // local-only entries instead of being starved whenever the shared
-            // page alone fills the limit.
             val merged = (sharedFiles.map { it to false } +
                     TranscriptionStorage.getQuarantinedFiles(context).map { it to true })
                 .sortedByDescending { (file, _) -> file.name }
@@ -135,7 +111,11 @@ class GoogleDriveSyncModule(reactContext: ReactApplicationContext) :
         }
     }
 
-    private fun putTranscriptionJson(jsonArray: JSONArray, file: File, isQuarantined: Boolean) {
+    private fun putTranscriptionJson(
+        jsonArray: JSONArray,
+        file: File,
+        isQuarantined: Boolean
+    ) {
         val pair = TranscriptionStorage.readTranscriptionFile(file) ?: return
         val jsonObj = JSONObject()
         jsonObj.put("fileName", pair.fileName)
@@ -157,7 +137,7 @@ class GoogleDriveSyncModule(reactContext: ReactApplicationContext) :
     }
 
     // ──────────────────────────────────────────────
-    // Sync: upload all unsynced transcriptions to Drive
+    // Sync: upload all unsynced transcriptions to backend proxy
     //
     // Belt-and-braces (map #130 ticket #135): the scanner is scoped to the
     // shared dir and already filters verdicts, and each file is re-verified
@@ -171,30 +151,17 @@ class GoogleDriveSyncModule(reactContext: ReactApplicationContext) :
     fun syncToDrive(promise: Promise) {
         Thread({
             try {
-                val clientId = prefs.getString("drive_client_id", "")
-                val clientSecret = prefs.getString("drive_client_secret", "")
-                val refreshToken = prefs.getString("drive_refresh_token", "")
-
-                if (clientId.isNullOrBlank() || clientSecret.isNullOrBlank() || refreshToken.isNullOrBlank()) {
-                    mainHandler.post { promise.reject("NO_CREDENTIALS", "Google Drive credentials not configured. Set them in Settings first.") }
+                // Airgap gate (tickets #233, #255): Fail closed if airgap is active
+                if (AirgapGate.isAirgapped(reactApplicationContext)) {
+                    mainHandler.post { promise.reject("AIRGAP_ON", AirgapGate.MESSAGE) }
                     return@Thread
                 }
 
-                // 1. Exchange refresh token for access token
-                val accessToken = getAccessToken(clientId, clientSecret, refreshToken)
-                if (accessToken == null) {
-                    mainHandler.post { promise.reject("AUTH_FAILED", "Failed to obtain Google Drive access token. The refresh token may be expired.") }
-                    return@Thread
-                }
+                val endpoint = prefs.getString("drive_backend_endpoint", DEFAULT_BACKEND_ENDPOINT)
+                    ?: DEFAULT_BACKEND_ENDPOINT
+                val appKey = prefs.getString("drive_app_key", STATIC_APP_KEY)
+                    ?: STATIC_APP_KEY
 
-                // 2. Find or create the "Vela Voice Transcriptions" folder
-                val folderId = getOrCreateFolder(accessToken, "Vela Voice Transcriptions")
-                if (folderId == null) {
-                    mainHandler.post { promise.reject("FOLDER_ERROR", "Failed to create or find Drive folder.") }
-                    return@Thread
-                }
-
-                // 3. Upload all unsynced files
                 val unsyncedFiles = TranscriptionStorage.getUnsyncedFiles(reactApplicationContext)
                 if (unsyncedFiles.isEmpty()) {
                     mainHandler.post { promise.resolve("No new transcriptions to sync.") }
@@ -207,35 +174,34 @@ class GoogleDriveSyncModule(reactContext: ReactApplicationContext) :
                 val results = JSONArray()
 
                 for (file in unsyncedFiles) {
-                    // Pre-upload re-verify (TOCTOU guard): the verdict is re-read
-                    // at upload time; anything but an explicit non-sensitive
-                    // verdict is skipped fail-closed — never uploaded, never
-                    // marked synced.
                     if (!TranscriptionStorage.isUploadable(file)) {
                         skipped++
-                        results.put(JSONObject().apply {
-                            put("fileName", file.name)
-                            put("status", "skipped")
-                        })
                         continue
                     }
                     try {
                         val pair = TranscriptionStorage.readTranscriptionFile(file)
                         if (pair != null) {
-                            uploadTextTranscription(accessToken, folderId, file, pair)
-                            // Upload matching audio if present
-                            if (pair.audioFileName != null) {
-                                val audioFile = TranscriptionStorage.getAudioFile(reactApplicationContext, file.name)
-                                if (audioFile != null) {
-                                    uploadAudioFile(accessToken, folderId, audioFile)
-                                }
+                            val audioFile = if (pair.audioFileName != null) {
+                                TranscriptionStorage.getAudioFile(reactApplicationContext, file.name)
+                            } else null
+                            val audioBytes = audioFile?.takeIf { it.exists() }?.readBytes()
+
+                            val success = uploadToBackendProxy(endpoint, appKey, file, pair, audioBytes)
+                            if (success) {
+                                TranscriptionStorage.markSynced(file)
+                                uploaded++
+                                results.put(JSONObject().apply {
+                                    put("fileName", file.name)
+                                    put("status", "uploaded")
+                                })
+                            } else {
+                                failed++
+                                results.put(JSONObject().apply {
+                                    put("fileName", file.name)
+                                    put("status", "failed")
+                                    put("error", "Backend proxy upload failed")
+                                })
                             }
-                            TranscriptionStorage.markSynced(file)
-                            uploaded++
-                            results.put(JSONObject().apply {
-                                put("fileName", file.name)
-                                put("status", "uploaded")
-                            })
                         }
                     } catch (e: Exception) {
                         android.util.Log.e("GoogleDriveSync", "Failed to upload ${file.name}", e)
@@ -267,295 +233,51 @@ class GoogleDriveSyncModule(reactContext: ReactApplicationContext) :
         }).start()
     }
 
-    // ──────────────────────────────────────────────
-    // OAuth2: refresh token → access token
-    // ──────────────────────────────────────────────
-
-    private fun getAccessToken(clientId: String, clientSecret: String, refreshToken: String): String? {
+    private fun uploadToBackendProxy(
+        endpointUrl: String,
+        bearerToken: String,
+        file: File,
+        pair: TranscriptionPair,
+        audioBytes: ByteArray?
+    ): Boolean {
         return try {
-            val url = URL("https://oauth2.googleapis.com/token")
+            val url = URL(endpointUrl)
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "POST"
             conn.doOutput = true
-            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+            conn.setRequestProperty("Authorization", "Bearer $bearerToken")
+            conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8")
             conn.connectTimeout = 15000
             conn.readTimeout = 15000
 
-            val body = "grant_type=refresh_token" +
-                    "&client_id=${java.net.URLEncoder.encode(clientId, "UTF-8")}" +
-                    "&client_secret=${java.net.URLEncoder.encode(clientSecret, "UTF-8")}" +
-                    "&refresh_token=${java.net.URLEncoder.encode(refreshToken, "UTF-8")}"
-
-            conn.outputStream.use { os ->
-                os.write(body.toByteArray(Charsets.UTF_8))
-            }
-
-            val responseCode = conn.responseCode
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                val reader = BufferedReader(InputStreamReader(conn.inputStream, Charsets.UTF_8))
-                val response = reader.readText()
-                reader.close()
-                val json = JSONObject(response)
-                json.optString("access_token", null)
-            } else {
-                val errorReader = conn.errorStream?.bufferedReader(Charsets.UTF_8)
-                val errorMsg = errorReader?.readText() ?: "HTTP $responseCode"
-                errorReader?.close()
-                android.util.Log.e("GoogleDriveSync", "Token refresh failed: $errorMsg")
-                null
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("GoogleDriveSync", "Token refresh error", e)
-            null
-        }
-    }
-
-    // ──────────────────────────────────────────────
-    // Drive API: folder management
-    // ──────────────────────────────────────────────
-
-    /**
-     * Find an existing folder by name, or create a new one.
-     * Returns the folder ID, or null on failure.
-     */
-    private fun getOrCreateFolder(accessToken: String, folderName: String): String? {
-        // Search for existing folder
-        val query = java.net.URLEncoder.encode(
-            "name='$folderName' and mimeType='application/vnd.google-apps.folder' and trashed=false",
-            "UTF-8"
-        )
-        val searchUrl = URL("https://www.googleapis.com/drive/v3/files?q=$query&fields=files(id,name)")
-        val searchConn = searchUrl.openConnection() as HttpURLConnection
-        searchConn.requestMethod = "GET"
-        searchConn.setRequestProperty("Authorization", "Bearer $accessToken")
-        searchConn.connectTimeout = 10000
-        searchConn.readTimeout = 10000
-
-        return try {
-            val searchCode = searchConn.responseCode
-            if (searchCode == HttpURLConnection.HTTP_OK) {
-                val reader = BufferedReader(InputStreamReader(searchConn.inputStream, Charsets.UTF_8))
-                val response = reader.readText()
-                reader.close()
-                val json = JSONObject(response)
-                val files = json.optJSONArray("files")
-                if (files != null && files.length() > 0) {
-                    // Folder already exists
-                    files.getJSONObject(0).optString("id", null)
-                } else {
-                    // Create new folder
-                    createDriveFolder(accessToken, folderName)
+            val payload = JSONObject().apply {
+                put("fileName", file.name)
+                put("createdAt", pair.createdAt)
+                put("durationMs", pair.durationMs)
+                put("raw", pair.raw)
+                put("cleaned", pair.cleaned)
+                if (audioBytes != null && audioBytes.isNotEmpty()) {
+                    put("audioBase64", android.util.Base64.encodeToString(audioBytes, android.util.Base64.NO_WRAP))
                 }
-            } else {
-                android.util.Log.e("GoogleDriveSync", "Folder search failed: HTTP $searchCode")
-                null
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("GoogleDriveSync", "Folder search error", e)
-            null
-        } finally {
-            searchConn.disconnect()
-        }
-    }
-
-    private fun createDriveFolder(accessToken: String, folderName: String): String? {
-        return try {
-            val url = URL("https://www.googleapis.com/drive/v3/files")
-            val conn = url.openConnection() as HttpURLConnection
-            conn.requestMethod = "POST"
-            conn.doOutput = true
-            conn.setRequestProperty("Authorization", "Bearer $accessToken")
-            conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8")
-            conn.connectTimeout = 10000
-            conn.readTimeout = 10000
-
-            val metadata = JSONObject().apply {
-                put("name", folderName)
-                put("mimeType", "application/vnd.google-apps.folder")
             }
 
             conn.outputStream.use { os ->
-                os.write(metadata.toString().toByteArray(Charsets.UTF_8))
+                os.write(payload.toString().toByteArray(Charsets.UTF_8))
             }
 
             val responseCode = conn.responseCode
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                val reader = BufferedReader(InputStreamReader(conn.inputStream, Charsets.UTF_8))
-                val response = reader.readText()
-                reader.close()
-                val json = JSONObject(response)
-                json.optString("id", null)
-            } else {
-                val errorReader = conn.errorStream?.bufferedReader(Charsets.UTF_8)
-                android.util.Log.e("GoogleDriveSync", "Folder creation failed: HTTP $responseCode — ${errorReader?.readText()}")
-                errorReader?.close()
-                null
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("GoogleDriveSync", "Folder creation error", e)
-            null
-        }
-    }
-
-    // ──────────────────────────────────────────────
-    // Drive API: text transcription upload (multipart)
-    // ──────────────────────────────────────────────
-
-    private fun uploadTextTranscription(
-        accessToken: String,
-        folderId: String,
-        file: File,
-        pair: TranscriptionPair
-    ): Boolean {
-        return try {
-            val boundary = "Boundary_${System.currentTimeMillis()}"
-            val lineFeed = "\r\n"
-
-            val url = URL("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart")
-            val conn = url.openConnection() as HttpURLConnection
-            conn.requestMethod = "POST"
-            conn.doOutput = true
-            conn.setRequestProperty("Authorization", "Bearer $accessToken")
-            conn.setRequestProperty("Content-Type", "multipart/related; boundary=$boundary")
-            conn.connectTimeout = 30000
-            conn.readTimeout = 30000
-
-            // Build JSON metadata
-            val metadata = JSONObject().apply {
-                put("name", file.name.removeSuffix(".json") + ".txt")
-                put("parents", JSONArray().apply { put(folderId) })
-                put("description", "Vela Voice transcription pair: raw ↔ cleaned")
-            }
-
-            // Build plain-text content: raw transcript + cleaned transcript
-            val content = buildString {
-                appendLine("=== Vela Voice Transcription ===")
-                appendLine("Date: ${pair.createdAt}")
-                appendLine("Duration: ${pair.durationMs}ms")
-                appendLine()
-                appendLine("--- RAW TRANSCRIPT ---")
-                appendLine(pair.raw)
-                appendLine()
-                appendLine("--- CLEANED TRANSCRIPT ---")
-                appendLine(pair.cleaned)
-                if (pair.audioFileName != null) {
-                    appendLine()
-                    appendLine("Audio: ${pair.audioFileName}")
-                }
-                appendLine()
-                appendLine("=== End ===")
-            }
-
-            conn.outputStream.use { os ->
-                val writer = OutputStreamWriter(os, Charsets.UTF_8)
-
-                // First part: JSON metadata
-                writer.append("--$boundary").append(lineFeed)
-                writer.append("Content-Type: application/json; charset=UTF-8").append(lineFeed)
-                writer.append(lineFeed)
-                writer.append(metadata.toString()).append(lineFeed)
-                writer.flush()
-
-                // Second part: text content
-                writer.append("--$boundary").append(lineFeed)
-                writer.append("Content-Type: text/plain; charset=UTF-8").append(lineFeed)
-                writer.append(lineFeed)
-                writer.append(content).append(lineFeed)
-                writer.flush()
-
-                // Close boundary
-                writer.append("--$boundary--").append(lineFeed)
-                writer.flush()
-            }
-
-            val responseCode = conn.responseCode
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                val reader = BufferedReader(InputStreamReader(conn.inputStream, Charsets.UTF_8))
-                val response = reader.readText()
-                reader.close()
-                android.util.Log.d("GoogleDriveSync", "Uploaded text: ${file.name}: $response")
+            if (responseCode in 200..299) {
+                android.util.Log.d("GoogleDriveSync", "Uploaded transcription to backend proxy: ${file.name}")
                 true
             } else {
                 val errorReader = conn.errorStream?.bufferedReader(Charsets.UTF_8)
                 val errorMsg = errorReader?.readText() ?: "HTTP $responseCode"
                 errorReader?.close()
-                android.util.Log.e("GoogleDriveSync", "Text upload failed: $errorMsg")
+                android.util.Log.e("GoogleDriveSync", "Backend proxy upload failed: $errorMsg")
                 false
             }
         } catch (e: Exception) {
             android.util.Log.e("GoogleDriveSync", "Text upload error for ${file.name}", e)
-            false
-        }
-    }
-
-    // ──────────────────────────────────────────────
-    // Drive API: audio file upload (binary)
-    // ──────────────────────────────────────────────
-
-    private fun uploadAudioFile(
-        accessToken: String,
-        folderId: String,
-        audioFile: File
-    ): Boolean {
-        return try {
-            val boundary = "Boundary_${System.currentTimeMillis()}"
-            val lineFeed = "\r\n"
-            val audioBytes = audioFile.readBytes()
-
-            val url = URL("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart")
-            val conn = url.openConnection() as HttpURLConnection
-            conn.requestMethod = "POST"
-            conn.doOutput = true
-            conn.setRequestProperty("Authorization", "Bearer $accessToken")
-            conn.setRequestProperty("Content-Type", "multipart/related; boundary=$boundary")
-            conn.connectTimeout = 30000
-            conn.readTimeout = 30000
-
-            // Metadata
-            val metadata = JSONObject().apply {
-                put("name", audioFile.name)
-                put("parents", JSONArray().apply { put(folderId) })
-                put("description", "Vela Voice audio recording (16-bit 16kHz mono WAV)")
-            }
-
-            conn.outputStream.use { os ->
-                val writer = OutputStreamWriter(os, Charsets.UTF_8)
-
-                // First part: JSON metadata
-                writer.append("--$boundary").append(lineFeed)
-                writer.append("Content-Type: application/json; charset=UTF-8").append(lineFeed)
-                writer.append(lineFeed)
-                writer.append(metadata.toString()).append(lineFeed)
-                writer.flush()
-
-                // Second part: binary audio
-                writer.append("--$boundary").append(lineFeed)
-                writer.append("Content-Type: audio/wav").append(lineFeed)
-                writer.append("Content-Transfer-Encoding: binary").append(lineFeed)
-                writer.append(lineFeed)
-                writer.flush()
-                os.write(audioBytes)
-                os.flush()
-                writer.append(lineFeed).flush()
-
-                // Close boundary
-                writer.append("--$boundary--").append(lineFeed)
-                writer.flush()
-            }
-
-            val responseCode = conn.responseCode
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                android.util.Log.d("GoogleDriveSync", "Uploaded audio: ${audioFile.name}")
-                true
-            } else {
-                val errorReader = conn.errorStream?.bufferedReader(Charsets.UTF_8)
-                val errorMsg = errorReader?.readText() ?: "HTTP $responseCode"
-                errorReader?.close()
-                android.util.Log.e("GoogleDriveSync", "Audio upload failed: $errorMsg")
-                false
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("GoogleDriveSync", "Audio upload error for ${audioFile.name}", e)
             false
         }
     }
