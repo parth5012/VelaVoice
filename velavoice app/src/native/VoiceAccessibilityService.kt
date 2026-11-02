@@ -51,6 +51,7 @@ import com.velavoice.sdk.InsertionTarget
 import com.velavoice.sdk.sanitizeForInsertion
 import com.velavoice.sdk.shouldCommitTranscript
 import com.velavoice.sdk.shouldInsertIntoTarget
+import com.velavoice.sdk.performWithClipboardRestore
 import com.velavoice.sdk.AudioRecorder
 import com.velavoice.sdk.AmplitudeCoalescer
 
@@ -836,31 +837,33 @@ class VoiceAccessibilityService : AccessibilityService() {
             return
         }
         // Cursor-insert path (ACTION_PASTE) for non-sensitive batch text.
+        // F12: Restore previous clipboard content around ACTION_PASTE so that
+        // transcript insertion preserves prior clips and does not linger on the clipboard.
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText("transcription", clean)
-        clipboard.setPrimaryClip(clip)
-
-        if (nodeSupportsAction(targetNode, AccessibilityNodeInfo.ACTION_PASTE)) {
-            if (!targetNode.performAction(AccessibilityNodeInfo.ACTION_PASTE)) {
-                Log.w("VoiceAccessibility", "ACTION_PASTE refused by target app")
-            }
-        } else if (nodeSupportsAction(targetNode, AccessibilityNodeInfo.ACTION_SET_TEXT)) {
-            // Fallback with explicit splice-replace semantics (existing + transcript).
-            try {
-                val existing = targetNode.text?.toString() ?: ""
-                val arguments = Bundle()
-                arguments.putCharSequence(
-                    AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
-                    existing + clean
-                )
-                if (!targetNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)) {
-                    Log.w("VoiceAccessibility", "ACTION_SET_TEXT refused by target app")
+        performWithClipboardRestore(clipboard, clip) {
+            if (nodeSupportsAction(targetNode, AccessibilityNodeInfo.ACTION_PASTE)) {
+                if (!targetNode.performAction(AccessibilityNodeInfo.ACTION_PASTE)) {
+                    Log.w("VoiceAccessibility", "ACTION_PASTE refused by target app")
                 }
-            } catch (e: Exception) {
-                Log.e("VoiceAccessibility", "Direct insert refused: ${e.javaClass.simpleName}")
+            } else if (nodeSupportsAction(targetNode, AccessibilityNodeInfo.ACTION_SET_TEXT)) {
+                // Fallback with explicit splice-replace semantics (existing + transcript).
+                try {
+                    val existing = targetNode.text?.toString() ?: ""
+                    val arguments = Bundle()
+                    arguments.putCharSequence(
+                        AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+                        existing + clean
+                    )
+                    if (!targetNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)) {
+                        Log.w("VoiceAccessibility", "ACTION_SET_TEXT refused by target app")
+                    }
+                } catch (e: Exception) {
+                    Log.e("VoiceAccessibility", "Direct insert refused: ${e.javaClass.simpleName}")
+                }
+            } else {
+                Log.w("VoiceAccessibility", "Target supports neither PASTE nor SET_TEXT; dropping write")
             }
-        } else {
-            Log.w("VoiceAccessibility", "Target supports neither PASTE nor SET_TEXT; dropping write")
         }
     }
 
