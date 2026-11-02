@@ -117,16 +117,26 @@ class ShareAudioDecoderTest {
         val data = byteArrayOf(128.toByte(), 228.toByte()) // centre 0, +100
         val bytes = wav(fmtChunk(1, 1, 16000, 8), data)
         val out = ShareAudioDecoder.decodeWav(bytes)
-        assertEquals(4, out.size) // (128-128)*256 == 0, little-endian 00 00
+        assertEquals(4, out.size)
+        // full-scale rescale: (228-128)=100, shifted up to 16-bit lands at 100 * 256
         assertEquals(0, (out[1].toInt() shl 8) or (0xFF and out[0].toInt()))
-        assertEquals(100, (out[3].toInt() shl 8) or (0xFF and out[2].toInt()))
+        assertEquals(25600, (out[3].toInt() shl 8) or (0xFF and out[2].toInt()))
     }
 
     @Test fun mono24bitIsConverted() {
-        // 1000 little-endian 24 bit: 0xE8 0x03 0x00
-        val bytes = wav(fmtChunk(1, 1, 16000, 24), byteArrayOf(0xE8.toByte(), 0x03, 0))
+        // 4,000,000 little-endian 24 bit (0x00 0x09 0x3D): full-scale rescale
+        // shr 8 gives 15,625 — without it, ~-48 dBFS samples and louder clip
+        val bytes = wav(fmtChunk(1, 1, 16000, 24), byteArrayOf(0x00, 0x09, 0x3D))
         val out = ShareAudioDecoder.decodeWav(bytes)
-        assertEquals(1000, (out[1].toInt() shl 8) or (out[0].toInt() and 0xFF))
+        assertEquals(15625, (out[1].toInt() shl 8) or (out[0].toInt() and 0xFF))
+    }
+
+    @Test fun mono32bitIntIsConverted() {
+        // 16,777,216 little-endian 32 bit (0x00 0x00 0x00 0x01): full-scale
+        // rescale shr 16 gives 256 — without it 32-bit int WAV hard-clips
+        val bytes = wav(fmtChunk(1, 1, 16000, 32), byteArrayOf(0x00, 0x00, 0x00, 0x01))
+        val out = ShareAudioDecoder.decodeWav(bytes)
+        assertEquals(256, (out[1].toInt() shl 8) or (out[0].toInt() and 0xFF))
     }
 
     @Test fun float32WavIsConverted() {

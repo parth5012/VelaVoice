@@ -27,7 +27,7 @@ object ShareAudioDecoder {
     private const val TARGET_RATE = 16000
 
     /** 20 minutes at 16 kHz — bounds memory and transcribe time for shared files. */
-    private const val MAX_FRAMES = 20 * 60 * TARGET_RATE
+
 
     /** Safety net so a corrupt/looping MediaCodec stream cannot hang the dialog. */
     private const val DECODE_DEADLINE_MS = 15_000L
@@ -110,12 +110,17 @@ object ShareAudioDecoder {
         var pos = 0
         while (pos < usable) {
             val raw: Long = when (bits) {
-                8 -> ((data[pos].toInt() and 0xFF) - 128).toLong()
+                // Full-scale amplitude rescale to 16-bit: 8-bit unsigned is
+                // centered then shifted up, 24/32-bit signed integers are
+                // shifted down — without this, 8-bit audio lands at -48 dBFS
+                // (nearly inaudible) and 24/32-bit loud recordings hard-clip
+                // into square waves at ±32767.
+                8 -> (((data[pos].toInt() and 0xFF) - 128) shl 8).toLong()
                 16 -> readUnsigned(data, pos, 2).toLong().let { if (it >= 0x8000) it - 0x10000 else it }
-                24 -> readUnsigned(data, pos, 3).toLong().let { if (it >= 0x800000) it - 0x1000000 else it }
+                24 -> readUnsigned(data, pos, 3).toLong().let { (if (it >= 0x800000) it - 0x1000000 else it) shr 8 }
                 else -> if (isFloat)
                     ByteBuffer.wrap(data, pos, 4).order(ByteOrder.LITTLE_ENDIAN).int.toLong()
-                else readUnsigned(data, pos, 4).toLong().let { if (it >= 0x80000000) it - 0x100000000 else it }
+                else readUnsigned(data, pos, 4).toLong().let { if (it >= 0x80000000) it - 0x100000000 else it } shr 16
             }
             shorts[sample++] = when {
                 isFloat -> roundToShort(java.lang.Float.intBitsToFloat(raw.toInt()).coerceIn(-1f, 1f) * 32767f)
@@ -141,7 +146,11 @@ object ShareAudioDecoder {
     internal fun to16kMonoPcm(interleaved: ShortArray, channels: Int, sampleRate: Int): ByteArray {
         require(channels >= 1 && sampleRate > 0)
         val frameCount = interleaved.size / channels
-        if (frameCount > MAX_FRAMES) throw IllegalArgumentException("Shared audio too long (max 20 minutes)")
+        // The cap is seconds of input audio, so scale by the actual source
+        // rate — comparing raw source-rate frames against a 16 kHz limit
+        // would reject valid 44.1/48 kHz files after only ~7 minutes.
+        if (frameCount.toLong() * TARGET_RATE / sampleRate > 20L * 60 * TARGET_RATE)
+            throw IllegalArgumentException("Shared audio too long (max 20 minutes)")
         val mono = ShortArray(frameCount)
         for (frame in 0 until frameCount) {
             var sum = 0
@@ -241,7 +250,16 @@ object ShareAudioDecoder {
             try {
                 codec.configure(format, null, null, 0)
                 codec.start()
-                val samples = drainCodec(codec, extractor, System.currentTimeMillis() + DECODE_DEADLINE_MS) { rate, chans ->
+                // The mid-loop cap must know the live sample rate and channel
+                // count (the decoder may report a different output format than
+                // the container): this closure captures the mutable locals so
+                // drainCodec aborts a too-long stream with the correct limit
+                // instead of a wrong stereo/16k assumption.
+                val capTooLong = { shortsTotal: Long ->
+                    val frames = shortsTotal / channels.coerceAtLeast(1)
+                    frames > 20L * 60 * sampleRate.coerceAtLeast(1)
+                }
+                val samples = drainCodec(codec, extractor, System.currentTimeMillis() + DECODE_DEADLINE_MS, capTooLong) { rate, chans ->
                     if (rate != null) sampleRate = rate
                     if (chans != null) channels = chans
                 }
@@ -274,6 +292,7 @@ object ShareAudioDecoder {
         codec: MediaCodec,
         extractor: MediaExtractor,
         deadlineAt: Long,
+        tooLong: (longShorts: Long) -> Boolean,
         onFormatChanged: (sampleRate: Int?, channels: Int?) -> Unit
     ): ShortArray {
         val info = MediaCodec.BufferInfo()
@@ -295,7 +314,14 @@ object ShareAudioDecoder {
                     if (size == 0) {
                         codec.queueInputBuffer(inIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
                         inputDone = true
-                    } else codec.queueInputBuffer(inIndex, 0, size, extractor.sampleTime, 0)
+                    } else {
+                        codec.queueInputBuffer(inIndex, 0, size, extractor.sampleTime, 0)
+                        // readSampleData() only copies the current sample;
+                        // without advance() every iteration re-feeds sample 0
+                        // and the loop never reaches EOF — all compressed
+                        // audio would fail at the deadline.
+                        extractor.advance()
+                    }
                 }
             }
             val outIndex = codec.dequeueOutputBuffer(info, 10_000)
@@ -317,7 +343,7 @@ object ShareAudioDecoder {
                         buffer.asShortBuffer().get(chunk)
                         chunks.add(chunk)
                         total += shortCount
-                        if (total / 2 > MAX_FRAMES)
+                        if (tooLong(total))
                             throw IllegalArgumentException("Shared audio too long (max 20 minutes)")
                     }
                     codec.releaseOutputBuffer(outIndex, false)
