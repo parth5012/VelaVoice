@@ -186,8 +186,23 @@ class GoogleDriveSyncAudioGateTest {
     }
 
     @Test
-    fun successfulUploadCarriesAudioAndMarksSynced() {
-        val proxy = startProxy(19083) { _, _ -> 200 }
+    fun zeroByteReferencedAudioIsAlsoRejected() {
+        val proxy = startProxy(19084) { _, _ -> 200 }
+
+        val record = seedTranscription(context(), withAudio = true)
+        val audioFile = File(record.parent, record.name.replace(".json", ".wav"))
+        audioFile.writeBytes(ByteArray(0))
+
+        val result = GoogleDriveSync.syncToDrive(context(), configuredPrefs(19084))
+
+        assertEquals("zero-byte audio is an upload failure too", 1, result.failed)
+        assertEquals(0, result.uploaded)
+        assertEquals("no text-only payload may be posted", 0, proxy.bodies.size)
+        assertFalse(markerFor(record).exists())
+    }
+
+    @Test
+    fun successfulUploadCarriesAudioAndMarksSynced() {        val proxy = startProxy(19083) { _, _ -> 200 }
 
         val record = seedTranscription(context(), withAudio = true)
         val result = GoogleDriveSync.syncToDrive(context(), configuredPrefs(19083))
