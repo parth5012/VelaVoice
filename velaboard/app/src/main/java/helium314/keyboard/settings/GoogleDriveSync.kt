@@ -107,6 +107,19 @@ object GoogleDriveSync {
                     } else null
                     val audioBytes = audioFile?.takeIf { it.exists() }?.readBytes()
 
+                    // F25 (map #212): the referenced audio MUST ship with the
+                    // transcription. A missing local audio copy used to go up
+                    // as a text-only payload and the record was still marked
+                    // synced — its audio was then permanently lost from every
+                    // future sync. Fail the record instead: it stays unsynced
+                    // (retriable on the next run, same stable fileName, no
+                    // text duplicates) until the audio is present again.
+                    if (pair.audioFileName != null && audioBytes == null) {
+                        failed++
+                        errors.add("Referenced audio missing for ${file.name} — record not marked synced")
+                        continue
+                    }
+
                     val success = uploadToBackendProxy(endpoint, appKey, file, pair, audioBytes)
                     if (success) {
                         TranscriptionStorage.markSynced(file)
