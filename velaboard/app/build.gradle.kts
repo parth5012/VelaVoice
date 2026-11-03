@@ -151,6 +151,12 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // F18 runtime prerequisite (map #212, CodeRabbit review of #274):
+        // java.time.Instant/DateTimeFormatter started being used at minSdk 24
+        // — without desugaring enabled those classes only exist on API 26+,
+        // and Android 7/7.1 would crash with NoClassDefFoundError. The
+        // desugar_jdk_libs dependency alone does nothing without this flag.
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlin {
