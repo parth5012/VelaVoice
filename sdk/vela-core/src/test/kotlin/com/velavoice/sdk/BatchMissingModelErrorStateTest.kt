@@ -65,17 +65,35 @@ class BatchMissingModelErrorStateTest {
     }
 
     @Test
+    fun missingModelMessageIsAlignedAcrossBatchAndStreamingPaths() {
+        val vas = vasSource()
+        assertFalse(
+            "streaming must no longer show the bare 'Model not found' string",
+            vas.contains("\"Model not found\"")
+        )
+        // the literal lives in one shared val; both surfaces use the val
+        assertTrue(
+            vas.contains("missingModelMessage = \"Model missing — open Vela settings\"")
+        )
+        assertTrue(
+            "batch path must route the shared val into errorMessage",
+            vas.contains("errorMessage = missingModelMessage")
+        )
+        assertTrue(
+            "streaming path must route the shared val into statusText",
+            vas.contains("statusText.text = missingModelMessage")
+        )
+    }
+
+    @Test
     fun batchErrorStateRoutesThroughTheGatedStatusPath() {
         val vas = vasSource()
         // The no-model branch reaches the user ONLY through the errorMessage →
         // statusText gate (nothing inserted/saved while rawTranscript is empty).
-        val missingModelIdx = vas.indexOf("Model missing — open Vela settings")
+        val missingModelIdx = vas.indexOf("errorMessage = missingModelMessage")
         if (missingModelIdx < 0) fail("missing-model error state not present")
         assertTrue(
-            "the error string must be assigned to errorMessage, not injected as transcript text",
-            vas.lineSequence().any {
-                it.contains("Model missing — open Vela settings") && it.contains("errorMessage")
-            }
+            vas.lineSequence().any { it.contains("Model missing — open Vela settings") && it.contains("missingModelMessage") }
         )
         assertTrue(
             "statusText error gate must exist after the transcription block",
