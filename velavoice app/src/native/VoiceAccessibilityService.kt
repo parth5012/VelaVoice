@@ -73,6 +73,15 @@ class VoiceAccessibilityService : AccessibilityService() {
     private val recordedAudioData = ByteArrayOutputStream()
 
     /**
+     * Single user-facing message shown whenever no local model is available,
+     * on every surface (batch + streaming). Aligned per F13 follow-up on map
+     * #212 ticket #244: both paths must report the identical missing-model
+     * error state — the old streaming wording (bare model-not-found string)
+     * and the batch wording differed before this alignment.
+     */
+    private val missingModelMessage = "Model missing — open Vela settings"
+
+    /**
      * Amplitude meter throttle (map #105 ticket #113): the batch capture loop
      * and the streaming callback fire per read buffer (~50/s); each used to
      * allocate a `post {}` runnable on the main thread. The coalescer keeps
@@ -741,7 +750,7 @@ class VoiceAccessibilityService : AccessibilityService() {
                 // as if they were a real transcription. Insert and persist
                 // nothing: errorMessage flows to statusText, rawTranscript
                 // stays empty so the cleaner, insert and save gates all skip.
-                errorMessage = "Model missing — open Vela settings"
+                errorMessage = missingModelMessage
             }
         }
 
@@ -1238,7 +1247,7 @@ class VoiceAccessibilityService : AccessibilityService() {
 
         val whisperPath = getWhisperModelPath(this@VoiceAccessibilityService)
         if (whisperPath == null) {
-            statusText.text = "Model not found"
+            statusText.text = missingModelMessage
             isStreaming = false
             return
         }
