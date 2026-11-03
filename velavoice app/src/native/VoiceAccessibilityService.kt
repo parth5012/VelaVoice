@@ -735,14 +735,13 @@ class VoiceAccessibilityService : AccessibilityService() {
                     rawTranscript = whisper.transcribe(audioBytes)
                 }
             } else {
-                val seconds = (audioBytes.size / 2) / 16000f
-                rawTranscript = if (seconds < 1f) {
-                    ""
-                } else if (seconds < 3f) {
-                    "Hello, testing Vela Voice floating transcription overlay."
-                } else {
-                    "Thank you for choosing Vela Voice. A longer offline transcription generated on-device using Whisper model."
-                }
+                // F13 (map #212 #244): no local model must surface the
+                // streaming path's missing-model error state — the old canned
+                // demo strings were inserted into the user's field AND saved
+                // as if they were a real transcription. Insert and persist
+                // nothing: errorMessage flows to statusText, rawTranscript
+                // stays empty so the cleaner, insert and save gates all skip.
+                errorMessage = "Model missing — open Vela settings"
             }
         }
 
