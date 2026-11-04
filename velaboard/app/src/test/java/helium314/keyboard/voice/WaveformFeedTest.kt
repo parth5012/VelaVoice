@@ -23,6 +23,27 @@ class WaveformFeedTest {
     }
 
     @Test
+    fun firstSampleDeliveredAtRealisticUptime() {
+        val feed = WaveformFeed()
+        // Real Android elapsedRealtime: phone has been up for 1 hour.
+        // Regression for F03 (map #213): Long.MIN_VALUE + 1 init overflowed
+        // nowMs - lastDeliveredMs negative at any real uptime, so the rate
+        // gate blocked forever and the waveform never drew on devices.
+        val delivered = feed.feed(1f, 3_600_000L)
+        assertTrue(delivered != null, "first sample must deliver at realistic device uptime")
+        assertTrue(tol(delivered!!, 0.3f) < 0.01f, "EMA seeded at alpha*value")
+    }
+
+    @Test
+    fun firstSampleDeliveredAfterResetAtRealisticUptime() {
+        val feed = WaveformFeed()
+        assertTrue(feed.feed(1f, 3_600_000L) != null)
+        feed.reset() // new recording starts — same realistic uptime clock
+        val delivered = feed.feed(0.5f, 3_600_005L)
+        assertTrue(delivered != null, "first sample after reset() must deliver at realistic uptime")
+    }
+
+    @Test
     fun rateGateFoldsSamplesBetweenDeliveries() {
         val feed = WaveformFeed()
         assertTrue(feed.feed(0f, 0L) != null, "t=0 delivered")

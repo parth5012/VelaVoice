@@ -23,7 +23,8 @@ class WaveformFeed(
     private val minIntervalMs: Long = 33L
 ) {
     private var smooth = 0f
-    private var lastDeliveredMs = Long.MIN_VALUE + 1
+    private var lastDeliveredMs = 0L
+    private var hasDelivered = false
 
     /**
      * Feed one raw normalized amplitude at time [nowMs].
@@ -33,6 +34,15 @@ class WaveformFeed(
     fun feed(amplitude: Float, nowMs: Long): Float? {
         val raw = amplitude.coerceIn(0f, 1f)
         smooth = emaAlpha * raw + (1f - emaAlpha) * smooth
+        if (!hasDelivered) {
+            // First sample is always delivered, regardless of the clock origin.
+            // (F03, map #213: the old Long.MIN_VALUE + 1 sentinel saturated the
+            // rate gate at any real device uptime — nowMs - sentinel overflowed
+            // negative and feed() returned null forever, dead waveform.)
+            hasDelivered = true
+            lastDeliveredMs = nowMs
+            return smooth
+        }
         if (nowMs - lastDeliveredMs < minIntervalMs) return null
         lastDeliveredMs = nowMs
         return smooth
@@ -41,7 +51,7 @@ class WaveformFeed(
     /** Clear EMA history when a new recording starts. */
     fun reset() {
         smooth = 0f
-        lastDeliveredMs = Long.MIN_VALUE + 1
+        hasDelivered = false
     }
 
     companion object {
