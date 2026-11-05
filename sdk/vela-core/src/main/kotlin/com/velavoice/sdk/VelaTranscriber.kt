@@ -35,6 +35,7 @@ class VelaTranscriber internal constructor(
 ) {
     class Builder(private val context: Context) {
         private var whisperModelPath: String? = null
+        private var localModelId: String? = null
         private var language: String = "en"
         private var threads: Int = 4
         private var useLlmCleaner: Boolean = false
@@ -47,6 +48,20 @@ class VelaTranscriber internal constructor(
         private var customSystemPrompt: String? = null
 
         fun whisperModel(path: String) = apply { this.whisperModelPath = path }
+
+        /**
+         * Resolve a local model by registry id (Ticket 801, map #290). For WHISPER
+         * definitions the registry filename is used as a hint; callers still
+         * supply the resolved on-disk path via [whisperModel] when needed. Records
+         * the id for engine-kind routing.
+         */
+        fun model(modelId: String) = apply {
+            this.localModelId = modelId
+            val def = com.velavoice.sdk.ModelRegistry.find(modelId)
+            if (def != null && def.engine == com.velavoice.sdk.EngineKind.WHISPER && whisperModelPath == null) {
+                this.whisperModelPath = def.filename
+            }
+        }
         fun language(lang: String) = apply { this.language = lang }
         fun threads(n: Int) = apply { this.threads = n }
         fun useLlmCleaner(enable: Boolean, modelPath: String? = null) = apply {
