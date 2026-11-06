@@ -1058,7 +1058,7 @@ class VoiceAccessibilityService : AccessibilityService() {
         var path: String? = null
         try {
             db = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-            db.rawQuery("SELECT path FROM models WHERE (id = 'whisper-tiny-en' OR name = 'whisper-tiny-en') AND status = 'completed' LIMIT 1", null).use { cursor ->
+            db.rawQuery("SELECT path FROM models WHERE (id LIKE 'whisper%' OR name LIKE 'whisper%') AND status = 'completed' LIMIT 1", null).use { cursor ->
                 if (cursor.moveToFirst()) {
                     path = cursor.getString(0)
                 }
