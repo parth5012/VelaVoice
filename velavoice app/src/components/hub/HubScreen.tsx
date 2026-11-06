@@ -28,7 +28,7 @@ export const HubScreen: React.FC<HubScreenProps> = ({
   onSelectRecording,
   onStartRecording,
 }) => {
-    const isWhisperDownloaded = models.some(m => m.id === 'whisper-tiny-en' && m.status === 'completed');
+    const isWhisperDownloaded = models.some(m => (m.engine === 'WHISPER' || m.id.startsWith('whisper')) && m.status === 'completed');
     
     return (
       <View style={styles.tabContent}>
