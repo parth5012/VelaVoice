@@ -23,6 +23,7 @@ rootProject.name = "vela-transcription-sdk"
 
 include(":vela-common")
 include(":vela-whisper")
+include(":vela-sherpa")
 include(":vela-cleaner")
 include(":vela-voice-ui")
 include(":vela-core")
