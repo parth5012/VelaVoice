@@ -44,6 +44,7 @@ dependencies {
     implementation(project(":vela-common"))
     implementation(project(":vela-whisper"))
     api(files("libs/sherpa-onnx-classes.jar"))
+    api("com.microsoft.onnxruntime:onnxruntime-android:1.22.0")
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
 }
