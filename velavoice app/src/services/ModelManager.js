@@ -2,13 +2,18 @@ import * as FileSystem from 'expo-file-system';
 import * as SQLite from 'expo-sqlite';
 import { NativeModules } from 'react-native';
 const { ModelVerifier } = NativeModules;
-const DEFAULT_MODELS = [
+// Ticket 805 (map #290): definitions come from the native ModelRegistry bridge
+// when available; the legacy list stays as fallback and fills ids (LLM cleaner)
+// the Kotlin registry does not yet include.
+const LEGACY_FALLBACK_MODELS = [
     {
         id: 'whisper-tiny-en',
         name: 'Whisper Tiny (English)',
         url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin',
         filename: 'ggml-tiny.en.bin',
         expectedHash: '921e4cf8686fdd993dcd081a5da5b6c365bfde1162e72b08d75ac75289920b1f',
+        minRamMb: 512,
+        engine: 'whisper',
     },
     {
         id: 'cleaner-llama-3b',
@@ -16,8 +21,45 @@ const DEFAULT_MODELS = [
         url: 'https://huggingface.co/onnx-community/Llama-3.2-1B-Instruct-ONNX/resolve/main/onnx/model.onnx',
         filename: 'llama-cleaner.onnx',
         expectedHash: '3002ec321434a9ac3e6e9b5e05b1e9e6eb751a2b560ecb898538f9cf7c1ae203',
+        minRamMb: 2048,
+        engine: 'cleaner',
     }
 ];
+function getNativeRegistry() {
+    if (!ModelVerifier || typeof ModelVerifier.getRegistry !== 'function') {
+        return Promise.resolve(null);
+    }
+    return ModelVerifier.getRegistry()
+        .then(function (json) { return JSON.parse(json); })
+        .then(function (rows) {
+            if (!Array.isArray(rows)) {
+                return null;
+            }
+            return rows.map(function (row) {
+                if (!row || typeof row.id !== 'string' || !row.id) {
+                    throw new Error('registry row missing id — Kotlin/TS contract drift detected');
+                }
+                return {
+                    id: row.id,
+                    name: row.name || row.id,
+                    url: row.url,
+                    filename: row.filename,
+                    expectedHash: row.expectedSha256 || '',
+                    minRamMb: row.minRamMb,
+                    engine: row.engine === 'SHERPA' ? 'sherpa' : 'whisper',
+                    supportsStreaming: !!row.supportsStreaming,
+                    languages: Array.isArray(row.languages) ? row.languages : [],
+                    multilingual: !!row.multilingual,
+                    downloadSizeHintMb: row.downloadSizeHintMb,
+                    downloadAvailable: !!row.url,
+                };
+            });
+        })
+        .catch(function (e) {
+            console.warn('ModelRegistry bridge unavailable, falling back to legacy list', e);
+            return null;
+        });
+}
 let dbPromise = null;
 async function getDb() {
     if (!dbPromise) {
@@ -92,8 +134,16 @@ export class ModelManager {
     static async getModels() {
         const db = await getDb();
         const rows = await db.getAllAsync('SELECT * FROM models');
-        // Merge database state with DEFAULT_MODELS list
-        return DEFAULT_MODELS.map((def) => {
+        // Definitions: native registry first (ticket 805), legacy fallback fills
+        // ids the registry does not yet include (LLM cleaner).
+        const registry = (await getNativeRegistry()) || LEGACY_FALLBACK_MODELS;
+        const defs = [
+            ...LEGACY_FALLBACK_MODELS.filter(
+                (legacy) => !registry.some((row) => row.id === legacy.id)
+            ),
+            ...registry,
+        ];
+        return defs.map((def) => {
             const row = rows.find((r) => r.id === def.id);
             if (row) {
                 return {
@@ -116,6 +166,9 @@ export class ModelManager {
         const model = models.find((m) => m.id === id);
         if (!model) {
             throw new Error(`Model not found with id: ${id}`);
+        }
+        if (model.downloadAvailable === false) {
+            throw new Error(`Model ${id} is registered but has no pinned download URL yet`);
         }
         const db = await getDb();
         // Update state to downloading
