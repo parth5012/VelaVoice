@@ -1067,7 +1067,7 @@ class VoiceInputMethodService : InputMethodService() {
         var db: SQLiteDatabase? = null
         try {
             db = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-            cachedWhisperPath = queryModelPath(db, "whisper-tiny-en")
+            cachedWhisperPath = queryModelPath(db, "whisper%")
             cachedLlmPath = queryModelPath(db, "cleaner-llama-3b")
         } catch (e: Exception) {
             android.util.Log.e("VoiceIME", "Failed to load model paths", e)
@@ -1078,7 +1078,7 @@ class VoiceInputMethodService : InputMethodService() {
 
     private fun queryModelPath(db: SQLiteDatabase, modelType: String): String? {
         db.rawQuery(
-            "SELECT path FROM models WHERE (id = ? OR name = ?) AND status = 'completed' LIMIT 1",
+            "SELECT path FROM models WHERE (id LIKE ? OR name LIKE ?) AND status = 'completed' LIMIT 1",
             arrayOf(modelType, modelType)
         ).use { cursor ->
             return if (cursor.moveToFirst()) cursor.getString(0) else null
