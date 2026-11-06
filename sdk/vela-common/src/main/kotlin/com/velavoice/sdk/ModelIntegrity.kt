@@ -97,3 +97,49 @@ object ModelIntegrity {
         }
     }
 }
+
+
+/**
+ * Bundle support (Ticket 804, map #290): per-file manifest verification.
+ */
+data class BundleFileSpec(
+    val name: String,
+    val expectedSha256: String? = null
+)
+
+object BundleIntegrity {
+    /**
+     * Verifies that every file listed in [manifest] exists under [dir] and
+     * matches its expected SHA-256 (when provided). Returns false on any
+     * missing/mismatched file or if total size exceeds [ModelIntegrity.MAX_MODEL_BYTES].
+     */
+    fun verifyBundle(dir: java.io.File, manifest: List<BundleFileSpec>): Boolean {
+        if (!dir.exists() || !dir.isDirectory) return false
+        var total = 0L
+        for (spec in manifest) {
+            val f = java.io.File(dir, spec.name)
+            if (!f.exists() || !f.isFile) return false
+            total += f.length()
+            if (total > ModelIntegrity.MAX_MODEL_BYTES) return false
+            if (spec.expectedSha256 != null) {
+                if (!ModelIntegrity.verifySha256(f, spec.expectedSha256)) return false
+            }
+        }
+        return true
+    }
+}
+
+    /**
+     * Bundle verification entry point (Ticket 804). Delegates to [BundleIntegrity].
+     */
+    fun verifyBundle(dir: java.io.File, manifest: List<BundleFileSpec>): Boolean =
+        BundleIntegrity.verifyBundle(dir, manifest)
+
+    /**
+     * Alias accepting a map of filename -> expected hash (null allowed).
+     */
+    fun verifyBundle(dir: java.io.File, expectedHashes: Map<String, String?>): Boolean {
+        val manifest = expectedHashes.map { BundleFileSpec(it.key, it.value) }
+        return BundleIntegrity.verifyBundle(dir, manifest)
+    }
+
