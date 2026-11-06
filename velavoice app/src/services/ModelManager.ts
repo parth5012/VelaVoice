@@ -10,22 +10,26 @@
 import * as FileSystem from 'expo-file-system';
 import * as SQLite from 'expo-sqlite';
 import { NativeModules } from 'react-native';
-
 const { ModelVerifier } = NativeModules;
 
-export interface ModelInfo {
-  id: string;
-  name: string;
+import { getNativeRegistry, ModelDefinitionFields } from './ModelRegistryBridge';
+
+/**
+ * Full UI-facing model info: definition fields from the registry bridge plus
+ * mutable state from models.db. Registry-shaped fields are optional so
+ * legacy native binaries stay source-compatible.
+ */
+export interface ModelInfo extends ModelDefinitionFields {
   url: string;
-  filename: string;
   expectedHash: string;
-  minRamMb?: number;
   path: string | null;
   status: 'pending' | 'downloading' | 'completed' | 'failed' | 'checksum_failed';
   progress: number;
 }
 
-const DEFAULT_MODELS: (Omit<ModelInfo, 'progress' | 'path' | 'status'> & { minRamMb: number })[] = [
+/** Legacy fallback for pre-registry native binaries and ids the Kotlin
+ *  registry does not yet include (LLM cleaner). */
+const LEGACY_FALLBACK_MODELS: Omit<ModelInfo, 'progress' | 'path' | 'status'>[] = [
   {
     id: 'whisper-tiny-en',
     name: 'WhisperTiny (English)',
@@ -33,6 +37,12 @@ const DEFAULT_MODELS: (Omit<ModelInfo, 'progress' | 'path' | 'status'> & { minRa
     filename: 'ggml-tiny.en.bin',
     expectedHash: '921e4cf8686fdd993dcd081a5da5b6c365bfde1162e72b08d75ac75289920b1f',
     minRamMb: 512,
+    engine: 'whisper',
+    supportsStreaming: false,
+    languages: ['en'],
+    multilingual: false,
+    downloadSizeHintMb: 75,
+    downloadAvailable: true,
   },
   {
     id: 'cleaner-llama-3b',
@@ -41,6 +51,12 @@ const DEFAULT_MODELS: (Omit<ModelInfo, 'progress' | 'path' | 'status'> & { minRa
     filename: 'llama-cleaner.onnx',
     expectedHash: '3002ec321434a9ac3e6e9b5e05b1e9e6eb751a2b560ecb898538f9cf7c1ae203',
     minRamMb: 2048,
+    engine: 'cleaner',
+    supportsStreaming: false,
+    languages: [],
+    multilingual: false,
+    downloadSizeHintMb: 0,
+    downloadAvailable: true,
   },
 ];
 
@@ -141,9 +157,21 @@ export class ModelManager {
   static async getModels(): Promise<ModelInfo[]> {
     const db = await getDb();
     const rows = await db.getAllAsync<ModelRow>('SELECT * FROM models');
-    
-    // Merge database state with DEFAULT_MODELS list
-    return DEFAULT_MODELS.map((def) => {
+
+    // Definitions come from the native registry first (ticket 805: the
+    // code-driven Kotlin ModelRegistry is the single source of truth); the
+    // legacy fallback list keeps pre-registry native binaries working and
+    // fills ids the registry does not yet include (e.g. the LLM cleaner).
+    const registry = (await getNativeRegistry()) ?? LEGACY_FALLBACK_MODELS;
+    const defs: Omit<ModelInfo, 'progress' | 'path' | 'status'>[] = [
+      ...LEGACY_FALLBACK_MODELS.filter(
+        (legacy) => !registry.some((row) => row.id === legacy.id)
+      ),
+      ...registry,
+    ];
+
+    // Merge database state with the merged definitions
+    return defs.map((def) => {
       const row = rows.find((r: ModelRow) => r.id === def.id);
       if (row) {
         return {
@@ -170,6 +198,9 @@ export class ModelManager {
     const model = models.find((m) => m.id === id);
     if (!model) {
       throw new Error(`Model not found with id: ${id}`);
+    }
+    if (model.downloadAvailable === false) {
+      throw new Error(`Model ${id} is registered but has no pinned download URL yet`);
     }
 
     const db = await getDb();
