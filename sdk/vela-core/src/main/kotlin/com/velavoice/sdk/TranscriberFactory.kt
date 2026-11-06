@@ -3,6 +3,7 @@ package com.velavoice.sdk
 import com.velavoice.sdk.EngineKind
 import com.velavoice.sdk.ModelDefinition
 import com.velavoice.sdk.ModelRegistry
+import com.velavoice.sdk.sherpa.SherpaConfig
 
 /**
  * Builds the cloud [StreamingTranscriber] for a [StreamingPipeline] session.
@@ -69,4 +70,23 @@ internal object TranscriberFactory {
      */
     fun isWhisperLocalModel(id: String): Boolean =
         ModelRegistry.find(id)?.engine == EngineKind.WHISPER
+
+
+    /**
+     * Build a streaming transcriber for a local model id, or null if unknown /
+     * not streaming-capable. Routes WHISPER -> LocalStreamingTranscriber,
+     * SHERPA -> SherpaStreamEngine. Ticket 803.
+     */
+    fun createLocalStreamingTranscriber(modelId: String, config: StreamConfig): StreamingTranscriber? {
+        val def = ModelRegistry.find(modelId) ?: return null
+        return when (def.engine) {
+            EngineKind.WHISPER -> LocalStreamingTranscriber(
+                com.velavoice.sdk.whisper.WhisperConfig(def.filename)
+            )
+            EngineKind.SHERPA -> if (def.supportsStreaming) {
+                SherpaStreamEngine(com.velavoice.sdk.sherpa.SherpaConfig(def.filename))
+            } else null
+        }
+    }
+
 }
