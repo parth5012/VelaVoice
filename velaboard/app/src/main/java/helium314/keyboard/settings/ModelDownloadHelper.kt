@@ -24,6 +24,17 @@ data class DownloadResult(
 )
 
 /**
+ * One file of a multi-file ONNX model bundle (Ticket 804, map #290).
+ * [expectedSha256] mirrors ModelIntegrity semantics: when non-null, the bytes
+ * are verified after download and before the bundle is marked complete.
+ */
+data class BundlePart(
+    val name: String,
+    val url: String,
+    val expectedSha256: String?
+)
+
+/**
  * Downloads Whisper and LLM Cleaner models from HuggingFace.
  * Tracks download status via SharedPreferences.
  * Models are stored in the app's private files directory to comply
@@ -166,6 +177,55 @@ object ModelDownloadHelper {
         }
     }
 
+    /** 
+     * Downloads a multi-file ONNX bundle (Ticket 804, map #290) into its
+     * per-model directory `[filesDir]/vela_models/<dirName>/`:
+     * each part streams through a `.part` file, verifies its pinned SHA-256,
+     * and atomically renames; after ALL parts land,
+     * [ModelIntegrity.verifyBundle] re-verifies the whole directory
+     * (manifest + aggregate size cap) before success is reported. On any
+     * failure the directory is deleted — a partially-verified bundle is never
+     * left behind, and callers must only mark `status: 'completed'` when this
+     * returns true.
+     *
+     * Aggregated progress is `(completedFiles + currentFileFraction) / files`.
+     */
+    suspend fun downloadModelBundle(
+        context: Context,
+        dirName: String,
+        parts: List<BundlePart>,
+        onProgress: (Float) -> Unit = {}
+    ): Boolean = withContext(Dispatchers.IO) {
+        require(dirName.isNotBlank()) { "bundle dirName must not be blank" }
+        require(parts.isNotEmpty()) { "bundle must have at least one part" }
+        val bundleDir = File(getModelsDir(context), dirName)
+        var ok = false
+        try {
+            for ((index, part) in parts.withIndex()) {
+                val destFile = File(bundleDir, part.name)
+                val seeded = downloadToFile(
+                    urlStr = part.url,
+                    destFile = destFile,
+                    onProgress = { fileFraction: Float ->
+                        onProgress((index + fileFraction) / parts.size)
+                    },
+                    expectedHash = part.expectedSha256
+                )
+                if (!seeded) return@withContext false
+            }
+            val manifest = parts.map { part -> com.velavoice.sdk.BundleFileSpec(part.name, part.expectedSha256) }
+            ok = ModelIntegrity.verifyBundle(bundleDir, manifest)
+        } catch (t: Throwable) {
+            android.util.Log.w("ModelDownloadHelper", "downloadModelBundle failed: ${t.message}")
+            ok = false
+        } finally {
+            if (!ok) {
+                bundleDir.deleteRecursively()
+            }
+        }
+        ok
+    }
+
     /**
      * Downloads a model file from HuggingFace to the app's private storage.
      * Resolves the download path to [context.filesDir]/vela_models/ so the
@@ -273,10 +333,11 @@ object ModelDownloadHelper {
     private suspend fun downloadToFile(
         urlStr: String,
         destFile: File,
-        onProgress: (Float) -> Unit
+        onProgress: (Float) -> Unit,
+        expectedHash: String? = null
     ): Boolean = withContext(Dispatchers.IO) {
         val partFile = File(destFile.parentFile, destFile.name + ".part")
-        val expectedHash = expectedHashForUrl(urlStr)
+        val expected = if (expectedHash != null) expectedHash else expectedHashForUrl(urlStr)
         val maxBytes = ModelIntegrity.MAX_MODEL_BYTES
         try {
             destFile.parentFile?.mkdirs()
@@ -321,8 +382,8 @@ object ModelDownloadHelper {
                 connection.disconnect()
             }
             // Verify SHA-256 against pinned hash
-            if (expectedHash != null) {
-                if (!ModelIntegrity.verifySha256(partFile, expectedHash)) {
+            if (expected != null) {
+                if (!ModelIntegrity.verifySha256(partFile, expected)) {
                     return@withContext false
                 }
             }
