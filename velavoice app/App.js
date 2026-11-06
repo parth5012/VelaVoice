@@ -708,7 +708,7 @@ export default function App() {
     };
     // Sub-render: Voice Hub Screen
     const renderVoiceHub = () => {
-        const isWhisperDownloaded = models.some(m => (m.engine === 'WHISPER' || m.id.startsWith('whisper')) && m.status === 'completed');
+        const isWhisperDownloaded = models.some(m => m.id.startsWith('whisper') && m.status === 'completed');
         return (<View style={styles.tabContent}>
         <View style={styles.hubHeader}>
           <Text style={styles.hubTitle}>Your Library</Text>
