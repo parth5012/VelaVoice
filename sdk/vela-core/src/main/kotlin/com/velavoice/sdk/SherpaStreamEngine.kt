@@ -17,6 +17,8 @@ import com.velavoice.sdk.whisper.AudioConverter
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * sherpa-onnx streaming backend (ticket 803, map #290).
@@ -50,6 +52,13 @@ open class SherpaStreamEngine protected constructor(
     // ── native handles (real path only; stay null on the stub path) ──
     private var recognizer: OnlineRecognizer? = null
     private var stream: OnlineStream? = null
+
+    /**
+     * Serializes native streaming ops ([emit]) against finalization/teardown
+     * ([stop]/[release]): a stalled `emit` (e.g. a timed-out capturer join)
+     * can never observe freed native recognizer/stream handles.
+     */
+    private val nativeLock = ReentrantLock()
 
     private var callback: StreamingTranscriptionCallback? = null
     private val running = AtomicBoolean(false)
@@ -115,53 +124,60 @@ open class SherpaStreamEngine protected constructor(
     }
 
     override fun emit(audioChunk: ByteArray) {
-        if (!running.get() || audioChunk.isEmpty()) return
+        if (audioChunk.isEmpty()) return
+        nativeLock.withLock {
+            if (!running.get()) return
+            val floatAudio = try {
+                AudioConverter.convertPcmToFloat(audioChunk)
+            } catch (e: Throwable) {
+                Log.e(TAG, "PCM conversion failed", e)
+                callback?.onError(VelaError("Audio conversion failed: ${e.message}"))
+                return
+            }
+            nativeFeed(floatAudio)
 
-        val floatAudio = try {
-            AudioConverter.convertPcmToFloat(audioChunk)
-        } catch (e: Throwable) {
-            Log.e(TAG, "PCM conversion failed", e)
-            callback?.onError(VelaError("Audio conversion failed: ${e.message}"))
-            return
-        }
-        nativeFeed(floatAudio)
+            pumpToMarker()
 
-        pumpToMarker()
-
-        // Native endpoint merges the current segment into the committed
-        // text and resets the stream, so later segments get disjoint ranges.
-        if (nativeEndpointCheck()) {
-            commitCurrentSegment()
-            nativeResetStream()
+            // Native endpoint merges the current segment into the committed
+            // text and resets the stream, so later segments get disjoint ranges.
+            if (nativeEndpointCheck()) {
+                commitCurrentSegment()
+                nativeResetStream()
+            }
         }
     }
 
     override fun stop() {
-        if (!running.getAndSet(false)) {
-            // Not running: still guarantee a single onFinal for idempotence
-            // only if we were started at some point and never delivered one.
-            if (!finalDelivered.getAndSet(true) && startedOnce.get()) {
-                callback?.onFinal(lastCombinedText())
+        nativeLock.withLock {
+            if (!running.getAndSet(false)) {
+                // Not running: still guarantee a single onFinal for idempotence
+                // only if we were started at some point and never delivered one.
+                if (!finalDelivered.getAndSet(true) && startedOnce.get()) {
+                    callback?.onFinal(lastCombinedText())
+                }
+                return
             }
-            return
-        }
-        if (finalDelivered.getAndSet(true)) return
+            if (finalDelivered.getAndSet(true)) return
 
-        val drained = if (config == null) null else nativeFinalize()
+            // Null-safe on both paths: stub engines hold no handles and the
+            // real default returns null when a recognizer was never created
+            // (or has already been freed inside the lock).
+            val drained = nativeFinalize()
 
-        // Commit the remaining uncommitted tail (if any)
-        val tail = lastPartialText
-        if (tail.isNotBlank()) {
-            commitCurrentSegment()
-        }
+            // The drained stream text is authoritative — the upstream input has
+            // finished, so it supersedes whatever partial was last pumped
+            // (usually a prefix of it: "hello wor" vs "hello world").
+            if (!drained.isNullOrBlank()) {
+                lastPartialText = drained
+            }
 
-        // Merge drained text (usually equals the last segment)
-        var text = committedText
-        if (!drained.isNullOrBlank() && !text.contains(drained)) {
-            text = combined(text, drained)
+            // Commit the remaining uncommitted tail (if any)
+            if (lastPartialText.isNotBlank()) {
+                commitCurrentSegment()
+            }
+            callback?.onFinal(committedText)
+            nativeClose()
         }
-        callback?.onFinal(text)
-        nativeClose()
         Log.d(TAG, "stream stopped")
     }
 
@@ -202,7 +218,7 @@ open class SherpaStreamEngine protected constructor(
                     type = "commit",
                     text = segment,
                     range = start until start + segment.length,
-                    revisionId = nextRevisionId++
+                    revisionId = ++nextRevisionId
                 )
             )
             committedText = combined(committedText, segment)
@@ -219,8 +235,10 @@ open class SherpaStreamEngine protected constructor(
     private fun lastCombinedText(): String = combined(committedText, lastPartialText)
 
     private fun fail(message: String) {
+        // Retriable: a bad path/failed allocation must not brick the engine
+        // instance — only release() is terminal. Native handle cleanup for
+        // allocation failures happens inside nativeAllocate itself.
         running.set(false)
-        released.set(true)
         Log.e(TAG, message)
         callback?.onError(VelaError(message))
     }
@@ -261,9 +279,20 @@ open class SherpaStreamEngine protected constructor(
             enableEndpoint = true
         )
         return try {
-            recognizer = OnlineRecognizer(assetManager = null, config = recognizerConfig)
-            val created = recognizer!!.createStream() ?: return false
-            stream = created
+            val createdRecognizer = OnlineRecognizer(assetManager = null, config = recognizerConfig)
+            val createdStream = try {
+                createdRecognizer.createStream() ?: run {
+                    // createStream failed: the recognizer still holds native
+                    // state — free it now, never leak it (fail-closed).
+                    createdRecognizer.release()
+                    return false
+                }
+            } catch (e: Throwable) {
+                createdRecognizer.release()
+                throw e
+            }
+            recognizer = createdRecognizer
+            stream = createdStream
             true
         } catch (e: UnsatisfiedLinkError) {
             Log.e(TAG, "sherpa JNI library not available", e)
