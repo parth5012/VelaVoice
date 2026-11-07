@@ -45,6 +45,7 @@ import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.utils.prefs
 import helium314.keyboard.settings.ModelDownloadHelper
 import com.velavoice.sdk.EngineKind
+import com.velavoice.sdk.ModelDefinition
 import com.velavoice.sdk.ModelRegistry
 import helium314.keyboard.settings.SearchSettingsScreen
 import helium314.keyboard.settings.Setting
@@ -192,11 +193,19 @@ fun VoiceModelsScreen(onClickBack: () -> Unit) {
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
                     )
-                    val selectedModelId = prefs.getString(
-                        Settings.PREF_VELA_SELECTED_MODEL, Defaults.PREF_VELA_SELECTED_MODEL
-                    )
+                    // Selection lives in Compose state (mirroring prefs) so
+                    // tapping a radio recomposes the list immediately — a raw
+                    // prefs read has no recompose trigger (CodeRabbit round-1).
+                    var selectedIdState by remember {
+                        mutableStateOf(
+                            prefs.getString(
+                                Settings.PREF_VELA_SELECTED_MODEL, Defaults.PREF_VELA_SELECTED_MODEL
+                            ) ?: ""
+                        )
+                    }
                     for (row in ModelRegistry.ALL) {
-                        val isSelected = row.id == (selectedModelId ?: "")
+                        val isSelected = row.id == selectedIdState
+                        val selectable = isDefaultModelSelectable(row)
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -205,7 +214,9 @@ fun VoiceModelsScreen(onClickBack: () -> Unit) {
                         ) {
                             RadioButton(
                                 selected = isSelected,
+                                enabled = selectable,
                                 onClick = {
+                                    selectedIdState = row.id
                                     prefs.edit { putString(Settings.PREF_VELA_SELECTED_MODEL, row.id) }
                                 }
                             )
@@ -311,6 +322,14 @@ private fun VoiceUiStyleSelector(prefs: android.content.SharedPreferences) {
         }
     }
 }
+
+/**
+ * Rows without a published release (blank url) have nothing to download, so
+ * they must not be selectable as the default local model. They stay visible
+ * and marked "download pending model release".
+ */
+internal fun isDefaultModelSelectable(row: ModelDefinition): Boolean =
+    row.url.isNotBlank()
 
 @Composable
 private fun ModelFileCard(
