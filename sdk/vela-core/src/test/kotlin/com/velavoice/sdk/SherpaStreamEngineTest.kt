@@ -42,28 +42,59 @@ class SherpaStreamEngineTest {
         var finalizeText: String? = null
         var closeCount = 0
 
+        // Op-ordering instrumentation (serialization test)
+        val ops = java.util.Vector<String>()
+        @Volatile var feedGate: CountDownLatch? = null
+
+        fun resetOps() {
+            ops.clear()
+            feedGate = null
+        }
+
+        private fun record(op: String) {
+            ops.add(op)
+        }
+
         override fun nativeAllocate(modelPath: String, language: String, threads: Int): Boolean {
+            record("allocate")
             allocateCount++
             return true
         }
 
         override fun nativeFeed(floatAudio: FloatArray) {
+            record("feed:start")
             feedCount++
             fedAudio.add(floatAudio)
+            try {
+                feedGate?.await(3, TimeUnit.SECONDS)
+            } catch (_: InterruptedException) {
+                // ignore
+            }
+            record("feed:end")
         }
 
-        /** Returns the fake cumulative stream text for the current segment. */
-        override fun nativePump(): String? = pumpedText
+        override fun nativePump(): String? {
+            record("pump")
+            return pumpedText
+        }
 
-        override fun nativeEndpointCheck(): Boolean = endpointHit
+        override fun nativeEndpointCheck(): Boolean {
+            record("endpoint")
+            return endpointHit
+        }
 
         override fun nativeResetStream() {
+            record("reset")
             endpointHit = false
         }
 
-        override fun nativeFinalize(): String? = finalizeText
+        override fun nativeFinalize(): String? {
+            record("finalize")
+            return finalizeText
+        }
 
         override fun nativeClose() {
+            record("close")
             closeCount++
         }
     }
@@ -419,5 +450,124 @@ class SherpaStreamEngineTest {
 
         assertEquals(2, cb.finals.size)
         assertEquals("second session", cb.finals[1])
+    }
+
+    // ── CodeRabbit round-1 findings ─────────────────────────────
+
+    @Test
+    fun `stop supersedes stale partial with drained text instead of appending it`() {
+        val modelFile = tempModelFile()
+        val engine = FakeSherpaStreamEngine()
+        val cb = RecordingCallback()
+        engine.setCallback(cb)
+        engine.start(StreamConfig(modelPath = modelFile.absolutePath))
+
+        engine.pumpedText = "hello wor"
+        engine.emit(pcmChunk(100))
+        engine.finalizeText = "hello world"
+        engine.stop()
+
+        // The commit must carry the authoritative drained text, and the final
+        // must NOT contain the stale partial followed by its supersession.
+        val commit = cb.markers.last()
+        assertEquals("commit", commit.type)
+        assertEquals("hello world", commit.text)
+        assertEquals(1, cb.finals.size)
+        assertEquals("hello world", cb.finals[0])
+        assertFalse(
+            "final must not duplicate text",
+            cb.finals[0].contains("hello wor hello world")
+        )
+    }
+
+    @Test
+    fun `commit markers always get a fresh revision id`() {
+        val modelFile = tempModelFile()
+        val engine = FakeSherpaStreamEngine()
+        val cb = RecordingCallback()
+        engine.setCallback(cb)
+        engine.start(StreamConfig(modelPath = modelFile.absolutePath))
+
+        engine.pumpedText = "hello"
+        engine.emit(pcmChunk(100))
+        engine.endpointHit = true
+        engine.pumpedText = "hello world"
+        engine.emit(pcmChunk(100))
+
+        val commit = cb.markers.last()
+        assertEquals("commit", commit.type)
+        val priorPartial = cb.markers.last { it.type == "partial" }
+        assertTrue(
+            "commit id ${commit.revisionId} must exceed previous partial ${priorPartial.revisionId}",
+            commit.revisionId > priorPartial.revisionId
+        )
+    }
+
+    @Test
+    fun `start failure is retriable - failed start does not brick the engine`() {
+        val engine = FakeSherpaStreamEngine()
+        val cb = RecordingCallback()
+        engine.setCallback(cb)
+
+        engine.start(StreamConfig(modelPath = "/definitely/not/here"))
+        assertNotNull(cb.error)
+        assertFalse(engine.isRunningForTest)
+
+        // A later start with a valid path must succeed on the same instance.
+        val cb2 = RecordingCallback()
+        engine.setCallback(cb2)
+        val modelFile = tempModelFile()
+        engine.start(StreamConfig(modelPath = modelFile.absolutePath))
+        assertNull(cb2.error)
+        assertTrue(engine.isRunningForTest)
+    }
+
+    @Test
+    fun `emit in flight holds the native lock - stop finalizes only afterwards`() {
+        val modelFile = tempModelFile()
+        val engine = FakeSherpaStreamEngine()
+        val cb = RecordingCallback()
+        engine.setCallback(cb)
+        engine.start(StreamConfig(modelPath = modelFile.absolutePath))
+
+        val feedGate = CountDownLatch(1)
+        engine.feedGate = feedGate
+        val emitThread = Thread { engine.emit(pcmChunk(64)) }
+        emitThread.start()
+
+        // Give the emit thread time to enter nativeFeed (blocked on the gate).
+        BlockingLatch.awaitQuiet(200)
+        engine.stop()
+        // Unblock feed; the finalize/close must have waited for feed to finish.
+        feedGate.countDown()
+        emitThread.join(5000)
+
+        val ops = engine.ops
+        val feedEndIdx = ops.indexOf("feed:end")
+        val finalizeIdx = ops.indexOf("finalize")
+        val closeIdx = ops.indexOf("close")
+        assertTrue("feed must have run", feedEndIdx >= 0)
+        assertTrue("finalize must have run", finalizeIdx >= 0)
+        assertTrue("close must have run", closeIdx >= 0)
+        assertTrue(
+            "finalize ($finalizeIdx) must come after feed end ($feedEndIdx)",
+            feedEndIdx < finalizeIdx
+        )
+        assertTrue(
+            "close ($closeIdx) must come after feed end ($feedEndIdx)",
+            feedEndIdx < closeIdx
+        )
+    }
+}
+
+/** Bounded sleep helper that never leaks InterruptedException. */
+internal object BlockingLatch {
+    fun awaitQuiet(ms: Long) {
+        val latch = CountDownLatch(1)
+        try {
+            latch.await(ms, TimeUnit.MILLISECONDS)
+        } catch (_: InterruptedException) {
+            // ignore
+        }
     }
 }
