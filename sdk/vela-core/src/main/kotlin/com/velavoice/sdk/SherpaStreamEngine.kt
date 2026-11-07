@@ -110,6 +110,7 @@ open class SherpaStreamEngine protected constructor(
         committedText = ""
         lastPartialText = ""
         startedOnce.set(true)
+        finalDelivered.set(false)
         Log.d(TAG, "stream started (model=${File(modelPath).name}, threads=$numThreads)")
     }
 
@@ -261,7 +262,8 @@ open class SherpaStreamEngine protected constructor(
         )
         return try {
             recognizer = OnlineRecognizer(assetManager = null, config = recognizerConfig)
-            stream = recognizer!!.createStream()
+            val created = recognizer!!.createStream() ?: return false
+            stream = created
             true
         } catch (e: UnsatisfiedLinkError) {
             Log.e(TAG, "sherpa JNI library not available", e)

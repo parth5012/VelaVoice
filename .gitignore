@@ -33,4 +33,4 @@ sdk/vela-cleaner/libs/*.aar
 # Build artifacts
 *.apk
 *.aab
-*.aar
+*.aarscripts/__pycache__/
