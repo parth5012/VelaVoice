@@ -35,4 +35,33 @@ class TranscriberFactoryLocalRoutingTest {
     fun `isWhisperLocalModel false for sherpa`() {
         assertFalse(TranscriberFactory.isWhisperLocalModel("fluid-speech-mini"))
     }
+
+    // ── Ticket 803: streaming-capable routing ───────────────────
+
+    @Test
+    fun `streaming sherpa model routes to SherpaStreamEngine`() {
+        val def = TranscriberFactory.resolveLocalModel("nemotron-streaming-en")
+        assertNotNull(def)
+        assertTrue(def!!.supportsStreaming)
+        assertEquals(EngineKind.SHERPA, def.engine)
+
+        val transcriber = TranscriberFactory.createLocalStreamingTranscriber(
+            "nemotron-streaming-en", StreamConfig()
+        )
+        assertNotNull(transcriber)
+        assertTrue(transcriber is SherpaStreamEngine)
+    }
+
+    @Test
+    fun `non-streaming sherpa models route to null streaming transcriber`() {
+        assertNull(TranscriberFactory.createLocalStreamingTranscriber("fluid-speech-mini", StreamConfig()))
+        assertNull(TranscriberFactory.createLocalStreamingTranscriber("parakeet-tdt-v3", StreamConfig()))
+        assertNull(TranscriberFactory.createLocalStreamingTranscriber("moonshine-tiny", StreamConfig()))
+    }
+
+    @Test
+    fun `streamingCapable lists the sherpa streaming model`() {
+        val ids = ModelRegistry.streamingCapable(EngineKind.SHERPA).map { it.id }
+        assertTrue("nemotron-streaming-en" in ids)
+    }
 }
