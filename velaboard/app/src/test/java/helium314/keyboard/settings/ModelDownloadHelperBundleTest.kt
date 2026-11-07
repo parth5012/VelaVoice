@@ -118,6 +118,50 @@ class ModelDownloadHelperBundleTest {
         cleanUp("test-bundle-corrupt")
     }
 
+    // ── CodeRabbit round-1 findings ─────────────────────────────
+
+    @Test
+    fun `downloadModelBundle rejects traversal dirName and escapes the models dir`() = runBlocking {
+        val parts = listOf(
+            BundlePart(
+                name = "encoder.onnx",
+                url = "http://127.0.0.1:$serverPort/good/encoder.onnx",
+                expectedSha256 = encoderSha
+            )
+        )
+
+        val ok = ModelDownloadHelper.downloadModelBundle(
+            context = context,
+            dirName = "../escape",
+            parts = parts
+        )
+        assertFalse(ok, "traversal dirName must fail closed")
+        val escaped = File(context.filesDir.parentFile, "escape")
+        assertFalse(escaped.exists() && escaped.listFiles()!!.isNotEmpty(), "traversal dirName must not write outside the models dir")
+        if (escaped.exists()) escaped.deleteRecursively()
+    }
+
+    @Test
+    fun `downloadModelBundle rejects traversal part names`() = runBlocking {
+        val parts = listOf(
+            BundlePart(
+                name = "../outside.onnx",
+                url = "http://127.0.0.1:$serverPort/good/encoder.onnx",
+                expectedSha256 = encoderSha
+            )
+        )
+
+        val ok = ModelDownloadHelper.downloadModelBundle(
+            context = context,
+            dirName = "test-bundle-traversal-part",
+            parts = parts
+        )
+        assertFalse(ok, "traversal part name must fail closed")
+        val escaped = File(context.filesDir, "vela_models/outside.onnx")
+        assertFalse(escaped.exists(), "traversal part name must not write outside the bundle dir")
+        cleanUp("test-bundle-traversal-part")
+    }
+
     @Test
     fun `downloadModelBundle reports aggregated progress for every file`() = runBlocking {
         val parts = listOf(
