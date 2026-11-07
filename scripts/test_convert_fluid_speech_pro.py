@@ -62,7 +62,47 @@ def run_tests():
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         assert r.returncode != 0, "incomplete bundle after conversion should exit non-zero, got %d" % r.returncode
         assert not os.path.isfile(row_path), "incomplete bundle must not emit a registry row"
-        print("[PASS] incomplete bundle after conversion exits non-zero without registry row")
+        # NOTE: this subprocess case exits at the NeMo gate, before conversion;
+        # the post-conversion verify gate itself is covered below in-process
+        # with NeMo availability stubbed (CodeRabbit round-2).
+        print("[PASS] missing NeMo exits non-zero without registry row")
+
+    # In-process: stub NeMo availability so the scaffold conversion SUCCEEDS,
+    # then the incomplete bundle must fail the post-conversion verify gate and
+    # skip the registry row (CodeRabbit round-2: the subprocess case could pass
+    # for the wrong reason).
+    sys.path.insert(0, os.path.dirname(__file__))
+    import convert_fluid_speech_pro as conv
+    with tempfile.TemporaryDirectory() as d:
+        out = os.path.join(d, "out")
+        os.makedirs(out)
+        nemo = os.path.join(d, "m.nemo")
+        open(nemo, "w").write("x")
+        row_path = os.path.join(d, "row.json")
+        orig_argv = sys.argv
+        orig_check = conv.check_neMo_available
+        orig_convert = conv.convert
+        sys.argv = [SCRIPT, "--nemo", nemo, "--out", out,
+                    "--emit-registry-row", row_path]
+        issues = []
+        try:
+            conv.check_neMo_available = lambda: True
+            captured = {}
+            def fake_convert(nemo_path, out_dir, quantize):
+                # The scaffold conversion must still run its manifest write but
+                # assert it is actually invoked (never NeMo-gated away).
+                captured["invoked"] = True
+                return orig_convert(nemo_path, out_dir, quantize)
+            conv.convert = fake_convert
+            rc = conv.main()
+        finally:
+            sys.argv = orig_argv
+            conv.check_neMo_available = orig_check
+            conv.convert = orig_convert
+        assert captured.get("invoked"), "conversion must run past the NeMo gate (stubbed available)"
+        assert rc != 0, "incomplete bundle after successful conversion must exit non-zero, got %d" % rc
+        assert not os.path.isfile(row_path), "unverified bundle must not emit a registry row"
+        print("[PASS] post-conversion verify gate fails closed with NeMo stubbed")
 
     sys.path.insert(0, os.path.dirname(__file__))
     import convert_fluid_speech_pro as conv
