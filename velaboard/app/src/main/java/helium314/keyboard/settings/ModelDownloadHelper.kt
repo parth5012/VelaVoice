@@ -66,8 +66,22 @@ object ModelDownloadHelper {
     /**
      * Returns the app-private directory for model storage.
      */
-    private fun getModelsDir(context: Context): File {
-        val dir = File(context.filesDir, MODELS_DIR)
+    /**
+     * Bundle names are registry-controlled single path components: reject blank
+     * names, parent traversal, and separators so `File(modelsDir, name)` can
+     * never escape the bundle directory.
+     */
+    internal fun isSafeBundleName(name: String): Boolean {
+        if (name.isBlank()) return false
+        if (name.contains("..")) return false
+        if (name.startsWith("/") || name.startsWith("\\")) return false
+        if (name.contains('/') || name.contains('\\')) return false
+        if (name.startsWith(".") && name.contains('.')) return false
+        if (name == "." || name.isEmpty()) return false
+        return true
+    }
+
+    private fun getModelsDir(context: Context): File {        val dir = File(context.filesDir, MODELS_DIR)
         dir.mkdirs()
         return dir
     }
@@ -263,6 +277,16 @@ object ModelDownloadHelper {
         parts: List<BundlePart>,
         onProgress: (Float) -> Unit = {}
     ): Boolean = withContext(Dispatchers.IO) {
+        if (!isSafeBundleName(dirName)) {
+            android.util.Log.w("ModelDownloadHelper", "downloadModelBundle rejected unsafe dirName: $dirName")
+            return@withContext false
+        }
+        parts.forEach { part ->
+            if (!isSafeBundleName(part.name)) {
+                android.util.Log.w("ModelDownloadHelper", "downloadModelBundle rejected unsafe part name: ${part.name}")
+                return@withContext false
+            }
+        }
         require(dirName.isNotBlank()) { "bundle dirName must not be blank" }
         require(parts.isNotEmpty()) { "bundle must have at least one part" }
         val bundleDir = File(getModelsDir(context), dirName)
@@ -283,6 +307,8 @@ object ModelDownloadHelper {
             val manifest = parts.map { part -> com.velavoice.sdk.BundleFileSpec(part.name, part.expectedSha256) }
             ok = ModelIntegrity.verifyBundle(bundleDir, manifest)
         } catch (t: Throwable) {
+            // Never swallow cancellation: let the coroutine machinery unwind.
+            if (t is kotlinx.coroutines.CancellationException) throw t
             android.util.Log.w("ModelDownloadHelper", "downloadModelBundle failed: ${t.message}")
             ok = false
         } finally {
