@@ -57,6 +57,19 @@ class ModelRegistryTest {
     }
 
     @Test
+    fun `whisperModelIds lists every whisper row in registry order`() {
+        // CodeRabbit round-1 finding (806 follow-up): native services must not
+        // hard-code 'whisper-tiny-en' — they query completed rows by candidate
+        // ids resolved from this helper, so every whisper variant a user
+        // downloads stays discoverable.
+        val ids = ModelRegistry.whisperModelIds()
+        assertTrue(ids.containsAll(listOf("whisper-tiny-en", "whisper-tiny-en-q5_0", "whisper-base-en", "whisper-small-en")))
+        assertTrue(ids.none { it.startsWith("fluid") || it.startsWith("parakeet") || it.startsWith("moonshine") })
+        // Registry order preserved: tiny first, small later.
+        assertTrue(ids.indexOf("whisper-tiny-en") < ids.indexOf("whisper-small-en"))
+    }
+
+    @Test
     fun `streamingCapable filters by flag`() {
         // Ticket 803 Phase B: exactly one streaming row so far — the streamed
         // Nemotron-3.5-ASR-Streaming-0.6b transducer (supportsStreaming=true).
