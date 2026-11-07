@@ -11,7 +11,10 @@ import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.velavoice.sdk.EngineKind
 import com.velavoice.sdk.ModelIntegrity
+import com.velavoice.sdk.ModelRegistry
+import com.velavoice.sdk.ModelSelection
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
@@ -165,6 +168,70 @@ object ModelDownloadHelper {
         }
         return null
     }
+
+    /**
+     * Reads ALL completed model rows from the companion app's models.db
+     * (Ticket 806, map #290): the registry-driven counterpart to the
+     * single-model [getSharedModelPath]. Only rows whose files exist on disk
+     * are returned, so callers can hand the list straight to
+     * [ModelSelection.resolve]. Read-only best-effort lookup (map #81 #95
+     * constraints apply — never credentials).
+     */
+    fun getCompletedSharedModels(context: Context): List<ModelSelection.CompletedModel> {
+        val out = mutableListOf<ModelSelection.CompletedModel>()
+        try {
+            val otherContext = context.createPackageContext("com.velavoice.app", Context.CONTEXT_IGNORE_SECURITY)
+            val dbPaths = listOf(
+                otherContext.getDatabasePath("models.db"),
+                File(otherContext.filesDir, "SQLite/models.db"),
+                File(otherContext.filesDir, "databases/models.db")
+            )
+            for (dbFile in dbPaths) {
+                if (dbFile == null || !dbFile.exists()) continue
+                var db: android.database.sqlite.SQLiteDatabase? = null
+                try {
+                    db = android.database.sqlite.SQLiteDatabase.openDatabase(
+                        dbFile.absolutePath, null, android.database.sqlite.SQLiteDatabase.OPEN_READONLY
+                    )
+                    val cursor = db.rawQuery(
+                        "SELECT id, path FROM models WHERE status = 'completed'", arrayOf<String>()
+                    )
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getString(0) ?: continue
+                        val path = cursor.getString(1) ?: continue
+                        val file = File(path)
+                        if (!file.exists() || !file.isFile) continue
+                        val engine = ModelRegistry.find(id)?.engine
+                            ?: if (id.startsWith("whisper")) EngineKind.WHISPER else continue
+                        out.add(ModelSelection.CompletedModel(id, engine, path))
+                    }
+                    cursor.close()
+                    if (out.isNotEmpty()) return out
+                } catch (e: Exception) {
+                    android.util.Log.e("ModelDownloadHelper", "Error querying database file ${dbFile.absolutePath}", e)
+                } finally {
+                    db?.close()
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.d("ModelDownloadHelper", "Vela Voice app context or database not accessible: ${e.message}")
+        }
+        return out
+    }
+
+    /**
+     * Registry-driven local model resolution for the keyboard
+     * (Ticket 806, map #290): reads [Settings.PREF_VELA_SELECTED_MODEL] and
+     * the completed shared models, resolving with the shared
+     * [ModelSelection] fallback order (selected → same engine → first
+     * registry-ordered completed → null, i.e. cloud only).
+     */
+    @JvmStatic
+    fun resolveSharedModel(context: Context, prefs: SharedPreferences): ModelSelection.Selection? =
+        ModelSelection.resolve(
+            prefs.getString(Settings.PREF_VELA_SELECTED_MODEL, Defaults.PREF_VELA_SELECTED_MODEL),
+            getCompletedSharedModels(context)
+        )
 
     /**
      * Returns the resolved download path for a model in app-private storage.

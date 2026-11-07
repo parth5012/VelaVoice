@@ -1058,7 +1058,10 @@ class VoiceAccessibilityService : AccessibilityService() {
         var path: String? = null
         try {
             db = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-            db.rawQuery("SELECT path FROM models WHERE (id LIKE 'whisper%' OR name LIKE 'whisper%') AND status = 'completed' LIMIT 1", null).use { cursor ->
+            // Ticket 806 (map #290): exact registry id instead of the old
+            // LIKE 'whisper%' prefix hack — models.db rows always carry the
+            // canonical ModelRegistry id ('whisper-tiny-en').
+            db.rawQuery("SELECT path FROM models WHERE (id = ? OR name = ?) AND status = 'completed' LIMIT 1", arrayOf("whisper-tiny-en", "whisper-tiny-en")).use { cursor ->
                 if (cursor.moveToFirst()) {
                     path = cursor.getString(0)
                 }
