@@ -10,6 +10,7 @@ import com.velavoice.sdk.TranscriptionEngine
 import com.velavoice.sdk.TranscriptionResult
 import com.velavoice.sdk.whisper.AudioConverter
 import com.k2fsa.sherpa.onnx.OfflineRecognizer
+import com.k2fsa.sherpa.onnx.OfflineStream
 import com.k2fsa.sherpa.onnx.OfflineRecognizerConfig
 import com.k2fsa.sherpa.onnx.OfflineModelConfig
 import com.k2fsa.sherpa.onnx.OfflineTransducerModelConfig
@@ -69,7 +70,16 @@ open class SherpaEngine protected constructor(
                 )
             }
         }
-        if (cfg.expectedHash != null && modelFile.isFile) {
+        if (cfg.expectedHash != null) {
+            // A pinned hash only protects a single file. A directory path
+            // would silently bypass verification — refuse instead of
+            // shipping unverified model contents.
+            if (modelFile.isDirectory) {
+                throw SecurityException(
+                    "Model path '${cfg.modelPath}' is a directory; SHA-256 pinning " +
+                    "requires a single model file, so a directory cannot be verified."
+                )
+            }
             if (!ModelIntegrity.verifySha256(modelFile, cfg.expectedHash)) {
                 throw SecurityException(
                     "Model file at '${cfg.modelPath}' failed SHA-256 verification."
@@ -144,6 +154,11 @@ open class SherpaEngine protected constructor(
         contextPtr = ptr
     }
 
+    /** Test-only: inject the recognizer for doNativeTranscribe-path tests. */
+    protected fun setRecognizerForTest(rec: OfflineRecognizer?) {
+        recognizer = rec
+    }
+
     // TranscriptionEngine
     override val engine: EngineKind = EngineKind.SHERPA
     override val supportsStreaming: Boolean = false
@@ -204,11 +219,28 @@ open class SherpaEngine protected constructor(
 
     protected open fun doNativeTranscribe(ptr: Long, floatAudio: FloatArray, language: String, threads: Int): String? {
         val rec = recognizer ?: return null
-        val stream = rec.createStream()
-        stream.acceptWaveform(floatAudio, 16000)
-        rec.decode(stream)
-        val res = rec.getResult(stream)
-        return res.text
+        val stream = createOfflineStream(rec) ?: return null
+        try {
+            stream.acceptWaveform(floatAudio, 16000)
+            rec.decode(stream)
+            return rec.getResult(stream).text
+        } finally {
+            releaseOfflineStream(stream)
+        }
+    }
+
+    /**
+     * Native call point: creates the per-transcription [OfflineStream].
+     * Returns null when the recognizer could not allocate a stream.
+     */
+    protected open fun createOfflineStream(rec: OfflineRecognizer): OfflineStream? = rec.createStream()
+
+    /**
+     * Native call point: releases the [OfflineStream]. Runs in a `finally`
+     * so a failed decode never leaks the native stream handle.
+     */
+    protected open fun releaseOfflineStream(stream: OfflineStream) {
+        stream.release()
     }
 
     protected open fun doNativeFree(ptr: Long) {

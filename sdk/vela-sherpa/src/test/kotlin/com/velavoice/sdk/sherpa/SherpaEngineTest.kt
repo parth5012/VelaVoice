@@ -86,6 +86,35 @@ class SherpaEngineTest {
     }
 
     @Test
+    fun `directory model path with expectedHash fails fast instead of silently skipping verification`() {
+        val tmpDir = java.nio.file.Files.createTempDirectory("sherpa-model-dir").toFile()
+        try {
+            val config = SherpaConfig(
+                modelPath = tmpDir.absolutePath,
+                expectedHash = "0".repeat(64)
+            )
+            val ex = assertThrows(SecurityException::class.java) {
+                SherpaEngine(config)
+            }
+            assertTrue(
+                "message should explain the hash cannot be verified for a directory",
+                ex.message?.contains("directory") == true
+            )
+        } finally {
+            tmpDir.delete()
+        }
+    }
+
+    // ── CodeRabbit round-1 findings ─────────────────────────────
+    // NOTE: OfflineStream.release-on-failure cannot be exercised headlessly —
+    // both OfflineStream and OfflineRecognizer run System.loadLibrary in their
+    // class initializers, so no instance (even Unsafe-allocated) exists
+    // without the native library. The release fix lives in
+    // SherpaEngine.doNativeTranscribe's try/finally, verified by code review
+    // and javap (OfflineStream.release() exists). Consistent with the
+    // stub-mode design used by SherpaStreamEngine for the same reason.
+
+    @Test
     fun `cancel during transcription returns promptly`() {
         val engine = SherpaEngineHarness()
         val transcribeEntered = CountDownLatch(1)
