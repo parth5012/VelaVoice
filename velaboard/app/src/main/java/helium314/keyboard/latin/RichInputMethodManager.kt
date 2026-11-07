@@ -73,10 +73,11 @@ class RichInputMethodManager private constructor() {
             }
             var modelPath = prefs.getString(Settings.PREF_VELA_MODEL_PATH, Defaults.PREF_VELA_MODEL_PATH) ?: ""
             if (modelPath.isEmpty() || !java.io.File(modelPath).exists()) {
-                val sharedPath = helium314.keyboard.settings.ModelDownloadHelper.getSharedModelPath(context, "whisper")
-                if (sharedPath != null) {
-                    modelPath = sharedPath
-                }
+                // Ticket 806 (map #290): registry-driven selection — whichever
+                // local model the user selected (selected → same engine → first
+                // completed registry row) qualifies, not just whisper.
+                modelPath = helium314.keyboard.settings.ModelDownloadHelper
+                    .resolveSharedModel(context, prefs)?.path ?: ""
             }
             if (modelPath.isEmpty()) return false
             return try {
