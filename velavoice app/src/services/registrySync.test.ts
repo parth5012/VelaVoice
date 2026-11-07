@@ -85,4 +85,7 @@ async function runTests() {
   console.log('registrySync tests passed.');
 }
 
-runTests();
+runTests().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
