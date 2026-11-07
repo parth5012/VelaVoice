@@ -34,3 +34,4 @@ sdk/vela-cleaner/libs/*.aar
 *.apk
 *.aab
 *.aar
+scripts/__pycache__/

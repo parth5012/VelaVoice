@@ -42,6 +42,7 @@ android {
 dependencies {
     api(project(":vela-common"))
     api(project(":vela-whisper"))
+    api(project(":vela-sherpa"))
     api(project(":vela-cleaner"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.okhttp)

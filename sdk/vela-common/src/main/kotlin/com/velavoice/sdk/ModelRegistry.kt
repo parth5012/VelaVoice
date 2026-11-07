@@ -64,7 +64,25 @@ object ModelRegistry {
             multilingual = false,
             downloadSizeHintMb = 487
         ),
-        // ── SHERPA (sherpa-onnx) — engine lands in ticket #802 ──────
+        // ── SHERPA (sherpa-onnx) ─────────────────────────────────
+        // Streaming NeMo transducer (ticket 803, map #290): Nemotron-3.5-ASR-
+        // Streaming-0.6b is streamable — sherpa-onnx re-exported it to ONNX in
+        // v1.13.5 (PR #3732) with streaming NeMo transducer greedy-search fix
+        // #3785 (v1.13.5) and per-stream options (PR #3891, v1.13.7+). The
+        // vendored AAR classes jar includes the full OnlineRecognizer API.
+        ModelDefinition(
+            id = "nemotron-streaming-en",
+            displayName = "Nemotron 3.5 ASR Streaming 0.6B (English)",
+            engine = EngineKind.SHERPA,
+            url = "",
+            filename = "nemotron-streaming-en",
+            expectedSha256 = null,
+            minRamMb = 1024,
+            supportsStreaming = true,
+            languages = setOf("en"),
+            multilingual = false,
+            downloadSizeHintMb = 0
+        ),
         ModelDefinition(
             id = "fluid-speech-mini",
             displayName = "Fluid Speech Mini (English, dictation)",

@@ -58,6 +58,9 @@ class ModelRegistryTest {
 
     @Test
     fun `streamingCapable filters by flag`() {
-        assertEquals(0, ModelRegistry.streamingCapable().size)
+        // Ticket 803 Phase B: exactly one streaming row so far — the streamed
+        // Nemotron-3.5-ASR-Streaming-0.6b transducer (supportsStreaming=true).
+        val ids = ModelRegistry.streamingCapable().map { it.id }
+        assertEquals(listOf("nemotron-streaming-en"), ids)
     }
 }

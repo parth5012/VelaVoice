@@ -19,6 +19,14 @@ import {
   StyleSheet,
 } from 'react-native';
 import { ModelInfo, DictionaryEntry, DictionaryKeyword } from '../../services/ModelManager';
+
+/** Engine-group order/labels for the model carsds list (ticket 805, map #290). */
+const ENGINE_GROUP_ORDER = ['whisper', 'sherpa', 'cleaner'] as const;
+const ENGINE_GROUP_LABELS: Record<string, string> = {
+  whisper: 'Whisper',
+  sherpa: 'Sherpa',
+  cleaner: 'Cleaner',
+};
 import GeminiSettings from '../GeminiSettings';
 import { isQuarantinedEntry, quarantineBadgeText } from '../../utils/quarantineBadge';
 import { sharedScreenStyles } from '../../theme/appStyles';
@@ -418,51 +426,74 @@ export const EngineRoomScreen: React.FC<EngineRoomScreenProps> = ({
           )}
         </View>
 
-        {/* Local Models List */}
+        {/* Local Models List — grouped by engine (ticket 805, map #290) */}
         <View style={styles.engineCard}>
           <Text style={styles.engineCardTitle}>On-Device Model Files</Text>
-          {models.map((item) => {
-            const progress = downloadProgress[item.id] || 0;
-            const progressPercent = Math.round(progress * 100);
-
+          {ENGINE_GROUP_ORDER.map((engineGroup) => {
+            const group = models.filter(
+              (m) => (m.engine ?? 'cleaner') === engineGroup
+            );
+            if (group.length === 0) return null;
             return (
-              <View key={item.id} style={styles.modelItem}>
-                <View style={styles.modelItemHeader}>
-                  <View>
-                    <Text style={styles.modelItemName}>{item.name}</Text>
-                    <Text style={styles.modelItemFile}>{item.filename}</Text>
-                  </View>
-                  <Text style={[styles.modelStatusTag, styles[item.status]]}>
-                    {item.status.toUpperCase()}
-                  </Text>
-                </View>
+              <View key={engineGroup}>
+                <Text style={styles.engineGroupLabel}>
+                  {ENGINE_GROUP_LABELS[engineGroup]}
+                </Text>
+                {group.map((item) => {
+                  const progress = downloadProgress[item.id] || 0;
+                  const progressPercent = Math.round(progress * 100);
 
-                {item.status === 'downloading' && (
-                  <View style={styles.progressContainer}>
-                    <View style={styles.progressBarBg}>
-                      <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
+                  return (
+                    <View key={item.id} style={styles.modelItem}>
+                      <View style={styles.modelItemHeader}>
+                        <View>
+                          <Text style={styles.modelItemName}>{item.name}</Text>
+                          <Text style={styles.modelItemFile}>{item.filename}</Text>
+                        </View>
+                        <Text style={[styles.modelStatusTag, styles[item.status]]}>
+                          {item.status.toUpperCase()}
+                        </Text>
+                      </View>
+
+                      {item.status === 'downloading' && (
+                        <View style={styles.progressContainer}>
+                          <View style={styles.progressBarBg}>
+                            <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
+                          </View>
+                          <Text style={styles.progressText}>{progressPercent}%</Text>
+                        </View>
+                      )}
+
+                      <View style={styles.modelActions}>
+                        {item.downloadAvailable === false ? (
+                          // Registered but no pinned URL yet — present as
+                          // coming-soon instead of a broken download (ticket 805).
+                          <Text style={styles.engineGroupLabel}>
+                            Registered — download pending model release
+                          </Text>
+                        ) : (
+                          <>
+                            {(item.status === 'pending' || item.status === 'failed' || item.status === 'checksum_failed') && (
+                              <TouchableOpacity style={styles.downloadBtn} onPress={() => handleDownload(item.id)}>
+                                <Text style={styles.downloadBtnText}>Download Model</Text>
+                              </TouchableOpacity>
+                            )}
+
+                            {item.status === 'completed' && (
+                              <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item.id)}>
+                                <Text style={styles.deleteBtnText}>Delete</Text>
+                              </TouchableOpacity>
+                            )}
+
+                            {item.status === 'downloading' && (
+                              <ActivityIndicator size="small" color="#62f9ee" />
+                            )}
+                          </>
+                        )}
+                      </View>
                     </View>
-                    <Text style={styles.progressText}>{progressPercent}%</Text>
-                  </View>
-                )}
-
-                <View style={styles.modelActions}>
-                  {(item.status === 'pending' || item.status === 'failed' || item.status === 'checksum_failed') && (
-                    <TouchableOpacity style={styles.downloadBtn} onPress={() => handleDownload(item.id)}>
-                      <Text style={styles.downloadBtnText}>Download Model</Text>
-                    </TouchableOpacity>
-                  )}
-
-                  {item.status === 'completed' && (
-                    <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item.id)}>
-                      <Text style={styles.deleteBtnText}>Delete</Text>
-                    </TouchableOpacity>
-                  )}
-
-                  {item.status === 'downloading' && (
-                    <ActivityIndicator size="small" color="#62f9ee" />
-                  )}
-                </View>
+                  );
+                })}
               </View>
             );
           })}
@@ -744,6 +775,14 @@ const styles = {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'flex-start',
+    },
+    engineGroupLabel: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: '#62f9ee',
+      marginTop: 12,
+      marginBottom: 6,
+      letterSpacing: 0.5,
     },
     modelItemName: {
       fontSize: 15,

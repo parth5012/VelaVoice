@@ -96,4 +96,70 @@ object ModelIntegrity {
             false
         }
     }
+
+    /**
+     * Bundle verification entry point (Ticket 804). Delegates to [BundleIntegrity].
+     */
+    fun verifyBundle(
+        dir: File,
+        manifest: List<BundleFileSpec>,
+        sizeCapBytes: Long = MAX_MODEL_BYTES
+    ): Boolean = BundleIntegrity.verifyBundle(dir, manifest, sizeCapBytes)
+
+    /**
+     * Alias accepting a map of filename -> expected hash (null allowed).
+     */
+    fun verifyBundle(
+        dir: File,
+        expectedHashes: Map<String, String?>,
+        sizeCapBytes: Long = MAX_MODEL_BYTES
+    ): Boolean = BundleIntegrity.verifyBundle(dir, expectedHashes, sizeCapBytes)
+}
+
+/**
+ * Bundle support (Ticket 804, map #290): per-file manifest verification.
+ */
+data class BundleFileSpec(
+    val name: String,
+    val expectedSha256: String? = null
+)
+
+object BundleIntegrity {
+    /**
+     * Verifies that every file listed in [manifest] exists under [dir] and
+     * matches its expected SHA-256 (when provided). Returns false on any
+     * missing/mismatched file, an empty manifest, or if the total size
+     * exceeds [sizeCapBytes] (disk-space DoS guard, ticket 804).
+     */
+    fun verifyBundle(
+        dir: File,
+        manifest: List<BundleFileSpec>,
+        sizeCapBytes: Long = ModelIntegrity.MAX_MODEL_BYTES
+    ): Boolean {
+        if (manifest.isEmpty()) return false
+        if (!dir.exists() || !dir.isDirectory) return false
+        var total = 0L
+        for (spec in manifest) {
+            val f = File(dir, spec.name)
+            if (!f.exists() || !f.isFile) return false
+            total += f.length()
+            if (total > sizeCapBytes) return false
+            if (spec.expectedSha256 != null) {
+                if (!ModelIntegrity.verifySha256(f, spec.expectedSha256)) return false
+            }
+        }
+        return true
+    }
+
+    /**
+     * Alias accepting a map of filename -> expected hash (null allowed).
+     */
+    fun verifyBundle(
+        dir: File,
+        expectedHashes: Map<String, String?>,
+        sizeCapBytes: Long = ModelIntegrity.MAX_MODEL_BYTES
+    ): Boolean {
+        val manifest = expectedHashes.map { BundleFileSpec(it.key, it.value) }
+        return verifyBundle(dir, manifest, sizeCapBytes)
+    }
 }

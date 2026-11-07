@@ -25,6 +25,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -43,6 +44,8 @@ import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.utils.prefs
 import helium314.keyboard.settings.ModelDownloadHelper
+import com.velavoice.sdk.EngineKind
+import com.velavoice.sdk.ModelRegistry
 import helium314.keyboard.settings.SearchSettingsScreen
 import helium314.keyboard.settings.Setting
 import helium314.keyboard.settings.preferences.TextInputPreference
@@ -177,6 +180,53 @@ fun VoiceModelsScreen(onClickBack: () -> Unit) {
                             whisperStatus = "pending"
                         }
                     )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    // Ticket 806 (map #290): per-app default-local-model
+                    // selection, driven by the shared code registry. Empty
+                    // selection keeps the legacy whisper-default behaviour.
+                    Text(
+                        text = "Default Local Model",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
+                    )
+                    val selectedModelId = prefs.getString(
+                        Settings.PREF_VELA_SELECTED_MODEL, Defaults.PREF_VELA_SELECTED_MODEL
+                    )
+                    for (row in ModelRegistry.ALL) {
+                        val isSelected = row.id == (selectedModelId ?: "")
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp, bottom = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = isSelected,
+                                onClick = {
+                                    prefs.edit { putString(Settings.PREF_VELA_SELECTED_MODEL, row.id) }
+                                }
+                            )
+                            Column {
+                                Text(text = row.displayName, style = MaterialTheme.typography.bodyMedium)
+                                val engineLabel = when (row.engine) {
+                                    EngineKind.WHISPER -> "Whisper"
+                                    EngineKind.SHERPA -> "Sherpa"
+                                }
+                                val availability = if (row.url.isBlank()) {
+                                    " — download pending model release"
+                                } else ""
+                                Text(
+                                    text = "$engineLabel$availability",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
 
                     Setting(context, Settings.PREF_VELA_MODEL_PATH, R.string.voice_model_path_title, R.string.voice_model_path_summary) {
                         TextInputPreference(setting = it, default = Defaults.PREF_VELA_MODEL_PATH)

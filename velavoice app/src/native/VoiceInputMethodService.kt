@@ -1077,6 +1077,8 @@ class VoiceInputMethodService : InputMethodService() {
     }
 
     private fun queryModelPath(db: SQLiteDatabase, modelType: String): String? {
+        // Ticket 806 (map #290): exact registry-id matching only — callers
+        // pass canonical ModelRegistry ids (e.g. 'whisper-tiny-en').
         db.rawQuery(
             "SELECT path FROM models WHERE (id = ? OR name = ?) AND status = 'completed' LIMIT 1",
             arrayOf(modelType, modelType)

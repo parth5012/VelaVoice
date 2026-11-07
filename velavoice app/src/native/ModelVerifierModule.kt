@@ -4,6 +4,8 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.Promise
+import com.velavoice.sdk.EngineKind
+import com.velavoice.sdk.ModelRegistry
 import java.io.File
 import java.io.FileInputStream
 import java.security.MessageDigest
@@ -16,6 +18,36 @@ import android.text.TextUtils
 class ModelVerifierModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
     override fun getName(): String {
         return "ModelVerifier"
+    }
+
+    /**
+     * Exports the code-driven ModelRegistry (ticket 805, map #290) as a JSON
+     * array so the TS layer never hard-codes model definitions. The Kotlin
+     * registry remains the single source of truth.
+     */
+    @ReactMethod
+    fun getRegistry(promise: Promise) {
+        try {
+            val array = org.json.JSONArray()
+            for (row in ModelRegistry.ALL) {
+                val obj = org.json.JSONObject()
+                obj.put("id", row.id)
+                obj.put("name", row.displayName)
+                obj.put("engine", row.engine.name)
+                obj.put("url", row.url)
+                obj.put("filename", row.filename)
+                obj.put("expectedSha256", row.expectedSha256)
+                obj.put("minRamMb", row.minRamMb)
+                obj.put("supportsStreaming", row.supportsStreaming)
+                obj.put("multilingual", row.multilingual)
+                obj.put("languages", org.json.JSONArray(row.languages.toList()))
+                obj.put("downloadSizeHintMb", row.downloadSizeHintMb)
+                array.put(obj)
+            }
+            promise.resolve(array.toString())
+        } catch (e: Exception) {
+            promise.reject("REGISTRY_ERROR", e.message)
+        }
     }
 
     @ReactMethod
