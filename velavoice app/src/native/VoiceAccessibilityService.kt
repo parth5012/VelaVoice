@@ -55,6 +55,7 @@ import com.velavoice.sdk.performWithClipboardRestore
 import com.velavoice.sdk.sanitizeApiErrorBody
 import com.velavoice.sdk.AudioRecorder
 import com.velavoice.sdk.AmplitudeCoalescer
+import com.velavoice.sdk.ModelRegistry
 
 class VoiceAccessibilityService : AccessibilityService() {
     private var windowManager: WindowManager? = null
@@ -1058,13 +1059,16 @@ class VoiceAccessibilityService : AccessibilityService() {
         var path: String? = null
         try {
             db = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-            // Ticket 806 (map #290): exact registry id instead of the old
-            // LIKE 'whisper%' prefix hack — models.db rows always carry the
-            // canonical ModelRegistry id ('whisper-tiny-en').
-            db.rawQuery("SELECT path FROM models WHERE (id = ? OR name = ?) AND status = 'completed' LIMIT 1", arrayOf("whisper-tiny-en", "whisper-tiny-en")).use { cursor ->
-                if (cursor.moveToFirst()) {
-                    path = cursor.getString(0)
+            // Ticket 806 (map #290) + CodeRabbit round-1: query every whisper
+            // registry id in registry order — hard-coding 'whisper-tiny-en'
+            // missed other completed whisper variants (whisper-base-en etc.).
+            for (id in ModelRegistry.whisperModelIds()) {
+                db.rawQuery("SELECT path FROM models WHERE (id = ? OR name = ?) AND status = 'completed' LIMIT 1", arrayOf(id, id)).use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        path = cursor.getString(0)
+                    }
                 }
+                if (path != null) return path
             }
         } catch (e: Exception) {
             e.printStackTrace()

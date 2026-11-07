@@ -130,4 +130,11 @@ object ModelRegistry {
 
     fun streamingCapable(engine: EngineKind? = null): List<ModelDefinition> =
         ALL.filter { (engine == null || it.engine == engine) && it.supportsStreaming }
+
+    /**
+     * Candidate look-up order for native services resolving a completed
+     * whisper download: every WHISPER row in registry order. Never hard-code a
+     * single id — users may have downloaded any variant (e.g. whisper-base-en).
+     */
+    fun whisperModelIds(): List<String> = ALL.filter { it.engine == EngineKind.WHISPER }.map { it.id }
 }

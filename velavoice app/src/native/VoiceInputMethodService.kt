@@ -17,6 +17,7 @@ import android.widget.Button
 import android.widget.LinearLayout
 import com.velavoice.sdk.AudioRecorder
 import com.velavoice.sdk.AmplitudeCoalescer
+import com.velavoice.sdk.ModelRegistry
 import com.velavoice.sdk.TranscriptionResult
 import com.velavoice.sdk.VelaException
 import com.velavoice.sdk.VelaRecordingCallback
@@ -1067,7 +1068,7 @@ class VoiceInputMethodService : InputMethodService() {
         var db: SQLiteDatabase? = null
         try {
             db = SQLiteDatabase.openDatabase(dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-            cachedWhisperPath = queryModelPath(db, "whisper-tiny-en")
+            cachedWhisperPath = queryModelPath(db, "whisper")
             cachedLlmPath = queryModelPath(db, "cleaner-llama-3b")
         } catch (e: Exception) {
             android.util.Log.e("VoiceIME", "Failed to load model paths", e)
@@ -1078,10 +1079,22 @@ class VoiceInputMethodService : InputMethodService() {
 
     private fun queryModelPath(db: SQLiteDatabase, modelType: String): String? {
         // Ticket 806 (map #290): exact registry-id matching only — callers
-        // pass canonical ModelRegistry ids (e.g. 'whisper-tiny-en').
+        // pass canonical ModelRegistry ids. CodeRabbit round-1: whisper type
+        // resolves via every whisper registry id in order, not just tiny-en.
+        if (modelType == "whisper") {
+            for (id in ModelRegistry.whisperModelIds()) {
+                val path = querySingleModelPath(db, id)
+                if (path != null) return path
+            }
+            return null
+        }
+        return querySingleModelPath(db, modelType)
+    }
+
+    private fun querySingleModelPath(db: SQLiteDatabase, modelId: String): String? {
         db.rawQuery(
             "SELECT path FROM models WHERE (id = ? OR name = ?) AND status = 'completed' LIMIT 1",
-            arrayOf(modelType, modelType)
+            arrayOf(modelId, modelId)
         ).use { cursor ->
             return if (cursor.moveToFirst()) cursor.getString(0) else null
         }
