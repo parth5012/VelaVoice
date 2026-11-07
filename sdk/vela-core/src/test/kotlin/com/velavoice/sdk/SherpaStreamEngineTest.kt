@@ -396,4 +396,28 @@ class SherpaStreamEngineTest {
         // Second start must not disturb session state (no markers expected)
         assertEquals(0, cb.markers.size)
     }
+
+    @Test
+    fun `restart after stop delivers a fresh onFinal`() {
+        val modelFile = tempModelFile()
+        val engine = FakeSherpaStreamEngine()
+        val cb = RecordingCallback()
+        engine.setCallback(cb)
+
+        // Session 1
+        engine.start(StreamConfig(modelPath = modelFile.absolutePath))
+        engine.pumpedText = "first session"
+        engine.emit(pcmChunk(100))
+        engine.stop()
+        assertEquals(1, cb.finals.size)
+
+        // Session 2 must get its own final even though session 1 delivered one
+        engine.start(StreamConfig(modelPath = modelFile.absolutePath))
+        engine.pumpedText = "second session"
+        engine.emit(pcmChunk(100))
+        engine.stop()
+
+        assertEquals(2, cb.finals.size)
+        assertEquals("second session", cb.finals[1])
+    }
 }
