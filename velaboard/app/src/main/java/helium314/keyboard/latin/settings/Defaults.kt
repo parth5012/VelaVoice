@@ -203,6 +203,8 @@ object Defaults {
     const val PREF_SPELLCHECK_SUGGEST = true
     const val PREF_SHOW_ONLY_TOOLBAR_WITH_HARDWARE_KEYBOARD = false
     const val PREF_VELA_MODEL_PATH = ""
+    // Ticket 806: empty = no explicit selection (registry fallback order applies).
+    const val PREF_VELA_SELECTED_MODEL = ""
     const val PREF_VELA_UI_STYLE = "vela"
     const val PREF_VELA_LLM_TOGGLE = false
     const val PREF_VELA_LLM_MODEL_PATH = ""

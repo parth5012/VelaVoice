@@ -56,6 +56,8 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     // theme-related stuff
     public static final String PREF_THEME_STYLE = "theme_style";
     public static final String PREF_VELA_MODEL_PATH = "vela_model_path";
+    // Ticket 806 (map #290): per-app default-local-model selection (registry id).
+    public static final String PREF_VELA_SELECTED_MODEL = "vela_selected_model";
     public static final String PREF_VELA_UI_STYLE = "vela_ui_style";
     public static final String PREF_VELA_LLM_TOGGLE = "vela_llm_toggle";
     public static final String PREF_VELA_LLM_MODEL_PATH = "vela_llm_model_path";
