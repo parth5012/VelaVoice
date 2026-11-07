@@ -19,6 +19,10 @@ REQUIRED_COMPONENTS = [
     "tokenizer.json",
 ]
 
+# WER values are fractions (0.10 == 10% error). The quality gate tolerates at
+# most 0.5 percentage points of regression, i.e. 0.005 on the fraction scale.
+WER_MAX_DELTA = 0.005
+
 REGISTRY_ROW_TEMPLATE = {
     "id": "fluid-speech-pro",
     "displayName": "Fluid Speech Pro (25 languages)",
@@ -97,8 +101,8 @@ def main():
     ap.add_argument("--out", required=True, help="Output directory for the ONNX bundle")
     ap.add_argument("--quantize", default="none", choices=["none", "int8"], help="Quantization")
     ap.add_argument("--emit-registry-row", default=None, help="Path to write registry row JSON")
-    ap.add_argument("--wer-before", type=float, default=None, help="WER before conversion")
-    ap.add_argument("--wer-after", type=float, default=None, help="WER after conversion")
+    ap.add_argument("--wer-before", type=float, default=None, help="WER before conversion (fraction, e.g. 0.10 = 10%%)")
+    ap.add_argument("--wer-after", type=float, default=None, help="WER after conversion (fraction, e.g. 0.15 = 15%%)")
     ap.add_argument("--verify", action="store_true", help="Only verify an existing bundle")
     args = ap.parse_args()
 
@@ -116,8 +120,8 @@ def main():
     if args.wer_before is not None and args.wer_after is not None:
         delta = abs(args.wer_after - args.wer_before)
         print("WER before=%.4f after=%.4f delta=%.4f" % (args.wer_before, args.wer_after, delta))
-        if delta > 0.5:
-            print("QUALITY GATE FAILED: WER delta %.4f > 0.5pt" % delta)
+        if delta > WER_MAX_DELTA:
+            print("QUALITY GATE FAILED: WER delta %.4f exceeds max %.4f (0.5pt = 0.005 on the fraction scale)" % (delta, WER_MAX_DELTA))
             return 2
 
     ok, msg = convert(args.nemo, args.out, args.quantize)
@@ -127,7 +131,10 @@ def main():
 
     ok, missing = verify_bundle(args.out)
     if not ok:
-        print("Bundle incomplete after conversion. Missing:", missing)
+        # An incomplete bundle must never be exposed to the registry: gate
+        # hard here (exit non-zero, skip the registry row).
+        print("Bundle INCOMPLETE after conversion. Missing:", missing)
+        return 1
 
     if args.emit_registry_row:
         emit_registry_row(args.out, args.emit_registry_row)
