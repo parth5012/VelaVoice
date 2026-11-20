@@ -64,6 +64,23 @@ object ModelRegistry {
             multilingual = false,
             downloadSizeHintMb = 487
         ),
+        // Whisper large-v3-turbo q5_0: a real whisper.cpp GGML artifact, but
+        // 574,041,195 bytes — above the global 500 MB disk-DoS cap. The
+        // override is scoped to this row so the default guard stays intact.
+        ModelDefinition(
+            id = "whisper-turbo-q5_0",
+            displayName = "Whisper Large v3 Turbo Q5_0 (multilingual)",
+            engine = EngineKind.WHISPER,
+            url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q5_0.bin",
+            filename = "ggml-large-v3-turbo-q5_0.bin",
+            expectedSha256 = "394221709cd5ad1f40c46e6031ca61bce88931e6e088c188294c6d5a55ffa7e2",
+            maxDownloadBytes = 600L * 1024 * 1024,
+            minRamMb = 2048,
+            supportsStreaming = false,
+            languages = emptySet(),
+            multilingual = true,
+            downloadSizeHintMb = 547
+        ),
         // ── SHERPA (sherpa-onnx) ─────────────────────────────────
         // Streaming NeMo transducer (ticket 803, map #290): Nemotron-3.5-ASR-
         // Streaming-0.6b is streamable — sherpa-onnx re-exported it to ONNX in
@@ -109,6 +126,50 @@ object ModelRegistry {
             multilingual = true,
             downloadSizeHintMb = 0
         ),
+        // Moondream's ternary Parakeet Redux is not Android-loadable as-is;
+        // cohearo's sherpa-onnx re-export ships exactly the four filenames
+        // SherpaEngine loads. It is a bundle, so `url` stays blank until the
+        // bundle download path is wired (catalog-only pass).
+        ModelDefinition(
+            id = "parakeet-redux",
+            displayName = "Parakeet Redux (25 EU languages)",
+            engine = EngineKind.SHERPA,
+            url = "",
+            filename = "parakeet-redux",
+            expectedSha256 = null,
+            minRamMb = 2048,
+            supportsStreaming = false,
+            languages = emptySet(),
+            multilingual = true,
+            downloadSizeHintMb = 397,
+            bundleParts = listOf(
+                BundleArtifact(
+                    name = "encoder.onnx",
+                    url = "https://huggingface.co/cohearo/sherpa-onnx-nemo-parakeet-redux/resolve/main/encoder.onnx",
+                    expectedSha256 = "e0bad06465fac0b7023231d9cab78bcebb4c295fb3f3c4e45fae6f1162b90cb1",
+                    sizeBytes = 343_842_409L
+                ),
+                BundleArtifact(
+                    name = "decoder.onnx",
+                    url = "https://huggingface.co/cohearo/sherpa-onnx-nemo-parakeet-redux/resolve/main/decoder.onnx",
+                    expectedSha256 = "326f1b9070b4b530ec39fe897fb28b505aa9cea135b7e17ede50926872730677",
+                    sizeBytes = 47_249_584L
+                ),
+                BundleArtifact(
+                    name = "joiner.onnx",
+                    url = "https://huggingface.co/cohearo/sherpa-onnx-nemo-parakeet-redux/resolve/main/joiner.onnx",
+                    expectedSha256 = "0d98c1c102143ea272af9730ac376e7f4591c7ad9839bfff6fa52587ce83d721",
+                    sizeBytes = 25_285_351L
+                ),
+                BundleArtifact(
+                    name = "tokens.txt",
+                    url = "https://huggingface.co/cohearo/sherpa-onnx-nemo-parakeet-redux/resolve/main/tokens.txt",
+                    expectedSha256 = "d58544679ea4bc6ac563d1f545eb7d474bd6cfa467f0a6e2c1dc1c7d37e3c35d",
+                    sizeBytes = 93_939L
+                )
+            ),
+            catalogNote = "sherpa-onnx bundle — source moondream/parakeet-redux; 4 pinned parts, 397 MB"
+        ),
         ModelDefinition(
             id = "moonshine-tiny",
             displayName = "Moonshine Tiny",
@@ -121,6 +182,40 @@ object ModelRegistry {
             languages = setOf("en"),
             multilingual = false,
             downloadSizeHintMb = 27
+        ),
+        // Catalog-only: MLX ternary weights are Apple-only, and the ONNX
+        // re-export carries a 2.43 GB external data file — neither loads in
+        // velaboard's WHISPER/SHERPA runtimes. Keep the row visible with its
+        // source pinned, but not selectable until an Android artifact exists.
+        ModelDefinition(
+            id = "phonon-2",
+            displayName = "Phonon 2 (Fermion Research)",
+            engine = EngineKind.SHERPA,
+            url = "",
+            filename = "phonon-2",
+            expectedSha256 = null,
+            minRamMb = 2048,
+            supportsStreaming = false,
+            languages = setOf("en"),
+            multilingual = false,
+            downloadSizeHintMb = 0,
+            catalogNote = "MLX ternary, Apple-only — source FermionResearch/Phonon-2; no Android runtime"
+        ),
+        // Catalog-only: ships whistle.cact for the Cactus runtime, which has
+        // no EngineKind in this SDK yet.
+        ModelDefinition(
+            id = "whistle",
+            displayName = "Whistle (Cactus Compute)",
+            engine = EngineKind.SHERPA,
+            url = "",
+            filename = "whistle",
+            expectedSha256 = null,
+            minRamMb = 1024,
+            supportsStreaming = false, // no Android runtime — keep out of streamingCapable()
+            languages = setOf("en", "de", "fr", "es", "it", "nl", "pl"),
+            multilingual = true,
+            downloadSizeHintMb = 17,
+            catalogNote = "Cactus .cact runtime — source Cactus-Compute/whistle; no Android runtime"
         )
     )
 

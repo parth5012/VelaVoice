@@ -222,15 +222,20 @@ fun VoiceModelsScreen(onClickBack: () -> Unit) {
                             )
                             Column {
                                 Text(text = row.displayName, style = MaterialTheme.typography.bodyMedium)
-                                val engineLabel = when (row.engine) {
-                                    EngineKind.WHISPER -> "Whisper"
-                                    EngineKind.SHERPA -> "Sherpa"
+                                val subtitle = row.catalogNote ?: run {
+                                    val engineLabel = when (row.engine) {
+                                        EngineKind.WHISPER -> "Whisper"
+                                        EngineKind.SHERPA -> "Sherpa"
+                                    }
+                                    val availability = when {
+                                        row.url.isNotBlank() -> ""
+                                        row.bundleParts.isNotEmpty() -> " — bundle download pending wiring"
+                                        else -> " — download pending model release"
+                                    }
+                                    "$engineLabel$availability"
                                 }
-                                val availability = if (row.url.isBlank()) {
-                                    " — download pending model release"
-                                } else ""
                                 Text(
-                                    text = "$engineLabel$availability",
+                                    text = subtitle,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

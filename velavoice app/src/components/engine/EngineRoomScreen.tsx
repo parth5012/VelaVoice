@@ -469,7 +469,7 @@ export const EngineRoomScreen: React.FC<EngineRoomScreenProps> = ({
                           // Registered but no pinned URL yet — present as
                           // coming-soon instead of a broken download (ticket 805).
                           <Text style={styles.engineGroupLabel}>
-                            Registered — download pending model release
+                            {item.catalogNote || 'Registered — download pending model release'}
                           </Text>
                         ) : (
                           <>

@@ -76,4 +76,62 @@ class ModelRegistryTest {
         val ids = ModelRegistry.streamingCapable().map { it.id }
         assertEquals(listOf("nemotron-streaming-en"), ids)
     }
+
+    @Test
+    fun `catalog contains all four newly requested models`() {
+        val ids = ModelRegistry.ALL.map { it.id }
+        assertTrue(ids.containsAll(listOf("whisper-turbo-q5_0", "parakeet-redux", "phonon-2", "whistle")))
+    }
+
+    @Test
+    fun `whisper turbo q5_0 is pinned and has a per-model size cap above its artifact`() {
+        val def = ModelRegistry.find("whisper-turbo-q5_0")!!
+        assertEquals(EngineKind.WHISPER, def.engine)
+        assertEquals("ggml-large-v3-turbo-q5_0.bin", def.filename)
+        assertEquals("394221709cd5ad1f40c46e6031ca61bce88931e6e088c188294c6d5a55ffa7e2", def.expectedSha256)
+        assertTrue(def.url.startsWith("https://huggingface.co/ggerganov/whisper.cpp/resolve/main/"))
+        assertEquals(600L * 1024 * 1024, def.maxDownloadBytes)
+        // The pinned q5_0 artifact is 574,041,195 bytes — larger than the global
+        // cap, so the per-model override must clear both bars.
+        assertTrue(def.effectiveMaxBytes() > 574_041_195L)
+        assertTrue(def.effectiveMaxBytes() > ModelIntegrity.MAX_MODEL_BYTES)
+    }
+
+    @Test
+    fun `rows without an override keep the global size cap`() {
+        assertEquals(ModelIntegrity.MAX_MODEL_BYTES, ModelRegistry.find("whisper-tiny-en")!!.effectiveMaxBytes())
+        assertEquals(ModelIntegrity.MAX_MODEL_BYTES, ModelRegistry.find("parakeet-redux")!!.effectiveMaxBytes())
+    }
+
+    @Test
+    fun `parakeet redux carries four pinned sherpa bundle parts within the global cap`() {
+        val def = ModelRegistry.find("parakeet-redux")!!
+        assertEquals(EngineKind.SHERPA, def.engine)
+        // A bundle has no single-file URL — the UI must keep it non-selectable
+        // until bundle download wiring lands (catalog-only pass).
+        assertEquals("", def.url)
+        assertEquals(4, def.bundleParts.size)
+        assertEquals(
+            setOf("encoder.onnx", "decoder.onnx", "joiner.onnx", "tokens.txt"),
+            def.bundleParts.map { it.name }.toSet()
+        )
+        assertTrue(def.bundleParts.all {
+            it.url.startsWith("https://huggingface.co/cohearo/sherpa-onnx-nemo-parakeet-redux/resolve/main/")
+        })
+        assertTrue(def.bundleParts.all { it.expectedSha256.length == 64 })
+        assertEquals(416_471_283L, def.bundleParts.map { it.sizeBytes }.sum())
+        assertTrue(def.bundleParts.map { it.sizeBytes }.sum() < ModelIntegrity.MAX_MODEL_BYTES)
+    }
+
+    @Test
+    fun `no-runtime catalog rows carry their source and runtime note`() {
+        val phonon = ModelRegistry.find("phonon-2")!!
+        val whistle = ModelRegistry.find("whistle")!!
+        assertEquals("", phonon.url)
+        assertEquals("", whistle.url)
+        assertTrue(phonon.catalogNote!!.contains("FermionResearch/Phonon-2"))
+        assertTrue(whistle.catalogNote!!.contains("Cactus-Compute/whistle"))
+        assertTrue(phonon.bundleParts.isEmpty())
+        assertTrue(whistle.bundleParts.isEmpty())
+    }
 }
