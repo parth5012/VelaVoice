@@ -22,6 +22,14 @@ export interface NativeRegistryRow {
   multilingual: boolean;
   languages: string[];
   downloadSizeHintMb: number;
+  maxDownloadBytes?: number | null;
+  bundleParts?: Array<{
+    name: string;
+    url: string;
+    expectedSha256: string;
+    sizeBytes: number;
+  }>;
+  catalogNote?: string | null;
 }
 
 /** Dependency-free definition fields every model needs (before db state merge). */
@@ -42,6 +50,17 @@ export interface ModelDefinitionFields {
    * the row as not-yet-downloadable instead of offering a broken download.
    */
   downloadAvailable: boolean;
+  /** Runtime/source note for catalog-only rows; replaces a misleading engine label. */
+  catalogNote?: string;
+  /** Per-model size cap exported by the Kotlin registry (wiring consumes later). */
+  maxDownloadBytes?: number | null;
+  /** Pinned files for directory-backed models (wiring consumes later). */
+  bundleParts?: Array<{
+    name: string;
+    url: string;
+    expectedSha256: string;
+    sizeBytes: number;
+  }>;
 }
 
 /**
@@ -86,6 +105,9 @@ export function registryRowToModelDefinition(row: NativeRegistryRow): ModelDefin
     multilingual: !!row.multilingual,
     downloadSizeHintMb: row.downloadSizeHintMb,
     downloadAvailable: !!row.url,
+    catalogNote: row.catalogNote || undefined,
+    maxDownloadBytes: row.maxDownloadBytes ?? null,
+    bundleParts: Array.isArray(row.bundleParts) ? row.bundleParts : [],
   };
 }
 

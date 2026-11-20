@@ -42,6 +42,27 @@ class ModelVerifierModule(reactContext: ReactApplicationContext) : ReactContextB
                 obj.put("multilingual", row.multilingual)
                 obj.put("languages", org.json.JSONArray(row.languages.toList()))
                 obj.put("downloadSizeHintMb", row.downloadSizeHintMb)
+                // New catalog metadata; older TS bridges ignore unknown keys.
+                if (row.maxDownloadBytes != null) {
+                    obj.put("maxDownloadBytes", row.maxDownloadBytes)
+                } else {
+                    obj.put("maxDownloadBytes", org.json.JSONObject.NULL)
+                }
+                val parts = org.json.JSONArray()
+                for (part in row.bundleParts) {
+                    val partObj = org.json.JSONObject()
+                    partObj.put("name", part.name)
+                    partObj.put("url", part.url)
+                    partObj.put("expectedSha256", part.expectedSha256)
+                    partObj.put("sizeBytes", part.sizeBytes)
+                    parts.put(partObj)
+                }
+                obj.put("bundleParts", parts)
+                if (row.catalogNote != null) {
+                    obj.put("catalogNote", row.catalogNote)
+                } else {
+                    obj.put("catalogNote", org.json.JSONObject.NULL)
+                }
                 array.put(obj)
             }
             promise.resolve(array.toString())
