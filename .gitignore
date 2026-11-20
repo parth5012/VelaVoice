@@ -17,9 +17,11 @@ graphify-out/
 .opencode
 
 
-# onnxruntime-genai-android is NOT on Maven Central; the 20 MB AAR is fetched from
-# GitHub releases and published to mavenLocal during local setup. Keep it out of git.
+# onnxruntime-genai-android is NOT on Maven Central; the 20 MB AAR is extracted from
+# the pinned Microsoft NuGet package and published to mavenLocal during setup.
+# Keep both the AAR and the downloaded package out of git (only their .sha256 files are tracked).
 sdk/vela-cleaner/libs/*.aar
+sdk/vela-cleaner/libs/*.nupkg
 
 # Keystores and certificates
 *.keystore

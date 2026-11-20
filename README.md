@@ -100,19 +100,32 @@ Run the bootstrap script to download, verify the checksum, and publish to mavenL
 ```bash
 ./scripts/bootstrap-onnx-aar.sh
 ```
+Set `ONNX_AAR_CACHE` (a pre-downloaded AAR) or `ONNX_NUPKG_CACHE` (a pre-downloaded
+`.nupkg`) to work offline; both are still checksum-verified before use.
 
 #### Manual / Windows setup
 
-```powershell
-# 1. Download the release AAR (20.6 MB)
-#    https://github.com/microsoft/onnxruntime-genai/releases/download/v0.15.0/onnxruntime-genai-android-0.15.0.aar
-#    Save it as: sdk/vela-cleaner/libs/onnxruntime-genai-android-0.15.0.aar
-#    (the file is gitignored; keep it out of version control)
+Microsoft made the `microsoft/onnxruntime-genai` GitHub repositories private on
+2026-11-17, so the old release asset URL no longer resolves. Microsoft's NuGet
+feed still serves the same AAR (byte-identical; the AAR checksum above is unchanged):
 
-# 2. Verify its SHA-256 checksum (must match a4aeadcd4d70b877c56a74ece7778324a5ee4686f395ef29e4d2a83908b83a6c)
+```powershell
+# 1. Download the pinned NuGet package (109 MB):
+#    https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntimegenai/0.15.0/microsoft.ml.onnxruntimegenai.0.15.0.nupkg
+#    Its SHA-256 must match f5fdaef183f5bdf16f08dd00da383dca905f63932b9b26abfeea56c657765b7f
+#    (also pinned in sdk/vela-cleaner/libs/microsoft.ml.onnxruntimegenai.0.15.0.nupkg.sha256).
+Get-FileHash microsoft.ml.onnxruntimegenai.0.15.0.nupkg -Algorithm SHA256
+
+# 2. A .nupkg is a zip. Extract the AAR and save it under its Maven coordinate name:
+#    Expand-Archive -Path microsoft.ml.onnxruntimegenai.0.15.0.nupkg -DestinationPath nupkg-out
+#    Copy-Item nupkg-out\runtimes\android\native\onnxruntime-genai.aar `
+#      sdk\vela-cleaner\libs\onnxruntime-genai-android-0.15.0.aar
+#    (the AAR and .nupkg are gitignored; keep them out of version control).
+
+# 3. Verify its SHA-256 checksum (must match a4aeadcd4d70b877c56a74ece7778324a5ee4686f395ef29e4d2a83908b83a6c)
 Get-FileHash sdk/vela-cleaner/libs/onnxruntime-genai-android-0.15.0.aar -Algorithm SHA256
 
-# 3. Publish to mavenLocal with automated checksum verification:
+# 4. Publish to mavenLocal with automated checksum verification:
 cd sdk; .\gradlew.bat --no-daemon -p ..\scripts\publish-genai-aar publishToMavenLocal
 ```
 
