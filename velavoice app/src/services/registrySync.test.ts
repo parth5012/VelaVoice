@@ -11,6 +11,8 @@ import {
   getNativeRegistry,
   registryRowToModelDefinition,
 } from './ModelRegistryBridge';
+import * as fs from 'fs';
+import * as path from 'path';
 
 function assert(expr: boolean, message: string) {
   if (!expr) {
@@ -114,6 +116,15 @@ async function runTests() {
   });
   assert(bundleDef.bundleParts?.length === 1, 'bundleParts round-trips');
   assert(bundleDef.bundleParts?.[0].name === 'encoder.onnx', 'bundle part name round-trips');
+
+  // Metro resolves ModelManager.js before ModelManager.ts (no sourceExts
+  // override). Its registry mapping must carry catalogNote too, or the app
+  // shows the generic fallback for the catalog-only rows.
+  const jsSource = fs.readFileSync(path.join(__dirname, 'ModelManager.js'), 'utf-8');
+  assert(
+    jsSource.includes('catalogNote: row.catalogNote || undefined'),
+    'ModelManager.js native bridge mapping must forward catalogNote'
+  );
 
   // Native bridge absent (tsx runtime) → clean null, never a throw.
   const bridge = await getNativeRegistry();

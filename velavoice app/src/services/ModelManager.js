@@ -52,6 +52,7 @@ function getNativeRegistry() {
                     multilingual: !!row.multilingual,
                     downloadSizeHintMb: row.downloadSizeHintMb,
                     downloadAvailable: !!row.url,
+                    catalogNote: row.catalogNote || undefined,
                 };
             });
         })
