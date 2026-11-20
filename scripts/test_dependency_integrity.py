@@ -7,7 +7,8 @@ Test dependency integrity and supply chain verification:
 4. sdk/settings.gradle.kts restricts mavenLocal to com.microsoft.onnxruntime and moves it last
 5. velaboard/build.gradle.kts restricts mavenLocal to allowed groups and moves it last
 6. README.md contains machine-checkable SHA-256 and no stale Windows paths
-7. Bootstrap script exists and is executable
+7. Bootstrap script exists, is executable, and pins the NuGet feed source
+8. NuGet package checksum file exists and contains the pinned SHA-256
 """
 
 import os
@@ -20,6 +21,12 @@ REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 EXPECTED_GRADLE_8_8_SHA256 = "f8b4f4772d302c8ff580bc40d0f56e715de69b163546944f787c87abf209c961"
 EXPECTED_GRADLE_8_14_SHA256 = "61ad310d3c7d3e5da131b76bbf22b5a4c0786e9d892dae8c1658d4b484de3caa"
 EXPECTED_GENAI_AAR_SHA256 = "a4aeadcd4d70b877c56a74ece7778324a5ee4686f395ef29e4d2a83908b83a6c"
+# Microsoft privatised the onnxruntime-genai GitHub repo; the official NuGet
+# package still ships the byte-identical AAR at this pinned URL.
+GENAI_NUPKG_NAME = "microsoft.ml.onnxruntimegenai.0.15.0.nupkg"
+GENAI_NUPKG_URL = "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntimegenai/0.15.0/" + GENAI_NUPKG_NAME
+EXPECTED_GENAI_NUPKG_SHA256 = "f5fdaef183f5bdf16f08dd00da383dca905f63932b9b26abfeea56c657765b7f"
+DEAD_GITHUB_AAR_URL = "github.com/microsoft/onnxruntime-genai/releases/download"
 
 passed = 0
 failed = 0
@@ -202,14 +209,42 @@ def run_tests():
         check(EXPECTED_GENAI_AAR_SHA256 in readme, "README.md documents the ONNX GenAI AAR SHA-256 checksum")
         check("C:\\Users\\DELL" not in readme, "README.md does not contain stale Windows path C:\\Users\\DELL")
         check("scripts/publish-genai-aar" in readme or "bootstrap" in readme, "README.md references bootstrap/publish project")
+        check(GENAI_NUPKG_URL in readme, "README.md documents the pinned NuGet feed URL")
+        check(DEAD_GITHUB_AAR_URL not in readme, "README.md no longer links the dead GitHub release asset")
 
-    # 7. Bootstrap / verification script exists and executes cleanly
+    # 7. Bootstrap script exists, is executable, and pins the live source
     bootstrap_sh = os.path.join(REPO_ROOT, "scripts", "bootstrap-onnx-aar.sh")
     check(os.path.isfile(bootstrap_sh), "scripts/bootstrap-onnx-aar.sh exists")
     if os.path.isfile(bootstrap_sh):
         check(os.access(bootstrap_sh, os.X_OK), "scripts/bootstrap-onnx-aar.sh is executable")
+        with open(bootstrap_sh, "r", encoding="utf-8") as f:
+            bootstrap = f.read()
+        check(GENAI_NUPKG_URL in bootstrap, "bootstrap pins the Microsoft.ML.OnnxRuntimeGenAI NuGet flat-container URL")
+        check(DEAD_GITHUB_AAR_URL not in bootstrap, "bootstrap no longer references the dead GitHub release asset")
+        check(EXPECTED_GENAI_NUPKG_SHA256 in bootstrap, "bootstrap pins the NuGet package SHA-256")
+        check("runtimes/android/native/onnxruntime-genai.aar" in bootstrap, "bootstrap extracts the AAR from the NuGet package")
+        check(
+            'if [ "$ACTUAL_NUPKG_SHA256" != "$EXPECTED_NUPKG_SHA256" ]' in bootstrap
+            and 'ACTUAL_NUPKG_SHA256="$(sha256_of "$NUPKG_TMP")"' in bootstrap
+            and "SHA-256 checksum mismatch for $NUPKG_NAME" in bootstrap
+            and "Publishing to mavenLocal" in bootstrap
+            and bootstrap.index('if [ "$ACTUAL_NUPKG_SHA256" != "$EXPECTED_NUPKG_SHA256" ]')
+            < bootstrap.index("Publishing to mavenLocal"),
+            "bootstrap compares the downloaded package digest and fails before publishing",
+        )
 
-    # 8. Checksum verification logic against actual AAR file if present (libs, m2, or optional cache)
+    # 8. Pinned NuGet package checksum file
+    nupkg_checksum_path = os.path.join(REPO_ROOT, "sdk", "vela-cleaner", "libs", GENAI_NUPKG_NAME + ".sha256")
+    check(os.path.isfile(nupkg_checksum_path), f"NuGet package checksum file exists at {os.path.relpath(nupkg_checksum_path, REPO_ROOT)}")
+    if os.path.isfile(nupkg_checksum_path):
+        with open(nupkg_checksum_path, "r", encoding="utf-8") as f:
+            nupkg_fields = f.read().split()
+        check(bool(nupkg_fields) and nupkg_fields[0] == EXPECTED_GENAI_NUPKG_SHA256,
+              f"NuGet package checksum matches {EXPECTED_GENAI_NUPKG_SHA256}")
+        check(len(nupkg_fields) > 1 and nupkg_fields[1] == GENAI_NUPKG_NAME,
+              "NuGet package checksum file names the pinned package")
+
+    # 9. Checksum verification logic against actual AAR file if present (libs, m2, or optional cache)
     m2_aar = os.path.expanduser("~/.m2/repository/com/microsoft/onnxruntime/onnxruntime-genai-android/0.15.0/onnxruntime-genai-android-0.15.0.aar")
     local_aar = os.path.join(REPO_ROOT, "sdk", "vela-cleaner", "libs", "onnxruntime-genai-android-0.15.0.aar")
     cache_aar = os.environ.get("ONNX_AAR_CACHE", "")
@@ -244,12 +279,12 @@ def run_tests():
         check(actual_sha == EXPECTED_GENAI_AAR_SHA256,
               f"Cached AAR sha256 matches pinned checksum ({actual_sha})")
 
-    # 9. Tampered file negative test
+    # 10. Tampered file negative test
     dummy_bytes = b"tampered content"
     tampered_sha = hashlib.sha256(dummy_bytes).hexdigest()
     check(tampered_sha != EXPECTED_GENAI_AAR_SHA256, "Tampered content correctly fails checksum comparison")
 
-    # 10. Check scripts/publish-genai-aar/build.gradle.kts exists and enforces checksum
+    # 11. Check scripts/publish-genai-aar/build.gradle.kts exists and enforces checksum
     publish_build = os.path.join(REPO_ROOT, "scripts", "publish-genai-aar", "build.gradle.kts")
     check(os.path.isfile(publish_build), "scripts/publish-genai-aar/build.gradle.kts exists")
     if os.path.isfile(publish_build):
